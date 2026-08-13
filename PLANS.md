@@ -54,25 +54,27 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 
 ### 1.3 Fixed top-level decisions
 
-1. **Use Java 25 as the minimum runtime.** FFM is final and is the only native-access mechanism on both the JVM and Native Image. The Vector API remains incubating and may appear only in optional optimization modules.
+1. **Use Java 25 as the minimum runtime.** For JVM and Native Image desktop targets, FFM is the only native-access mechanism. A future browser/Wasm target uses generated host bindings rather than FFM and does not reintroduce an FFI provider SPI. The Vector API remains incubating and may appear only in optional optimization modules.
 2. **Do not require a compiler plugin.** The declarative runtime uses explicit `Composer`/`UiScope` semantics, stable keys, a slot table, and phase-aware state-read tracking. Annotation processors or `javac` plugins may add diagnostics and optimizations, but correctness must not depend on them.
 3. **Use several purpose-specific trees.** Keep the component/element, layout, layer/display-list, and semantics structures separate.
 4. **Make the software renderer normative.** Add every path, blend, filter, and glyph-raster operation to the pure-Java scalar path before accepting Vulkan, D3D12, or Metal implementations.
-5. **Use an explicit RHI.** Model resources, pipelines, passes, command buffers, synchronization, and ownership directly. Do not introduce an OpenGL-style implicit global state machine.
+5. **Use an explicit, backend-neutral RHI.** Model resources, pipelines, passes, command buffers, resource usages, pass dependencies, submission order, and ownership directly. Let Vulkan and D3D12 materialize native barriers from that model instead of exposing their raw barrier APIs as the cross-backend contract.
 6. **Implement production text processing in Java.** ICU4J may supply Unicode data, Bidi, and boundary analysis. Implement OpenType parsing, GSUB/GPOS, script shaping, TrueType/CFF interpretation, hinting, and glyph rasterization in Java. Use system text APIs, FreeType, and HarfBuzz only for discovery or testing.
-7. **Generate strongly typed FFM bindings.** The canonical ABI schema generates layouts, downcalls, upcalls, error capture, metadata, and verification code. Do not define a runtime FFI provider SPI or a generic `Object...` invocation layer.
+7. **Generate strongly typed desktop FFM bindings.** The canonical ABI schema generates layouts, downcalls, upcalls, error capture, metadata, and verification code for JVM and Native Image desktop targets. Do not define a runtime FFI provider SPI or a generic `Object...` invocation layer.
 8. **Share the same FFM path between the JVM and Native Image.** Generate reachability and downcall/upcall registration metadata at build time. Do not maintain SVM- or JNA-based system-call backends.
 9. **Prove infrastructure before building controls.** Complete Headless, software rendering, and ABI feasibility work before investing in a broad widget catalog.
 10. **Port in four stages.** Every port follows specification, Oracle runner, Java reference implementation, and optimized implementation. AI-generated screenshots are never sufficient evidence.
 11. **Use the accepted Himari naming scheme.** Maven coordinates use `org.glavo.himari:himari-*`; JPMS modules and Java packages use `org.glavo.himari.*`.
+12. **Preserve browser/Wasm portability seams.** Platform startup, event delivery, rendering execution, clipboard, resource loading, font discovery, and GPU initialization must permit asynchronous, host-driven, and single-threaded implementations. Do not expose JavaScript, DOM, WebGPU, or Wasm runtime objects from platform-neutral public APIs.
 
 ### 1.4 Default technology choices
 
 | Area | Default | Constraint or rationale |
 |---|---|---|
 | Language/runtime | Java 25 | Stable public APIs must not expose preview or incubator types |
-| Native access | FFM only | Enable native access per JPMS module; no runtime provider selection |
+| Desktop native access | FFM only | Enable native access per JPMS module; no runtime provider selection |
 | Native Image | Shared FFM bindings plus generated metadata | No separate SVM system-call backend |
+| Future browser/Wasm host access | Generated Wasm imports and JavaScript/browser host bindings | Separate target-specific boundary; not an FFI provider |
 | Unicode | ICU4J | Isolate it behind the `org.glavo.himari.unicode` SPI |
 | Coordinates | `org.glavo.himari` and `himari-*` | Follow ADR-013 for Maven, JPMS, and packages |
 | UI model | Declarative, incrementally composed, unidirectional data flow | No mandatory compiler plugin |
@@ -106,7 +108,7 @@ Apply these constraints to `himari-ui`, `himari-runtime`, `himari-render-*`, `hi
 
 Create `build-logic/pure-java-guard` and implement at least these gates:
 
-1. `verifyNoNativeEntries`: reject CPU-native file formats in every publishable JAR and runtime dependency JAR.
+1. `verifyNoNativeEntries`: reject CPU-native file formats in every publishable JAR and runtime dependency JAR. A future isolated Web artifact may contain `.wasm` target bytecode, which is not a CPU-native library and must not enter desktop JARs.
 2. `verifyDependencyAllowlist`: lock runtime dependencies and compare them with the approved pure-Java allowlist; use separate allowlists for optional modules.
 3. `verifyNoDesktopModule`: use `jdeps` to reject `java.desktop` from the core dependency graph.
 4. `verifyNoUnsupportedJdkApi`: run `jdeps --jdk-internals` and static scans for internal JDK APIs.
@@ -116,7 +118,8 @@ Create `build-logic/pure-java-guard` and implement at least these gates:
 8. `verifyReproducibleArtifacts`: build the same commit twice and require identical artifact hashes.
 9. `verifyLicenseManifest`: require provenance records for generated tables, ports, shader blobs, and test fonts.
 10. `verifyTestRuntimeIsolation`: allow Oracle, LWJGL, and JNA dependencies only on `testRuntimeClasspath` or isolated `oracle-*` configurations.
-11. `verifySingleFfmPath`: reject JNA, GraalVM SVM interop, and handwritten JNI in production modules. Permit creation of `FunctionDescriptor` values and calls to `Linker.downcallHandle` or `Linker.upcallStub` only in generated bindings or allowlisted `himari-ffi` support code.
+11. `verifySingleFfmPath`: for JVM and Native Image desktop production modules, reject JNA, GraalVM SVM interop, and handwritten JNI. Permit creation of `FunctionDescriptor` values and calls to `Linker.downcallHandle` or `Linker.upcallStub` only in generated bindings or allowlisted `himari-ffi` support code. Future browser/Wasm modules must use their isolated host-binding boundary and must not depend on `himari-ffi`.
+12. `verifyWebHostIsolation`: activate with W0/W1; require an explicit browser-import allowlist, reject desktop/FFM dependencies from Web artifacts, validate generated linear-memory marshalling, and reject dynamic JavaScript evaluation or undeclared ambient browser access.
 
 ### 2.3 Published artifacts and user entry points
 
@@ -178,7 +181,7 @@ Deliver all of the following:
 
 - **Android**: reuse runtime, layout, text, and render-core modules; call Android Java APIs and Vulkan from the platform layer.
 - **iOS**: reuse portable subsystems through a suitable AOT Java runtime and Objective-C/Metal/UIKit system APIs.
-- **Web/Wasm**: add WebGPU/Canvas and browser-event adapters without changing the desktop RHI contract.
+- **Browser/Wasm**: compile the portable Java subsystems to WebAssembly; use generated Wasm imports and JavaScript/browser host bindings, WebGPU with a Canvas fallback, host-driven event delivery, asynchronous browser capabilities, and a DOM-backed semantics/IME bridge. Reuse the backend-neutral RHI contract without requiring FFM or runtime JPMS. This target does not provide DOM/CSS visual compatibility.
 - **Media**: add a pure-Java `himari-media` API, WAV/PCM baseline implementations, and optional FFmpeg, GStreamer, or platform-codec providers.
 
 ---
@@ -191,9 +194,9 @@ Create or maintain an ADR for each decision below. Accepted ADRs live in `adr/`;
 
 Define HimariUI image, font, color, input, and window types. Java2D may appear in tests as an Oracle but never in production modules.
 
-### ADR-002: Use FFM as the only FFI and generate typed bindings
+### ADR-002: Use FFM as the only desktop FFI and generate typed bindings
 
-Use generated, fixed-signature Java calls or `MethodHandle.invokeExact`. Do not define an FFI provider SPI, runtime provider selection, reflection-based calls, or `Object[]` invocation.
+For JVM and Native Image desktop targets, use generated, fixed-signature Java calls or `MethodHandle.invokeExact`. Do not define an FFI provider SPI, runtime provider selection, reflection-based calls, or `Object[]` invocation. Browser/Wasm host bindings are a separate target boundary, not another implementation of this FFI contract.
 
 ### ADR-003: Keep compiler plugins optional
 
@@ -218,11 +221,11 @@ Add each drawing operation to the scalar software renderer and golden corpus fir
 
 ### ADR-006: Use an explicit RHI resource model
 
-Represent resource creation, lifetime, synchronization, pass boundaries, and pipeline state explicitly. Do not leak OpenGL-style implicit state into the higher-level Canvas API.
+Represent resource creation, lifetime, declared usage, pass dependencies, submission order, pass boundaries, and pipeline state explicitly. The frame compiler produces logical access transitions; each backend materializes native barriers or validation as required. Do not expose Vulkan/D3D12 barrier objects or leak OpenGL-style implicit state into the higher-level Canvas API.
 
 ### ADR-007: Keep FFM memory types out of public APIs
 
-Confine `MemorySegment`, `Arena`, `Linker`, and low-level method handles to interop/internal packages. An explicit interop escape hatch may expose framework-defined typed native handles, but ordinary component APIs must not expose FFM types.
+Confine `MemorySegment`, `Arena`, `Linker`, and low-level method handles to desktop interop/internal packages. An explicit interop escape hatch may expose framework-defined typed native handles, but ordinary component APIs must not expose FFM, JavaScript, DOM, WebGPU, or Wasm runtime types.
 
 ### ADR-008: Prefer verifiable correctness over porting speed
 
@@ -248,6 +251,10 @@ When GPU, IME, color-font, accessibility, or platform extensions are unavailable
 
 Use `org.glavo.himari` as the Maven group, `himari-<area>` as artifact IDs, and `org.glavo.himari.<area>` for JPMS modules and exported packages. Keep repository modules fine-grained while presenting coarse user entry points such as `himari-desktop` and `himari-ui`. Do not introduce a `gui-*` prefix.
 
+### ADR-014: Keep host integration asynchronous and target-specific
+
+Platform-neutral contracts must support host-driven event loops, asynchronous capability acquisition, optional rendering workers, and unavailable capabilities. Desktop targets use FFM behind generated native bindings. A browser/Wasm target uses generated Wasm imports and JavaScript/browser bindings in a separate host module. Neither boundary may leak target runtime objects into common public APIs or become a generic provider SPI.
+
 ---
 
 ## 5. Target Architecture
@@ -270,10 +277,12 @@ flowchart TD
     RHI --> Vulkan[Vulkan Backend]
     RHI --> D3D12[D3D12 Backend]
     RHI --> Metal[Metal Backend]
+    RHI -. future .-> WebGPU[WebGPU Backend]
     Runtime --> Platform[Platform SPI]
     Platform --> Windows[Win32]
     Platform --> Mac[AppKit / Cocoa]
     Platform --> Wayland[Wayland]
+    Platform -. future .-> Browser[Browser / Wasm]
     Windows --> NativeAccess[Generated Native Bindings]
     Mac --> NativeAccess
     Wayland --> NativeAccess
@@ -281,12 +290,14 @@ flowchart TD
     D3D12 --> NativeAccess
     Metal --> NativeAccess
     NativeAccess --> FFM[Generated Typed FFM Bindings]
+    Browser --> WebHost[Generated Wasm / JavaScript Host Bindings]
+    WebGPU --> WebHost
 ```
 
 ### 5.2 Frame flow
 
 ```text
-OS events
+host / OS events
   -> normalized event queue
   -> input routing / gesture / focus / IME
   -> state transaction
@@ -302,16 +313,17 @@ OS events
   -> present + timing feedback
 ```
 
-### 5.3 Initial threading model
+### 5.3 Execution and threading model
 
-- **Platform/UI thread**: use the operating-system-required main thread for window messages, composition, layout, input, and semantics updates.
-- **Render thread**: own the GPU device, queue, and most GPU resources; consume immutable `SceneSnapshot` values.
-- **Worker pool**: run font parsing, image decoding, CPU tile rasterization, expensive filters, and I/O. Use a bounded platform-thread pool for CPU work and virtual threads for blocking I/O where appropriate.
-- **No user callbacks on the render thread**: never run application callbacks, component code, or state writes there.
-- **Latest-frame mailbox**: allow scene snapshots to use latest-wins replacement; keep resource creation, upload, and destruction on an ordered non-droppable queue.
-- **Explicit frame ownership**: submit only immutable values or objects with documented ownership transfer.
+- **Platform/UI execution context**: run window or host events, composition, layout, input, and semantics updates on the main execution context required by the target. Desktop targets use the OS-required UI thread; a browser target uses the browser event loop.
+- **Render execution capability**: desktop targets initially use a dedicated render thread that owns the GPU device, queue, and most GPU resources. Platform-neutral contracts must also permit rendering on the UI context or in a Web Worker.
+- **Optional worker execution**: use a bounded platform-thread pool for desktop CPU work and virtual threads for blocking desktop I/O where appropriate. A target may provide no workers, limited workers, or browser workers; correctness must not depend on their presence.
+- **Host-driven event loop**: platform scheduling must accept callbacks from a host event loop and must not require a blocking message-pump API.
+- **No user callbacks in render execution**: never run application callbacks, component code, or state writes from the render executor, whether it is a thread, worker, or same-thread render phase.
+- **Frame handoff**: when UI and rendering execute separately, scene snapshots may use latest-wins replacement while resource creation, upload, and destruction remain ordered and non-droppable. A same-context implementation preserves the same ordering without requiring a mailbox.
+- **Explicit frame ownership**: hand off only immutable values or objects with documented ownership transfer.
 
-Do not parallelize component execution in the first version. Still require components to be fast, reentrant, and free of implicit side effects so future composition may be parallelized or cancelled safely.
+Do not parallelize component execution in the first version. Require components to be fast, reentrant, and free of implicit side effects so composition can later be cancelled or executed under different target schedulers.
 
 ---
 
@@ -436,6 +448,12 @@ platform backends
     -> platform/api + ffi/generated bindings
 ffi
     -> java.base FFM API only
+future platform/web
+    -> platform/api + host/web
+future rhi/webgpu
+    -> rhi/api + host/web
+future host/web
+    -> generated Wasm imports + JavaScript/browser bindings
 ```
 
 Reject all of the following:
@@ -446,17 +464,23 @@ Reject all of the following:
 - `controls/core -> theme/default`.
 - Platform or RHI modules that bypass generated bindings and construct arbitrary downcalls.
 - Production dependencies on JNA, LWJGL, GraalVM SVM interop, or `oracles/*`.
+- Browser/Wasm modules that depend on `himari-ffi` or expose host runtime objects through common APIs.
 
 ### 6.3 JPMS rules
 
-- Give every published artifact an explicit `module-info.java` named `org.glavo.himari.<area>`.
+- Give every JVM-published artifact an explicit `module-info.java` named `org.glavo.himari.<area>`.
 - Request native access only from `org.glavo.himari.ffi` and concrete platform/RHI modules that invoke restricted FFM methods.
 - Use `uses`/`provides` for platform, renderer, and feature SPIs. Generate statically analyzable registries for Native Image when required. Do not define an FFI provider SPI.
 - Do not export `org.glavo.himari.*.internal`; use narrow SPIs for cross-module internal access instead of `--add-exports`.
+- A future Wasm build may link modules statically without runtime JPMS, but it must preserve the same logical dependency and encapsulation boundaries.
 
 ### 6.4 Naming rules
 
 Repository directories may be short, but Maven artifacts, JPMS modules, and Java packages must use the complete isomorphic naming scheme defined by ADR-013. BUILD-001 must not introduce an alternative convention.
+
+### 6.5 Future browser/Wasm boundaries
+
+Reserve logical boundaries for `modules/platform/web`, `modules/rhi/webgpu`, and `modules/host/web`. Keep browser host bindings outside `modules/ffi`; they adapt generated Wasm imports and JavaScript/browser APIs rather than native system libraries. Defer public artifact names and the Java-to-Wasm toolchain until the post-stable feasibility milestone.
 
 ---
 
@@ -490,12 +514,12 @@ Implement these structures:
 
 ### 7.3 State requirements
 
-Provide object and primitive state types, including `State<T>`, `MutableState<T>`, `IntState`, `LongState`, `FloatState`, and `BooleanState`. Add `DerivedState<T>`, batched `StateTransaction.run(...)`, a safe background-thread commit queue, consistent snapshot/version reads, and debug checks for illegal composition side effects or reentrant writes.
+Provide object and primitive state types, including `State<T>`, `MutableState<T>`, `IntState`, `LongState`, `FloatState`, and `BooleanState`. Add `DerivedState<T>`, batched `StateTransaction.run(...)`, a safe external-update commit queue for thread or host callbacks, consistent snapshot/version reads, and debug checks for illegal composition side effects or reentrant writes.
 
 Enforce these write rules:
 
 1. Coalesce repeated writes within one event-loop tick.
-2. Publish off-UI-thread writes as commits; do not compose directly on the writer thread.
+2. Publish changes initiated outside the UI execution context as commits; do not compose directly from the originating thread, worker, or host callback.
 3. Keep every state version read by a composition transaction stable for that transaction.
 4. Cancel and retry on conflict; never commit a partial tree.
 5. Start effects only after a successful commit.
@@ -675,7 +699,7 @@ Any referenced or ported tessellator must retain upstream mapping, licensing, an
 
 ### 11.1 RHI object model
 
-Define explicit device, queue, buffer, texture, texture-view, sampler, shader-module, pipeline-layout, graphics-pipeline, compute-pipeline, command-buffer, render-pass, compute-pass, transfer-pass, fence/timeline, swapchain/surface, resource-state/barrier, and debug-label abstractions.
+Define explicit device, queue, buffer, texture, texture-view, sampler, shader-module, pipeline-layout, graphics-pipeline, compute-pipeline, command-buffer, render-pass, compute-pass, transfer-pass, submission-completion token/timeline, swapchain/surface, resource-usage/access, pass-dependency, submission-order, and debug-label abstractions. Device and surface acquisition must support asynchronous completion.
 
 ### 11.2 Capability tiers
 
@@ -690,20 +714,21 @@ The frame compiler selects algorithms from capabilities, never from checks such 
 
 ### 11.3 Frame compiler responsibilities
 
-Implement culling, clip-strategy selection, save-layer/offscreen planning, transient-texture lifetime, draw batching, pipeline keys, upload coalescing, glyph/image-atlas updates, resource barriers, GPU-resource retirement, and damage-aware presentation. Emit a backend-neutral render graph; backend modules only encode and submit it.
+Implement culling, clip-strategy selection, save-layer/offscreen planning, transient-texture lifetime, draw batching, pipeline keys, upload coalescing, glyph/image-atlas updates, logical resource transitions, GPU-resource retirement, and damage-aware presentation. Emit a backend-neutral render graph with declared resource access and pass dependencies; each backend derives its required barriers, validation, and submission commands.
 
 ### 11.4 Shader toolchain
 
-1. Define a typed pure-Java shader IR.
+1. Define a typed pure-Java shader IR without SPIR-V-, HLSL-, MSL-, or WGSL-specific assumptions in its common model.
 2. Maintain a small fixed shader set for built-in brushes, clips, glyphs, images, and filters.
 3. Generate SPIR-V in Java.
 4. Generate HLSL and MSL source in Java.
-5. Use official platform tools in release CI to produce DXIL/DXBC and metallib data artifacts.
-6. Generate a common reflection manifest.
-7. Load shaders and create pipelines during initialization; never compile in the frame path.
-8. Permit an initialization-time MSL source fallback with system compilation and caching.
-9. Record source hashes, tool versions, targets, and bindings for every shader binary.
-10. Keep external compilers in build/verification tooling, not GUI runtime dependencies.
+5. Preserve WGSL as a first-class future target for the WebGPU backend.
+6. Use official platform tools in release CI to produce DXIL/DXBC and metallib data artifacts.
+7. Generate a common reflection manifest.
+8. Load shaders and create pipelines during initialization; never compile in the frame path.
+9. Permit an initialization-time MSL source fallback with system compilation and caching.
+10. Record source hashes, tool versions, targets, and bindings for every shader binary.
+11. Keep external compilers in build/verification tooling, not GUI runtime dependencies.
 
 Do not expose arbitrary user shaders in the first stable release.
 
@@ -735,17 +760,17 @@ Do not expose arbitrary user shaders in the first stable release.
 
 ### 11.6 GPU resource lifetime
 
-- Create and destroy GPU resources on the render thread that owns the device, or enqueue those operations there.
-- Treat `close()` as logical release and delay native destruction until the relevant fence completes.
+- Create and destroy GPU resources in the render execution context that owns the device, or enqueue those operations there.
+- Treat `close()` as logical release and delay backend destruction until the relevant submission-completion point is reached.
 - Use `Cleaner` only for leak reporting, never for correct release.
 - Emit structured device-lost events and retain source descriptors/upload sources for rebuildable resources.
 - Attach debug labels, optional sampled creation stacks, and memory estimates to resources.
 
 ---
 
-## 12. FFM, ABI, and Binding-Generation Workstream
+## 12. Desktop FFM, Host Interop, ABI, and Binding Generation
 
-### 12.1 Binding architecture
+### 12.1 Desktop binding architecture
 
 Do not implement a generic reflective `invoke` abstraction. It would introduce boxing in hot paths, defer signature failures to runtime, weaken Native Image analysis, complicate callbacks and value-struct ABIs, and make layout mistakes difficult to detect.
 
@@ -758,7 +783,7 @@ Canonical ABI schema
   -> system library
 ```
 
-There is no runtime FFI provider selection. Platform-neutral modules depend on narrow HimariUI interfaces; concrete platform and RHI modules depend on the relevant generated bindings.
+There is no runtime FFI provider selection. Platform-neutral modules depend on narrow HimariUI interfaces; concrete JVM and Native Image desktop platform/RHI modules depend on the relevant generated bindings.
 
 ### 12.2 Canonical ABI schema
 
@@ -818,20 +843,39 @@ Do not generate `@CFunction`, `CFunctionPointer`, or GraalVM native-interop view
 
 If a future C/C++ host needs to create a Java isolate and call HimariUI through the Native Image C API, place that reverse-direction capability in a separate embedding extension. It must not implement or replace the framework FFI path.
 
-### 12.6 Boundary for non-FFM interop libraries
+### 12.6 Future browser/Wasm host-binding architecture
 
-- Production modules must not depend on JNA, LWJGL, or GraalVM SVM interop APIs.
+Use a separate generated host-binding path:
+
+```text
+Browser host schema
+  -> generated Java-facing host stubs
+  -> Wasm imports + minimal JavaScript glue
+  -> browser APIs
+```
+
+- Keep the browser host schema and generated stubs in `host/web`, outside `himari-ffi`.
+- Represent asynchronous browser operations as delayed completion in platform-internal contracts; do not block the browser event loop.
+- Keep JavaScript objects, DOM nodes, WebGPU objects, and Wasm runtime handles opaque and internal.
+- Normalize host callbacks into the same event, state-transaction, and error-reporting paths used by desktop backends.
+- Keep JavaScript glue generated or narrowly reviewed, versioned, and free of application policy.
+- Support static linking and closed-world analysis; do not rely on runtime classpath discovery.
+- Treat this as a target-specific platform boundary, not a second FFI implementation or generic provider SPI.
+
+### 12.7 Boundary for non-FFM interop libraries
+
+- Desktop production modules must not depend on JNA, LWJGL, or GraalVM SVM interop APIs. Browser/Wasm modules use only the isolated `host/web` boundary.
 - Oracle runners, ABI probes, and tests may use JNA or LWJGL.
 - Confine those dependencies to `oracles/`, `testRuntimeClasspath`, or explicitly isolated development-tool configurations.
 - Verify that standard samples and published runtime graphs contain none of them.
 
-### 12.7 ABI verification
+### 12.8 ABI verification
 
 Compile non-published C/C++ probes in platform CI and compare machine-readable JSON results with generated Java layouts. Cover `sizeof`, `alignof`, `offsetof`, enum/constant values, function-pointer calls, callback round trips, variadic calls, structure returns, COM vtable indices, Objective-C method encodings, pointer width, and endianness.
 
 Require explicit review for every difference introduced by an SDK upgrade.
 
-### 12.8 Native callback safety
+### 12.9 Desktop native callback safety
 
 - Catch `Throwable` at every callback boundary.
 - Publish failures to a lock-free error queue; never unwind through native code.
@@ -875,7 +919,8 @@ Implement these internal concepts:
 - **FontFace**: immutable, thread-safe face with lazy table caches.
 - **FontInstance**: face, size, variation coordinates, features, and synthesis.
 - **GlyphCacheKey**: face, variation, ppem, hinting mode, and subpixel phase.
-- **FontCollection**: application fonts, system fonts, and fallback policy.
+- **FontSource**: bundled assets, application-provided bytes, fetched resources, or an optional platform catalog, with asynchronous loading where the host requires it.
+- **FontCollection**: available font sources, resolved faces, and fallback policy; it must not assume that a system-font catalog exists.
 
 The public font API must expose metadata, code-point-to-glyph mapping, metrics, and outline loading without leaking parser storage.
 
@@ -934,11 +979,12 @@ Use ICU/Unicode for break opportunities and glyph advances plus available width 
 
 ### 13.8 Font fallback and system discovery
 
-Do not call DirectWrite, CoreText, or Pango for production shaping or rasterization. Platform APIs may enumerate and locate system font files or public descriptors.
+Do not call DirectWrite, CoreText, or Pango for production shaping or rasterization. Platform APIs may enumerate and locate system font files or public descriptors when that capability exists.
 
 - On Windows, use font directories, registry data, and public enumeration information.
 - On macOS, use CoreText/AppKit only to enumerate or locate files/descriptors.
 - On Linux, parse XDG/fontconfig configuration in a pure-Java catalog; a system fontconfig adapter may be transitional or optional.
+- In a browser/Wasm target, default to bundled, application-provided, or fetched font bytes. The backend may report system-font discovery as unavailable rather than substituting browser text rasterization.
 - Give application fonts priority over system fonts.
 - Cache fallback by Unicode block, script, locale, and emoji preference.
 - Diagnose missing glyphs and prevent recursive fallback loops.
@@ -958,9 +1004,9 @@ Do not call DirectWrite, CoreText, or Pango for production shaping or rasterizat
 
 ### 14.1 Platform SPI
 
-Define a platform backend contract for capabilities, event loop, window creation, clipboard, cursors, system fonts, and accessibility. A platform window must expose logical/physical size, scale factor, visibility/title/state, a native-surface descriptor, redraw requests, cursor/IME/drag-and-drop controls, frame-timing callbacks, and explicit close.
+Define a platform backend contract for capabilities, host-driven event scheduling, surface/window creation, clipboard, cursors, font sources, and accessibility. Backend initialization, GPU/surface acquisition, clipboard access, permission-gated operations, and resource loading must be able to complete asynchronously. A platform window or surface must expose logical/physical size, scale factor, visibility/title/state where supported, a target-neutral surface descriptor, redraw requests, cursor/IME/drag-and-drop controls, frame-timing callbacks, and explicit close.
 
-Do not expose `HWND`, `NSWindow*`, or `wl_surface*` from core APIs. Make typed native handles available only through explicit interop modules.
+Do not expose `HWND`, `NSWindow*`, `wl_surface*`, DOM nodes, JavaScript objects, or WebGPU handles from core APIs. Make typed target handles available only through explicit interop modules.
 
 ### 14.2 Headless
 
@@ -1001,6 +1047,17 @@ Implement:
 - NSAccessibility roles/actions/values, text markers/ranges, and main-thread marshaling.
 
 Validate Objective-C block ABI, method-return ABI, selector signatures, and dynamic-class lifetime during M0. Prefer block-free APIs until the spike establishes a safe contract.
+
+### 14.7 Future browser/Wasm backend
+
+- Map the primary application surface to a browser canvas. Treat multiple top-level windows as a capability that may be unavailable rather than emulating desktop windows silently.
+- Acquire WebGPU adapters, devices, and canvas configuration asynchronously. Use the software renderer plus Canvas presentation as the documented fallback.
+- Receive pointer, keyboard, wheel, focus, visibility, resize, and timing events through generated browser host bindings and normalize them before they enter the runtime.
+- Bridge IME through a narrowly controlled hidden textarea or content-editable element while keeping HimariUI's text model authoritative.
+- Mirror the semantics tree into a DOM accessibility structure without using DOM/CSS for visual layout or rendering.
+- Model clipboard, drag-and-drop, file selection, and permissions as asynchronous capabilities with explicit denial/unavailability results.
+- Permit rendering on the browser event context or in a Web Worker. Do not require threads, `SharedArrayBuffer`, or worker support for correctness.
+- Load application assets and fonts from bundled bytes or fetch-based sources; do not assume filesystem or system-font access.
 
 ---
 
@@ -1087,6 +1144,7 @@ Implement a `FrameClock`, tween/keyframe/spring/decay models, implicit and expli
 - Add BMP or QOI as simple debug formats if useful.
 - Add JPEG, GIF, WebP, and AVIF through independent codec providers.
 - Enforce image-size, memory, decompression-ratio, and incremental-input limits.
+- Accept framework resource sources or incremental byte input rather than requiring filesystem paths; browser/Wasm loading may complete through fetch-based asynchronous sources.
 
 ### 17.2 Color
 
@@ -1186,6 +1244,10 @@ Initial engineering targets:
 - Record p50/p95/p99, allocation, GC, native memory, and GPU memory.
 
 Set absolute regression thresholds on M3 baseline machines and enforce them thereafter.
+
+### 18.9 Future browser/Wasm validation
+
+When the post-stable Web track begins, add browser integration tests for host-driven single-thread execution, optional Web Worker rendering, asynchronous startup and permissions, WebGPU and Canvas fallback, pointer/keyboard/IME normalization, DOM semantics mirroring, fetched fonts/assets, device loss, and deterministic replay. Run a defined browser/WebGPU matrix and compare portable subsystem fixtures with JVM Headless results.
 
 ---
 
@@ -1287,8 +1349,8 @@ Emit a structured startup report containing:
 ```text
 Java runtime/version
 Selected platform backend
-Native access mechanism: FFM
-Native access status
+Host integration mechanism: FFM or browser/Wasm host bindings
+Host integration status
 Loaded system libraries
 Selected renderer
 GPU adapter/capabilities
@@ -1343,6 +1405,14 @@ Treat fonts, images, clipboard data, drag-and-drop data, and protocol messages a
 - Soak-test repeated window and device creation/destruction.
 - Test shutdown order.
 - Validate lifetime behavior separately on the JVM and Native Image.
+
+### 21.4 Future browser/Wasm host boundary
+
+- Treat browser messages, fetched resources, clipboard content, drag-and-drop data, and JavaScript callback payloads as untrusted input.
+- Validate every value copied across Wasm linear memory, including offsets, lengths, encodings, object-handle generations, and callback identifiers.
+- Keep generated JavaScript glue compatible with browser content-security policies; do not rely on dynamic code evaluation.
+- Model permission denial, context loss, detached canvases, aborted fetches, and page lifecycle changes as ordinary capability or lifecycle failures.
+- Do not grant the Wasm module ambient access to browser globals beyond the imports declared by the host schema.
 
 ---
 
@@ -1611,11 +1681,31 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - Core artifacts contain no native payload or dependency.
 - Public limitations and accepted differences are complete.
 
+### Post-stable W0–W4 — Browser/Wasm extension track
+
+This track begins only after the stable desktop release unless a separate project decision changes the priority. It does not block M0–M11.
+
+- **W0 — Toolchain and host-binding feasibility**: evaluate Java 25 language/runtime coverage, closed-world linking, exceptions, garbage collection, code size, startup, browser debugging, generated Wasm imports, and content-security-policy constraints. Select the Java-to-Wasm toolchain only after this evidence exists.
+- **W1 — Browser platform baseline**: implement `host/web` and `platform/web`, host-driven single-thread scheduling, canvas surface creation, normalized browser events, fetch-based assets, and software-renderer presentation.
+- **W2 — WebGPU backend**: implement asynchronous adapter/device acquisition, WGSL output, WebGPU resource mapping, render-graph validation, device/context loss, and CPU/GPU differential scenes.
+- **W3 — Browser integration**: implement clipboard/permissions, drag-and-drop, hidden text-input bridge, DOM semantics mirror, application/downloaded fonts, lifecycle/visibility handling, and optional Web Worker rendering.
+- **W4 — Productization**: define Web artifacts, loader/bootstrap code, cache/version policy, browser compatibility matrix, diagnostics, deployment samples, performance budgets, and reproducible packaging.
+
+**Track exit criteria:**
+
+- The same representative application and portable subsystem tests run on JVM Headless and browser/Wasm.
+- Browser execution uses no FFM, JNI, JNA, or native desktop module.
+- Software/Canvas and WebGPU rendering have documented selection and fallback behavior.
+- Single-thread execution is fully functional; workers improve capability or performance but are not required for correctness.
+- IME and accessibility operate through target-specific bridges while HimariUI retains authoritative text, layout, paint, and semantics models.
+- No JavaScript, DOM, WebGPU, or Wasm runtime object appears in common public APIs.
+- Browser integration, security, compatibility, and performance gates pass on the defined matrix.
+
 ---
 
 ## 23. Initial Issue Backlog
 
-These issues are sufficient to begin implementation without waiting for visual control design:
+These issues are sufficient to begin implementation without waiting for visual control design. Do not add W0–W4 work to this initial backlog until the post-stable Web track is activated:
 
 1. **GOV-001**: Select the license, contribution rules, and ADR template. Naming is already accepted by ADR-013.
 2. **BUILD-001**: Create the Java 25 Gradle multi-project and JPMS sample according to ADR-013.
@@ -1685,7 +1775,7 @@ Meet the general DoD and all of the following:
 - Retain the reference implementation.
 - Allow the optimized path to be disabled and run both paths in differential mode.
 
-### 24.3 Platform or FFM feature
+### 24.3 Desktop platform or FFM feature
 
 - ABI probes pass.
 - Native callbacks are exception-safe.
@@ -1703,7 +1793,7 @@ Meet the general DoD and all of the following:
 - Display-list bounds and culling tests pass.
 - Exact software goldens pass.
 - GPU differential tests and a tolerance policy exist.
-- Resource-lifetime and fence tests pass.
+- Resource-lifetime, declared-usage, pass-dependency, and backend-synchronization tests pass.
 - Debug labels are present.
 - A benchmark scene exists.
 - Device-lost and fallback behavior are defined.
@@ -1717,6 +1807,17 @@ Meet the general DoD and all of the following:
 - Theme tokens are used.
 - Interaction tests and goldens pass.
 - Disabled, read-only, and error states are defined.
+
+### 24.6 Future browser/Wasm feature
+
+- Single-thread, host-driven execution passes before worker acceleration is considered complete.
+- Asynchronous initialization, permissions, clipboard, resource loading, and GPU acquisition cover success, denial, cancellation, and unavailability.
+- Generated host bindings validate linear-memory bounds, object handles, callback IDs, and encodings.
+- No FFM dependency or target runtime object leaks into common APIs.
+- WebGPU and Canvas/software paths have differential tests and documented fallback behavior.
+- IME and DOM semantics bridges pass browser integration and accessibility tests.
+- Browser lifecycle, device/context loss, detached surfaces, and aborted fetches have defined recovery or shutdown behavior.
+- Packaging is reproducible and passes the supported browser/security-policy matrix.
 
 ---
 
@@ -1740,6 +1841,11 @@ Meet the general DoD and all of the following:
 | Required system libraries are absent | Linux startup failure | Vulkan or Wayland libraries cannot be resolved | Report capabilities and fall back to software, Headless, or X11 where documented |
 | Java syntax makes the API too verbose | Poor usability | Samples require excessive boilerplate | Keep runtime semantics explicit but add optional code generation or DSLs; review through samples |
 | Published modules are too granular | Dependency confusion | Users must understand internal module boundaries | Use ADR-013, the BOM, and `himari-desktop`; keep fine-grained artifacts out of the default user surface |
+| The Java-to-Wasm toolchain cannot support the required Java 25/runtime subset | Web track blocked or fragmented | W0 needs source rewrites or incompatible runtime substitutions | Keep the Web track post-stable, define a portable-core profile, and select a toolchain only after representative feasibility tests |
+| Desktop threading or synchronous APIs leak into common contracts | Browser deadlocks or unusable APIs | Web prototypes require blocking, threads, or `SharedArrayBuffer` | Require host-driven scheduling, asynchronous capabilities, and a correct single-thread execution path in ADR-014 |
+| WebGPU capability and browser behavior vary | Rendering gaps or unstable performance | Adapter acquisition, limits, or presentation differs across the browser matrix | Use capability tiers, logical resource dependencies, Canvas/software fallback, and a real browser/WebGPU matrix |
+| Browser system fonts are unavailable as font bytes | Incorrect fallback or inconsistent text | The backend attempts to delegate shaping/rasterization to browser text APIs | Use bundled/application/fetched fonts and report system-font discovery as unavailable |
+| Wasm/JavaScript host glue expands the attack surface | Security or CSP failures | Dynamic code generation, unchecked linear-memory offsets, or ambient browser access appears | Generate narrow imports, validate every boundary value, avoid dynamic evaluation, and test strict content-security policies |
 
 ---
 
@@ -1756,9 +1862,14 @@ The entries below must not block M0 unless marked accepted. Use the working defa
 | First complete platform | Linux Wayland plus Vulkan, subject to M0 evidence |
 | Unicode provider | ICU4J |
 | Default renderer | GPU when available, otherwise software; allow explicit override |
-| Native-access mechanism | FFM only; no provider SPI |
+| Desktop native-access mechanism | FFM only; no provider SPI |
 | Native Image system calls | Reuse the JVM FFM bindings and ABI tests |
 | JNA | Oracle/test tooling only; no production backend or artifact |
+| Future browser/Wasm host access | Generated Wasm imports plus isolated JavaScript/browser bindings under ADR-014; never an FFI provider |
+| Future browser renderer | WebGPU with Canvas/software fallback |
+| Future browser execution | Correct on the browser event context without workers; Web Workers are optional acceleration/capability |
+| Future browser fonts/resources | Bundled, application-provided, or fetched bytes; system catalogs are optional |
+| Java-to-Wasm toolchain and Web artifact names | Defer to W0 feasibility evidence |
 | Public coordinate precision | `float` logical pixels |
 | Text indices | UTF-16 offsets plus grapheme/cluster APIs |
 | Compiler plugin | Optional; never a correctness dependency |
@@ -1784,6 +1895,8 @@ The first demonstrable release must validate the architecture rather than show o
 10. The inspector displays component, layout, layer, and semantics trees.
 
 This increment is the earliest credible proof that the architecture works end to end.
+
+Browser/Wasm is intentionally not an exit criterion for this first desktop increment; it is covered by the post-stable W0–W4 track.
 
 ---
 
@@ -1841,8 +1954,16 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 
 ---
 
-## 29. Final Acceptance Statement
+## 29. Final Acceptance Statements
 
-At the stable release, automated evidence must support the following public statement:
+### 29.1 First stable desktop release
 
-> HimariUI's core, text engine, software renderer, GPU abstraction, platform backends, and sole FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
+At the first stable desktop release, automated evidence must support this public statement:
+
+> HimariUI's core, text engine, software renderer, GPU abstraction, desktop platform backends, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
+
+### 29.2 Future browser/Wasm release
+
+When the post-stable Web track is complete, automated evidence must additionally support this statement:
+
+> HimariUI's browser/Wasm target reuses the portable Java runtime, layout, text, display-list, semantics, and rendering subsystems. It accesses browser capabilities only through generated, target-specific Wasm imports and JavaScript/browser host bindings; it does not use FFM, JNI, JNA, or desktop platform modules. WebGPU and Canvas/software rendering follow the same backend-neutral resource-usage and scene semantics as desktop backends. Browser-specific DOM integration is limited to host services such as IME and accessibility and does not replace HimariUI's layout or visual rendering model.
