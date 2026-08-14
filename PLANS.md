@@ -1,9 +1,10 @@
 # HimariUI Implementation Plan
 
-> Status: Draft 0.2  
-> Runtime baseline: Java 25  
-> Initial platforms: Windows, macOS, Linux, and Headless  
-> Primary distribution constraint: the core and official platform backends must not ship project-built or third-party CPU-native libraries  
+> Status: Draft 0.3<br>
+> Runtime baseline: Java 25<br>
+> Initial platforms: Windows, macOS, Linux, and Headless<br>
+> Future mobile policy: Android and iOS are post-stable Java 25 AOT targets and do not define the core compatibility baseline<br>
+> Primary distribution constraint: published core and desktop artifacts must not ship project-built or third-party CPU-native libraries; future mobile bundles may contain only declared target-generated AOT code and host glue<br>
 > Last reviewed: 2026-08-14
 
 ---
@@ -26,6 +27,7 @@ Terms used throughout this plan:
 - **System library**: a library supplied by the operating system or system graphics stack, such as `user32.dll`, `d3d12.dll`, AppKit, Metal, `libwayland-client.so`, or `libvulkan.so.1`. HimariUI may call these libraries through FFM but must not repackage them.
 - **Test/tool dependency**: JNA, LWJGL, and similar dependencies used only by Oracle runners, tests, or development tools. They must not become production backends or enter the standard runtime dependency graph.
 - **Optional integration**: a non-core feature such as an FFmpeg binding. It must use a separate artifact, remain non-transitive by default, and stay outside the strict pure-Java distribution.
+- **Target-generated mobile artifact**: AOT application code, launcher code, or narrowly generated platform glue produced only while packaging a future Android or iOS application. These files may enter the final mobile application bundle but must not enter published core or desktop JARs, become a general native backend, or introduce a third-party graphics stack.
 - **Reference implementation**: a correctness-first, readable, scalar Java implementation suitable for differential validation.
 - **Optimized implementation**: a SIMD, parallel, GPU, cache-aware, or otherwise optimized implementation added only after the reference path passes its conformance gates.
 - **Oracle**: a native or external reference implementation used by tests, such as FreeType, HarfBuzz, SDL, Skia, Impeller, a platform text API, or LWJGL. Oracles may be test dependencies but must not enter the published runtime graph.
@@ -36,7 +38,7 @@ Terms used throughout this plan:
 
 ### 1.1 Target outcome
 
-Deliver a modern declarative GUI framework whose runtime, layout engine, text stack, software renderer, GPU abstraction, platform backends, and generated native bindings are implemented in Java 25. Standard artifacts must contain no project-built or third-party CPU-native libraries. Desktop platforms must be reached through generated, strongly typed FFM bindings to system APIs.
+Deliver a modern declarative GUI framework whose runtime, layout engine, text stack, software renderer, GPU abstraction, platform backends, and generated native bindings are implemented in Java 25. Published Java artifacts and first-stable desktop distributions must contain no project-built or third-party CPU-native libraries. Desktop platforms must be reached through generated, strongly typed FFM bindings to system APIs.
 
 The first stable release must support deterministic Headless execution, software fallback, modern GPU backends, complete input and accessibility paths, a practical control set, JVM execution, and GraalVM Native Image packaging.
 
@@ -54,18 +56,19 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 
 ### 1.3 Fixed top-level decisions
 
-1. **Use Java 25 as the minimum runtime.** For JVM and Native Image desktop targets, FFM is the only native-access mechanism. A future browser/Wasm target uses generated host bindings rather than FFM and does not reintroduce an FFI provider SPI. The Vector API remains incubating and may appear only in optional optimization modules.
+1. **Use Java 25 as the minimum runtime.** Core and internal implementations may use stable Java 25 language and library features. For JVM and Native Image desktop targets, FFM is the only native-access mechanism. Future Android and iOS targets must use a Java 25-capable AOT toolchain instead of imposing Android Runtime class-library compatibility on common modules. A future browser/Wasm target uses generated host bindings rather than FFM and does not reintroduce an FFI provider SPI. The Vector API remains incubating and may appear only in optional optimization modules.
 2. **Do not require a compiler plugin.** Runtime correctness and the baseline application API must be usable from ordinary Java source. M1 selects the structural-reactivity model from evidence comparing explicit grouped recomposition, one-shot signal ownership, and a hybrid of fine-grained bindings with small structural scopes. Annotation processors or `javac` plugins may add diagnostics and optimizations, but correctness and acceptable baseline ergonomics must not depend on them.
 3. **Use several purpose-specific trees.** Keep the reactive-owner/mounted-element, layout, layer/display-list, and semantics structures separate.
 4. **Make the software renderer normative.** Add every path, blend, filter, and glyph-raster operation to the pure-Java scalar path before accepting Vulkan, D3D12, or Metal implementations.
 5. **Use an explicit, backend-neutral RHI.** Model resources, pipelines, passes, command buffers, resource usages, pass dependencies, submission order, and ownership directly. Let Vulkan and D3D12 materialize native barriers from that model instead of exposing their raw barrier APIs as the cross-backend contract.
 6. **Implement production text processing in Java.** ICU4J may supply Unicode data, Bidi, and boundary analysis. Implement OpenType parsing, GSUB/GPOS, script shaping, TrueType/CFF interpretation, hinting, and glyph rasterization in Java. Use system text APIs, FreeType, and HarfBuzz only for discovery or testing.
 7. **Generate strongly typed desktop FFM bindings.** The canonical ABI schema generates layouts, downcalls, upcalls, error capture, metadata, and verification code for JVM and Native Image desktop targets. Do not define a runtime FFI provider SPI or a generic `Object...` invocation layer.
-8. **Share the same FFM path between the JVM and Native Image.** Generate reachability and downcall/upcall registration metadata at build time. Do not maintain SVM- or JNA-based system-call backends.
+8. **Share the same desktop FFM path between the JVM and Native Image.** Generate reachability and downcall/upcall registration metadata at build time. Do not maintain SVM- or JNA-based desktop system-call backends.
 9. **Prove infrastructure before building controls.** Complete Headless, software rendering, and ABI feasibility work before investing in a broad widget catalog.
 10. **Port in four stages.** Every port follows specification, Oracle runner, Java reference implementation, and optimized implementation. AI-generated screenshots are never sufficient evidence.
 11. **Use the accepted Himari naming scheme.** Maven coordinates use `org.glavo.himari:himari-*`; JPMS modules and Java packages use `org.glavo.himari.*`.
 12. **Preserve browser/Wasm portability seams.** Platform startup, event delivery, rendering execution, clipboard, resource loading, font discovery, and GPU initialization must permit asynchronous, host-driven, and single-threaded implementations. Do not expose JavaScript, DOM, WebGPU, or Wasm runtime objects from platform-neutral public APIs.
+13. **Treat mobile as a post-stable AOT extension.** Android and iOS support is contingent on a mobile AOT toolchain compiling the representative Java 25 core without source rewrites or a reduced Java profile. If no such toolchain is viable, defer the mobile target instead of lowering the runtime baseline, banning stable Java 25 APIs, or maintaining an ART-compatible common implementation.
 
 ### 1.4 Default technology choices
 
@@ -73,7 +76,9 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 |---|---|---|
 | Language/runtime | Java 25 | Stable public APIs must not expose preview or incubator types |
 | Desktop native access | FFM only | Enable native access per JPMS module; no runtime provider selection |
-| Native Image | Shared FFM bindings plus generated metadata | No separate SVM system-call backend |
+| Desktop Native Image | Shared FFM bindings plus generated metadata | No separate SVM system-call backend |
+| Future Android/iOS runtime | Java 25-capable mobile AOT; GraalVM Native Image-derived tooling is the initial candidate | Toolchain feasibility gates the target; ART compatibility does not constrain common modules |
+| Future Android/iOS host access | Generated target-specific launcher and JNI/NDK or Objective-C/C glue | Separate packaging boundary; not the desktop FFM contract or an FFI provider |
 | Future browser/Wasm host access | Generated Wasm imports and JavaScript/browser host bindings | Separate target-specific boundary; not an FFI provider |
 | Unicode | ICU4J | Isolate it behind the `org.glavo.himari.unicode` SPI |
 | Coordinates | `org.glavo.himari` and `himari-*` | Follow ADR-013 for Maven, JPMS, and packages |
@@ -92,7 +97,7 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 
 ### 2.1 Runtime distribution constraints
 
-Apply these constraints to `himari-ui`, `himari-runtime`, `himari-render-*`, `himari-text`, `himari-platform-*`, `himari-rhi-*`, `himari-ffi`, and their aggregated internal implementation modules:
+Apply these constraints to `himari-ui`, `himari-runtime`, `himari-render-*`, `himari-text`, the first-stable desktop `himari-platform-*` and `himari-rhi-*` modules, `himari-ffi`, and their aggregated internal implementation modules. They govern published Java artifacts and the desktop runtime graph. A post-stable mobile application bundle may contain target-generated AOT code and narrowly generated host glue, but those files must remain outside standard JARs and desktop dependencies:
 
 - Ship no JNI C/C++ source and no precompiled native bridge.
 - Do not call `System.load` or `System.loadLibrary` for framework-owned files.
@@ -108,7 +113,7 @@ Apply these constraints to `himari-ui`, `himari-runtime`, `himari-render-*`, `hi
 
 Create `build-logic/pure-java-guard` and implement at least these gates:
 
-1. `verifyNoNativeEntries`: reject CPU-native file formats in every publishable JAR and runtime dependency JAR. A future isolated Web artifact may contain `.wasm` target bytecode, which is not a CPU-native library and must not enter desktop JARs.
+1. `verifyNoNativeEntries`: reject CPU-native file formats in every publishable JAR and runtime dependency JAR. A future isolated Web artifact may contain `.wasm` target bytecode, and a future mobile application bundle may contain target-generated AOT code and host glue; neither may enter core or desktop JARs.
 2. `verifyDependencyAllowlist`: lock runtime dependencies and compare them with the approved pure-Java allowlist; use separate allowlists for optional modules.
 3. `verifyNoDesktopModule`: use `jdeps` to reject `java.desktop` from the core dependency graph.
 4. `verifyNoUnsupportedJdkApi`: run `jdeps --jdk-internals` and static scans for internal JDK APIs.
@@ -120,6 +125,7 @@ Create `build-logic/pure-java-guard` and implement at least these gates:
 10. `verifyTestRuntimeIsolation`: allow Oracle, LWJGL, and JNA dependencies only on `testRuntimeClasspath` or isolated `oracle-*` configurations.
 11. `verifySingleFfmPath`: for JVM and Native Image desktop production modules, reject JNA, GraalVM SVM interop, and handwritten JNI. Permit creation of `FunctionDescriptor` values and calls to `Linker.downcallHandle` or `Linker.upcallStub` only in generated bindings or allowlisted `himari-ffi` support code. Future browser/Wasm modules must use their isolated host-binding boundary and must not depend on `himari-ffi`.
 12. `verifyWebHostIsolation`: activate with W0/W1; require an explicit browser-import allowlist, reject desktop/FFM dependencies from Web artifacts, validate generated linear-memory marshalling, and reject dynamic JavaScript evaluation or undeclared ambient browser access.
+13. `verifyMobileAotIsolation`: activate with A0; require mobile packaging inputs to be explicit, reject mobile launchers and generated host glue from core or desktop JARs, reject target runtime types from common public APIs, and verify that the representative Java 25 core is compiled without an ART compatibility fork or source rewrite.
 
 ### 2.3 Published artifacts and user entry points
 
@@ -169,6 +175,7 @@ Deliver all of the following:
 
 ### 3.2 Explicit non-goals for the first stable release
 
+- Android or iOS product support; both belong to the post-stable AOT extension track.
 - Browser DOM/CSS compatibility.
 - Swing or JavaFX control interoperability as a core architectural requirement.
 - Arbitrary user shaders; expose only a controlled set of brushes, filters, and effects initially.
@@ -179,8 +186,9 @@ Deliver all of the following:
 
 ### 3.3 Later extensions
 
-- **Android**: reuse runtime, layout, text, and render-core modules; call Android Java APIs and Vulkan from the platform layer.
-- **iOS**: reuse portable subsystems through a suitable AOT Java runtime and Objective-C/Metal/UIKit system APIs.
+- **Android, AOT-first and feasibility-gated**: compile the unchanged Java 25 runtime, layout, text, display-list, semantics, and rendering modules with a Java 25-capable mobile AOT toolchain. Use a thin Android host shell plus generated JNI/NDK glue for lifecycle, surfaces, input, IME, accessibility, and Vulkan. The shell may execute on ART, but the HimariUI core is not required to be ART-compatible. Treat a full ART execution path as a separate future decision rather than a constraint on current code.
+- **iOS, AOT-only and feasibility-gated**: compile the same unchanged Java 25 subsystems with a suitable mobile AOT toolchain and use generated Objective-C/C glue for application lifecycle, UIKit, Metal, input, IME, and accessibility. GraalVM Native Image-derived tooling, initially Gluon Substrate/GluonFX, is a candidate to validate rather than an accepted dependency or proof that the desktop FFM path works on iOS.
+- **Mobile compatibility rule**: require representative mobile AOT spikes to cover stable Java 25 APIs used by the core, including `MemorySegment` and `Arena` where applicable. A toolchain failure postpones Android/iOS support; it must not cause the main source set to adopt an older Java profile, avoid stable Java 25 features, or maintain parallel ART-compatible algorithms.
 - **Browser/Wasm**: compile the portable Java subsystems to WebAssembly; use generated Wasm imports and JavaScript/browser host bindings, WebGPU with a Canvas fallback, host-driven event delivery, asynchronous browser capabilities, and a DOM-backed semantics/IME bridge. Reuse the backend-neutral RHI contract without requiring FFM or runtime JPMS. This target does not provide DOM/CSS visual compatibility.
 - **Media**: add a pure-Java `himari-media` API, WAV/PCM baseline implementations, and optional FFmpeg, GStreamer, or platform-codec providers.
 
@@ -196,7 +204,7 @@ Define HimariUI image, font, color, input, and window types. Java2D may appear i
 
 ### ADR-002: Use FFM as the only desktop FFI and generate typed bindings
 
-For JVM and Native Image desktop targets, use generated, fixed-signature Java calls or `MethodHandle.invokeExact`. Do not define an FFI provider SPI, runtime provider selection, reflection-based calls, or `Object[]` invocation. Browser/Wasm host bindings are a separate target boundary, not another implementation of this FFI contract.
+For JVM and Native Image desktop targets, use generated, fixed-signature Java calls or `MethodHandle.invokeExact`. Do not define an FFI provider SPI, runtime provider selection, reflection-based calls, or `Object[]` invocation. Future mobile AOT host glue and browser/Wasm host bindings are separate target and packaging boundaries, not alternative implementations of this desktop FFI contract.
 
 ### ADR-003: Keep compiler plugins optional
 
@@ -225,9 +233,9 @@ Add each drawing operation to the scalar software renderer and golden corpus fir
 
 Represent resource creation, lifetime, declared usage, pass dependencies, submission order, pass boundaries, and pipeline state explicitly. The frame compiler produces logical access transitions; each backend materializes native barriers or validation as required. Do not expose Vulkan/D3D12 barrier objects or leak OpenGL-style implicit state into the higher-level Canvas API.
 
-### ADR-007: Keep FFM memory types out of public APIs
+### ADR-007: Keep low-level memory and host-interop types out of public APIs
 
-Confine `MemorySegment`, `Arena`, `Linker`, and low-level method handles to desktop interop/internal packages. An explicit interop escape hatch may expose framework-defined typed native handles, but ordinary component APIs must not expose FFM, JavaScript, DOM, WebGPU, or Wasm runtime types.
+Core and internal implementation modules may use `MemorySegment`, `Arena`, `MemoryLayout`, and other stable Java 25 APIs when ownership and lifetime are explicit. Do not remove or replace those uses solely to preserve possible ART compatibility. Confine `Linker`, `SymbolLookup`, `FunctionDescriptor`, and low-level method handles used for desktop system calls to generated desktop interop or allowlisted `himari-ffi` support packages. An explicit interop escape hatch may expose framework-defined typed native handles, but ordinary component APIs must not expose low-level memory, FFM linker, Android, Objective-C, JavaScript, DOM, WebGPU, or Wasm runtime types.
 
 ### ADR-008: Prefer verifiable correctness over porting speed
 
@@ -255,13 +263,17 @@ Use `org.glavo.himari` as the Maven group, `himari-<area>` as artifact IDs, and 
 
 ### ADR-014: Keep host integration asynchronous and target-specific
 
-Platform-neutral contracts must support host-driven event loops, asynchronous capability acquisition, optional rendering workers, and unavailable capabilities. Desktop targets use FFM behind generated native bindings. A browser/Wasm target uses generated Wasm imports and JavaScript/browser bindings in a separate host module. Neither boundary may leak target runtime objects into common public APIs or become a generic provider SPI.
+Platform-neutral contracts must support host-driven event loops, asynchronous capability acquisition, optional rendering workers, and unavailable capabilities. Desktop targets use FFM behind generated native bindings. Future mobile AOT targets use generated target launchers and JNI/NDK or Objective-C/C glue outside the desktop FFM contract. A browser/Wasm target uses generated Wasm imports and JavaScript/browser bindings in a separate host module. None of these boundaries may leak target runtime objects into common public APIs or become a generic provider SPI.
 
 ### ADR-015: Separate value reactivity from structural updates
 
 Use a fine-grained producer/consumer graph for `State`, `DerivedState`, phase dependencies, and owned effects. Source writes push invalidation through the graph; derived values recompute lazily when pulled and publish semantic version changes only when their equality policy observes a new value. Treat conditional branches, keyed collections, mounted-node identity, and lifecycle as a separate structural-update problem.
 
 Do not accept universal slot-table recomposition or one-shot component execution as the structural contract before M1 evidence exists. Compare explicit grouped recomposition, one-shot signal ownership with explicit reactive control flow, and a hybrid that uses fine-grained property bindings plus small structural scopes. A slot table may remain an internal implementation selected by that evidence, but it is not a fixed public-runtime requirement.
+
+### ADR-016: Do not lower the Java baseline for speculative targets
+
+The shared implementation may use stable Java 25 language and runtime features. Android and iOS become supported only when a mobile AOT toolchain can compile and run the representative core without source rewriting, an older common source set, or replacement of Java 25 APIs solely for target compatibility. The absence of such a toolchain defers the affected mobile target. An ART-compatible execution profile requires a future replacement or supplementary ADR and is not a current design constraint.
 
 ---
 
@@ -464,6 +476,16 @@ future rhi/webgpu
     -> rhi/api + host/web
 future host/web
     -> generated Wasm imports + JavaScript/browser bindings
+future platform/android
+    -> platform/api + host/android
+future rhi/android-vulkan
+    -> rhi/api + host/android
+future platform/ios
+    -> platform/api + host/ios
+future rhi/ios-metal
+    -> rhi/api + host/ios
+future host/android + host/ios
+    -> generated mobile launcher/host glue + target AOT entry points
 ```
 
 Reject all of the following:
@@ -473,8 +495,10 @@ Reject all of the following:
 - `graphics/api -> Vulkan/D3D12/Metal`.
 - `controls/core -> theme/default`.
 - Platform or RHI modules that bypass generated bindings and construct arbitrary downcalls.
-- Production dependencies on JNA, LWJGL, GraalVM SVM interop, or `oracles/*`.
+- Core or desktop production dependencies on JNA, LWJGL, GraalVM SVM interop, or `oracles/*`; future mobile toolchain-specific entry points must remain confined to `host/android` or `host/ios`.
 - Browser/Wasm modules that depend on `himari-ffi` or expose host runtime objects through common APIs.
+- Future mobile modules that leak Android, JNI, Objective-C, UIKit, Metal, or AOT-toolchain types into common public APIs.
+- Changes to common modules whose only purpose is ART class-library or bytecode compatibility without a separately accepted ART-target ADR.
 
 ### 6.3 JPMS rules
 
@@ -483,6 +507,7 @@ Reject all of the following:
 - Use `uses`/`provides` for platform, renderer, and feature SPIs. Generate statically analyzable registries for Native Image when required. Do not define an FFI provider SPI.
 - Do not export `org.glavo.himari.*.internal`; use narrow SPIs for cross-module internal access instead of `--add-exports`.
 - A future Wasm build may link modules statically without runtime JPMS, but it must preserve the same logical dependency and encapsulation boundaries.
+- Future mobile AOT builds may statically link modules and generated entry points without runtime JPMS, but they must compile the normal Java 25 source sets and preserve the same logical dependency and encapsulation boundaries.
 
 ### 6.4 Naming rules
 
@@ -491,6 +516,10 @@ Repository directories may be short, but Maven artifacts, JPMS modules, and Java
 ### 6.5 Future browser/Wasm boundaries
 
 Reserve logical boundaries for `modules/platform/web`, `modules/rhi/webgpu`, and `modules/host/web`. Keep browser host bindings outside `modules/ffi`; they adapt generated Wasm imports and JavaScript/browser APIs rather than native system libraries. Defer public artifact names and the Java-to-Wasm toolchain until the post-stable feasibility milestone.
+
+### 6.6 Future mobile/AOT boundaries
+
+Reserve logical boundaries for `modules/platform/android`, `modules/platform/ios`, `modules/rhi/android-vulkan`, `modules/rhi/ios-metal`, `modules/host/android`, and `modules/host/ios`. Keep target launchers, AOT entry points, and generated JNI/NDK or Objective-C/C glue outside `modules/ffi` and outside all core JARs. These modules adapt platform lifecycle and services to target-neutral contracts; they do not define a runtime-selectable backend or an ART-compatible variant of the core. Defer public artifact names and the mobile AOT toolchain selection until A0 feasibility evidence exists.
 
 ---
 
@@ -896,13 +925,13 @@ Concrete platform code may depend on `FooApi` and `FooTypes`. `FooApi` is an int
 - Capture `errno` or `GetLastError` immediately after the native call.
 - Generate launcher documentation for the required `--enable-native-access=org.glavo.himari.ffi,org.glavo.himari.platform...` options.
 
-### 12.5 Native Image path
+### 12.5 Desktop Native Image path
 
 - Reuse the JVM FFM bindings unchanged.
 - Generate downcall/upcall registration and reachability metadata.
 - Avoid runtime creation of signatures unknown at build time.
 - Generate statically analyzable registries for platform and renderer SPIs when required.
-- Build and execute a Native Image smoke test on each supported platform.
+- Build and execute a Native Image smoke test on each supported desktop platform.
 
 Do not generate `@CFunction`, `CFunctionPointer`, or GraalVM native-interop views as a second system-call implementation. The JVM and Native Image paths must run the same binding and ABI test suites.
 
@@ -948,6 +977,24 @@ Require explicit review for every difference introduced by an SDK upgrade.
 - Copy or enqueue events from OS callback threads; never run user components there.
 - Guard callbacks that may reenter the UI loop.
 - Let the `himari-ffi` support layer manage required JVM/Native Image attachment and upcall lifetime.
+
+### 12.10 Future mobile AOT host-binding architecture
+
+Treat mobile AOT as a separate packaging and host-integration direction:
+
+```text
+unchanged Java 25 HimariUI modules
+  -> Java 25-capable mobile AOT toolchain
+  -> generated target launcher and host bridge
+  -> Android framework/NDK or iOS/UIKit/Metal
+```
+
+- Test Java 25 language and class-library coverage separately from native host-call support. Successful `MemorySegment` and `Arena` use in the core does not imply that mobile FFM downcalls or upcalls are available.
+- Keep Android Activity, JNI, `ANativeWindow`, and Vulkan bridge types inside `host/android`; keep Objective-C runtime, UIKit, `CAMetalLayer`, and Metal bridge types inside `host/ios`.
+- Permit a thin Android Java host to run on ART and load the target-generated AOT application library. Do not require HimariUI runtime, layout, text, or rendering bytecode to execute on ART.
+- Generate and statically validate boundary signatures, callback lifetimes, ownership, exception containment, and thread attachment. Do not create a generic native invocation API or runtime FFI provider.
+- Keep mobile host glue and AOT output out of `himari-ffi`, core JARs, desktop artifacts, and the desktop system-call test matrix.
+- If the candidate toolchain cannot compile the representative Java 25 core unchanged, record the failure and defer that target. Do not introduce compatibility substitutions into common modules as part of the spike.
 
 ---
 
@@ -1123,6 +1170,14 @@ Validate Objective-C block ABI, method-return ABI, selector signatures, and dyna
 - Model clipboard, drag-and-drop, file selection, and permissions as asynchronous capabilities with explicit denial/unavailability results.
 - Permit rendering on the browser event context or in a Web Worker. Do not require threads, `SharedArrayBuffer`, or worker support for correctness.
 - Load application assets and fonts from bundled bytes or fetch-based sources; do not assume filesystem or system-font access.
+
+### 14.8 Future Android and iOS AOT backends
+
+- Share the normal Java 25 runtime, layout, text, graphics, software-rendering, RHI, and semantics implementations without an ART-specific common source set.
+- On Android, use a thin platform host for Activity lifecycle, surfaces, touch, keyboard, IME, clipboard, permissions, accessibility, display density, safe areas, suspend/resume, and memory-pressure events. Present the software renderer first; add Vulkan through generated JNI/NDK glue only after the host boundary passes lifetime and threading tests.
+- On iOS, use generated Objective-C/C host glue for application and scene lifecycle, UIKit surfaces and events, text input, clipboard, permissions, accessibility, display scale and safe areas, suspend/resume, and memory-pressure events. Present the software renderer first; add Metal after the same host-boundary gates pass.
+- Treat surface loss, backgrounding, device loss, and host-driven main-thread scheduling as ordinary lifecycle states rather than desktop exceptions.
+- Do not claim either target until its AOT toolchain, signing, device deployment, packaging, Java 25 coverage, and platform integration matrix pass. Failure leaves the desktop release and Java 25 design unchanged.
 
 ---
 
@@ -1314,6 +1369,10 @@ Set absolute regression thresholds on M3 baseline machines and enforce them ther
 
 When the post-stable Web track begins, add browser integration tests for host-driven single-thread execution, optional Web Worker rendering, asynchronous startup and permissions, WebGPU and Canvas fallback, pointer/keyboard/IME normalization, DOM semantics mirroring, fetched fonts/assets, device loss, and deterministic replay. Run a defined browser/WebGPU matrix and compare portable subsystem fixtures with JVM Headless results.
 
+### 18.10 Future mobile AOT validation
+
+When the post-stable mobile track begins, first compile and execute a representative slice of the unchanged Java 25 core on each candidate AOT toolchain. Cover every stable Java 25 API family used by production modules, including `MemorySegment`, `Arena`, concurrency, exceptions, garbage collection, resources, and static initialization where applicable. Test target host calls and callbacks separately; do not infer mobile downcall/upcall support from successful core memory access. After feasibility passes, run lifecycle, input, IME, accessibility, software/GPU differential, device-loss, suspend/resume, memory-pressure, signing, installation, and package-reproducibility matrices on Android and iOS devices and simulators/emulators.
+
 ---
 
 ## 19. Porting Plan
@@ -1478,6 +1537,14 @@ Treat fonts, images, clipboard data, drag-and-drop data, and protocol messages a
 - Keep generated JavaScript glue compatible with browser content-security policies; do not rely on dynamic code evaluation.
 - Model permission denial, context loss, detached canvases, aborted fetches, and page lifecycle changes as ordinary capability or lifecycle failures.
 - Do not grant the Wasm module ambient access to browser globals beyond the imports declared by the host schema.
+
+### 21.5 Future mobile AOT host boundary
+
+- Validate every length, offset, handle, object reference, callback identifier, and encoding crossing generated JNI/NDK or Objective-C/C glue.
+- Contain exceptions on both sides of the boundary and make thread attachment, main-thread dispatch, callback lifetime, and shutdown order explicit.
+- Treat intents, clipboard content, drag-and-drop data, file-provider results, URLs, platform callbacks, and restored state as untrusted input.
+- Record all target-generated native inputs and outputs in the mobile package manifest; prohibit undeclared native libraries and runtime code downloads.
+- Keep mobile signing credentials outside the repository and require reproducible unsigned package inputs before signing.
 
 ---
 
@@ -1755,6 +1822,25 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - Core artifacts contain no native payload or dependency.
 - Public limitations and accepted differences are complete.
 
+### Post-stable A0–A4 — Android/iOS AOT extension track
+
+This track begins only after the stable desktop release unless a separate project decision changes the priority. It does not block M0–M11. The track targets the unchanged Java 25 implementation; it does not establish ART compatibility as a prerequisite or fallback requirement.
+
+- **A0 — Java 25 mobile AOT feasibility**: evaluate candidate AOT toolchains, initially GraalVM Native Image-derived tooling such as Gluon Substrate/GluonFX, against representative runtime, state, layout, text, software-rendering, RHI, and resource-loading code. Cover stable Java 25 APIs in actual use, including `MemorySegment` and `Arena`; closed-world analysis; static initialization; exceptions; garbage collection; threads; callbacks; code size; startup; debugging; and target packaging. Reject any path that requires rewriting or downgrading common source sets unless a replacement ADR explicitly changes the project baseline.
+- **A1 — Android host baseline**: build a thin Activity/host shell, generated JNI/NDK boundary, host-driven lifecycle, normalized input, IME, clipboard, permissions, accessibility, assets, and software-renderer presentation on Android AArch64 devices and emulators.
+- **A2 — iOS host baseline**: build generated Objective-C/C host glue, application and scene lifecycle, UIKit surface/event integration, text input, clipboard, permissions, accessibility, assets, and software-renderer presentation on iOS arm64 devices and supported simulators.
+- **A3 — Mobile GPU and lifecycle completion**: add Android Vulkan and iOS Metal behind the existing RHI, then complete surface/device loss, background/foreground transitions, memory pressure, safe areas, scale changes, orientation, and CPU/GPU differential scenes.
+- **A4 — Productization**: define isolated mobile artifacts, AOT and host-glue manifests, signing and store packaging, compatibility matrices, diagnostics, deployment samples, performance budgets, and reproducible package generation.
+
+**Track exit criteria:**
+
+- The ordinary Java 25 source sets compile without ART compatibility branches, source rewriting, or replacement of stable Java 25 APIs solely for mobile.
+- Android and iOS run the representative application and portable subsystem suites through the selected AOT toolchain.
+- Target launchers, generated host glue, and AOT output remain outside core and desktop JARs and are covered by explicit provenance and boundary tests.
+- Software presentation is complete before Vulkan or Metal is accepted; GPU implementations pass the existing RHI and differential contracts.
+- Lifecycle, input, IME, accessibility, permissions, packaging, signing, installation, compatibility, and performance gates pass on the defined device matrix.
+- Failure at any feasibility gate defers the affected mobile target without changing the Java 25 baseline or blocking desktop releases.
+
 ### Post-stable W0–W4 — Browser/Wasm extension track
 
 This track begins only after the stable desktop release unless a separate project decision changes the priority. It does not block M0–M11.
@@ -1779,7 +1865,7 @@ This track begins only after the stable desktop release unless a separate projec
 
 ## 23. Initial Issue Backlog
 
-These issues are sufficient to begin implementation without waiting for visual control design. Do not add W0–W4 work to this initial backlog until the post-stable Web track is activated:
+These issues are sufficient to begin implementation without waiting for visual control design. Do not add A0–A4 or W0–W4 work to this initial backlog until the corresponding post-stable extension track is activated:
 
 1. **GOV-001**: Select the license, contribution rules, and ADR template. Naming is already accepted by ADR-013.
 2. **BUILD-001**: Create the Java 25 Gradle multi-project and JPMS sample according to ADR-013.
@@ -1899,6 +1985,16 @@ Meet the general DoD and all of the following:
 - Browser lifecycle, device/context loss, detached surfaces, and aborted fetches have defined recovery or shutdown behavior.
 - Packaging is reproducible and passes the supported browser/security-policy matrix.
 
+### 24.7 Future Android/iOS AOT feature
+
+- The selected toolchain compiles the normal Java 25 source sets; no ART-compatible common fork, source rewrite, or compatibility substitution is required.
+- Every stable Java 25 API family used by the included modules has a representative compile-and-run test on each supported mobile target.
+- `MemorySegment`/`Arena` core behavior and target host-call/callback behavior have separate tests and diagnostics.
+- Generated launcher and JNI/NDK or Objective-C/C boundaries validate signatures, ownership, lifetimes, thread attachment, exception containment, and untrusted inputs.
+- Mobile AOT output and host glue remain isolated from core and desktop JARs and have complete provenance manifests.
+- Lifecycle, input, IME, accessibility, permissions, software presentation, GPU differential behavior, suspend/resume, surface/device loss, and memory pressure pass on the supported matrix.
+- Packaging is reproducible before signing; installation, signing, and store-oriented validation procedures are documented and repeatable.
+
 ---
 
 ## 25. Risk Register
@@ -1922,6 +2018,8 @@ Meet the general DoD and all of the following:
 | The compiler-free structural runtime has unacceptable ceremony | Public API lock-in and poor usability | Grouped samples require pervasive keys or boundaries, or signal samples require pervasive deferred getters and control-flow wrappers | Complete all M1 runtime prototypes with ordinary Java, publish ceremony and execution metrics, and select the production model before building widgets; treat optional tooling only as a later enhancement |
 | Fine-grained dependencies introduce glitches, cycles, or owner leaks | Inconsistent UI or unbounded memory growth | Diamond, dynamic-branch, equality, or disposal tests observe intermediate values or retained consumers | Use two-phase push/pull propagation, semantic versions, cycle diagnostics, explicit ownership, and adversarial graph/liveness tests |
 | Published modules are too granular | Dependency confusion | Users must understand internal module boundaries | Use ADR-013, the BOM, and `himari-desktop`; keep fine-grained artifacts out of the default user surface |
+| Mobile AOT tooling cannot compile the unchanged Java 25 core or required stable APIs | Android/iOS targets are delayed | A0 requires an older common source set, rejects `MemorySegment`/`Arena`, or needs source rewriting | Keep mobile post-stable and feasibility-gated; evaluate updated or alternative AOT tooling and defer the target rather than lowering the Java baseline or adding ART compatibility constraints |
+| Mobile host integration requires a separate native ABI path | Lifecycle, input, graphics, or accessibility gaps | A0–A2 cannot express required Android/iOS callbacks through the candidate toolchain | Generate narrow target host glue outside desktop FFM and core artifacts; validate it independently and do not turn it into a runtime provider SPI |
 | The Java-to-Wasm toolchain cannot support the required Java 25/runtime subset | Web track blocked or fragmented | W0 needs source rewrites or incompatible runtime substitutions | Keep the Web track post-stable, define a portable-core profile, and select a toolchain only after representative feasibility tests |
 | Desktop threading or synchronous APIs leak into common contracts | Browser deadlocks or unusable APIs | Web prototypes require blocking, threads, or `SharedArrayBuffer` | Require host-driven scheduling, asynchronous capabilities, and a correct single-thread execution path in ADR-014 |
 | WebGPU capability and browser behavior vary | Rendering gaps or unstable performance | Adapter acquisition, limits, or presentation differs across the browser matrix | Use capability tiers, logical resource dependencies, Canvas/software fallback, and a real browser/WebGPU matrix |
@@ -1946,6 +2044,9 @@ The entries below must not block M0 unless marked accepted. Use the working defa
 | Desktop native-access mechanism | FFM only; no provider SPI |
 | Native Image system calls | Reuse the JVM FFM bindings and ABI tests |
 | JNA | Oracle/test tooling only; no production backend or artifact |
+| Future Android/iOS runtime | Java 25 AOT first; initial candidate is GraalVM Native Image-derived tooling; full ART execution is not a compatibility baseline |
+| Future Android/iOS Java compatibility | Compile the normal Java 25 implementation unchanged; defer a target rather than lower the baseline or prohibit stable Java 25 features |
+| Future Android/iOS host access | Generated, isolated JNI/NDK or Objective-C/C glue plus target launchers; never a desktop FFM replacement or runtime provider |
 | Future browser/Wasm host access | Generated Wasm imports plus isolated JavaScript/browser bindings under ADR-014; never an FFI provider |
 | Future browser renderer | WebGPU with Canvas/software fallback |
 | Future browser execution | Correct on the browser event context without workers; Web Workers are optional acceleration/capability |
@@ -1979,7 +2080,7 @@ The first demonstrable release must validate the architecture rather than show o
 
 This increment is the earliest credible proof that the architecture works end to end.
 
-Browser/Wasm is intentionally not an exit criterion for this first desktop increment; it is covered by the post-stable W0–W4 track.
+Android/iOS AOT and browser/Wasm are intentionally not exit criteria for this first desktop increment; they are covered by the post-stable A0–A4 and W0–W4 tracks.
 
 ---
 
@@ -1995,6 +2096,9 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 - [JEP 508: Vector API (Tenth Incubator)](https://openjdk.org/jeps/508)
 - [GraalVM Native Image Reachability Metadata](https://www.graalvm.org/latest/reference-manual/native-image/metadata/)
 - [GraalVM Native Image C API](https://www.graalvm.org/latest/reference-manual/native-image/native-code-interoperability/C-API/)
+- [GraalVM Native Image FFM Support](https://www.graalvm.org/jdk25/reference-manual/native-image/native-code-interoperability/ffm-api/)
+- [Gluon Documentation](https://docs.gluonhq.com/)
+- [Gluon Substrate](https://github.com/gluonhq/substrate)
 
 ### Reactive systems and declarative UI
 
@@ -2036,6 +2140,8 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 - [Direct3D 12 Programming Guide](https://learn.microsoft.com/en-us/windows/win32/direct3d12/directx-12-programming-guide)
 - [Apple Objective-C Runtime](https://developer.apple.com/documentation/objectivec)
 - [Apple Metal](https://developer.apple.com/documentation/metal)
+- [Android Runtime Architecture](https://developer.android.com/guide/platform)
+- [Android Vulkan Guide](https://developer.android.com/ndk/guides/graphics/)
 - [Wayland Architecture](https://wayland.freedesktop.org/docs/book/Architecture.html)
 - [Wayland Message Definition Language](https://wayland.freedesktop.org/docs/book/Message_XML.html)
 - [Vulkan Specification](https://registry.khronos.org/vulkan/specs/latest/html/vkspec.html)
@@ -2060,3 +2166,9 @@ At the first stable desktop release, automated evidence must support this public
 When the post-stable Web track is complete, automated evidence must additionally support this statement:
 
 > HimariUI's browser/Wasm target reuses the portable Java runtime, layout, text, display-list, semantics, and rendering subsystems. It accesses browser capabilities only through generated, target-specific Wasm imports and JavaScript/browser host bindings; it does not use FFM, JNI, JNA, or desktop platform modules. WebGPU and Canvas/software rendering follow the same backend-neutral resource-usage and scene semantics as desktop backends. Browser-specific DOM integration is limited to host services such as IME and accessibility and does not replace HimariUI's layout or visual rendering model.
+
+### 29.3 Future Android/iOS AOT release
+
+When the post-stable mobile track is complete, automated evidence must additionally support this statement:
+
+> HimariUI's Android and iOS targets compile the ordinary Java 25 runtime, layout, text, display-list, semantics, software-rendering, and RHI implementations through a validated mobile AOT toolchain without an ART-compatible common fork or restrictions on stable Java 25 features. Android and iOS platform services are reached through generated, target-specific host glue that is isolated from the desktop FFM path and from core JARs. Target-generated AOT code and host glue appear only in mobile application bundles, have complete provenance and boundary validation, and do not introduce a runtime FFI provider or third-party graphics stack.
