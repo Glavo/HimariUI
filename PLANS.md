@@ -1,6 +1,6 @@
 # HimariUI Implementation Plan
 
-> Status: Draft 0.7<br>
+> Status: Draft 0.8<br>
 > Runtime baseline: Java 25<br>
 > Initial platforms: Windows, macOS, Linux, and Headless<br>
 > Future mobile policy: Android and iOS are post-stable Java 25 AOT targets and do not define the core compatibility baseline<br>
@@ -21,8 +21,12 @@ Use the following rules when executing the plan:
 - Do not build downstream work on a deliverable whose consumed exit criteria have not passed. Independent tracks proceed in parallel under the dependency declarations in the milestone plan.
 - Future targets may constrain the shape of contracts, types, and encodings in early milestones, but they must not add implementation deliverables to a pre-stable milestone unless a first-stable consumer exists. Record every such deferral in the owning milestone.
 - Give every issue an executable acceptance command or a reproducible manual procedure.
+- Treat words such as “correct,” “complete,” “usable,” “stable,” or “does not grow” as summaries, not acceptance criteria; bind them to a versioned conformance profile, fixture set, duration, tolerance, or resource budget before implementation begins.
+- Give every work package one globally unique canonical ID. Milestone tables, bootstrap backlogs, project boards, and CI tasks may reference that ID but must never redefine it with a different scope.
+- Distinguish when a work package may start from what must pass before it can complete. Do not serialize independent implementation merely because its integration gate belongs to a later milestone.
 - Keep reference implementations available while optimized implementations are developed and validated.
 - Record source versions, licenses, generated data, and accepted behavioral differences as repository artifacts rather than relying on task history.
+- Keep this file as the execution index. As canonical ADR, conformance, protocol, or workstream documents are created, replace duplicated normative detail here with a concise milestone summary and a stable link; do not maintain two independently editable contracts.
 
 Terms used throughout this plan:
 
@@ -106,7 +110,7 @@ The order states dependency, not strict serialization; the milestone plan organi
 
 ### 2.1 Runtime distribution constraints
 
-Apply these constraints to `himari-ui`, `himari-runtime`, `himari-render-*`, `himari-text`, the first-stable desktop `himari-platform-*` and `himari-rhi-*` modules, `himari-ffi`, and their aggregated internal implementation modules. They govern published Java artifacts and the desktop runtime graph. A post-stable mobile application bundle may contain target-generated AOT code and narrowly generated host glue, but those files must remain outside standard JARs and desktop dependencies:
+Apply these constraints to `himari-ui`, `himari-runtime`, `himari-render-*`, `himari-font`, `himari-text`, the first-stable desktop `himari-platform-*` and `himari-rhi-*` modules, `himari-ffi`, and their aggregated internal implementation modules. They govern published Java artifacts and the desktop runtime graph. A post-stable mobile application bundle may contain target-generated AOT code and narrowly generated host glue, but those files must remain outside standard JARs and desktop dependencies:
 
 - Ship no JNI C/C++ source and no precompiled native bridge.
 - Do not call `System.load` or `System.loadLibrary` for framework-owned files.
@@ -120,7 +124,7 @@ Apply these constraints to `himari-ui`, `himari-runtime`, `himari-render-*`, `hi
 
 ### 2.2 Required CI gates
 
-Create `build-logic/pure-java-guard` and implement at least these gates:
+Create `build-logic/pure-java-guard` as a staged gate registry. Each gate declares the milestone that activates it; an inactive gate is reported as not applicable, never as evidence that the corresponding feature passed. Implement and activate at least these gates at the owning milestones:
 
 1. `verifyNoNativeEntries`: reject CPU-native file formats in every publishable JAR and runtime dependency JAR. A future isolated Web artifact may contain `.wasm` target bytecode, and a future mobile application bundle may contain target-generated AOT code and host glue; neither may enter core or desktop JARs.
 2. `verifyDependencyAllowlist`: lock runtime dependencies and compare them with the approved pure-Java allowlist; use separate allowlists for optional modules.
@@ -135,7 +139,9 @@ Create `build-logic/pure-java-guard` and implement at least these gates:
 11. `verifySingleFfmPath`: for JVM and Native Image desktop production modules, reject JNA, GraalVM SVM interop, and handwritten JNI. Permit creation of `FunctionDescriptor` values and calls to `Linker.downcallHandle` or `Linker.upcallStub` only in generated bindings or allowlisted `himari-ffi` support code. Future browser/Wasm modules must use their isolated host-binding boundary and must not depend on `himari-ffi`.
 12. `verifyWebHostIsolation`: activate with W0/W1; require an explicit browser-import allowlist, reject desktop/FFM dependencies from Web artifacts, validate generated linear-memory marshalling, and reject dynamic JavaScript evaluation or undeclared ambient browser access.
 13. `verifyMobileAotIsolation`: activate with A0; require mobile packaging inputs to be explicit, reject mobile launchers and generated host glue from core or desktop JARs, reject target runtime types from common public APIs, and verify that the representative Java 25 core is compiled without an ART compatibility fork or source rewrite.
-14. `verifySceneCodec`: round-trip canonical scene, display-list, resource-manifest, semantics, and normalized-input fixtures; reject native addresses, Java object identity, target handles, malformed lengths, unsupported required features, hash mismatches, and configured resource-limit violations; fuzz every decoder.
+14. `verifySceneCodec`: activate with `SCENE-CODEC-001` in M3; round-trip canonical scene, display-list, resource-manifest, snapshot/resource-generation, semantics, and normalized-input fixtures; reject missing or mismatched bases, illegal generation transitions, native addresses, Java object identity, target handles, malformed lengths, unsupported required features, hash mismatches, and configured resource-limit violations; fuzz every decoder.
+
+`GUARD-FRAMEWORK-001` in M0 implements the registry and activates gates 1–11 for every artifact and module that exists at that commit. `GUARD-SCENE-001`, `verifyWebHostIsolation`, and `verifyMobileAotIsolation` are owned by M3, W0/W1, and A0 respectively. Adding a later module must automatically place it under every already-active applicable gate.
 
 ### 2.3 Published artifacts and user entry points
 
@@ -150,6 +156,7 @@ org.glavo.himari:himari-layout
 org.glavo.himari:himari-graphics
 org.glavo.himari:himari-render-software
 org.glavo.himari:himari-render-gpu
+org.glavo.himari:himari-font
 org.glavo.himari:himari-text
 org.glavo.himari:himari-controls
 org.glavo.himari:himari-platform-windows
@@ -162,7 +169,9 @@ org.glavo.himari:himari-testing
 
 `himari-render-gpu` contains the backend-neutral frame compiler and render graph. Keep Vulkan, D3D12, and Metal implementations in `himari-rhi-vulkan`, `himari-rhi-d3d12`, and `himari-rhi-metal`.
 
-`himari-ffi` contains shared FFM support and internal facilities required by generated bindings. It defines no provider SPI and is not a dependency applications should declare directly. Do not publish a JNA production artifact or include one in the BOM.
+Implementation artifacts such as `himari-ffi`, `himari-rhi-vulkan`, `himari-rhi-d3d12`, and `himari-rhi-metal` may be published for dependency composition but are not normal application entry points. `himari-ffi` contains shared FFM support and internal facilities required by generated bindings; it defines no provider SPI and is not a dependency applications should declare directly. Record every implementation coordinate and its BOM relationship in ADR-013. Do not publish a JNA production artifact or include one in the BOM.
+
+`himari-platform-linux-x11` is a reserved optional coordinate. Do not include it transitively from `himari-desktop` or advertise a stable version until the separate X11 compatibility profile passes.
 
 ---
 
@@ -172,7 +181,7 @@ org.glavo.himari:himari-testing
 
 Deliver all of the following:
 
-- Windows, macOS, and Linux Wayland backends, with Linux X11 as a compatibility backend.
+- Required desktop platform profiles for Windows, macOS, and Linux Wayland. Linux X11 is a separately versioned compatibility profile that may ship with 1.0 but does not block the first stable release.
 - x86-64 and arm64 processes only.
 - Multiple windows, DPI/scaling, mouse, touch, pen, keyboard, IME, clipboard, and drag-and-drop support.
 - A first-class Headless platform and deterministic software rendering.
@@ -184,9 +193,12 @@ Deliver all of the following:
 - JVM and GraalVM Native Image distribution paths.
 - Inspector, versioned transport-ready scene/frame traces, deterministic offline replay, and golden-test tooling.
 
+The first stable release is blocked only by the required common, Windows, macOS, Linux Wayland, Headless, software-renderer, and declared GPU profiles recorded in `PLATFORM_CONFORMANCE.yaml`. Optional capabilities such as X11 or native HDR have independent profiles and release versions; omitting or disabling one must be reported truthfully but does not weaken a required profile.
+
 ### 3.2 Explicit non-goals for the first stable release
 
 - Android or iOS product support; both belong to the post-stable AOT extension track.
+- Completion of the optional Linux X11 compatibility profile.
 - Live remote sessions, network transports, authentication, adaptive streaming, and remote-desktop product features.
 - Browser DOM/CSS compatibility.
 - Swing or JavaFX control interoperability as a core architectural requirement.
@@ -205,6 +217,7 @@ Deliver all of the following:
 - **Browser/Wasm**: compile the portable Java subsystems to WebAssembly; use generated Wasm imports and JavaScript/browser host bindings, WebGPU with a Canvas fallback, host-driven event delivery, asynchronous browser capabilities, and a DOM-backed semantics/IME bridge. Reuse the backend-neutral RHI contract without requiring FFM or runtime JPMS. This target does not provide DOM/CSS visual compatibility.
 - **Remote scene rendering and Web client**: keep the authoritative Java 25 runtime, layout, text shaping, hit testing, focus, and application state on a JVM or Native Image host. Stream versioned scene/display-list envelopes, content-addressed resources, correlated semantics updates, and lifecycle/configuration changes to a browser client that presents through WebGPU or Canvas/software and returns normalized input and IME transactions. This path must not require the full Java runtime to execute in the browser and must not expose component trees, RHI commands, native GPU commands, or target handles on the wire. Pixel/video streaming may be an optional fallback, not the normative scene protocol.
 - **Advanced color and HDR presentation**: add production BT.2020/BT.2100 PQ and HLG, extended-linear/EDR, high-bit-depth and floating-point swapchains, per-display luminance/headroom updates, static and future negotiated dynamic metadata, versioned gamut/tone-mapping policies, HDR image/media ingestion, and calibrated output matrices. Keep content encoding independent of output capability so unsupported surfaces receive an explicit deterministic SDR mapping rather than reinterpretation or clipping.
+- **Linux X11 compatibility profile**: complete and release the XCB/XInput2/XIM/selection/XDnD/Vulkan-XCB/software-presentation backend independently of the required Wayland profile. It may be developed before 1.0, but an incomplete X11 profile does not delay the first stable release.
 - **Media**: add a pure-Java `himari-media` API, WAV/PCM baseline implementations, and optional FFmpeg, GStreamer, or platform-codec providers.
 
 ### 3.4 Pre-stable standalone releases
@@ -221,7 +234,7 @@ Pre-stable artifacts use `0.x` versions, carry an explicit instability notice, a
 
 ## 4. Architectural Decisions
 
-Create or maintain an ADR for each decision below. Accepted ADRs live in `adr/`; this section records the execution-level summary.
+Create or maintain an ADR for each decision below. An `ADR-NNN` heading in this draft is an identifier, not proof that the decision is accepted; the status in Section 26 and the canonical file under `adr/` are authoritative. Until `ADR-BOOTSTRAP-001` materializes the accepted files, the accepted summaries in this document remain the temporary source of truth. Every unresolved entry receives an evidence requirement and decision milestone rather than remaining an undated working default.
 
 ### ADR-001: Keep the core independent of `java.desktop`
 
@@ -407,7 +420,7 @@ host / OS events
 - **Frame handoff**: when UI and rendering execute separately, scene snapshots may use latest-wins replacement while resource creation, upload, destruction, configuration, and correlated semantics updates remain ordered and non-droppable. A same-context implementation preserves the same ordering without requiring a mailbox. The logical contract must not require a shared address space even though the default implementation passes immutable Java objects in-process.
 - **Explicit frame ownership**: hand off only immutable values or objects with documented ownership transfer.
 
-Do not parallelize application component, binding, or structural-control callbacks in the first version. Require every callback that the selected runtime may rerun to be fast, reentrant, and free of implicit side effects so staged UI work can later be cancelled or executed under different target schedulers. One-shot initializers must register external work through owned lifecycle APIs rather than performing unmanaged side effects.
+Do not parallelize application component, binding, or structural-control callbacks in the first version. Require every callback that the selected runtime may rerun to be fast, reentrant, and free of implicit side effects so a later scheduler may safely add cancellation or different execution strategies. M1 requires atomic commit and deterministic failure cleanup, but it does not require speculative execution, preemption, or conflict retries unless `RUNTIME-ADR-001` selects them. One-shot initializers must register external work through owned lifecycle APIs rather than performing unmanaged side effects.
 
 ---
 
@@ -421,6 +434,13 @@ Do not parallelize application component, binding, or structural-control callbac
 ├─ README.md
 ├─ CONTRIBUTING.md
 ├─ ARCHITECTURE.md
+├─ CONFORMANCE.md
+├─ FUTURE_TARGETS.md
+├─ REFERENCES.lock
+├─ PROVENANCE.json
+├─ DIFFERENCE_POLICY.md
+├─ PERF_BUDGETS.toml
+├─ PLATFORM_CONFORMANCE.yaml
 ├─ THIRD_PARTY.md
 ├─ NOTICE
 ├─ adr/
@@ -639,9 +659,9 @@ Run all three prototypes through one checked-in comparison suite:
 - high-frequency text, color, size, and offset changes that exercise different phase impacts;
 - cross-scope geometry propagation in which a simulated child measure result feeds a parent placement consumer, standing in for layout integration before M2 exists;
 - a controlled text-editing fixture in which an editor-owned buffer synchronizes with application-owned value state through transactional updates that are asynchronously filtered, partially accepted, or rejected, without reentrant writes, lost updates, or composition corruption;
-- failed or cancelled staged work with deterministic cleanup and retry.
+- failed staged work with deterministic cleanup and retry, plus cancelled work only for a candidate that claims preemption or cancellation as part of its model.
 
-Record source lines of code, explicit keys, deferred getters, structural-control primitives, generic type noise, callbacks executed, nodes visited, dependency edges, steady-state allocations, retained memory, and phase invalidations. Include debug trace quality and Native Image compatibility. Performance alone cannot select a model whose ordinary-Java samples require pervasive accidental ceremony.
+Before implementing any candidate, freeze a checked-in decision rubric containing correctness disqualifiers, required diagnostics, measured ergonomics dimensions, performance and memory dimensions, and the method used to resolve tradeoffs. Then record source lines of code, explicit keys, deferred getters, structural-control primitives, generic type noise, callbacks executed, nodes visited, dependency edges, steady-state allocations, retained memory, and phase invalidations. Include debug trace quality and Native Image compatibility. Performance alone cannot select a model whose ordinary-Java samples require pervasive accidental ceremony.
 
 Micro-fixtures cannot expose ceremony at application scale. Before the decision review, port one realistic application of roughly five hundred lines — for example a settings form plus a chat-style keyed list — to each candidate API and include it in the recorded metrics. Keep these samples in the repository as the API charter: they are the concrete statement of acceptable ergonomics, and later public-API changes must keep them compiling and comparably concise.
 
@@ -657,7 +677,7 @@ Implement these model-independent structures before committing to a structural r
 - **StructuralRuntime**: implement the M1-selected branch, collection, identity, and local-state model.
 - **NodeApplier**: apply staged structural changes incrementally to mounted, layout, and semantics nodes.
 - **PhaseDependencyIndex**: map reactive and presentation versions to structure, measure, placement, paint, composite, semantics, and hit-test consumers.
-- **UiCommitTransaction**: stage mounted-property targets, topology changes, and inherited animation metadata and commit atomically; cancellation must leave no nodes, animation instances, completions, or effects behind.
+- **UiCommitTransaction**: stage mounted-property targets, topology changes, and inherited animation metadata and commit atomically; failure must leave no nodes, animation instances, completions, or effects behind. If the selected model supports cancellation, cancellation has the same cleanup guarantee.
 - **AnimationRegistry**: own active presentation values, velocities, transition states, completion groups, replacement generations, and next-frame deadlines without making them application state.
 - **EffectRegistry**: define deterministic `mount`, `update`, and `dispose` ordering and aggregate failures for reporting.
 
@@ -689,7 +709,7 @@ Enforce these write rules:
 2. Give nested state transactions explicit flattening, rollback, and failure semantics.
 3. Publish changes initiated outside the UI execution context through the commit queue; never execute application UI callbacks directly on the originating thread, worker, or host callback.
 4. Keep every reactive version read by staged UI work stable for that attempt.
-5. Cancel and retry conflicting staged work; never commit a partial tree or mixed state epoch.
+5. Prevent state-epoch interleaving during a non-preemptive UI attempt. If `RUNTIME-ADR-001` selects speculative or preemptible work, detect conflicts, cancel, and retry without committing a partial tree or mixed state epoch.
 6. Schedule each affected effect at most once per committed epoch and run it only after affected UI work has committed or established that the epoch requires no UI mutation.
 7. Reject reentrant writes and illegal side effects from derived computations or rerunnable structural callbacks in debug mode.
 
@@ -827,6 +847,7 @@ Encode an immutable `SceneEnvelope` that can feed offline replay, another local 
 ```text
 protocol/version/features
 streamEpoch + snapshotId + optional baseSnapshotId
+resourceGeneration + optional baseResourceGeneration
 viewport + scale + requested/effective presentation color configuration
 declared compositing + content encodings + reference white/luminance/content-light metadata
 layer snapshot or delta + display-list references + damage
@@ -835,7 +856,7 @@ correlated semantics snapshot/delta identifier
 frame timing metadata and diagnostics
 ```
 
-First stable delivers this envelope as a deterministic codec and file format for traces, offline replay, and process isolation. Full snapshots establish recovery points; a delta may refer only to a base snapshot and resource generation the consumer demonstrably holds. Scene frames may be latest-wins, but resource, color/presentation configuration, and semantics records required by an accepted frame are ordered and non-droppable. ICC profiles and versioned mapping parameters are content-addressed resources, while live display capability/headroom remains presentation configuration rather than scene content identity. The producing runtime remains authoritative for layout, text shaping, hit testing, focus, application state, animation targets, and any host-side color mapping.
+First stable delivers this envelope as a deterministic codec and ordered file/process stream for traces, offline replay, and process isolation. Every stream begins with a full snapshot and complete resource generation. A delta is valid only when its exact base snapshot and base resource generation were accepted earlier in the same ordered stream or are supplied in an explicit base bundle. Resource add/release records advance logical decoder state; a release forbids later references in that stream but does not imply a live acknowledgement or producer-side reclamation handshake. The in-process scene mailbox may still replace obsolete immutable frames latest-wins, but an encoded stream must retain every base, resource, color/presentation configuration, and semantics record needed by each retained frame. ICC profiles and versioned mapping parameters are content-addressed resources, while live display capability/headroom remains presentation configuration rather than scene content identity. The producing runtime remains authoritative for layout, text shaping, hit testing, focus, application state, animation targets, and any host-side color mapping.
 
 Live-session semantics are deliberately not part of the first-stable codec. Acknowledgement flows, backpressure, capability-negotiation sequences, resource-reclamation handshakes, transmitted layer-animation program encodings, and reversible client-side prediction are session protocol, and R0 specifies and freezes them. The first-stable format reserves the required extension points — including the animation-program field and negotiation-sensitive feature bits — so R0 extends the encoding without invalidating recorded traces.
 
@@ -872,7 +893,7 @@ geometry normalization
 
 ### 10.3 Scalar reference implementation
 
-Build the first implementation as a single-threaded readable scalar path. Include fixed-point edge coverage, non-zero/even-odd filling, quadratic/cubic/conic curves, cap/join/miter/dash stroke semantics, explicitly encoded extended-range floating-point color, linear-light premultiplied alpha, common Porter-Duff and blend modes, nearest/bilinear sampling, solid and linear/radial/sweep gradients, grayscale glyph masks, clip stacks, basic blur, color matrices, chromatic adaptation, reference color transforms, and deterministic gamut/tone-mapped SDR output. Preserve finite negative and above-one intermediate components; clamp only where the selected mapping or destination numeric format requires it.
+Build the first implementation as a single-threaded readable scalar path. Include fixed-point edge coverage, non-zero/even-odd filling, quadratic/cubic/conic curves, cap/join/miter/dash stroke semantics, explicitly encoded extended-range floating-point color, linear-light premultiplied alpha, common Porter-Duff and blend modes, nearest/bilinear sampling, solid and linear/radial/sweep gradients, grayscale glyph masks, clip stacks, basic blur, color matrices, the `COLOR-SDR-REF-001` conversions/adaptation, and its deterministic versioned SDR output mapping. Preserve finite negative and above-one intermediate components; clamp only where the selected mapping or destination numeric format requires it. M10 adds the advanced BT.2020/PQ/HLG, ICC, and color-volume mapping implementations behind the same contracts through `COLOR-REF-001`.
 
 Avoid opaque bit-level micro-optimizations in this path. It must remain debuggable and suitable for field-by-field differential comparison.
 
@@ -884,10 +905,10 @@ The Vector module must be removable without changing functionality or correctnes
 
 ### 10.5 Path-rendering progression
 
-- **R0**: pure-Java scanline coverage as the specification.
-- **R1**: pure-Java tessellation with GPU triangle/stencil rendering.
-- **R2**: analytic edge antialiasing and GPU tile/path rendering.
-- **R3**: compute acceleration for large paths, complex clips, and blur.
+- **PATH-REFERENCE**: pure-Java scanline coverage as the specification.
+- **PATH-TESSELLATED**: pure-Java tessellation with GPU triangle/stencil rendering.
+- **PATH-ANALYTIC**: analytic edge antialiasing and GPU tile/path rendering.
+- **PATH-COMPUTE**: compute acceleration for large paths, complex clips, and blur.
 
 Any referenced or ported tessellator must retain upstream mapping, licensing, and a differential corpus.
 
@@ -1250,7 +1271,7 @@ Implement:
 - `libwayland-client` as the system transport.
 - Generated typed proxies and event bindings from Wayland XML.
 - xdg-shell, presentation timing/frame callbacks, pointer/keyboard/touch/tablet protocols, data-device clipboard/drag-and-drop, text-input-v3, fractional-scale/viewporter, `wl_shm`, Vulkan WSI, and negotiated color-management/output-description protocols when available.
-- `xdg-decoration` negotiation plus complete client-side decorations — titlebar, window controls, and interactive move/resize regions — for compositors that provide no server-side decorations. Decoration drawing uses the ordinary controls/theme layer.
+- `xdg-decoration` negotiation plus complete client-side decorations — titlebar, window controls, and interactive move/resize regions — for compositors that provide no server-side decorations. M5 implements decorations with the private platform-neutral `UI-BOOTSTRAP-001` primitives so it does not depend on M9; the public controls/theme layer may later reuse the same behavior and tokens.
 
 For keyboard handling, consume compositor-provided XKB keymaps, implement a pure-Java parser/state machine, and differentially test it against `libxkbcommon`. A system xkbcommon adapter may be transitional but must not remain the only implementation.
 
@@ -1260,7 +1281,7 @@ Expose the semantics tree to Linux assistive technology through an AT-SPI2 bridg
 
 ### 14.4 Linux X11
 
-Implement X11 as a compatibility backend that does not block the Wayland-first release. Prefer XCB to Xlib. Cover XKB, XInput2, XIM, selection/clipboard, XDnD, Vulkan XCB surfaces, and software-image upload. Confine X11-specific behavior to the backend.
+Implement X11 as an optional, separately versioned compatibility profile that does not block the first stable Wayland release. Prefer XCB to Xlib. Cover XKB, XInput2, XIM, selection/clipboard, XDnD, Vulkan XCB surfaces, and software-image upload. Confine X11-specific behavior to the backend and publish the profile only after its own compatibility gates pass.
 
 ### 14.5 Windows
 
@@ -1471,7 +1492,7 @@ Animation is the transaction-scoped evolution of presentation state toward commi
 
 #### 17.2.3 Profiles and transforms
 
-- Implement common pure-Java ICC v2/v4 profile parsing and matrix/TRC plus bounded LUT transforms; defer unusually complex profiles. Treat profiles as untrusted, content-addressed resources with explicit size, grid, channel, recursion, and work limits.
+- In M3, implement the fixed sRGB/Display-P3 conversions and D50/D65 adaptation required by `COLOR-SDR-REF-001`. In M10, implement common pure-Java ICC v2/v4 profile parsing and matrix/TRC plus bounded LUT transforms through `COLOR-REF-001`; defer unusually complex profiles. Treat profiles as untrusted, content-addressed resources with explicit size, grid, channel, recursion, and work limits.
 - Keep an extension seam for iccMAX or future profile architectures without requiring them for first stable. ICC processing does not replace explicit PQ/HLG, reference-white, content-luminance, or presentation metadata.
 - Implement chromatic adaptation and conversion reference paths from published formulas and fixed vectors. Version gamut-mapping and tone-mapping algorithms because their output participates in goldens, traces, caches, and remote replay.
 
@@ -1554,7 +1575,7 @@ Oracle probes may depend on C compilers, SDKs, LWJGL, or JNA only if they live u
 
 ### 18.8 Performance baseline
 
-Create fixed end-to-end benchmark scenes for:
+`PERF-BASE-001` in M3 creates the benchmark harness, baseline-machine descriptors, measurement policy, and budgets for the scenarios available by M3. Each later owning work package adds its scenario and freezes its first budget before accepting an optimized implementation. The complete first-stable catalog covers:
 
 - 10,000 mounted nodes with a 1% state change.
 - A 100,000-item virtualized list scroll.
@@ -1578,7 +1599,7 @@ Initial engineering targets:
 - Measure input-to-present latency in frames as well as CPU time.
 - Record p50/p95/p99, allocation, GC, native memory, and GPU memory.
 
-Set absolute regression thresholds on M3 baseline machines and enforce them thereafter.
+Record baseline-machine descriptors and the first absolute regression thresholds in `PERF_BUDGETS.toml` during M3, then append each later scenario when its reference implementation becomes runnable. Enforce every published threshold thereafter. `PERF-001` in M10 completes the catalog, expands the supported-machine set, and builds the release dashboard; it must not retroactively erase an earlier regression without a reviewed budget change.
 
 ### 18.9 Animation conformance
 
@@ -1702,6 +1723,8 @@ Maintain:
 - `PROVENANCE.json`: source, license, and hashes.
 - `ORACLE_FORMAT.md`: fixture protocol.
 - `DIFFERENCE_POLICY.md`: accepted differences and rationale, plus the frozen differential pass-rate thresholds for each corpus, fixed from Oracle baseline reports before the consuming milestone begins.
+- `PERF_BUDGETS.toml`: baseline-machine descriptors, benchmark commands, warmup/measurement policy, absolute budgets, and reviewed revisions.
+- `PLATFORM_CONFORMANCE.yaml`: required platform profiles, fixture identifiers, supported capability modes, soak durations, resource budgets, and platform-specific waivers.
 - `UPSTREAM_SYNC.md`: upgrade procedure.
 
 ### 19.5 Upstream upgrades
@@ -1810,7 +1833,7 @@ Treat fonts, images, color profiles/LUTs, HDR/content-light metadata, clipboard 
 ### 21.6 Future remote scene boundary
 
 - Treat scene envelopes, color encodings/profiles/LUTs and luminance metadata, resource payloads, semantics deltas, input events, acknowledgements, capability messages, and session-control records as untrusted regardless of transport security.
-- Validate magic, protocol version, required features, stream epoch, sequence/base IDs, lengths, counts, offsets, hashes, finite color/luminance values, profile/LUT dimensions and transform depth, supported encoding/mapping identifiers, compression ratios, recursion, total retained resources, and per-frame work before allocating or dispatching.
+- Validate magic, protocol version, required features, stream epoch, snapshot/resource generations and their bases, sequence IDs, lengths, counts, offsets, hashes, finite color/luminance values, profile/LUT dimensions and transform depth, supported encoding/mapping identifiers, compression ratios, recursion, total retained resources, and per-frame work before allocating or dispatching.
 - Authenticate peers and apply authorization, origin, rate, replay, timeout, and resource quotas in the remote extension. Encryption and authentication do not belong to the scene codec and must not be replaced by a custom cryptographic protocol.
 - Prevent remote input from naming arbitrary runtime objects or semantics nodes. Resolve actions only through capability-scoped, generation-checked IDs valid for the current authoritative snapshot and session.
 - Redact password fields, private semantics, clipboard content, logs, traces, and diagnostic labels according to explicit session policy. Remote diagnostics must not silently widen the data exposed to a client.
@@ -1822,11 +1845,16 @@ Treat fonts, images, color profiles/LUTs, HDR/content-light metadata, clipboard 
 
 The milestones are dependency-ordered, not calendar-bound, and are organized into three tracks that may proceed in parallel:
 
-- **Platform track**: M0 platform/FFM feasibility, then M5, M6, and M7 platform completion.
+- **Platform track**: M0 platform/FFM feasibility, then Linux, Windows, and macOS implementation proceeds as individual prerequisites pass; M5 closes the first Linux convergence profile and M6/M7 close the remaining required desktop profiles.
 - **Runtime track**: M1 reactivity/structure and M2 layout/input/semantics.
 - **Graphics and text track**: M3 software graphics and M4 fonts/basic text, then M8.
 
-A milestone gates only the work that consumes its exit criteria; each milestone declares its dependencies below. Work in one track proceeds while an unrelated criterion in another track remains open, with two exceptions: M0's feasibility verdict is a project-level veto — if the shim-free FFM model fails on a platform, the affected platform work stops until a replacement ADR exists — and no track may merge work that violates a non-negotiable constraint from Section 2. M5 is the first convergence point of all three tracks; M9 through M11 integrate and stabilize.
+A milestone gates only the work that consumes its exit criteria; each milestone declares two dependency sets below:
+
+- **Starts after** lists the minimum evidence needed to begin useful work. Work packages without a dependency on another track proceed in parallel.
+- **Completes after** lists integration evidence required before the milestone may close. It must not be interpreted as a reason to delay independent work.
+
+Work in one track proceeds while an unrelated criterion in another track remains open, with two exceptions: M0's feasibility verdict is a project-level veto — if the shim-free FFM model fails on a platform, the affected platform work stops until a replacement ADR exists — and no track may merge work that violates a non-negotiable constraint from Section 2. M5 is the first convergence point of all three tracks; M9 through M11 integrate and stabilize. Where only part of a milestone consumes another deliverable, the dependency names that work package explicitly.
 
 ### M0 — Repository baseline and shim-free feasibility
 
@@ -1835,20 +1863,30 @@ A milestone gates only the work that consumes its exit criteria; each milestone 
 **Deliverables:**
 
 - **GOV-001**: Select the project license, contribution rules, and ADR template. Do not reopen the coordinates and naming accepted by ADR-013.
+- **ADR-BOOTSTRAP-001**: Materialize every accepted inline decision as a canonical file under `adr/`, with status, date, evidence, and replacement links; add decision milestones for unresolved entries.
+- **REFERENCE-LOCK-001**: Create `REFERENCES.lock` and pin the edition, release, commit, or retrieval date of every rolling source used as normative evidence.
+- **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
+- **CONFORMANCE-POLICY-001**: Create `CONFORMANCE.md` plus the `PLATFORM_CONFORMANCE.yaml` schema for profile ownership, fixtures, tolerances, durations, budgets, and reviewed waivers; populate the initial M0 spike profiles.
 - **BUILD-001**: Create the Gradle multi-project build, JPMS setup, Java 25 toolchain, and dependency locking according to ADR-013.
-- **GUARD-001**: Implement all `pure-java-guard` gates.
-- **FFI-001**: Implement the minimum canonical ABI schema.
-- **FFI-002**: Implement the minimum shared FFM binding infrastructure.
-- **SPIKE-LINUX-001**: Open a Wayland window, receive events, enumerate available output/color-management information, clear a software surface, and present it.
+- **GUARD-FRAMEWORK-001**: Implement the staged `pure-java-guard` registry and activate gates 1–11 for every artifact and module present in M0.
+- **FFI-SCHEMA-001**: Define the minimum canonical primitive, pointer, structure, function, and callback schema.
+- **FFI-FFM-001**: Generate typed FFM downcalls and upcalls for the minimum schema and execute them on the JVM.
+- **ABI-PROBE-001**: Define the C-probe JSON protocol and compare its output with generated Java layouts.
+- **SPIKE-WAYLAND-001**: Open a Wayland window, receive events, enumerate available output/color-management information, clear a software surface, and present it.
 - **SPIKE-VK-001**: Create a Vulkan device and swapchain, enumerate surface format/color-space pairs without assuming HDR extensions, and present a clear.
-- **SPIKE-WIN-001**: Open a Win32 window, receive `WndProc` callbacks, query the current DXGI output/Advanced Color description, and present a D3D12 clear.
-- **SPIKE-MAC-001**: Open an NSWindow with `CAMetalLayer`, query display color space/EDR headroom, and present a Metal clear.
-- **SPIKE-NI-001**: Build and run at least one platform spike with Native Image and FFM.
-- **ABI-001**: Compare C-probe output with generated Java layouts.
+- **SPIKE-WIN-001**: Open a Win32 window, receive `WndProc` callbacks, and query the current DXGI output/Advanced Color description.
+- **SPIKE-D3D12-001**: Create a D3D12 device and swapchain, map its effective SDR presentation configuration, and present a clear.
+- **SPIKE-MAC-001**: Open an NSWindow, attach a `CAMetalLayer`, and query display color space/EDR headroom.
+- **SPIKE-METAL-001**: Create a Metal device and queue, map the layer's effective SDR presentation configuration, and present a clear.
+- **SPIKE-OBJC-BLOCK-001**: Exercise representative Objective-C block creation, invocation, lifetime, and exception containment, then record an ADR that either forbids blocks or defines their verified use policy.
+- **NI-FFM-001**: Build and run at least one platform spike with Native Image using the same generated FFM bindings and prototype the required reachability/downcall/upcall metadata.
 
 **Exit criteria:**
 
 - All three platforms run without a project-built native library.
+- Accepted ADR files and `REFERENCES.lock` exist, carry reviewed status/evidence metadata, and have no unresolved internal links.
+- `PROVENANCE.json` validation passes for every generated schema, binding fixture, shader/data resource, and Oracle input present in M0.
+- `PLATFORM_CONFORMANCE.yaml` validates and names the commands, fixtures, and evidence required by every M0 platform spike.
 - Generated FFM bindings are the only system-call path; no runtime FFI provider registry exists.
 - JAR and dependency scans pass.
 - Each platform can open a window, receive close/resize/input events, and present a solid color.
@@ -1859,14 +1897,16 @@ A milestone gates only the work that consumes its exit criteria; each milestone 
 
 ### M1 — Headless, state, reactivity, structural runtime, and scheduling
 
-**Depends on:** M0 `BUILD-001` and `GUARD-001` only; the platform spikes proceed in parallel on the platform track.
+**Starts after:** M0 `BUILD-001`, `GUARD-FRAMEWORK-001`, `ADR-BOOTSTRAP-001`, `REFERENCE-LOCK-001`, and `CONFORMANCE-POLICY-001`; the remaining platform spikes proceed in parallel on the platform track.
+
+**Completes after:** the same five M0 work packages; M1 does not wait for platform-spike completion.
 
 **Deliverables:**
 
-- **PLATFORM-HEADLESS-001**: Virtual display, window, event loop, and clock.
+- **HEADLESS-001**: Virtual display, window, event loop, and clock.
 - **STATE-001**: Primitive/object state, atomic transactions, epochs, and external commits.
 - **REACTIVE-001**: Dynamic producer/consumer graph, `DerivedState`, push/pull propagation, equality, liveness, and cycle detection.
-- **RUNTIME-SAMPLE-001**: Shared ordinary-Java comparison suite, instrumentation, and reporting format.
+- **RUNTIME-SAMPLE-001**: Shared ordinary-Java comparison suite, frozen decision rubric, instrumentation, and reporting format.
 - **RUNTIME-SPIKE-GROUPED-001**: Explicit grouped-recomposition prototype with positional memory and no compiler assistance.
 - **RUNTIME-SPIKE-ONESHOT-001**: One-shot owner prototype with fine-grained bindings and explicit structural control flow.
 - **RUNTIME-SPIKE-HYBRID-001**: Fine-grained binding prototype with small rerunnable structural scopes.
@@ -1884,7 +1924,7 @@ A milestone gates only the work that consumes its exit criteria; each milestone 
 - `RUNTIME-ADR-001` is accepted before `STRUCTURE-001` begins; the evidence remains checked in and reproducible.
 - Dynamic-dependency, lazy-derived, equality-suppression, diamond-glitch, batching, nested-transaction, effect-coalescing, cycle, and owner-disposal tests pass.
 - Conditional, loop, keyed-reordering, changing-input, and local-state-retention tests pass under the selected model.
-- Failed or cancelled staged UI work leaks no nodes, graph edges, or effects.
+- Failed staged UI work leaks no nodes, graph edges, or effects; every candidate that claims cancellation or preemption passes the same cleanup gate for cancelled attempts.
 - Local value changes invalidate only their dependent bindings or phase consumers; topology changes rerun only the selected structural scope.
 - Headless animation tests prove atomic presentation epochs, no per-frame application-state writes, deterministic timestamp sampling, value-continuous replacement, and velocity-continuous compatible spring retargeting.
 - A Headless sample runs deterministically.
@@ -1892,7 +1932,9 @@ A milestone gates only the work that consumes its exit criteria; each milestone 
 
 ### M2 — Layout, input, focus, and semantics skeleton
 
-**Depends on:** M1 `RUNTIME-ADR-001`, `STRUCTURE-001`, and `MOUNT-001`.
+**Starts after:** M1 `RUNTIME-ADR-001`, `STRUCTURE-001`, and `MOUNT-001`.
+
+**Completes after:** the same M1 work packages.
 
 **Deliverables:**
 
@@ -1903,6 +1945,7 @@ A milestone gates only the work that consumes its exit criteria; each milestone 
 - **FOCUS-001**: Focus tree and traversal.
 - **SEM-001**: Semantics tree and snapshots.
 - **HIT-001**: Hit testing and spatial indexing.
+- **UI-BOOTSTRAP-001**: Private, non-stable interaction and window-chrome primitives used by architecture samples before the public controls API exists; build them only from M2 layout, input, focus, and semantics contracts.
 
 **Exit criteria:**
 
@@ -1914,13 +1957,18 @@ A milestone gates only the work that consumes its exit criteria; each milestone 
 
 ### M3 — Software graphics MVP
 
-**Depends on:** M1 `TRACE-001` for trace integration only; graphics value types, display lists, and rasterization may start alongside M1.
+**Starts after:** M0 `BUILD-001`, `GUARD-FRAMEWORK-001`, `ADR-BOOTSTRAP-001`, `REFERENCE-LOCK-001`, and `CONFORMANCE-POLICY-001`; graphics values, display lists, scalar rasterization, and color reference work proceed alongside M1 and M2.
+
+**Completes after:** M1 `TRACE-001` and `ANIM-CORE-001`; `SCENE-CODEC-001` consumes M2 `INPUT-001` and `SEM-001`, and the Headless integration exit consumes M2 `UI-BOOTSTRAP-001`, before M3 closes.
 
 **Deliverables:**
 
 - **GFX-001**: Geometry, color, `Path`, and `PathBuilder`.
-- **COLOR-MODEL-001**: Extensible tagged color encodings, finite extended-range values, first-stable named spaces, linear-light alpha/blending rules, and encoding/pixel-format/alpha separation. Non-sRGB encodings, luminance metadata, and ICC payloads pass through values, display lists, and scenes as validated tagged data; their conversion math is `COLOR-REF-001` in M10.
-- **DL-001**: Canonical pointer-free display-list encoding, scene envelope, resource manifest, and replay.
+- **COLOR-MODEL-001**: Extensible tagged color encodings, finite extended-range values, first-stable named spaces, linear-light alpha/blending rules, and encoding/pixel-format/alpha separation. Non-sRGB encodings, luminance metadata, and ICC payloads pass through values, display lists, and scenes as validated tagged data.
+- **COLOR-SDR-REF-001**: Deterministic reference conversion among sRGB, linear-sRGB, Display-P3, linear Display-P3, and the first-stable extended-linear working encoding; D50/D65 chromatic adaptation; linear-light premultiplied composition; and a simple explicitly versioned extended-range/WCG-to-SDR mapping suitable for early Headless and platform fallback tests.
+- **DL-001**: Canonical pointer-free display-list encoding and resource references.
+- **SCENE-CODEC-001**: Canonical `SceneEnvelope`, ordered snapshot/delta and resource-generation state machine, semantics/input correlation, configured limits, and offline replay codec.
+- **GUARD-SCENE-001**: Activate `verifySceneCodec` with canonical, malformed, limit, and fuzz fixtures.
 - **SW-001**: Solid rectangle, rounded-rectangle, and path filling.
 - **SW-002**: Clip, transform, and blend operations.
 - **SW-003**: Images and gradients.
@@ -1928,21 +1976,25 @@ A milestone gates only the work that consumes its exit criteria; each milestone 
 - **CODEC-001**: PNG encoding and decoding.
 - **GOLDEN-001**: Golden infrastructure and reviewer.
 - **ANIM-SCENE-001**: Bounded retained-layer animation programs as immutable framework values, shared clock mappings, replacement generations, and Headless/software/render-executor reference sampling for compositor-eligible properties; the canonical program encoding is an R0 extension of the scene format.
+- **PERF-BASE-001**: Check in benchmark scenes, baseline-machine descriptors, measurement commands, and initial regression budgets for M3 and later work.
 
 **Exit criteria:**
 
-- A Headless control prototype renders to PNG.
-- Headless extended-linear float captures preserve tagged negative and above-one components; separately configured SDR PNG output uses a declared, versioned mapping — initially the simple sRGB encode for in-gamut content — rather than implicit clipping.
+- A Headless bootstrap interaction sample renders to PNG without depending on the public M9 controls API.
+- Headless extended-linear float captures preserve tagged negative and above-one components; separately configured SDR PNG output uses the explicit `COLOR-SDR-REF-001` mapping rather than implicit clipping.
 - Display lists and full `SceneEnvelope` fixtures serialize canonically, reject configured limit violations, and replay without producer-process object references.
-- Tagged BT.2020/PQ/HLG encodings, luminance/content-light metadata, and bounded ICC payloads survive canonical scene/trace round trips as validated tagged data; their conversion math is deferred to `COLOR-REF-001`.
+- sRGB/Display-P3 reference conversions, adaptation, linear-light blending, and the initial versioned SDR mapping pass fixed numeric fixtures. Tagged BT.2020/PQ/HLG encodings, luminance/content-light metadata, and bounded ICC payloads survive canonical scene/trace round trips as validated data; their advanced conversion math and transforms remain `COLOR-REF-001` in M10.
 - Transform and opacity animation fixtures produce the same presentation values at declared timestamps from the UI reference sampler and the render-executor sampler, while invalidating only `COMPOSITE` plus required hit-test or semantics geometry.
 - Path/property fuzz tests produce no crash.
 - Scalar and tiled outputs agree.
 - Exact goldens remain stable for core scenes.
+- `PERF-BASE-001` publishes reproducible numbers and budgets before optimized paths are accepted.
 
 ### M4 — Fonts and basic text
 
-**Depends on:** M3 rasterization and golden infrastructure.
+**Starts after:** M0 `BUILD-001`, `GUARD-FRAMEWORK-001`, `ADR-BOOTSTRAP-001`, `REFERENCE-LOCK-001`, and `CONFORMANCE-POLICY-001`; font parsing, shaping, Unicode, and Oracle work do not wait for graphics.
+
+**Completes after:** M3 `SW-001` and `GOLDEN-001` for glyph rasterization and text goldens.
 
 **Deliverables:**
 
@@ -1954,6 +2006,7 @@ A milestone gates only the work that consumes its exit criteria; each milestone 
 - **TEXT-001**: Styled runs, line breaking, and paragraph layout.
 - **RASTER-GLYPH-001**: Grayscale glyph rasterization and atlas.
 - **ORACLE-FT-001 / ORACLE-HB-001**: FreeType and HarfBuzz runners plus corpora.
+- **PORT-POLICY-001**: Create `DIFFERENCE_POLICY.md` from recorded Oracle baselines and freeze the M8 differential thresholds before M8 work begins.
 
 **Exit criteria:**
 
@@ -1962,12 +2015,15 @@ A milestone gates only the work that consumes its exit criteria; each milestone 
 - Unicode boundary corpora pass.
 - Basic selection and caret behavior work.
 - Text rendered with fixed fonts has stable goldens.
+- `DIFFERENCE_POLICY.md` records the reviewed baseline, threshold, and rationale for every M8 corpus.
 
 ### M5 — First complete desktop vertical slice
 
 Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Change the order only if M0 evidence justifies an ADR.
 
-**Depends on:** M0 Linux/Vulkan spikes, M2, M3, and M4. This is the first convergence point of all three tracks.
+**Starts after:** M0 `FFI-SCHEMA-001`, `FFI-FFM-001`, `SPIKE-WAYLAND-001`, and `SPIKE-VK-001`; Wayland bindings, window lifecycle, Vulkan device work, and RHI implementation proceed while M2–M4 run.
+
+**Completes after:** M2, M3, and M4. This is the first convergence point of all three tracks.
 
 **Deliverables:**
 
@@ -1985,19 +2041,21 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 **Exit criteria:**
 
-- The controls demo runs in a real Wayland session.
+- `CounterApp` and the private bootstrap interaction/window-chrome primitives run in a real Wayland session without depending on the M9 public controls API.
 - Users can select software or Vulkan rendering.
-- Resize, DPI/scaling, and presentation behavior are correct.
+- The checked-in Wayland platform-conformance profile passes for resize, DPI/fractional scaling, presentation timing, and surface reconfiguration.
 - The demo presents usable window decorations on compositors with and without server-side decorations.
 - Moving or reconfiguring the output updates the surface capability generation and preserves deterministic SDR presentation; Vulkan HDR remains disabled unless its optional conformance profile passes.
-- Continuous scrolling does not grow resource usage.
+- The scrolling soak fixture remains within the memory, resource-count, and frame-allocation budgets established by `PERF-BASE-001`.
 - Host frame callbacks pace a compositor-only animation, no application callback runs on the render executor, and frame requests stop after completion.
 - Vulkan validation reports no errors.
 - JVM and Native Image FFM smoke tests pass.
 
 ### M6 — Complete Windows backend
 
-**Depends on:** M0 Windows spikes plus the M5 RHI and frame compiler.
+**Starts after:** M0 `FFI-SCHEMA-001`, `FFI-FFM-001`, `SPIKE-WIN-001`, and `SPIKE-D3D12-001`; generator, window, input, and device work may proceed before M5 closes.
+
+**Completes after:** the M5 RHI and frame compiler.
 
 **Deliverables:**
 
@@ -2012,16 +2070,18 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 **Exit criteria:**
 
-- Multiple windows, per-monitor DPI, and move/resize modal loops behave correctly.
+- The checked-in Windows platform-conformance profile passes for multiple windows, per-monitor DPI, move/resize modal loops, pointer/keyboard input, and resource-lifetime soaks.
 - D3D12 validation/debug layers report no errors.
 - Advanced Color and ordinary SDR displays report distinct truthful capabilities and deterministic SDR fallback; Windows HDR remains disabled unless its optional conformance profile passes.
-- IME composition and candidate rectangles are correct.
+- The Windows IME corpus passes composition, surrounding-text, candidate-rectangle, reconversion, and cancellation fixtures.
 - The UI Automation inspection corpus passes.
 - The Native Image sample runs.
 
 ### M7 — Complete macOS backend
 
-**Depends on:** M0 macOS spikes plus the M5 RHI and frame compiler.
+**Starts after:** M0 `FFI-SCHEMA-001`, `FFI-FFM-001`, `SPIKE-MAC-001`, `SPIKE-METAL-001`, and `SPIKE-OBJC-BLOCK-001`; generator, window, input, and device work may proceed before M5 closes.
+
+**Completes after:** the M5 RHI and frame compiler.
 
 **Deliverables:**
 
@@ -2035,9 +2095,8 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 **Exit criteria:**
 
-- arm64 and x86-64 CI pass.
-- Scaling and multi-display behavior are correct.
-- Metal validation/capture reports no material errors.
+- The checked-in macOS platform-conformance profile passes on arm64 and x86-64 for scaling, multi-display migration, input, and resource-lifetime soaks.
+- Metal validation/capture contains no error in the declared validation allowlist; every warning waiver is recorded in `PLATFORM_CONFORMANCE.yaml`.
 - Display color-space/headroom changes update the surface capability generation and preserve deterministic SDR fallback; Metal EDR remains disabled unless its optional conformance profile passes.
 - IME and accessibility corpora pass.
 - Autorelease and native-resource soak tests pass.
@@ -2045,7 +2104,9 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 ### M8 — Complex text and font completeness
 
-**Depends on:** M4.
+**Starts after:** M4 `SHAPE-001`, `OT-001`, the relevant Oracle runners, and `PORT-POLICY-001`; script and font-capability units begin as soon as those individual prerequisites and their frozen comparison thresholds pass.
+
+**Completes after:** M4.
 
 **Deliverables:**
 
@@ -2068,7 +2129,9 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 ### M9 — Controls, IME, accessibility, and themes
 
-**Depends on:** M5 and M8; M6 and M7 gate only their platform-specific exit criteria.
+**Starts after:** M2 `LAYOUT-002`, `INPUT-001`, `FOCUS-001`, and `SEM-001` plus M4 `TEXT-001` and `RASTER-GLYPH-001`; platform-neutral controls, editing-state machines, gestures, themes, and animation completion may proceed while platform and complex-text work continues.
+
+**Completes after:** M5, M6, M7, and M8. Platform-independent deliverables may close earlier, but the M9 milestone does not close until all three accessibility and IME profiles pass.
 
 **Deliverables:**
 
@@ -2088,24 +2151,26 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 **Exit criteria:**
 
-- The controls gallery behaves consistently on all three platforms.
-- Every control is usable with only a keyboard.
+- The controls-gallery interaction corpus produces the declared common outcomes on all three required desktop profiles, with every platform-specific difference recorded.
+- Every control passes its keyboard-only traversal and activation fixtures.
 - Basic screen-reader flows pass on Windows UI Automation, macOS Accessibility, and Linux AT-SPI2.
-- Multilingual IME editing passes.
-- RTL, high-contrast, and reduced-motion modes pass.
+- The multilingual editing corpus passes the declared IME, selection, composition, rejection, and undo fixtures on all required profiles.
+- The controls matrix passes its RTL, high-contrast, and reduced-motion fixtures.
 - The animation conformance suite passes for interruption, velocity continuity, phase isolation, structural lifecycle, matched geometry, completion outcomes, and deterministic replay.
 - Compositor-only animation triggers no structure, measure, placement, or paint callbacks, and authoritative hit testing follows its visible presentation geometry.
 - Control accessibility tests are required merge gates.
 
 ### M10 — Performance, tools, and Native Image productization
 
-**Depends on:** M5 through M9.
+**Starts after:** M3 `PERF-BASE-001`, `SCENE-CODEC-001`, and `COLOR-SDR-REF-001` plus M5 `RHI-001` and `GPU-DIFF-001`; independent tooling, advanced color, and Native Image work may begin before M9 closes.
+
+**Completes after:** M5 through M9.
 
 **Deliverables:**
 
-- **PERF-001**: Baseline machines and regression dashboard.
+- **PERF-001**: Expand the M3 baseline-machine set into the release regression dashboard and finalize supported-profile budgets without discarding earlier history.
 - **CACHE-001**: Raster, glyph, and pipeline cache budgets.
-- **COLOR-REF-001**: BT.2020/PQ/HLG reference conversion math and fixtures, ICC v2/v4 baseline parsing and transforms, chromatic adaptation, and the versioned gamut/tone-mapped SDR fallback required by ADR-019.
+- **COLOR-REF-001**: BT.2020/PQ/HLG reference conversion math and fixtures, ICC v2/v4 baseline parsing and transforms, completion of the chromatic-adaptation corpus beyond the M3 D50/D65 baseline, and the production versioned gamut/tone-mapped SDR fallback required by ADR-019.
 - **VECTOR-001**: Optional `himari-render-vector` renderer.
 - **INSPECT-001**: Tree, frame, and render inspector.
 - **REPLAY-001**: Canonical scene/resource/color-profile/presentation/semantics/event trace and offline replay in a fresh process.
@@ -2126,7 +2191,9 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 ### M11 — Beta and stabilization
 
-**Depends on:** all prior milestones.
+**Starts after:** release-candidate APIs and platform profiles from M5–M10 are available.
+
+**Completes after:** all prior milestones.
 
 **Deliverables:**
 
@@ -2216,52 +2283,75 @@ This track begins only after the stable desktop release unless a separate projec
 
 ## 23. Initial Issue Backlog
 
-These issues are sufficient to begin implementation without waiting for visual control design. Do not add A0–A4, W0–W4, or R0–R4 work to this initial backlog until the corresponding post-stable extension track is activated:
+These issues are the initial project-board view of canonical work packages, not a second place to define their scope. They are grouped by their earliest owning milestone; ordering inside a group does not override `Starts after`. A fine-grained child issue that appears only here must name its milestone deliverable parent in project-board metadata. Do not add A0–A4, W0–W4, or R0–R4 work until the corresponding post-stable extension track is activated.
 
-1. **GOV-001**: Select the license, contribution rules, and ADR template. Naming is already accepted by ADR-013.
-2. **BUILD-001**: Create the Java 25 Gradle multi-project and JPMS sample according to ADR-013.
-3. **GUARD-001**: Scan JARs for native entries.
-4. **GUARD-002**: Enforce the dependency allowlist plus `java.desktop` and JDK-internal gates.
-5. **FFI-SCHEMA-001**: Define primitive, pointer, structure, function, and callback schema elements.
-6. **FFI-FFM-001**: Generate typed bindings for `strlen` and a simple callback and execute them.
-7. **ABI-PROBE-001**: Define the C-probe JSON protocol and layout comparator.
-8. **WAYLAND-GEN-001**: Generate interface/opcode/event decoding from minimal Wayland XML.
-9. **WIN-GEN-001**: Generate Win32 structures, functions, and `WndProc` bindings.
-10. **OBJC-GEN-001**: Generate typed selector and `objc_msgSend` bindings.
-11. **SPIKE-WAYLAND-001**: Create a surface through FFM, process configure/close events, and report available output/color-management information.
-12. **SPIKE-WIN-001**: Register a window class through FFM, receive `WM_*` messages, and query the current DXGI output/Advanced Color description.
-13. **SPIKE-MAC-001**: Create NSApplication and NSWindow and query display color space/EDR headroom through FFM.
-14. **SPIKE-VK-001**: Load Vulkan through FFM, create a device, enumerate surface format/color-space pairs, and present a clear.
-15. **SPIKE-D3D12-001**: Create a COM device/swapchain, map its effective SDR color configuration, and present a clear.
-16. **SPIKE-METAL-001**: Create a Metal device and `CAMetalLayer`, map its effective SDR color configuration, and present a clear.
-17. **NI-FFM-001**: Prototype Native Image downcall/upcall metadata.
-18. **STATE-001**: Implement versioned primitive state, atomic transactions, epochs, and external commits.
-19. **REACTIVE-001**: Implement dynamic dependencies, `DerivedState`, push/pull propagation, equality, liveness, and cycle diagnostics.
-20. **HEADLESS-001**: Implement virtual windows, displays with programmable color/dynamic-range capabilities, event loops, and clocks.
-21. **RUNTIME-SAMPLE-001**: Implement the shared ordinary-Java comparison suite and metric report.
-22. **RUNTIME-SPIKE-GROUPED-001**: Prototype explicit grouped recomposition without compiler assistance.
-23. **RUNTIME-SPIKE-ONESHOT-001**: Prototype one-shot owners, typed signal bindings, and explicit structural control flow.
-24. **RUNTIME-SPIKE-HYBRID-001**: Prototype fine-grained bindings plus small structural scopes.
-25. **RUNTIME-ADR-001**: Select the production structural-reactivity model from the checked-in evidence.
-26. **STRUCTURE-001**: Implement the selected identity, branch, collection, local-state, and failure semantics.
-27. **ANIM-CORE-001**: Implement animation-transaction propagation, atomic presentation epochs, a manual-clock reference sampler, allocation-free scalar adapters, and deterministic tween/spring interruption tests.
-28. **LAYOUT-001**: Prototype constraints and single-measure enforcement.
-29. **DL-001**: Define the canonical pointer-free primitive-buffer display-list format, `SceneEnvelope`, color/profile resources and presentation configuration, resource manifest, versioning, limits, and replay codec.
-30. **ANIM-SCENE-001**: Implement bounded retained-layer animation programs as immutable framework values, clock mappings, replacement generations, and a Headless/software reference sampler; reserve the canonical encoding extension for R0.
-31. **COLOR-MODEL-001**: Implement extensible tagged color encodings, extended-linear finite values, first-stable named spaces, linear-light composition rules, and validated tagged pass-through of non-sRGB encodings, luminance metadata, and ICC payloads; the reference conversion math, ICC transforms, and versioned SDR mapping follow as `COLOR-REF-001` with M10.
-32. **PATH-001**: Implement `PathBuilder`, bounds, and reference flattening.
-33. **RASTER-001**: Implement scalar rectangle and path coverage.
-34. **PNG-001**: Implement a pure-Java PNG writer for explicitly mapped SDR golden output.
-35. **FONT-READER-001**: Implement a checked big-endian font reader.
-36. **FONT-SFNT-001**: Implement table directories, metrics, and `cmap`.
-37. **HB-ORACLE-001**: Build a HarfBuzz JSON runner.
-38. **FT-ORACLE-001**: Build a FreeType outline/bitmap JSON runner.
-39. **UNICODE-001**: Add the ICU4J provider and Unicode conformance-data harness.
-40. **GOLDEN-001**: Define exact SDR image/hash and extended-linear numeric fixture formats.
-41. **FUZZ-001**: Add starter Jazzer targets for fonts, color profiles/LUTs, paths, and canonical scene decoding.
-42. **TRACE-001**: Define the normalized input plus scene/resource/color-profile/presentation/semantics/animation trace format.
-43. **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
-44. **SAMPLE-001**: Build a deterministic Headless counter sample and golden using the selected runtime model.
+### 23.1 M0 bootstrap
+
+- **GOV-001**: Select the project license, contribution rules, and ADR template. Do not reopen the coordinates and naming accepted by ADR-013.
+- **ADR-BOOTSTRAP-001**: Materialize every accepted inline decision as a canonical file under `adr/`, with status, date, evidence, and replacement links; add decision milestones for unresolved entries.
+- **REFERENCE-LOCK-001**: Create `REFERENCES.lock` and pin the edition, release, commit, or retrieval date of every rolling source used as normative evidence.
+- **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
+- **CONFORMANCE-POLICY-001**: Create `CONFORMANCE.md` plus the `PLATFORM_CONFORMANCE.yaml` schema for profile ownership, fixtures, tolerances, durations, budgets, and reviewed waivers; populate the initial M0 spike profiles.
+- **BUILD-001**: Create the Gradle multi-project build, JPMS setup, Java 25 toolchain, and dependency locking according to ADR-013.
+- **GUARD-FRAMEWORK-001**: Implement the staged `pure-java-guard` registry and activate gates 1–11 for every artifact and module present in M0.
+- **FFI-SCHEMA-001**: Define the minimum canonical primitive, pointer, structure, function, and callback schema.
+- **FFI-FFM-001**: Generate typed FFM downcalls and upcalls for the minimum schema and execute them on the JVM.
+- **ABI-PROBE-001**: Define the C-probe JSON protocol and compare its output with generated Java layouts.
+- **WAYLAND-GEN-001**: Generate interface/opcode/event decoding from minimal Wayland XML.
+- **WIN-GEN-001**: Generate Win32 structures, functions, and `WndProc` bindings.
+- **OBJC-GEN-001**: Generate typed selector and `objc_msgSend` bindings.
+- **SPIKE-WAYLAND-001**: Open a Wayland window, receive events, enumerate available output/color-management information, clear a software surface, and present it.
+- **SPIKE-VK-001**: Create a Vulkan device and swapchain, enumerate surface format/color-space pairs without assuming HDR extensions, and present a clear.
+- **SPIKE-WIN-001**: Open a Win32 window, receive `WndProc` callbacks, and query the current DXGI output/Advanced Color description.
+- **SPIKE-D3D12-001**: Create a D3D12 device and swapchain, map its effective SDR presentation configuration, and present a clear.
+- **SPIKE-MAC-001**: Open an NSWindow, attach a `CAMetalLayer`, and query display color space/EDR headroom.
+- **SPIKE-METAL-001**: Create a Metal device and queue, map the layer's effective SDR presentation configuration, and present a clear.
+- **SPIKE-OBJC-BLOCK-001**: Exercise representative Objective-C block creation, invocation, lifetime, and exception containment, then record an ADR that either forbids blocks or defines their verified use policy.
+- **NI-FFM-001**: Build and run at least one platform spike with Native Image using the same generated FFM bindings and prototype the required reachability/downcall/upcall metadata.
+
+### 23.2 M1 runtime bootstrap
+
+- **STATE-001**: Primitive/object state, atomic transactions, epochs, and external commits.
+- **REACTIVE-001**: Dynamic producer/consumer graph, `DerivedState`, push/pull propagation, equality, liveness, and cycle detection.
+- **HEADLESS-001**: Virtual display, window, event loop, and clock.
+- **RUNTIME-SAMPLE-001**: Shared ordinary-Java comparison suite, frozen decision rubric, instrumentation, and reporting format.
+- **RUNTIME-SPIKE-GROUPED-001**: Explicit grouped-recomposition prototype with positional memory and no compiler assistance.
+- **RUNTIME-SPIKE-ONESHOT-001**: One-shot owner prototype with fine-grained bindings and explicit structural control flow.
+- **RUNTIME-SPIKE-HYBRID-001**: Fine-grained binding prototype with small rerunnable structural scopes.
+- **RUNTIME-ADR-001**: Select and specify the production structural-reactivity model from reviewed evidence.
+- **STRUCTURE-001**: Implement the selected branch, keyed-collection, identity, local-state, and failure-recovery semantics.
+- **ANIM-CORE-001**: Animation-transaction propagation, model/presentation separation, manual-clock sampling, presentation epochs, allocation-free scalar adapters, and reference tween/spring retargeting.
+- **TRACE-001**: Initial deterministic trace format.
+- **SAMPLE-001**: Build a deterministic Headless counter sample and golden using the selected runtime model.
+
+### 23.3 M2 layout and interaction bootstrap
+
+- **LAYOUT-001**: Constraints, measurement, and placement.
+- **UI-BOOTSTRAP-001**: Private, non-stable interaction and window-chrome primitives used by architecture samples before the public controls API exists; build them only from M2 layout, input, focus, and semantics contracts.
+
+### 23.4 M3 graphics bootstrap
+
+- **DL-001**: Canonical pointer-free display-list encoding and resource references.
+- **ANIM-SCENE-001**: Bounded retained-layer animation programs as immutable framework values, shared clock mappings, replacement generations, and Headless/software/render-executor reference sampling for compositor-eligible properties; the canonical program encoding is an R0 extension of the scene format.
+- **COLOR-MODEL-001**: Extensible tagged color encodings, finite extended-range values, first-stable named spaces, linear-light alpha/blending rules, and encoding/pixel-format/alpha separation. Non-sRGB encodings, luminance metadata, and ICC payloads pass through values, display lists, and scenes as validated tagged data.
+- **COLOR-SDR-REF-001**: Deterministic reference conversion among sRGB, linear-sRGB, Display-P3, linear Display-P3, and the first-stable extended-linear working encoding; D50/D65 chromatic adaptation; linear-light premultiplied composition; and a simple explicitly versioned extended-range/WCG-to-SDR mapping suitable for early Headless and platform fallback tests.
+- **PATH-001**: Implement `PathBuilder`, bounds, and reference flattening.
+- **RASTER-001**: Implement scalar rectangle and path coverage.
+- **PNG-001**: Implement a pure-Java PNG writer for explicitly mapped SDR golden output.
+- **GOLDEN-001**: Golden infrastructure and reviewer.
+- **SCENE-CODEC-001**: Canonical `SceneEnvelope`, ordered snapshot/delta and resource-generation state machine, semantics/input correlation, configured limits, and offline replay codec.
+- **GUARD-SCENE-001**: Activate `verifySceneCodec` with canonical, malformed, limit, and fuzz fixtures.
+- **PERF-BASE-001**: Check in benchmark scenes, baseline-machine descriptors, measurement commands, and initial regression budgets for M3 and later work.
+- **FUZZ-001**: Add starter Jazzer targets for fonts, color profiles/LUTs, paths, and canonical scene decoding.
+
+### 23.5 M4 text bootstrap
+
+- **FONT-READER-001**: Implement a checked big-endian font reader.
+- **FONT-SFNT-001**: Implement table directories, metrics, and `cmap`.
+- **HB-ORACLE-001**: Build a HarfBuzz JSON runner.
+- **FT-ORACLE-001**: Build a FreeType outline/bitmap JSON runner.
+- **UNICODE-001**: Add the ICU4J provider and Unicode conformance-data harness.
+- **PORT-POLICY-001**: Create `DIFFERENCE_POLICY.md` from recorded Oracle baselines and freeze the M8 differential thresholds before M8 work begins.
 
 Every issue must use the standard work-package template or Port Unit template and include an executable acceptance command.
 
@@ -2389,7 +2479,7 @@ Meet the general DoD and all of the following:
 
 | Risk | Impact | Early signal | Mitigation |
 |---|---|---|---|
-| Total scope exceeds sustained execution capacity | The project stalls before any release | Milestones accumulate partially met exit criteria, or the first visible increment gains requirements across plan revisions | Enforce the contract-versus-implementation rule from Section 0, keep the first visible increment minimal, run the parallel milestone tracks, and ship the pre-stable standalone artifacts from Section 3.4 for early feedback |
+| Total scope exceeds sustained execution capacity | The project stalls before any release | Milestones accumulate partially met exit criteria, or V0/V1 gains requirements across plan revisions | Enforce the contract-versus-implementation rule from Section 0, keep the V0/V1 profiles fixed and minimal, run the parallel milestone tracks, and ship the pre-stable standalone artifacts from Section 3.4 for early feedback |
 | Text-stack effort dominates the schedule | M4–M9 and the stable release slip by quarters | Shaping, hinting, or fallback port units slip while other tracks idle | Publish the text stack as a pre-stable standalone artifact, keep script coverage explicitly tiered, track port-unit velocity from M4 onward, and re-scope stable-release script coverage by ADR if velocity is insufficient |
 | macOS Objective-C ABI or block APIs cannot be covered safely without a shim | Platform blocker | Unstable M0 callbacks or completion handlers | Generate typed message sends and dynamic delegates; prefer `_f`/selector APIs; isolate block ABI in its own spike |
 | D3D12 shader tooling becomes too heavy | Windows GPU delay | Runtime DXC becomes necessary | Keep a fixed shader set, compile offline in release CI, ship versioned blobs, and define HLSL/MSL source fallback policy |
@@ -2399,7 +2489,7 @@ Meet the general DoD and all of the following:
 | XKB or IME complexity is underestimated | Incorrect keyboard/text behavior | Non-US layouts or compose keys fail | Port XKB in Java, compare with xkbcommon, and build IME corpora early |
 | Large AI-assisted HarfBuzz/FreeType ports drift semantically | Broken text | Screenshots appear plausible while clusters or metrics differ | Use small port units, field-level Oracles, official corpora, reference paths, and fuzzing |
 | CPU and GPU rendering semantics drift | Cross-platform graphics differences | Clip/blend edge differences accumulate | Keep software normative, compare complete scenes and individual operations, and enforce difference budgets |
-| Color APIs or scene/RHI formats harden around 8-bit sRGB or a Boolean HDR flag | Wide-gamut/HDR lockout, clipped highlights, hue shifts, and incompatible wire/API changes | Components are clamped to `[0, 1]`, color spaces become a closed enum, textures lose encoding metadata, or a backend advertises HDR from format support alone | Enforce ADR-019 through `COLOR-MODEL-001` and `COLOR-REF-001`, preserve tagged extended-range floats and profiles through canonical codecs, separate surface format from encoding/luminance, require deterministic mapped-SDR fallback, and capability-gate every native HDR mode |
+| Color APIs or scene/RHI formats harden around 8-bit sRGB or a Boolean HDR flag | Wide-gamut/HDR lockout, clipped highlights, hue shifts, and incompatible wire/API changes | Components are clamped to `[0, 1]`, color spaces become a closed enum, textures lose encoding metadata, or a backend advertises HDR from format support alone | Enforce ADR-019 through `COLOR-MODEL-001`, `COLOR-SDR-REF-001`, and `COLOR-REF-001`, preserve tagged extended-range floats and profiles through canonical codecs, separate surface format from encoding/luminance, require deterministic mapped-SDR fallback, and capability-gate every native HDR mode |
 | Optimization starts before behavior is verifiable | Long-term maintenance cost | Dense bit tricks or parallel code appear without a reference path | Require reference-first gates and benchmark evidence |
 | `java.desktop` enters accidentally | Headless/pure-Java goal failure | Utility code imports ImageIO or Color | Enforce JPMS and `jdeps` gates and use framework-owned types |
 | The ABI schema is wrong | JVM crash or memory corruption | Intermittent platform crashes | Run C probes, generator tests, SDK matrices, and debug fail-fast checks |
@@ -2425,7 +2515,9 @@ Meet the general DoD and all of the following:
 
 ## 26. Decision Register and Working Defaults
 
-The entries below must not block M0 unless marked accepted. Use the working default until the relevant ADR deadline.
+ADR-001 through ADR-019 are accepted at the execution-summary level in this draft. ADR-015 accepts fine-grained value reactivity and the separation of structural updates, but deliberately leaves the grouped/one-shot/hybrid structural subdecision to `RUNTIME-ADR-001`. `ADR-BOOTSTRAP-001` must materialize these decisions with their evidence and dates before downstream implementation treats the files as canonical.
+
+The remaining entries below must not block M0 unless marked accepted. Use a working default only until the decision milestone recorded by `ADR-BOOTSTRAP-001`; no default may remain undated.
 
 | Decision | Status/default |
 |---|---|
@@ -2463,36 +2555,54 @@ The entries below must not block M0 unless marked accepted. Use the working defa
 | Compiler plugin | Optional; never a correctness or baseline-usability dependency |
 | Arbitrary user shaders | Defer until after the stable release |
 | Linux keyboard | Pure-Java XKB target; system xkbcommon is transitional or an Oracle only |
-| X11 | Compatibility backend; Wayland first |
+| X11 | Optional separately versioned compatibility profile; Wayland is the required Linux profile for first stable |
 
 ---
 
-## 27. First Visible Increment
+## 27. Increment Ladder
 
-The first demonstrable release must validate the architecture rather than show only a GPU triangle or static mockup. It is complete when:
+Use three named demonstrable increments instead of one “first” increment that silently depends on most of the roadmap. These increments are cross-workstream integration cuts, not additional milestone gates.
 
-1. The same `CounterApp` runs on Headless, Linux, Windows, and macOS.
-2. Headless produces a deterministic PNG through the pure-Java software renderer.
-3. Desktop execution can select software or GPU rendering.
-4. The button responds to pointer input, receives keyboard focus, and exposes semantics.
-5. Text uses HimariUI's SFNT parser, basic shaper, and glyph rasterizer.
-6. Every desktop platform reaches system APIs only through FFM.
-7. Native Image runs on at least one platform.
-8. JAR and dependency scans prove that no native library is bundled.
-9. The same scene has a CPU/GPU golden comparison.
-10. The inspector displays reactive owners, structural scopes, mounted elements, layout, layer, semantics, animation, and effective presentation-color state.
-11. The counter scene, declared color/profile and other resources, presentation configuration, correlated semantics, and normalized input trace round-trip through the canonical codec and replay in a fresh process.
-12. A counter change exercises the animation-transaction and model/presentation path; Headless reproduces declared intermediate timestamps, and a compositor-eligible property is sampled by the render executor without application callbacks.
+### V0 — Headless architecture seed
 
-This increment is the earliest credible proof that the architecture works end to end.
+V0 is complete after the required M1–M4 work packages pass when:
 
-Android/iOS AOT, browser/Wasm, and live remote rendering are intentionally not exit criteria for this first desktop increment; they are covered by the post-stable A0–A4, W0–W4, and R0–R4 tracks. Canonical offline scene encoding and replay remain first-stable requirements.
+1. `CounterApp` runs on Headless with the selected structural runtime, layout, normalized input, focus, semantics, and private `UI-BOOTSTRAP-001` interaction primitives.
+2. Pointer and keyboard injection activate the counter, focus is observable, and the semantics snapshot exposes the action without a public M9 control dependency.
+3. Text uses HimariUI's SFNT parser, basic shaper, and grayscale glyph rasterizer.
+4. The pure-Java software renderer produces a deterministic SDR PNG and a separate extended-linear numeric capture.
+5. The display list and one full `SceneEnvelope` round-trip canonically through offline replay.
+6. A counter change exercises animation-transaction and model/presentation separation, and the Headless manual clock reproduces declared intermediate timestamps.
+7. Runtime-core execution and the sample load no native library, and the active M0/M3 guard set passes.
+
+### V1 — First desktop vertical slice
+
+V1 is the first public desktop architecture demonstration and coincides with M5 completion:
+
+1. The same `CounterApp` runs in a real Linux Wayland session through generated FFM bindings.
+2. The application can select software or Vulkan rendering, and the same scene passes the declared CPU/GPU differential profile.
+3. Window lifecycle, scaling, input, frame callbacks, bootstrap client-side decorations, and deterministic SDR presentation pass the Wayland profile.
+4. A compositor-eligible property is sampled by the render executor without application callbacks or unnecessary structure/layout/paint work.
+5. Native Image runs the same FFM path on the selected M5 platform.
+6. Published-artifact and runtime-dependency guards prove that no native library is bundled.
+
+### V2 — Cross-platform architecture proof
+
+V2 is complete only after the relevant M6, M7, and M10 work packages pass:
+
+1. The same application runs on Linux, Windows, macOS, and Headless through the required software and native GPU profiles.
+2. Each desktop platform reaches system APIs only through the generated FFM path and reports truthful presentation capabilities and fallback reasons.
+3. The inspector displays reactive owners, structural scopes, mounted elements, layout, layers, semantics, animation, and effective presentation-color state.
+4. The counter scene, declared color/profile and other resources, presentation configuration, correlated semantics, normalized input, and sampled presentation epochs replay in a fresh process without ambient fonts or producer objects.
+5. JVM and Native Image packaging matrices pass for the profiles owned by M10.
+
+M11 and the remaining M9 release profiles are still required for the first stable desktop release; V2 is an architecture proof, not the stable-release definition. Android/iOS AOT, browser/Wasm, and live remote rendering are intentionally absent from V0–V2 and remain in the post-stable A0–A4, W0–W4, and R0–R4 tracks.
 
 ---
 
 ## 28. Primary References
 
-Use these sources to confirm API status, derive behavioral specifications, and build Oracles. A referenced design is not permission to copy its public abstractions.
+Use these sources to confirm API status, derive behavioral specifications, and build Oracles. A referenced design is not permission to copy its public abstractions. `REFERENCES.lock` records the reviewed specification edition, release, repository commit, or retrieval date for every rolling `latest`, `main`, or unversioned URL used as normative evidence; this list remains the human-readable index.
 
 ### Java and GraalVM
 
@@ -2595,7 +2705,7 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 
 At the first stable desktop release, automated evidence must support this public statement:
 
-> HimariUI's core, text engine, software renderer, GPU abstraction, desktop platform backends, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. Animation keeps committed model targets separate from atomically sampled presentation values, preserves value and compatible spring velocity across interruption, respects declared phase impacts and reduced-motion policy, and replays deterministically without per-frame application-state writes. Color values, image/display-list/scene encodings, the extended-linear reference renderer, and RHI surfaces keep gamut, transfer function, luminance, precision, and presentation capability explicit; finite extended-range values and HDR metadata survive canonical replay, and every backend provides a deterministic SDR fallback without claiming unverified hardware HDR support. A versioned, bounded, pointer-free scene/display-list codec plus offline replay proves that scenes, declared color/profile and other resources, presentation configuration, correlated semantics, and normalized input survive a process boundary without placing networking or remote-session policy in the core. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
+> HimariUI's core, text engine, software renderer, GPU abstraction, required Windows, macOS, and Linux Wayland platform profiles, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. Animation keeps committed model targets separate from atomically sampled presentation values, preserves value and compatible spring velocity across interruption, respects declared phase impacts and reduced-motion policy, and replays deterministically without per-frame application-state writes. Color values, image/display-list/scene encodings, the extended-linear reference renderer, and RHI surfaces keep gamut, transfer function, luminance, precision, and presentation capability explicit; finite extended-range values and HDR metadata survive canonical replay, and every backend provides a deterministic SDR fallback without claiming unverified hardware HDR support. A versioned, bounded, pointer-free scene/display-list codec plus offline replay proves that scenes, declared color/profile and other resources, presentation configuration, correlated semantics, and normalized input survive a process boundary without placing networking or remote-session policy in the core. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
 
 ### 29.2 Future local browser/Wasm release
 
