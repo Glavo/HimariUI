@@ -45,7 +45,7 @@ The first stable release must support deterministic Headless execution, software
 Execute the project in this order:
 
 1. Prove the distribution and ABI model with repository guards, Headless execution, and platform/FFM feasibility spikes.
-2. Build the state, composition, layout, display-list, software-rendering, and basic-text reference paths.
+2. Build the state, declarative-runtime, layout, display-list, software-rendering, and basic-text reference paths.
 3. Complete one end-to-end desktop slice, provisionally Linux Wayland plus Vulkan.
 4. Complete Windows/D3D12 and macOS/Metal without introducing native shims.
 5. Expand complex text, controls, accessibility, tooling, performance, Native Image packaging, and release hardening.
@@ -55,8 +55,8 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 ### 1.3 Fixed top-level decisions
 
 1. **Use Java 25 as the minimum runtime.** For JVM and Native Image desktop targets, FFM is the only native-access mechanism. A future browser/Wasm target uses generated host bindings rather than FFM and does not reintroduce an FFI provider SPI. The Vector API remains incubating and may appear only in optional optimization modules.
-2. **Do not require a compiler plugin.** The declarative runtime uses explicit `Composer`/`UiScope` semantics, stable keys, a slot table, and phase-aware state-read tracking. Annotation processors or `javac` plugins may add diagnostics and optimizations, but correctness must not depend on them.
-3. **Use several purpose-specific trees.** Keep the component/element, layout, layer/display-list, and semantics structures separate.
+2. **Do not require a compiler plugin.** Runtime correctness and the baseline application API must be usable from ordinary Java source. M1 selects the structural-reactivity model from evidence comparing explicit grouped recomposition, one-shot signal ownership, and a hybrid of fine-grained bindings with small structural scopes. Annotation processors or `javac` plugins may add diagnostics and optimizations, but correctness and acceptable baseline ergonomics must not depend on them.
+3. **Use several purpose-specific trees.** Keep the reactive-owner/mounted-element, layout, layer/display-list, and semantics structures separate.
 4. **Make the software renderer normative.** Add every path, blend, filter, and glyph-raster operation to the pure-Java scalar path before accepting Vulkan, D3D12, or Metal implementations.
 5. **Use an explicit, backend-neutral RHI.** Model resources, pipelines, passes, command buffers, resource usages, pass dependencies, submission order, and ownership directly. Let Vulkan and D3D12 materialize native barriers from that model instead of exposing their raw barrier APIs as the cross-backend contract.
 6. **Implement production text processing in Java.** ICU4J may supply Unicode data, Bidi, and boundary analysis. Implement OpenType parsing, GSUB/GPOS, script shaping, TrueType/CFF interpretation, hinting, and glyph rasterization in Java. Use system text APIs, FreeType, and HarfBuzz only for discovery or testing.
@@ -77,7 +77,7 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 | Future browser/Wasm host access | Generated Wasm imports and JavaScript/browser host bindings | Separate target-specific boundary; not an FFI provider |
 | Unicode | ICU4J | Isolate it behind the `org.glavo.himari.unicode` SPI |
 | Coordinates | `org.glavo.himari` and `himari-*` | Follow ADR-013 for Maven, JPMS, and packages |
-| UI model | Declarative, incrementally composed, unidirectional data flow | No mandatory compiler plugin |
+| UI model | Declarative, signal-driven, phase-aware, unidirectional data flow | Select the structural-update strategy in M1; no mandatory compiler plugin |
 | Layout | Downward constraints, upward sizes, one measure per child by default | Treat intrinsic measurement as explicit and expensive |
 | Drawing | Immutable display lists plus a retained layer tree | Support partial repaint and caching |
 | CPU rendering | Tile-based pure-Java rasterizer | Scalar normative path plus optional Vector API acceleration |
@@ -200,20 +200,22 @@ For JVM and Native Image desktop targets, use generated, fixed-signature Java ca
 
 ### ADR-003: Keep compiler plugins optional
 
-Runtime correctness must not depend on bytecode rewriting. Optional tooling may provide stable source keys, stability diagnostics, debug source maps, static skip optimization, or development-time hot reload.
+Runtime correctness and the baseline application API must not depend on source rewriting, bytecode rewriting, or generated application code. Optional tooling may provide source maps, stability diagnostics, static dependency analysis, skip optimization, or development-time hot reload. Evaluate all runtime candidates through ordinary Java samples before applying optional tooling; annotation processing alone is not a substitute for method-body instrumentation.
 
-### ADR-004: Track state reads by execution phase
+### ADR-004: Track reactive reads by execution phase
 
-Invalidate only the phase that read a state value and its required successors:
+Invalidate only the phase consumer that read a reactive value and its required successors:
 
 ```text
-COMPOSE -> MEASURE -> PLACE -> PAINT -> SEMANTICS
-           PLACE   -> PAINT
-                     PAINT
-                               SEMANTICS
+STRUCTURE -> {MEASURE, PLACE, PAINT, SEMANTICS, HIT_TEST_INDEX} as topology or node results require
+MEASURE   -> {PLACE, PAINT, SEMANTICS, HIT_TEST_INDEX} as geometry changes require
+PLACE     -> {PAINT, SEMANTICS, HIT_TEST_INDEX} as geometry changes require
+PAINT
+SEMANTICS
+HIT_TEST_INDEX
 ```
 
-Allow measure and placement to use separate restart scopes.
+`STRUCTURE` denotes the smallest callback that may change mounted-node topology; it does not imply that component functions are always rerun. Keep structure, measure, placement, paint, and semantics consumers independently restartable. A reactive property binding must declare which phases its value can affect instead of mutating a mounted node from an unclassified generic effect.
 
 ### ADR-005: Make the software renderer normative
 
@@ -255,6 +257,12 @@ Use `org.glavo.himari` as the Maven group, `himari-<area>` as artifact IDs, and 
 
 Platform-neutral contracts must support host-driven event loops, asynchronous capability acquisition, optional rendering workers, and unavailable capabilities. Desktop targets use FFM behind generated native bindings. A browser/Wasm target uses generated Wasm imports and JavaScript/browser bindings in a separate host module. Neither boundary may leak target runtime objects into common public APIs or become a generic provider SPI.
 
+### ADR-015: Separate value reactivity from structural updates
+
+Use a fine-grained producer/consumer graph for `State`, `DerivedState`, phase dependencies, and owned effects. Source writes push invalidation through the graph; derived values recompute lazily when pulled and publish semantic version changes only when their equality policy observes a new value. Treat conditional branches, keyed collections, mounted-node identity, and lifecycle as a separate structural-update problem.
+
+Do not accept universal slot-table recomposition or one-shot component execution as the structural contract before M1 evidence exists. Compare explicit grouped recomposition, one-shot signal ownership with explicit reactive control flow, and a hybrid that uses fine-grained property bindings plus small structural scopes. A slot table may remain an internal implementation selected by that evidence, but it is not a fixed public-runtime requirement.
+
 ---
 
 ## 5. Target Architecture
@@ -264,7 +272,7 @@ Platform-neutral contracts must support host-driven event loops, asynchronous ca
 ```mermaid
 flowchart TD
     App[Application Components] --> API[Public UI API]
-    API --> Runtime[Composition + State Runtime]
+    API --> Runtime[Reactive State + Structural Runtime]
     Runtime --> Element[Mounted Element Tree]
     Element --> Layout[Layout Tree]
     Element --> Semantics[Semantics Tree]
@@ -301,8 +309,10 @@ host / OS events
   -> normalized event queue
   -> input routing / gesture / focus / IME
   -> state transaction
-  -> composition invalidation
-  -> incremental composition
+  -> publish one state epoch
+  -> push reactive invalidation
+  -> pull derived values at affected consumers
+  -> run affected property bindings or structural scopes
   -> incremental measure/place
   -> paint invalidation and display-list recording
   -> layer diff + damage
@@ -315,7 +325,7 @@ host / OS events
 
 ### 5.3 Execution and threading model
 
-- **Platform/UI execution context**: run window or host events, composition, layout, input, and semantics updates on the main execution context required by the target. Desktop targets use the OS-required UI thread; a browser target uses the browser event loop.
+- **Platform/UI execution context**: run window or host events, reactive bindings, structural updates, layout, input, and semantics updates on the main execution context required by the target. Desktop targets use the OS-required UI thread; a browser target uses the browser event loop.
 - **Render execution capability**: desktop targets initially use a dedicated render thread that owns the GPU device, queue, and most GPU resources. Platform-neutral contracts must also permit rendering on the UI context or in a Web Worker.
 - **Optional worker execution**: use a bounded platform-thread pool for desktop CPU work and virtual threads for blocking desktop I/O where appropriate. A target may provide no workers, limited workers, or browser workers; correctness must not depend on their presence.
 - **Host-driven event loop**: platform scheduling must accept callbacks from a host event loop and must not require a blocking message-pump API.
@@ -323,7 +333,7 @@ host / OS events
 - **Frame handoff**: when UI and rendering execute separately, scene snapshots may use latest-wins replacement while resource creation, upload, and destruction remain ordered and non-droppable. A same-context implementation preserves the same ordering without requiring a mailbox.
 - **Explicit frame ownership**: hand off only immutable values or objects with documented ownership transfer.
 
-Do not parallelize component execution in the first version. Require components to be fast, reentrant, and free of implicit side effects so composition can later be cancelled or executed under different target schedulers.
+Do not parallelize application component, binding, or structural-control callbacks in the first version. Require every callback that the selected runtime may rerun to be fast, reentrant, and free of implicit side effects so staged UI work can later be cancelled or executed under different target schedulers. One-shot initializers must register external work through owned lifecycle APIs rather than performing unmanaged side effects.
 
 ---
 
@@ -486,58 +496,109 @@ Reserve logical boundaries for `modules/platform/web`, `modules/rhi/webgpu`, and
 
 ## 7. Declarative Runtime Workstream
 
-### 7.1 Public execution model
+### 7.1 Accepted public semantics
 
-Design the public model around these concepts:
+The ordinary Java API must express these concepts without generated application code:
 
 ```text
-Component.compose(UiScope)
-UiScope.component(key, content)
-UiScope.remember(initializer)
-UiScope.rememberInt(initialValue)
-UiScope.node(spec, children)
-UiScope.effect(key, effect)
+component or reactive owner
+source state and derived state
+phase-aware property binding
+conditional structural scope
+keyed collection scope
+mounted node declaration
+owned effect and cleanup
 ```
 
-An optional static DSL may shorten application syntax, but the runtime contract must remain explicit `UiScope` composition.
+M1 determines the final names, callback shapes, and ownership rules. Do not accept an API merely because optional code generation makes it concise. Samples used for the decision must call the same runtime surface available through standard Java compilation without an annotation processor, compiler plugin, source generator, or bytecode transformer.
 
-### 7.2 Runtime structures
+The API must preserve the point at which a reactive value is read. An eagerly evaluated argument such as a computed `String` cannot become a property-level binding: a grouped model can attribute it only to the current structural scope, while a one-shot model must reject or diagnose an uncaptured read. A deferred property getter may become a narrower phase consumer. The runtime must not claim property-level invalidation after the application has already erased the dependency by passing an eager value.
 
-Implement these structures:
+### 7.2 M1 structural-reactivity decision
 
-- **SlotTable**: store remembered values, effects, keys, source information, parameter summaries, and dependencies by group.
-- **MountedElement**: connect component declarations to persistent nodes and hold lifecycle plus local invalidation state.
-- **NodeApplier**: apply composition results incrementally to layout and semantics nodes.
-- **StateDependencyIndex**: map state versions to phase restart scopes.
-- **CompositionTransaction**: build temporary changes and commit atomically; cancellation must leave no effects behind.
+Implement three bounded prototypes over the same state graph, mounted-node abstraction, and Headless host:
+
+1. **Explicit grouped recomposition**: rerunnable structural callbacks, explicit ordinary-Java group boundaries, positional memory, and keyed reconciliation. The prototype receives no compiler-generated groups, source keys, change masks, restart lambdas, or lambda memoization.
+2. **One-shot signal ownership**: initialize each component owner once, bind deferred reactive expressions to typed node properties, and express changing branches and collections through explicit control-flow primitives equivalent to `Show` and `ForEach`. Changing component inputs must remain reactive rather than becoming frozen constructor values.
+3. **Hybrid structural scopes**: use fine-grained bindings for values and phase callbacks, but rerun the smallest explicit structural scope for conditional branches, keyed collections, or other topology changes.
+
+Freeze the shared behavioral fixtures and instrumentation before prototype work begins. The three spikes may then proceed in parallel, but they must not share a structural abstraction that prejudges the result. Each candidate implements behaviorally identical applications through its own ordinary-Java API variant.
+
+Run all three prototypes through one checked-in comparison suite:
+
+- a counter with a derived label and event handler;
+- a diamond dependency graph that would expose an intermediate-value glitch;
+- conditional insertion and removal with documented local-state retention and effect disposal;
+- nested components whose inputs change after mounting;
+- keyed list insertion, deletion, and reorder with item-local state;
+- high-frequency text, color, size, and offset changes that exercise different phase impacts;
+- failed or cancelled staged work with deterministic cleanup and retry.
+
+Record source lines of code, explicit keys, deferred getters, structural-control primitives, generic type noise, callbacks executed, nodes visited, dependency edges, steady-state allocations, retained memory, and phase invalidations. Include debug trace quality and Native Image compatibility. Performance alone cannot select a model whose ordinary-Java samples require pervasive accidental ceremony.
+
+Accept the production structural-runtime ADR only after the comparison is reviewed. The decision may select one prototype or specify a measured hybrid, but it must define component input semantics, local state ownership, branch and list identity, failure recovery, and the boundary between value propagation and structural work.
+
+### 7.3 Runtime structures
+
+Implement these model-independent structures before committing to a structural representation:
+
+- **ReactiveGraph**: maintain producer/consumer edges, value versions, dynamic dependencies, liveness, and dirty propagation.
+- **ReactiveOwner**: own computations, structural scopes, effects, and cleanup independently of any particular slot representation.
+- **MountedElement**: connect the selected declaration or binding model to persistent layout and semantics nodes and hold local invalidation state.
+- **StructuralRuntime**: implement the M1-selected branch, collection, identity, and local-state model.
+- **NodeApplier**: apply staged structural changes incrementally to mounted, layout, and semantics nodes.
+- **PhaseDependencyIndex**: map reactive versions to structure, measure, placement, paint, semantics, and hit-test consumers.
+- **UiCommitTransaction**: stage mounted-property and topology changes and commit atomically; cancellation must leave no nodes or effects behind.
 - **EffectRegistry**: define deterministic `mount`, `update`, and `dispose` ordering and aggregate failures for reporting.
 
-### 7.3 State requirements
+The grouped-recomposition prototype may contain a `SlotTable`; the one-shot prototype may instead use owners, anchors, and explicit collection records. Do not promote either storage layout to a production deliverable before the M1 ADR is accepted.
 
-Provide object and primitive state types, including `State<T>`, `MutableState<T>`, `IntState`, `LongState`, `FloatState`, and `BooleanState`. Add `DerivedState<T>`, batched `StateTransaction.run(...)`, a safe external-update commit queue for thread or host callbacks, consistent snapshot/version reads, and debug checks for illegal composition side effects or reentrant writes.
+### 7.4 State and propagation requirements
+
+Provide object and primitive state types, including `State<T>`, `MutableState<T>`, `IntState`, `LongState`, `FloatState`, and `BooleanState`. Add `DerivedState<T>`, batched `StateTransaction.run(...)`, a safe external-update commit queue for thread or host callbacks, and consistent snapshot/version reads.
+
+The reactive graph must provide:
+
+- dynamic dependency discovery and reconciliation on every consumer execution;
+- synchronous dependency capture with an explicit non-tracking read operation; asynchronous continuations must establish their own consumer context;
+- eager push propagation of dirtiness without running effects or recomputing derived values;
+- lazy pull recomputation of invalidated derived values;
+- equality policies and monotonically advancing semantic value versions so unchanged derivations do not wake downstream consumers;
+- dependency-version polling before consumer execution so a dirty notification whose inputs are semantically unchanged can be skipped;
+- glitch-free reads across diamond and dynamically changing dependency graphs;
+- cycle detection with deterministic diagnostics;
+- side-effect-free derived computations that cannot write state;
+- owner disposal and liveness rules that do not retain unreachable consumers;
+- defined caching, propagation, and retry behavior for failed derivations.
+
+`StateTransaction` and `UiCommitTransaction` are distinct. A state transaction atomically publishes source values as one epoch; a UI commit transaction atomically publishes property and topology changes derived from that epoch. Neither observers nor effects may observe an intermediate source combination, a partially updated set of bound properties, or a partially applied tree.
 
 Enforce these write rules:
 
-1. Coalesce repeated writes within one event-loop tick.
-2. Publish changes initiated outside the UI execution context as commits; do not compose directly from the originating thread, worker, or host callback.
-3. Keep every state version read by a composition transaction stable for that transaction.
-4. Cancel and retry on conflict; never commit a partial tree.
-5. Start effects only after a successful commit.
+1. Coalesce repeated writes to the same source within one transaction or event-loop tick before notifying consumers.
+2. Give nested state transactions explicit flattening, rollback, and failure semantics.
+3. Publish changes initiated outside the UI execution context through the commit queue; never execute application UI callbacks directly on the originating thread, worker, or host callback.
+4. Keep every reactive version read by staged UI work stable for that attempt.
+5. Cancel and retry conflicting staged work; never commit a partial tree or mixed state epoch.
+6. Schedule each affected effect at most once per committed epoch and run it only after affected UI work has committed or established that the epoch requires no UI mutation.
+7. Reject reentrant writes and illegal side effects from derived computations or rerunnable structural callbacks in debug mode.
 
-### 7.4 Identity and keys
+### 7.5 Identity and dynamic structure
 
-- Derive structural-position keys for built-in widget calls.
-- Require business keys for loops, conditional movement, and reorderable lists.
-- Treat `component(key, ...)` as a custom restart-group boundary.
-- Record source locations in debug builds; an annotation processor may generate stable source tokens.
-- Diagnose duplicate keys, unkeyed reordering, and remembered-slot type changes with actionable errors.
+- Require application keys for semantic identity in reorderable collections or explicit reparenting, not merely to compensate for missing compiler-generated source positions.
+- Make branch identity and the retain-versus-dispose policy for inactive local state explicit in the selected structural model.
+- Give one-shot and hybrid control-flow scopes stable anchors, deterministic child ownership, and child-before-parent disposal.
+- If grouped recomposition is selected, derive safe positional identity only inside explicit runtime scopes and require keys wherever execution order may change.
+- Record source locations in debug builds when available, but never depend on generated source tokens for correctness.
+- Never use stack inspection, line numbers, synthetic lambda class names, or allocation order as correctness-critical identity; they are diagnostic inputs only.
+- Diagnose duplicate keys, unkeyed reorder, stale bindings, owner leaks, and local-state type changes with actionable errors.
 
-### 7.5 Phase invalidation
+### 7.6 Phase invalidation
 
 Maintain independent node flags:
 
 ```text
-NEEDS_COMPOSE
+NEEDS_STRUCTURE
 NEEDS_MEASURE
 NEEDS_PLACE
 NEEDS_PAINT
@@ -545,13 +606,17 @@ NEEDS_SEMANTICS
 NEEDS_HIT_TEST_INDEX
 ```
 
-Track state reads in their phase context. Reads from component, measure, placement, paint, and semantics callbacks set the corresponding flag. A scroll offset should therefore be able to invalidate placement and paint without rebuilding the component subtree.
+Track reactive reads in their execution context. Reads from structural, measure, placement, paint, and semantics callbacks register the corresponding consumer. A typed property binding must declare phase-impact metadata; changing text may require measure, paint, and semantics, while changing color may require only paint. Mark the earliest affected phase and its required successors rather than inferring impact from an unclassified setter.
 
-### 7.6 Effects and lifecycle
+A signal write only marks consumers dirty and requests scheduled work. It must never mutate mounted, layout, semantics, or render nodes directly. A scroll offset should therefore be able to invalidate placement, paint, and hit testing without rerunning an unrelated component or structural scope.
 
-- Require composition functions to be externally side-effect free.
+### 7.7 Effects and lifecycle
+
+- Require component initialization and every rerunnable binding or structural callback to be externally side-effect free.
+- Attach effects and resources to a `ReactiveOwner`; disposing the owner must sever graph edges and release all registered work.
 - Start committed effects from parent to child and dispose them from child to parent.
-- Dispose the old effect before starting a replacement when its key changes.
+- Dispose the old effect before starting a replacement when its identity changes.
+- Coalesce effect scheduling per committed epoch and run effects only after derived values and affected staged UI work are consistent; an epoch with no UI mutation still crosses the same stabilization barrier.
 - Catch effect failures at the runtime error boundary; never let them escape through a native callback.
 - Register timers, subscriptions, and resources as effects. Do not rely on finalization.
 
@@ -563,7 +628,7 @@ Track state reads in their phase context. Reads from component, measure, placeme
 
 Implement a constraints-down, sizes-up protocol with a separate placement phase. By default, permit each child to be measured once per layout pass. Make intrinsic measurement explicit, cache it, and identify it as expensive in profiling data.
 
-Treat measurement and placement as separate restart scopes. Make baselines and alignment lines first-class results. Use `float` logical pixels throughout layout; packed integer-range optimizations may remain internal.
+Treat measurement and placement as separate reactive consumers. Make baselines and alignment lines first-class results. Use `float` logical pixels throughout layout; packed integer-range optimizations may remain internal.
 
 ### 8.2 Primitive implementation order
 
@@ -586,7 +651,7 @@ Use immutable, typed modifier chains and flatten them when mounted. Each modifie
 
 ### 8.4 Virtualization requirements
 
-`LazyList` and related primitives must provide stable item keys, viewport-based composition, overscan/prefetch, variable-height estimation and correction, anchor-preserving updates, internal-node reuse without state-identity leakage, logical accessibility information for unmounted items, and deterministic Headless scrolling tests.
+`LazyList` and related primitives must provide stable item keys, viewport-based materialization, overscan/prefetch, variable-height estimation and correction, anchor-preserving updates, internal-node reuse without state-identity leakage, logical accessibility information for unmounted items, and deterministic Headless scrolling tests.
 
 ### 8.5 Hit testing
 
@@ -1130,7 +1195,7 @@ Use a gap buffer for small single-line fields and a piece table or rope for larg
 
 ### 16.4 Animation
 
-Implement a `FrameClock`, tween/keyframe/spring/decay models, implicit and explicit animation, transition state machines, phase-aware state reads, visibility/lifecycle behavior, reduced-motion policy, replayable traces, and zero or near-zero steady-state per-frame allocation.
+Implement a `FrameClock`, tween/keyframe/spring/decay models, implicit and explicit animation, transition state machines, phase-aware reactive reads, visibility/lifecycle behavior, reduced-motion policy, replayable traces, and zero or near-zero steady-state per-frame allocation.
 
 ---
 
@@ -1362,7 +1427,7 @@ Fallback reasons
 
 ### 20.2 Inspector
 
-Inspect component, element, layout, layer, and semantics trees; state dependencies; recomposition counts; measure/place/paint invalidations; bounds, clips, and hit testing; frame timelines; display lists; render graphs; GPU resources/caches; font fallback and shaping runs; and accessibility properties.
+Inspect reactive owners, structural scopes, mounted elements, layout, layer, and semantics trees; dependency edges and versions; binding and structural-scope execution counts; measure/place/paint invalidations; bounds, clips, and hit testing; frame timelines; display lists; render graphs; GPU resources/caches; font fallback and shaping runs; and accessibility properties.
 
 Use a versioned pure-Java protocol. The inspector UI may be built with HimariUI or exposed through WebSocket/JSON to an external tool.
 
@@ -1448,23 +1513,32 @@ The milestones are dependency-ordered, not calendar-bound. Do not advance the de
 - Native Image uses the same FFM bindings as the JVM and has reproducible run evidence.
 - The macOS block-ABI spike produces an ADR that either avoids blocks or defines a verified use policy.
 
-### M1 — Headless, state, composition, and scheduling
+### M1 — Headless, state, reactivity, structural runtime, and scheduling
 
 **Deliverables:**
 
 - **PLATFORM-HEADLESS-001**: Virtual display, window, event loop, and clock.
-- **STATE-001**: Primitive/object state, transactions, and versions.
-- **COMPOSE-001**: Slot table, groups, remembered values, and keys.
-- **COMPOSE-002**: Mounted elements and incremental apply.
+- **STATE-001**: Primitive/object state, atomic transactions, epochs, and external commits.
+- **REACTIVE-001**: Dynamic producer/consumer graph, `DerivedState`, push/pull propagation, equality, liveness, and cycle detection.
+- **RUNTIME-SAMPLE-001**: Shared ordinary-Java comparison suite, instrumentation, and reporting format.
+- **RUNTIME-SPIKE-GROUPED-001**: Explicit grouped-recomposition prototype with positional memory and no compiler assistance.
+- **RUNTIME-SPIKE-ONESHOT-001**: One-shot owner prototype with fine-grained bindings and explicit structural control flow.
+- **RUNTIME-SPIKE-HYBRID-001**: Fine-grained binding prototype with small rerunnable structural scopes.
+- **RUNTIME-ADR-001**: Select and specify the production structural-reactivity model from reviewed evidence.
+- **STRUCTURE-001**: Implement the selected branch, keyed-collection, identity, local-state, and failure-recovery semantics.
+- **MOUNT-001**: Mounted elements, typed property bindings, phase impacts, and incremental apply.
 - **EFFECT-001**: Effect lifecycle.
 - **SCHED-001**: UI scheduling and frame-request coalescing.
 - **TRACE-001**: Initial deterministic trace format.
 
 **Exit criteria:**
 
-- Conditional, loop, and keyed-reordering tests pass.
-- Cancelled composition leaks no effects.
-- Local state changes invalidate only local work.
+- The three prototypes compile and run without application code generation or transformation and publish the same source-ceremony, execution, allocation, memory, and phase-invalidation metrics.
+- `RUNTIME-ADR-001` is accepted before `STRUCTURE-001` begins; the evidence remains checked in and reproducible.
+- Dynamic-dependency, lazy-derived, equality-suppression, diamond-glitch, batching, nested-transaction, effect-coalescing, cycle, and owner-disposal tests pass.
+- Conditional, loop, keyed-reordering, changing-input, and local-state-retention tests pass under the selected model.
+- Failed or cancelled staged UI work leaks no nodes, graph edges, or effects.
+- Local value changes invalidate only their dependent bindings or phase consumers; topology changes rerun only the selected structural scope.
 - A Headless sample runs deterministically.
 - Runtime-core execution loads no native library.
 
@@ -1658,7 +1732,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - Regression budgets are fixed and enforced.
 - Idle, scrolling, animation, and large-text scenarios meet their targets.
 - JVM and Native Image sample matrices pass.
-- The inspector can localize composition, layout, and render faults.
+- The inspector can localize reactive propagation, structural-update, layout, and render faults.
 - Every pure-Java release-artifact gate passes.
 
 ### M11 — Beta and stabilization
@@ -1724,24 +1798,30 @@ These issues are sufficient to begin implementation without waiting for visual c
 15. **SPIKE-D3D12-001**: Create a COM device/swapchain through FFM and present a clear.
 16. **SPIKE-METAL-001**: Create a Metal device and `CAMetalLayer` through FFM and present a clear.
 17. **NI-FFM-001**: Prototype Native Image downcall/upcall metadata.
-18. **STATE-001**: Implement versioned primitive state and transactions.
-19. **COMPOSE-001**: Implement a slot table and keyed groups.
+18. **STATE-001**: Implement versioned primitive state, atomic transactions, epochs, and external commits.
+19. **REACTIVE-001**: Implement dynamic dependencies, `DerivedState`, push/pull propagation, equality, liveness, and cycle diagnostics.
 20. **HEADLESS-001**: Implement virtual windows, event loops, and clocks.
-21. **LAYOUT-001**: Prototype constraints and single-measure enforcement.
-22. **DL-001**: Define the primitive-buffer display-list format.
-23. **PATH-001**: Implement `PathBuilder`, bounds, and reference flattening.
-24. **RASTER-001**: Implement scalar rectangle and path coverage.
-25. **PNG-001**: Implement a pure-Java PNG writer for golden output.
-26. **FONT-READER-001**: Implement a checked big-endian font reader.
-27. **FONT-SFNT-001**: Implement table directories, metrics, and `cmap`.
-28. **HB-ORACLE-001**: Build a HarfBuzz JSON runner.
-29. **FT-ORACLE-001**: Build a FreeType outline/bitmap JSON runner.
-30. **UNICODE-001**: Add the ICU4J provider and Unicode conformance-data harness.
-31. **GOLDEN-001**: Define the exact image/hash fixture format.
-32. **FUZZ-001**: Add starter Jazzer targets for fonts and paths.
-33. **TRACE-001**: Define the normalized event-trace format.
-34. **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
-35. **SAMPLE-001**: Build a Headless counter sample and golden.
+21. **RUNTIME-SAMPLE-001**: Implement the shared ordinary-Java comparison suite and metric report.
+22. **RUNTIME-SPIKE-GROUPED-001**: Prototype explicit grouped recomposition without compiler assistance.
+23. **RUNTIME-SPIKE-ONESHOT-001**: Prototype one-shot owners, typed signal bindings, and explicit structural control flow.
+24. **RUNTIME-SPIKE-HYBRID-001**: Prototype fine-grained bindings plus small structural scopes.
+25. **RUNTIME-ADR-001**: Select the production structural-reactivity model from the checked-in evidence.
+26. **STRUCTURE-001**: Implement the selected identity, branch, collection, local-state, and failure semantics.
+27. **LAYOUT-001**: Prototype constraints and single-measure enforcement.
+28. **DL-001**: Define the primitive-buffer display-list format.
+29. **PATH-001**: Implement `PathBuilder`, bounds, and reference flattening.
+30. **RASTER-001**: Implement scalar rectangle and path coverage.
+31. **PNG-001**: Implement a pure-Java PNG writer for golden output.
+32. **FONT-READER-001**: Implement a checked big-endian font reader.
+33. **FONT-SFNT-001**: Implement table directories, metrics, and `cmap`.
+34. **HB-ORACLE-001**: Build a HarfBuzz JSON runner.
+35. **FT-ORACLE-001**: Build a FreeType outline/bitmap JSON runner.
+36. **UNICODE-001**: Add the ICU4J provider and Unicode conformance-data harness.
+37. **GOLDEN-001**: Define the exact image/hash fixture format.
+38. **FUZZ-001**: Add starter Jazzer targets for fonts and paths.
+39. **TRACE-001**: Define the normalized event-trace format.
+40. **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
+41. **SAMPLE-001**: Build a deterministic Headless counter sample and golden using the selected runtime model.
 
 Every issue must use the standard work-package template or Port Unit template and include an executable acceptance command.
 
@@ -1839,7 +1919,8 @@ Meet the general DoD and all of the following:
 | Native callbacks reenter the UI runtime | State-tree corruption | Nested dispatch during resize, IME, or modal loops | Add reentrancy guards, queue events, and commit through transactions |
 | Font or image parsers permit denial of service | Security failure | Extreme memory or CPU use | Enforce resource limits, checked arithmetic, fuzzing, and timeouts |
 | Required system libraries are absent | Linux startup failure | Vulkan or Wayland libraries cannot be resolved | Report capabilities and fall back to software, Headless, or X11 where documented |
-| Java syntax makes the API too verbose | Poor usability | Samples require excessive boilerplate | Keep runtime semantics explicit but add optional code generation or DSLs; review through samples |
+| The compiler-free structural runtime has unacceptable ceremony | Public API lock-in and poor usability | Grouped samples require pervasive keys or boundaries, or signal samples require pervasive deferred getters and control-flow wrappers | Complete all M1 runtime prototypes with ordinary Java, publish ceremony and execution metrics, and select the production model before building widgets; treat optional tooling only as a later enhancement |
+| Fine-grained dependencies introduce glitches, cycles, or owner leaks | Inconsistent UI or unbounded memory growth | Diamond, dynamic-branch, equality, or disposal tests observe intermediate values or retained consumers | Use two-phase push/pull propagation, semantic versions, cycle diagnostics, explicit ownership, and adversarial graph/liveness tests |
 | Published modules are too granular | Dependency confusion | Users must understand internal module boundaries | Use ADR-013, the BOM, and `himari-desktop`; keep fine-grained artifacts out of the default user surface |
 | The Java-to-Wasm toolchain cannot support the required Java 25/runtime subset | Web track blocked or fragmented | W0 needs source rewrites or incompatible runtime substitutions | Keep the Web track post-stable, define a portable-core profile, and select a toolchain only after representative feasibility tests |
 | Desktop threading or synchronous APIs leak into common contracts | Browser deadlocks or unusable APIs | Web prototypes require blocking, threads, or `SharedArrayBuffer` | Require host-driven scheduling, asynchronous capabilities, and a correct single-thread execution path in ADR-014 |
@@ -1872,7 +1953,9 @@ The entries below must not block M0 unless marked accepted. Use the working defa
 | Java-to-Wasm toolchain and Web artifact names | Defer to W0 feasibility evidence |
 | Public coordinate precision | `float` logical pixels |
 | Text indices | UTF-16 offsets plus grapheme/cluster APIs |
-| Compiler plugin | Optional; never a correctness dependency |
+| Value reactivity | **Accepted:** ADR-015 fine-grained producer/consumer graph with push invalidation and lazy pull recomputation |
+| Structural reactivity | No working default before M1 evidence; `RUNTIME-ADR-001` selects grouped, one-shot, or hybrid semantics |
+| Compiler plugin | Optional; never a correctness or baseline-usability dependency |
 | Arbitrary user shaders | Defer until after the stable release |
 | Linux keyboard | Pure-Java XKB target; system xkbcommon is transitional or an Oracle only |
 | X11 | Compatibility backend; Wayland first |
@@ -1892,7 +1975,7 @@ The first demonstrable release must validate the architecture rather than show o
 7. Native Image runs on at least one platform.
 8. JAR and dependency scans prove that no native library is bundled.
 9. The same scene has a CPU/GPU golden comparison.
-10. The inspector displays component, layout, layer, and semantics trees.
+10. The inspector displays reactive owners, structural scopes, mounted elements, layout, layer, and semantics trees.
 
 This increment is the earliest credible proof that the architecture works end to end.
 
@@ -1913,13 +1996,23 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 - [GraalVM Native Image Reachability Metadata](https://www.graalvm.org/latest/reference-manual/native-image/metadata/)
 - [GraalVM Native Image C API](https://www.graalvm.org/latest/reference-manual/native-image/native-code-interoperability/C-API/)
 
-### Compose, Flutter, and Impeller
+### Reactive systems and declarative UI
 
+- [A Survey on Reactive Programming](https://dl.acm.org/doi/10.1145/2501654.2501666)
+- [Angular Signals Implementation](https://github.com/angular/angular/blob/main/packages/core/primitives/signals/README.md)
+- [SolidJS State Management](https://docs.solidjs.com/guides/state-management)
+- [Svelte Lifecycle Hooks](https://svelte.dev/docs/svelte/lifecycle-hooks)
+- [Svelte Derived State and Push-Pull Propagation](https://svelte.dev/docs/svelte/%24derived)
+- [Vue Core Releases and Vapor Mode Status](https://github.com/vuejs/core/releases)
+- [How Compose Works](https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/compose/runtime/design/how-compose-works.md)
 - [Thinking in Compose](https://developer.android.com/develop/ui/compose/mental-model)
 - [Compose UI Architecture](https://developer.android.com/develop/ui/compose/architecture)
 - [Jetpack Compose Phases](https://developer.android.com/develop/ui/compose/phases)
 - [Compose Layout Basics](https://developer.android.com/develop/ui/compose/layouts/basics)
 - [Flutter Architectural Overview](https://docs.flutter.dev/resources/architectural-overview)
+
+### Rendering architecture
+
 - [Impeller Rendering Engine](https://docs.flutter.dev/perf/impeller)
 
 ### Text, fonts, and Unicode
