@@ -1,9 +1,10 @@
 # HimariUI Implementation Plan
 
-> Status: Draft 0.3<br>
+> Status: Draft 0.4<br>
 > Runtime baseline: Java 25<br>
 > Initial platforms: Windows, macOS, Linux, and Headless<br>
 > Future mobile policy: Android and iOS are post-stable Java 25 AOT targets and do not define the core compatibility baseline<br>
+> Future remote policy: the scene boundary is transport-ready, while networking and remote-session products remain post-stable extensions<br>
 > Primary distribution constraint: published core and desktop artifacts must not ship project-built or third-party CPU-native libraries; future mobile bundles may contain only declared target-generated AOT code and host glue<br>
 > Last reviewed: 2026-08-14
 
@@ -69,6 +70,7 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 11. **Use the accepted Himari naming scheme.** Maven coordinates use `org.glavo.himari:himari-*`; JPMS modules and Java packages use `org.glavo.himari.*`.
 12. **Preserve browser/Wasm portability seams.** Platform startup, event delivery, rendering execution, clipboard, resource loading, font discovery, and GPU initialization must permit asynchronous, host-driven, and single-threaded implementations. Do not expose JavaScript, DOM, WebGPU, or Wasm runtime objects from platform-neutral public APIs.
 13. **Treat mobile as a post-stable AOT extension.** Android and iOS support is contingent on a mobile AOT toolchain compiling the representative Java 25 core without source rewrites or a reduced Java profile. If no such toolchain is viable, defer the mobile target instead of lowering the runtime baseline, banning stable Java 25 APIs, or maintaining an ART-compatible common implementation.
+14. **Make the scene boundary transport-ready without putting networking in the core.** `SceneSnapshot`, display-list, resource, semantics, and normalized-input encodings must be versioned, pointer-free, bounded, and replayable outside the producing process. The default renderer remains in-process. Authentication, encryption, discovery, congestion control, codecs, and remote-session policy belong to post-stable extensions.
 
 ### 1.4 Default technology choices
 
@@ -79,14 +81,16 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 | Desktop Native Image | Shared FFM bindings plus generated metadata | No separate SVM system-call backend |
 | Future Android/iOS runtime | Java 25-capable mobile AOT; GraalVM Native Image-derived tooling is the initial candidate | Toolchain feasibility gates the target; ART compatibility does not constrain common modules |
 | Future Android/iOS host access | Generated target-specific launcher and JNI/NDK or Objective-C/C glue | Separate packaging boundary; not the desktop FFM contract or an FFI provider |
-| Future browser/Wasm host access | Generated Wasm imports and JavaScript/browser host bindings | Separate target-specific boundary; not an FFI provider |
+| Future local browser/Wasm host access | Generated Wasm imports and JavaScript/browser host bindings | Separate target-specific boundary; not an FFI provider |
 | Unicode | ICU4J | Isolate it behind the `org.glavo.himari.unicode` SPI |
 | Coordinates | `org.glavo.himari` and `himari-*` | Follow ADR-013 for Maven, JPMS, and packages |
 | UI model | Declarative, signal-driven, phase-aware, unidirectional data flow | Select the structural-update strategy in M1; no mandatory compiler plugin |
 | Layout | Downward constraints, upward sizes, one measure per child by default | Treat intrinsic measurement as explicit and expensive |
 | Drawing | Immutable display lists plus a retained layer tree | Support partial repaint and caching |
+| Scene/process boundary | Versioned `SceneSnapshot` envelopes plus content-addressed resources | In-process mailbox by default; canonical encoding supports replay, process isolation, and future transport |
 | CPU rendering | Tile-based pure-Java rasterizer | Scalar normative path plus optional Vector API acceleration |
 | GPU rendering | Vulkan, D3D12, and Metal | Use a backend-neutral explicit RHI |
+| Future remote Web client | Scene/display-list stream rendered through WebGPU or Canvas/software | Java 25 runtime remains authoritative on the server; never stream RHI or native GPU commands |
 | Text | Pure-Java OpenType, shaping, and rasterization | Differentially validate against FreeType and HarfBuzz |
 | Testing | JUnit 5, jqwik/Jazzer, JMH, native Oracle runners | LWJGL/JNA/system libraries are test-only |
 | Build | Gradle multi-project plus JPMS | Publish a Maven BOM and modular JARs |
@@ -126,6 +130,7 @@ Create `build-logic/pure-java-guard` and implement at least these gates:
 11. `verifySingleFfmPath`: for JVM and Native Image desktop production modules, reject JNA, GraalVM SVM interop, and handwritten JNI. Permit creation of `FunctionDescriptor` values and calls to `Linker.downcallHandle` or `Linker.upcallStub` only in generated bindings or allowlisted `himari-ffi` support code. Future browser/Wasm modules must use their isolated host-binding boundary and must not depend on `himari-ffi`.
 12. `verifyWebHostIsolation`: activate with W0/W1; require an explicit browser-import allowlist, reject desktop/FFM dependencies from Web artifacts, validate generated linear-memory marshalling, and reject dynamic JavaScript evaluation or undeclared ambient browser access.
 13. `verifyMobileAotIsolation`: activate with A0; require mobile packaging inputs to be explicit, reject mobile launchers and generated host glue from core or desktop JARs, reject target runtime types from common public APIs, and verify that the representative Java 25 core is compiled without an ART compatibility fork or source rewrite.
+14. `verifySceneCodec`: round-trip canonical scene, display-list, resource-manifest, semantics, and normalized-input fixtures; reject native addresses, Java object identity, target handles, malformed lengths, unsupported required features, hash mismatches, and configured resource-limit violations; fuzz every decoder.
 
 ### 2.3 Published artifacts and user entry points
 
@@ -171,11 +176,12 @@ Deliver all of the following:
 - Accessibility bridges for Windows UI Automation, macOS Accessibility, and Linux AT-SPI2.
 - Vulkan, D3D12, and Metal GPU backends plus CPU fallback.
 - JVM and GraalVM Native Image distribution paths.
-- Inspector, frame trace, deterministic replay, and golden-test tooling.
+- Inspector, versioned transport-ready scene/frame traces, deterministic offline replay, and golden-test tooling.
 
 ### 3.2 Explicit non-goals for the first stable release
 
 - Android or iOS product support; both belong to the post-stable AOT extension track.
+- Live remote sessions, network transports, authentication, adaptive streaming, and remote-desktop product features.
 - Browser DOM/CSS compatibility.
 - Swing or JavaFX control interoperability as a core architectural requirement.
 - Arbitrary user shaders; expose only a controlled set of brushes, filters, and effects initially.
@@ -190,6 +196,7 @@ Deliver all of the following:
 - **iOS, AOT-only and feasibility-gated**: compile the same unchanged Java 25 subsystems with a suitable mobile AOT toolchain and use generated Objective-C/C glue for application lifecycle, UIKit, Metal, input, IME, and accessibility. GraalVM Native Image-derived tooling, initially Gluon Substrate/GluonFX, is a candidate to validate rather than an accepted dependency or proof that the desktop FFM path works on iOS.
 - **Mobile compatibility rule**: require representative mobile AOT spikes to cover stable Java 25 APIs used by the core, including `MemorySegment` and `Arena` where applicable. A toolchain failure postpones Android/iOS support; it must not cause the main source set to adopt an older Java profile, avoid stable Java 25 features, or maintain parallel ART-compatible algorithms.
 - **Browser/Wasm**: compile the portable Java subsystems to WebAssembly; use generated Wasm imports and JavaScript/browser host bindings, WebGPU with a Canvas fallback, host-driven event delivery, asynchronous browser capabilities, and a DOM-backed semantics/IME bridge. Reuse the backend-neutral RHI contract without requiring FFM or runtime JPMS. This target does not provide DOM/CSS visual compatibility.
+- **Remote scene rendering and Web client**: keep the authoritative Java 25 runtime, layout, text shaping, hit testing, focus, and application state on a JVM or Native Image host. Stream versioned scene/display-list envelopes, content-addressed resources, correlated semantics updates, and lifecycle/configuration changes to a browser client that presents through WebGPU or Canvas/software and returns normalized input and IME transactions. This path must not require the full Java runtime to execute in the browser and must not expose component trees, RHI commands, native GPU commands, or target handles on the wire. Pixel/video streaming may be an optional fallback, not the normative scene protocol.
 - **Media**: add a pure-Java `himari-media` API, WAV/PCM baseline implementations, and optional FFmpeg, GStreamer, or platform-codec providers.
 
 ---
@@ -275,6 +282,10 @@ Do not accept universal slot-table recomposition or one-shot component execution
 
 The shared implementation may use stable Java 25 language and runtime features. Android and iOS become supported only when a mobile AOT toolchain can compile and run the representative core without source rewriting, an older common source set, or replacement of Java 25 APIs solely for target compatibility. The absence of such a toolchain defers the affected mobile target. An ART-compatible execution profile requires a future replacement or supplementary ADR and is not a current design constraint.
 
+### ADR-017: Make scene output transport-ready without making remote rendering core policy
+
+Define a canonical, versioned, pointer-free encoding for immutable scene/display-list data, resources, semantics snapshots, and normalized input. The encoding must survive a process and language boundary, use explicit feature negotiation and resource limits, and remain independent of Java object layout, `MemorySegment` identity, FFM handles, RHI objects, and native GPU commands. Internal implementations may continue to use Java 25 APIs and `MemorySegment`; only the encoded form is constrained. Core modules own deterministic codecs and offline replay, not sockets, TLS, authentication, discovery, congestion control, video codecs, clipboard/file redirection, or session policy. A future remote renderer is a target-specific consumer of this boundary, not a runtime renderer provider SPI.
+
 ---
 
 ## 5. Target Architecture
@@ -291,7 +302,12 @@ flowchart TD
     Layout --> Paint[Paint Recording]
     Paint --> DisplayList[Immutable Display Lists]
     DisplayList --> Layer[Retained Layer Tree]
-    Layer --> FrameCompiler[Frame Compiler / Render Graph]
+    Layer --> Scene[Immutable SceneSnapshot]
+    Scene --> FrameCompiler[Frame Compiler / Render Graph]
+    Scene --> SceneCodec[Canonical Scene Codec]
+    Semantics --> SceneCodec
+    SceneCodec --> Replay[Trace / Offline Replay]
+    SceneCodec -. future .-> RemoteWeb[Remote Web Client]
     FrameCompiler --> Software[Pure Java Software Renderer]
     FrameCompiler --> RHI[Explicit GPU RHI]
     RHI --> Vulkan[Vulkan Backend]
@@ -302,7 +318,7 @@ flowchart TD
     Platform --> Windows[Win32]
     Platform --> Mac[AppKit / Cocoa]
     Platform --> Wayland[Wayland]
-    Platform -. future .-> Browser[Browser / Wasm]
+    Platform -. future .-> Browser[Local Browser / Wasm]
     Windows --> NativeAccess[Generated Native Bindings]
     Mac --> NativeAccess
     Wayland --> NativeAccess
@@ -310,8 +326,11 @@ flowchart TD
     D3D12 --> NativeAccess
     Metal --> NativeAccess
     NativeAccess --> FFM[Generated Typed FFM Bindings]
-    Browser --> WebHost[Generated Wasm / JavaScript Host Bindings]
+    Browser --> WebHost[Browser Host Bindings]
     WebGPU --> WebHost
+    RemoteWeb --> WebHost
+    RemoteWeb --> WebGPU
+    RemoteWeb --> Canvas[Canvas / Software Presentation]
 ```
 
 ### 5.2 Frame flow
@@ -329,7 +348,7 @@ host / OS events
   -> paint invalidation and display-list recording
   -> layer diff + damage
   -> immutable SceneSnapshot
-  -> render mailbox
+  -> render mailbox by default, or canonical encoded scene sink
   -> frame compiler / render graph
   -> CPU tiles or GPU command buffers
   -> present + timing feedback
@@ -342,7 +361,7 @@ host / OS events
 - **Optional worker execution**: use a bounded platform-thread pool for desktop CPU work and virtual threads for blocking desktop I/O where appropriate. A target may provide no workers, limited workers, or browser workers; correctness must not depend on their presence.
 - **Host-driven event loop**: platform scheduling must accept callbacks from a host event loop and must not require a blocking message-pump API.
 - **No user callbacks in render execution**: never run application callbacks, component code, or state writes from the render executor, whether it is a thread, worker, or same-thread render phase.
-- **Frame handoff**: when UI and rendering execute separately, scene snapshots may use latest-wins replacement while resource creation, upload, and destruction remain ordered and non-droppable. A same-context implementation preserves the same ordering without requiring a mailbox.
+- **Frame handoff**: when UI and rendering execute separately, scene snapshots may use latest-wins replacement while resource creation, upload, destruction, configuration, and correlated semantics updates remain ordered and non-droppable. A same-context implementation preserves the same ordering without requiring a mailbox. The logical contract must not require a shared address space even though the default implementation passes immutable Java objects in-process.
 - **Explicit frame ownership**: hand off only immutable values or objects with documented ownership transfer.
 
 Do not parallelize application component, binding, or structural-control callbacks in the first version. Require every callback that the selected runtime may rerun to be fast, reentrant, and free of implicit side effects so staged UI work can later be cancelled or executed under different target schedulers. One-shot initializers must register external work through owned lifecycle APIs rather than performing unmanaged side effects.
@@ -378,6 +397,8 @@ Do not parallelize application component, binding, or structural-control callbac
 │  ├─ graphics/
 │  │  ├─ api/
 │  │  └─ path/
+│  ├─ scene/
+│  │  └─ codec/
 │  ├─ render/
 │  │  ├─ core/
 │  │  ├─ software/
@@ -460,6 +481,8 @@ text/layout
     -> unicode + text/shaper + font modules
 render/core
     -> graphics + text glyph data
+scene/codec
+    -> render/core + semantics snapshots + normalized input value types
 render/software
     -> render/core
 render/gpu
@@ -486,6 +509,10 @@ future rhi/ios-metal
     -> rhi/api + host/ios
 future host/android + host/ios
     -> generated mobile launcher/host glue + target AOT entry points
+future remote/server
+    -> runtime + scene/codec
+future remote/web-client
+    -> scene/codec schema + host/web + browser presentation backend
 ```
 
 Reject all of the following:
@@ -499,6 +526,8 @@ Reject all of the following:
 - Browser/Wasm modules that depend on `himari-ffi` or expose host runtime objects through common APIs.
 - Future mobile modules that leak Android, JNI, Objective-C, UIKit, Metal, or AOT-toolchain types into common public APIs.
 - Changes to common modules whose only purpose is ART class-library or bytecode compatibility without a separately accepted ART-target ADR.
+- Scene codecs that encode native addresses, Java object identity, `MemorySegment` identity, FFM/host handles, component trees, RHI resources, or native GPU commands.
+- Core modules that depend on sockets, HTTP/WebSocket implementations, TLS providers, authentication, discovery, congestion control, video codecs, or remote-session policy.
 
 ### 6.3 JPMS rules
 
@@ -513,13 +542,17 @@ Reject all of the following:
 
 Repository directories may be short, but Maven artifacts, JPMS modules, and Java packages must use the complete isomorphic naming scheme defined by ADR-013. BUILD-001 must not introduce an alternative convention.
 
-### 6.5 Future browser/Wasm boundaries
+### 6.5 Future local browser/Wasm boundaries
 
 Reserve logical boundaries for `modules/platform/web`, `modules/rhi/webgpu`, and `modules/host/web`. Keep browser host bindings outside `modules/ffi`; they adapt generated Wasm imports and JavaScript/browser APIs rather than native system libraries. Defer public artifact names and the Java-to-Wasm toolchain until the post-stable feasibility milestone.
 
 ### 6.6 Future mobile/AOT boundaries
 
 Reserve logical boundaries for `modules/platform/android`, `modules/platform/ios`, `modules/rhi/android-vulkan`, `modules/rhi/ios-metal`, `modules/host/android`, and `modules/host/ios`. Keep target launchers, AOT entry points, and generated JNI/NDK or Objective-C/C glue outside `modules/ffi` and outside all core JARs. These modules adapt platform lifecycle and services to target-neutral contracts; they do not define a runtime-selectable backend or an ART-compatible variant of the core. Defer public artifact names and the mobile AOT toolchain selection until A0 feasibility evidence exists.
+
+### 6.7 Future remote-rendering boundaries
+
+Keep the canonical scene codec in `modules/scene/codec` so Headless replay, inspector tooling, process isolation, and future transports share one conformance surface. Reserve `modules/remote/server`, `modules/remote/web-client`, and target-specific transport adapters for the post-stable remote track. The server adapts the authoritative runtime to encoded scene, resource, semantics, and interaction streams. The Web client adapts that protocol to the browser presentation backend and DOM-based IME/accessibility services. Transport adapters own networking, security, and session policy; the scene codec must not depend on them. A remote client is a build-time product target, not a runtime renderer provider selected from core code.
 
 ---
 
@@ -707,7 +740,10 @@ Use a compact primitive-buffer format that can be scanned sequentially:
 
 ```text
 Header:
-  version
+  magic:u32
+  majorVersion:u16
+  minorVersion:u16
+  requiredFeatures:u64
   bounds
   opCount
   resourceCount
@@ -720,17 +756,35 @@ Operations:
 
 Side tables:
   immutable paths
-  images
-  text blobs
+  content-addressed images
+  pre-shaped text blobs and glyph resources
   filters
   nested display lists
 ```
 
-Require reusable builders that freeze on completion, no per-command Java object allocation, hashing and serialization, trace/replay support, conservative bounds for culling and damage, debug source/resource labels, and explicit format versioning. Do not promise permanent compatibility across major versions.
+Use a canonical little-endian encoding independent of Java object layout and native byte order. Require reusable builders that freeze on completion, no per-command Java object allocation, hashing and serialization, trace/replay support, conservative bounds for culling and damage, debug source/resource labels, and explicit format versioning. Resource references use stable IDs scoped by a manifest plus content hashes; they never use pointers or object identity. Text blobs carry authoritative glyph IDs, positions, clusters, and required glyph data rather than asking a consumer to reshape with ambient system fonts. Reject unknown required features and malformed payloads. Do not promise permanent compatibility across major versions.
 
 ### 9.4 Retained layer tree
 
 Support transform, clip, opacity, picture, texture, backdrop-filter, explicit interop surface, and repaint-boundary layers. Implement subtree diffing, display-list reuse, raster caching, dirty regions, occlusion culling, offscreen-pass merging, opacity folding, and clip simplification.
+
+### 9.5 Transport-ready scene envelope
+
+Encode an immutable `SceneEnvelope` that can feed offline replay, another local process, or a future remote client:
+
+```text
+protocol/version/features
+streamEpoch + snapshotId + optional baseSnapshotId
+viewport + scale + color-space/presentation configuration
+layer snapshot or delta + display-list references + damage
+resource manifest + ordered add/release records + content hashes
+correlated semantics snapshot/delta identifier
+frame timing metadata and diagnostics
+```
+
+Full snapshots establish recovery points; deltas may refer only to an acknowledged base snapshot and available resource generation. Scene frames may be latest-wins, but resource, configuration, and semantics records required by an accepted frame are ordered and non-droppable. Consumers acknowledge accepted snapshots and resource generations so producers can apply backpressure and reclaim data safely. The server or local runtime remains authoritative for layout, text shaping, hit testing, focus, and application state. Client-side scrolling, cursor movement, or animation prediction is permitted only as a reversible optimization reconciled against later authoritative snapshots.
+
+The encoded envelope may be produced from `MemorySegment`-backed internal storage, but it must contain no address, arena lifetime, Java reference, FFM handle, RHI object, or backend command. Keep transport framing, compression, encryption, authentication, and session policy outside this format.
 
 ---
 
@@ -937,7 +991,7 @@ Do not generate `@CFunction`, `CFunctionPointer`, or GraalVM native-interop view
 
 If a future C/C++ host needs to create a Java isolate and call HimariUI through the Native Image C API, place that reverse-direction capability in a separate embedding extension. It must not implement or replace the framework FFI path.
 
-### 12.6 Future browser/Wasm host-binding architecture
+### 12.6 Future local browser/Wasm host-binding architecture
 
 Use a separate generated host-binding path:
 
@@ -1160,7 +1214,7 @@ Implement:
 
 Validate Objective-C block ABI, method-return ABI, selector signatures, and dynamic-class lifetime during M0. Prefer block-free APIs until the spike establishes a safe contract.
 
-### 14.7 Future browser/Wasm backend
+### 14.7 Future local browser/Wasm backend
 
 - Map the primary application surface to a browser canvas. Treat multiple top-level windows as a capability that may be unavailable rather than emulating desktop windows silently.
 - Acquire WebGPU adapters, devices, and canvas configuration asynchronously. Use the software renderer plus Canvas presentation as the documented fallback.
@@ -1178,6 +1232,15 @@ Validate Objective-C block ABI, method-return ABI, selector signatures, and dyna
 - On iOS, use generated Objective-C/C host glue for application and scene lifecycle, UIKit surfaces and events, text input, clipboard, permissions, accessibility, display scale and safe areas, suspend/resume, and memory-pressure events. Present the software renderer first; add Metal after the same host-boundary gates pass.
 - Treat surface loss, backgrounding, device loss, and host-driven main-thread scheduling as ordinary lifecycle states rather than desktop exceptions.
 - Do not claim either target until its AOT toolchain, signing, device deployment, packaging, Java 25 coverage, and platform integration matrix pass. Failure leaves the desktop release and Java 25 design unchanged.
+
+### 14.9 Future remote Web client
+
+- Accept the canonical scene, resource, semantics, and interaction protocol from an authoritative JVM or Native Image host. Do not require the full HimariUI Java runtime, application components, layout engine, or text shaper to execute in the browser.
+- Reuse the same browser presentation semantics, WebGPU mapping, Canvas/software fallback, device-loss handling, and visual differential corpus as the local browser/Wasm target. Code sharing is preferred when the selected toolchain permits it; protocol conformance and output equivalence are required even when the client decoder uses a different implementation language.
+- Keep the server authoritative for state, layout, shaping, hit testing, focus, pointer capture, and IME transactions. Return normalized browser input with stream epoch, sequence, surface-configuration version, monotonic client time, and synthetic/real origin.
+- Mirror correlated semantics deltas into DOM accessibility nodes and use a narrowly controlled hidden text-input element for IME. Do not use DOM/CSS for authoritative visual layout or rendering.
+- Cache images, glyph data, paths, and nested display lists by declared resource ID and verified content hash. Request missing resources and recovery snapshots explicitly; never substitute ambient browser fonts for authoritative shaped text.
+- Apply frame acknowledgements, latest-wins scene delivery, ordered resource/configuration records, bounded queues, and measured backpressure. Do not decode or synthesize RHI, WebGPU, Vulkan, D3D12, Metal, or other native GPU command streams from the network.
 
 ---
 
@@ -1210,6 +1273,12 @@ Define a common text-input client model for current value, range replacement, se
 Maintain an independent incremental tree containing role, label/value/hint, state, actions, bounds/transform, reading order, live regions, text-range providers, descendant merge/clear behavior, and virtualized collection metadata.
 
 Include semantics acceptance criteria from the first implementation of every control. Accessibility is never a final stabilization add-on.
+
+### 15.6 Transported interaction and semantics
+
+Give normalized input, focus, IME, and semantics records canonical bounded encodings correlated with `streamEpoch`, surface-configuration version, and scene snapshot IDs. Preserve client event sequence, monotonic client timestamp, receive timestamp, device identity, and synthetic/real origin so replay and latency analysis can distinguish production, transport, and scheduling delay. The authoritative runtime validates all remote input against current surface, focus, pointer-capture, permission, and session state; a client cannot select arbitrary internal nodes or mutate state directly.
+
+Transmit semantics as full recovery snapshots plus ordered deltas with stable IDs scoped to the stream epoch. A visual scene may be dropped, but semantics, focus, and IME transitions referenced by an accepted scene must remain ordered. Password and otherwise sensitive text fields expose only the minimum semantics and surrounding-text data permitted by their API contract and session policy.
 
 ---
 
@@ -1331,7 +1400,7 @@ Maintain separate groups for minimal synthetic fonts, open-source Latin/CJK/Arab
 
 ### 18.6 Fuzzing and parser safety
 
-Target font tables, charstrings, TrueType bytecode, image headers/compressed streams, paths/dashes/transforms, display-list deserialization, Wayland/X11 message decoding, ABI string/array marshaling, and text-editing operations.
+Target font tables, charstrings, TrueType bytecode, image headers/compressed streams, paths/dashes/transforms, display-list/scene/resource/semantics/input deserialization, Wayland/X11 message decoding, ABI string/array marshaling, and text-editing operations.
 
 Use Jazzer and property-based tests, import relevant OSS-Fuzz corpora, run differential fuzzers, enforce time/allocation/recursion limits, minimize crashes into regression fixtures, and use checked `long` arithmetic for parser offsets.
 
@@ -1365,13 +1434,17 @@ Initial engineering targets:
 
 Set absolute regression thresholds on M3 baseline machines and enforce them thereafter.
 
-### 18.9 Future browser/Wasm validation
+### 18.9 Future local browser/Wasm validation
 
 When the post-stable Web track begins, add browser integration tests for host-driven single-thread execution, optional Web Worker rendering, asynchronous startup and permissions, WebGPU and Canvas fallback, pointer/keyboard/IME normalization, DOM semantics mirroring, fetched fonts/assets, device loss, and deterministic replay. Run a defined browser/WebGPU matrix and compare portable subsystem fixtures with JVM Headless results.
 
 ### 18.10 Future mobile AOT validation
 
 When the post-stable mobile track begins, first compile and execute a representative slice of the unchanged Java 25 core on each candidate AOT toolchain. Cover every stable Java 25 API family used by production modules, including `MemorySegment`, `Arena`, concurrency, exceptions, garbage collection, resources, and static initialization where applicable. Test target host calls and callbacks separately; do not infer mobile downcall/upcall support from successful core memory access. After feasibility passes, run lifecycle, input, IME, accessibility, software/GPU differential, device-loss, suspend/resume, memory-pressure, signing, installation, and package-reproducibility matrices on Android and iOS devices and simulators/emulators.
+
+### 18.11 Future remote-rendering validation
+
+When the post-stable remote track begins, validate the canonical scene protocol first through offline files and a separate local process, then through the browser client and real transports. Require byte-for-byte canonical encoding, cross-implementation fixtures, full/delta recovery, resource deduplication and reclamation, unknown-feature rejection, malformed-input fuzzing, and identical software output for decoded scenes. Exercise latency, bandwidth limits, fragmentation, disconnect/reconnect, stale input, missing resources, dropped frames, bounded backpressure, stream-epoch changes, and recovery snapshots. Compare browser WebGPU and Canvas/software output with Headless, verify correlated DOM semantics and IME behavior, and measure input-to-present latency by production, transport, client queue, and presentation stages. Assert that no component, Java runtime, FFM, RHI, or native GPU object appears in the wire format.
 
 ---
 
@@ -1492,9 +1565,9 @@ Use a versioned pure-Java protocol. The inspector UI may be built with HimariUI 
 
 ### 20.3 Capture and replay
 
-Record normalized input events, state-transaction summaries, scenes/display lists, resource hashes, frame timing, platform scale/configuration, and renderer capabilities in `FrameTrace`.
+Record normalized input events, state-transaction summaries, canonical scene/display-list envelopes, resource manifests and hashes, correlated semantics snapshots, frame timing, platform scale/configuration, and renderer capabilities in `FrameTrace`.
 
-Replay traces with Headless and the software renderer so platform or GPU failures can become deterministic repository fixtures.
+Replay traces with Headless and the software renderer so platform or GPU failures can become deterministic repository fixtures. The `scene-replay` tool must render from the encoded trace and declared resources alone, without references to producer-process objects or ambient system fonts. This offline boundary is the first-stable proof of transport readiness; it is not a live network implementation.
 
 ---
 
@@ -1530,7 +1603,7 @@ Treat fonts, images, clipboard data, drag-and-drop data, and protocol messages a
 - Test shutdown order.
 - Validate lifetime behavior separately on the JVM and Native Image.
 
-### 21.4 Future browser/Wasm host boundary
+### 21.4 Future local browser/Wasm host boundary
 
 - Treat browser messages, fetched resources, clipboard content, drag-and-drop data, and JavaScript callback payloads as untrusted input.
 - Validate every value copied across Wasm linear memory, including offsets, lengths, encodings, object-handle generations, and callback identifiers.
@@ -1545,6 +1618,15 @@ Treat fonts, images, clipboard data, drag-and-drop data, and protocol messages a
 - Treat intents, clipboard content, drag-and-drop data, file-provider results, URLs, platform callbacks, and restored state as untrusted input.
 - Record all target-generated native inputs and outputs in the mobile package manifest; prohibit undeclared native libraries and runtime code downloads.
 - Keep mobile signing credentials outside the repository and require reproducible unsigned package inputs before signing.
+
+### 21.6 Future remote scene boundary
+
+- Treat scene envelopes, resource payloads, semantics deltas, input events, acknowledgements, capability messages, and session-control records as untrusted regardless of transport security.
+- Validate magic, protocol version, required features, stream epoch, sequence/base IDs, lengths, counts, offsets, hashes, compression ratios, recursion, total retained resources, and per-frame work before allocating or dispatching.
+- Authenticate peers and apply authorization, origin, rate, replay, timeout, and resource quotas in the remote extension. Encryption and authentication do not belong to the scene codec and must not be replaced by a custom cryptographic protocol.
+- Prevent remote input from naming arbitrary runtime objects or semantics nodes. Resolve actions only through capability-scoped, generation-checked IDs valid for the current authoritative snapshot and session.
+- Redact password fields, private semantics, clipboard content, logs, traces, and diagnostic labels according to explicit session policy. Remote diagnostics must not silently widen the data exposed to a client.
+- Bound producer, transport, decoder, resource, and presentation queues independently; disconnect or request recovery on protocol abuse instead of allowing unbounded memory growth.
 
 ---
 
@@ -1634,7 +1716,7 @@ The milestones are dependency-ordered, not calendar-bound. Do not advance the de
 **Deliverables:**
 
 - **GFX-001**: Geometry, color, `Path`, and `PathBuilder`.
-- **DL-001**: Display-list encoding and replay.
+- **DL-001**: Canonical pointer-free display-list encoding, scene envelope, resource manifest, and replay.
 - **SW-001**: Solid rectangle, rounded-rectangle, and path filling.
 - **SW-002**: Clip, transform, and blend operations.
 - **SW-003**: Images and gradients.
@@ -1645,7 +1727,7 @@ The milestones are dependency-ordered, not calendar-bound. Do not advance the de
 **Exit criteria:**
 
 - A Headless control prototype renders to PNG.
-- Display lists serialize and replay.
+- Display lists and full `SceneEnvelope` fixtures serialize canonically, reject configured limit violations, and replay without producer-process object references.
 - Path/property fuzz tests produce no crash.
 - Scalar and tiled outputs agree.
 - Exact goldens remain stable for core scenes.
@@ -1789,7 +1871,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **CACHE-001**: Raster, glyph, and pipeline cache budgets.
 - **VECTOR-001**: Optional `himari-render-vector` renderer.
 - **INSPECT-001**: Tree, frame, and render inspector.
-- **REPLAY-001**: Scene and event replay.
+- **REPLAY-001**: Canonical scene/resource/semantics/event trace and offline replay in a fresh process.
 - **NI-001**: Reachability generator and static platform/renderer backend registries.
 - **PACK-001**: jlink and Native Image packaging plugin.
 - **DIAG-001**: Capability and fallback report.
@@ -1800,6 +1882,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - Idle, scrolling, animation, and large-text scenarios meet their targets.
 - JVM and Native Image sample matrices pass.
 - The inspector can localize reactive propagation, structural-update, layout, and render faults.
+- `scene-replay` reproduces reference frames from encoded traces and declared resources alone, with no ambient font or producer-object access.
 - Every pure-Java release-artifact gate passes.
 
 ### M11 — Beta and stabilization
@@ -1808,7 +1891,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 - **API-REVIEW-001**: Public API compatibility review.
 - **DOC-001**: Tutorials, architecture, platform limits, and migration guidance.
-- **SECURITY-001**: Parser and FFI threat review.
+- **SECURITY-001**: Parser, canonical scene-codec, and FFI threat review.
 - **SOAK-001**: Long-running, multi-window, device-lost, sleep, and wake tests.
 - **RELEASE-001**: BOM, SBOM, NOTICE, signing, and reproducible release build.
 - **COMPAT-001**: OS, JDK, and GPU compatibility matrix.
@@ -1846,10 +1929,10 @@ This track begins only after the stable desktop release unless a separate projec
 This track begins only after the stable desktop release unless a separate project decision changes the priority. It does not block M0–M11.
 
 - **W0 — Toolchain and host-binding feasibility**: evaluate Java 25 language/runtime coverage, closed-world linking, exceptions, garbage collection, code size, startup, browser debugging, generated Wasm imports, and content-security-policy constraints. Select the Java-to-Wasm toolchain only after this evidence exists.
-- **W1 — Browser platform baseline**: implement `host/web` and `platform/web`, host-driven single-thread scheduling, canvas surface creation, normalized browser events, fetch-based assets, and software-renderer presentation.
+- **W1 — Browser platform baseline**: implement `host/web` and `platform/web`, host-driven single-thread scheduling, canvas surface creation, normalized browser events, fetch-based assets, and software-renderer presentation for scenes produced by the local Wasm runtime.
 - **W2 — WebGPU backend**: implement asynchronous adapter/device acquisition, WGSL output, WebGPU resource mapping, render-graph validation, device/context loss, and CPU/GPU differential scenes.
 - **W3 — Browser integration**: implement clipboard/permissions, drag-and-drop, hidden text-input bridge, DOM semantics mirror, application/downloaded fonts, lifecycle/visibility handling, and optional Web Worker rendering.
-- **W4 — Productization**: define Web artifacts, loader/bootstrap code, cache/version policy, browser compatibility matrix, diagnostics, deployment samples, performance budgets, and reproducible packaging.
+- **W4 — Productization**: define Web artifacts, loader/bootstrap code, cache/version policy, browser compatibility matrix, diagnostics, deployment samples, performance budgets, reproducible packaging, and the logical browser-presentation conformance surface reusable by a future remote Web client.
 
 **Track exit criteria:**
 
@@ -1859,13 +1942,34 @@ This track begins only after the stable desktop release unless a separate projec
 - Single-thread execution is fully functional; workers improve capability or performance but are not required for correctness.
 - IME and accessibility operate through target-specific bridges while HimariUI retains authoritative text, layout, paint, and semantics models.
 - No JavaScript, DOM, WebGPU, or Wasm runtime object appears in common public APIs.
+- Browser scene presentation passes the same canonical display-list, resource, and visual fixtures later consumed by the remote Web client; this does not require live transport support in W0–W4.
 - Browser integration, security, compatibility, and performance gates pass on the defined matrix.
+
+### Post-stable R0–R4 — Remote scene rendering and Web client track
+
+This track begins only after the stable desktop release unless a separate project decision changes the priority. It does not block M0–M11 and may proceed even if compiling the full Java runtime to browser/Wasm remains infeasible. It reuses the canonical scene boundary and browser rendering semantics without placing networking in core modules.
+
+- **R0 — Protocol and threat-model hardening**: freeze the supported-major-version scene, resource, semantics, interaction, capability, acknowledgement, and recovery records for the first remote experiment. Define quotas, required-feature negotiation, stream epochs, full/delta rules, resource generations, redaction, fuzz corpora, cross-implementation fixtures, and compatibility policy. Do not expose RHI or native GPU commands.
+- **R1 — Authoritative host and reference transport**: implement `remote/server`, a separate-process client, full and delta scene delivery, resource deduplication, acknowledgements, latest-wins frames, ordered non-droppable records, bounded backpressure, disconnect/reconnect recovery, and per-stage latency diagnostics. Keep transport, authentication, and session policy behind the remote extension rather than the scene codec.
+- **R2 — Remote Web client**: decode the canonical protocol in a browser without the full HimariUI Java runtime, render through WebGPU with Canvas/software fallback, verify resource hashes, request missing data and recovery snapshots, and pass the shared browser presentation corpus. Reuse W-track artifacts when practical but require protocol conformance rather than a particular implementation language.
+- **R3 — Interaction, IME, semantics, and responsiveness**: return normalized input to the authoritative runtime, bridge text input through a controlled browser element, mirror correlated semantics into DOM accessibility nodes, handle focus and pointer capture, add reversible client prediction where evidence justifies it, and test latency, stale input, permissions, privacy, and reconnect behavior.
+- **R4 — Productization**: define remote artifacts, standard secure transport adapters, authentication/authorization integration points, deployment topology, session lifecycle, observability, compatibility matrices, bandwidth/memory/latency budgets, reproducible browser assets, and optional pixel/video fallback policy.
+
+**Track exit criteria:**
+
+- A Java 25 application running on the JVM and, where supported, Native Image renders and accepts input through the remote Web client without requiring the application or full runtime to execute in the browser.
+- Headless, local browser/Wasm where available, remote WebGPU, and remote Canvas/software consume the same scene conformance corpus and meet documented visual tolerances.
+- The server remains authoritative for application state, layout, shaping, hit testing, focus, pointer capture, and IME; client prediction is bounded and recoverable.
+- Full/delta recovery, resource lifetime, acknowledgements, backpressure, reconnect, capability negotiation, semantics, and input ordering pass deterministic and impaired-network tests.
+- Decoders pass fuzzing and configured CPU, memory, bandwidth, resource, recursion, and retained-state limits; security and privacy threat reviews are complete.
+- No component tree, Java runtime object, `MemorySegment` identity, FFM handle, target handle, RHI object, shader/pipeline command, or native GPU command appears in the wire format.
+- Core modules remain free of networking, authentication, codecs, and remote-session policy; remote artifacts are optional and non-transitive by default.
 
 ---
 
 ## 23. Initial Issue Backlog
 
-These issues are sufficient to begin implementation without waiting for visual control design. Do not add A0–A4 or W0–W4 work to this initial backlog until the corresponding post-stable extension track is activated:
+These issues are sufficient to begin implementation without waiting for visual control design. Do not add A0–A4, W0–W4, or R0–R4 work to this initial backlog until the corresponding post-stable extension track is activated:
 
 1. **GOV-001**: Select the license, contribution rules, and ADR template. Naming is already accepted by ADR-013.
 2. **BUILD-001**: Create the Java 25 Gradle multi-project and JPMS sample according to ADR-013.
@@ -1894,7 +1998,7 @@ These issues are sufficient to begin implementation without waiting for visual c
 25. **RUNTIME-ADR-001**: Select the production structural-reactivity model from the checked-in evidence.
 26. **STRUCTURE-001**: Implement the selected identity, branch, collection, local-state, and failure semantics.
 27. **LAYOUT-001**: Prototype constraints and single-measure enforcement.
-28. **DL-001**: Define the primitive-buffer display-list format.
+28. **DL-001**: Define the canonical pointer-free primitive-buffer display-list format, `SceneEnvelope`, resource manifest, versioning, limits, and replay codec.
 29. **PATH-001**: Implement `PathBuilder`, bounds, and reference flattening.
 30. **RASTER-001**: Implement scalar rectangle and path coverage.
 31. **PNG-001**: Implement a pure-Java PNG writer for golden output.
@@ -1904,8 +2008,8 @@ These issues are sufficient to begin implementation without waiting for visual c
 35. **FT-ORACLE-001**: Build a FreeType outline/bitmap JSON runner.
 36. **UNICODE-001**: Add the ICU4J provider and Unicode conformance-data harness.
 37. **GOLDEN-001**: Define the exact image/hash fixture format.
-38. **FUZZ-001**: Add starter Jazzer targets for fonts and paths.
-39. **TRACE-001**: Define the normalized event-trace format.
+38. **FUZZ-001**: Add starter Jazzer targets for fonts, paths, and canonical scene decoding.
+39. **TRACE-001**: Define the normalized input plus scene/resource/semantics trace format.
 40. **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
 41. **SAMPLE-001**: Build a deterministic Headless counter sample and golden using the selected runtime model.
 
@@ -1974,7 +2078,7 @@ Meet the general DoD and all of the following:
 - Interaction tests and goldens pass.
 - Disabled, read-only, and error states are defined.
 
-### 24.6 Future browser/Wasm feature
+### 24.6 Future local browser/Wasm feature
 
 - Single-thread, host-driven execution passes before worker acceleration is considered complete.
 - Asynchronous initialization, permissions, clipboard, resource loading, and GPU acquisition cover success, denial, cancellation, and unavailability.
@@ -1994,6 +2098,16 @@ Meet the general DoD and all of the following:
 - Mobile AOT output and host glue remain isolated from core and desktop JARs and have complete provenance manifests.
 - Lifecycle, input, IME, accessibility, permissions, software presentation, GPU differential behavior, suspend/resume, surface/device loss, and memory pressure pass on the supported matrix.
 - Packaging is reproducible before signing; installation, signing, and store-oriented validation procedures are documented and repeatable.
+
+### 24.8 Future remote-rendering feature
+
+- The canonical scene protocol is versioned, pointer-free, deterministic, bounded, and independent of Java object layout, implementation language, FFM, RHI, and native GPU APIs.
+- Full snapshots, deltas, resource manifests, content hashes, acknowledgements, reclamation, required-feature negotiation, stream epochs, recovery, and backpressure pass cross-process and cross-implementation tests.
+- Decoders reject malformed or unsupported input before unbounded allocation or work and pass fuzzing plus configured CPU, memory, bandwidth, recursion, decompression, and retained-resource limits.
+- Remote WebGPU and Canvas/software output pass the shared scene corpus against Headless references; optional pixel/video fallback is tested and documented separately.
+- Normalized input, focus, pointer capture, IME, semantics, lifecycle, configuration changes, disconnect/reconnect, stale events, and redaction preserve authoritative server state and defined ordering.
+- Authentication, authorization, encryption, transport, discovery, codecs, and session policy remain isolated in optional remote artifacts and use documented standard mechanisms.
+- Per-stage production, encoding, transport, decode, queue, render, and presentation latency plus bandwidth and memory diagnostics are available and meet the supported-profile budgets.
 
 ---
 
@@ -2020,6 +2134,9 @@ Meet the general DoD and all of the following:
 | Published modules are too granular | Dependency confusion | Users must understand internal module boundaries | Use ADR-013, the BOM, and `himari-desktop`; keep fine-grained artifacts out of the default user surface |
 | Mobile AOT tooling cannot compile the unchanged Java 25 core or required stable APIs | Android/iOS targets are delayed | A0 requires an older common source set, rejects `MemorySegment`/`Arena`, or needs source rewriting | Keep mobile post-stable and feasibility-gated; evaluate updated or alternative AOT tooling and defer the target rather than lowering the Java baseline or adding ART compatibility constraints |
 | Mobile host integration requires a separate native ABI path | Lifecycle, input, graphics, or accessibility gaps | A0–A2 cannot express required Android/iOS callbacks through the candidate toolchain | Generate narrow target host glue outside desktop FFM and core artifacts; validate it independently and do not turn it into a runtime provider SPI |
+| The scene format becomes a disguised RHI or permanent public wire ABI | Backend lock-in and unsafe remote compatibility | Encoded records contain GPU resources, synchronization, pointers, or backend commands, or every internal change is treated as wire-compatible forever | Keep the protocol at immutable scene/display-list semantics, reject target handles in CI, negotiate required features, and promise compatibility only under an explicit version policy |
+| Remote rendering cannot meet interaction latency or bandwidth budgets | Unusable remote UI | Queues grow, intermediate frames arrive stale, or input-to-present latency is dominated by round trips | Use latest-wins scene frames, ordered resource/control records, bounded backpressure, content-addressed reuse, recovery snapshots, per-stage telemetry, and only evidence-backed reversible client prediction |
+| Remote codecs or diagnostics expose an untrusted attack and privacy surface | Resource exhaustion or data disclosure | Fuzzing finds unbounded work, clients can name runtime objects, or traces expose private text | Keep decoders bounded and pointer-free, generation-check all capabilities, isolate authentication/session policy, redact sensitive data, and complete a dedicated R-track threat review |
 | The Java-to-Wasm toolchain cannot support the required Java 25/runtime subset | Web track blocked or fragmented | W0 needs source rewrites or incompatible runtime substitutions | Keep the Web track post-stable, define a portable-core profile, and select a toolchain only after representative feasibility tests |
 | Desktop threading or synchronous APIs leak into common contracts | Browser deadlocks or unusable APIs | Web prototypes require blocking, threads, or `SharedArrayBuffer` | Require host-driven scheduling, asynchronous capabilities, and a correct single-thread execution path in ADR-014 |
 | WebGPU capability and browser behavior vary | Rendering gaps or unstable performance | Adapter acquisition, limits, or presentation differs across the browser matrix | Use capability tiers, logical resource dependencies, Canvas/software fallback, and a real browser/WebGPU matrix |
@@ -2047,11 +2164,15 @@ The entries below must not block M0 unless marked accepted. Use the working defa
 | Future Android/iOS runtime | Java 25 AOT first; initial candidate is GraalVM Native Image-derived tooling; full ART execution is not a compatibility baseline |
 | Future Android/iOS Java compatibility | Compile the normal Java 25 implementation unchanged; defer a target rather than lower the baseline or prohibit stable Java 25 features |
 | Future Android/iOS host access | Generated, isolated JNI/NDK or Objective-C/C glue plus target launchers; never a desktop FFM replacement or runtime provider |
-| Future browser/Wasm host access | Generated Wasm imports plus isolated JavaScript/browser bindings under ADR-014; never an FFI provider |
-| Future browser renderer | WebGPU with Canvas/software fallback |
-| Future browser execution | Correct on the browser event context without workers; Web Workers are optional acceleration/capability |
-| Future browser fonts/resources | Bundled, application-provided, or fetched bytes; system catalogs are optional |
+| Future local browser/Wasm host access | Generated Wasm imports plus isolated JavaScript/browser bindings under ADR-014; never an FFI provider |
+| Future local browser renderer | WebGPU with Canvas/software fallback |
+| Future local browser execution | Correct on the browser event context without workers; Web Workers are optional acceleration/capability |
+| Future local browser fonts/resources | Bundled, application-provided, or fetched bytes; system catalogs are optional |
 | Java-to-Wasm toolchain and Web artifact names | Defer to W0 feasibility evidence |
+| Core scene/process boundary | Canonical versioned `SceneEnvelope`, resource, semantics, and input codecs; in-process mailbox remains the default |
+| Future remote rendering level | Stream scene/display-list semantics and content-addressed resources; never component trees, RHI objects, or native GPU commands |
+| Future remote authority | JVM or Native Image host owns state, layout, shaping, hit testing, focus, and IME; browser prediction is optional and recoverable |
+| Future remote Web client | WebGPU with Canvas/software fallback; independent of compiling the full Java runtime to Wasm and logically conformant with the local browser renderer |
 | Public coordinate precision | `float` logical pixels |
 | Text indices | UTF-16 offsets plus grapheme/cluster APIs |
 | Value reactivity | **Accepted:** ADR-015 fine-grained producer/consumer graph with push invalidation and lazy pull recomputation |
@@ -2077,10 +2198,11 @@ The first demonstrable release must validate the architecture rather than show o
 8. JAR and dependency scans prove that no native library is bundled.
 9. The same scene has a CPU/GPU golden comparison.
 10. The inspector displays reactive owners, structural scopes, mounted elements, layout, layer, and semantics trees.
+11. The counter scene, declared resources, correlated semantics, and normalized input trace round-trip through the canonical codec and replay in a fresh process.
 
 This increment is the earliest credible proof that the architecture works end to end.
 
-Android/iOS AOT and browser/Wasm are intentionally not exit criteria for this first desktop increment; they are covered by the post-stable A0–A4 and W0–W4 tracks.
+Android/iOS AOT, browser/Wasm, and live remote rendering are intentionally not exit criteria for this first desktop increment; they are covered by the post-stable A0–A4, W0–W4, and R0–R4 tracks. Canonical offline scene encoding and replay remain first-stable requirements.
 
 ---
 
@@ -2118,6 +2240,9 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 ### Rendering architecture
 
 - [Impeller Rendering Engine](https://docs.flutter.dev/perf/impeller)
+- [Firefox Rendering Overview and WebRender Display Lists](https://firefox-source-docs.mozilla.org/gfx/RenderingOverview.html)
+- [Chromium GPU-Accelerated Compositing and GPU Process](https://www.chromium.org/developers/design-documents/gpu-accelerated-compositing-in-chrome/)
+- [Remote Desktop Graphics Pipeline Extension](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpegfx/da5c75f9-cd99-450c-98c4-014a496942b0)
 
 ### Text, fonts, and Unicode
 
@@ -2159,9 +2284,9 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 
 At the first stable desktop release, automated evidence must support this public statement:
 
-> HimariUI's core, text engine, software renderer, GPU abstraction, desktop platform backends, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
+> HimariUI's core, text engine, software renderer, GPU abstraction, desktop platform backends, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. A versioned, bounded, pointer-free scene/display-list codec plus offline replay proves that scenes, declared resources, correlated semantics, and normalized input survive a process boundary without placing networking or remote-session policy in the core. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
 
-### 29.2 Future browser/Wasm release
+### 29.2 Future local browser/Wasm release
 
 When the post-stable Web track is complete, automated evidence must additionally support this statement:
 
@@ -2172,3 +2297,9 @@ When the post-stable Web track is complete, automated evidence must additionally
 When the post-stable mobile track is complete, automated evidence must additionally support this statement:
 
 > HimariUI's Android and iOS targets compile the ordinary Java 25 runtime, layout, text, display-list, semantics, software-rendering, and RHI implementations through a validated mobile AOT toolchain without an ART-compatible common fork or restrictions on stable Java 25 features. Android and iOS platform services are reached through generated, target-specific host glue that is isolated from the desktop FFM path and from core JARs. Target-generated AOT code and host glue appear only in mobile application bundles, have complete provenance and boundary validation, and do not introduce a runtime FFI provider or third-party graphics stack.
+
+### 29.4 Future remote scene rendering release
+
+When the post-stable remote track is complete, automated evidence must additionally support this statement:
+
+> HimariUI can keep an application and its authoritative Java 25 runtime on a JVM or Native Image host while presenting and interacting with the same GUI in a browser through a versioned, bounded, pointer-free scene protocol. The browser renders immutable scene/display-list semantics and content-addressed resources through WebGPU or Canvas/software, mirrors correlated semantics for accessibility, and returns normalized input and IME transactions. No component tree, Java runtime object, FFM handle, RHI object, or native GPU command crosses the wire. Networking, security, codecs, and session policy remain isolated in optional remote artifacts and do not become core renderer providers or dependencies.
