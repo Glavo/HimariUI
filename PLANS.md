@@ -1,6 +1,6 @@
 # HimariUI Implementation Plan
 
-> Status: Draft 0.4<br>
+> Status: Draft 0.5<br>
 > Runtime baseline: Java 25<br>
 > Initial platforms: Windows, macOS, Linux, and Headless<br>
 > Future mobile policy: Android and iOS are post-stable Java 25 AOT targets and do not define the core compatibility baseline<br>
@@ -71,6 +71,7 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 12. **Preserve browser/Wasm portability seams.** Platform startup, event delivery, rendering execution, clipboard, resource loading, font discovery, and GPU initialization must permit asynchronous, host-driven, and single-threaded implementations. Do not expose JavaScript, DOM, WebGPU, or Wasm runtime objects from platform-neutral public APIs.
 13. **Treat mobile as a post-stable AOT extension.** Android and iOS support is contingent on a mobile AOT toolchain compiling the representative Java 25 core without source rewrites or a reduced Java profile. If no such toolchain is viable, defer the mobile target instead of lowering the runtime baseline, banning stable Java 25 APIs, or maintaining an ART-compatible common implementation.
 14. **Make the scene boundary transport-ready without putting networking in the core.** `SceneSnapshot`, display-list, resource, semantics, and normalized-input encodings must be versioned, pointer-free, bounded, and replayable outside the producing process. The default renderer remains in-process. Authentication, encryption, discovery, congestion control, codecs, and remote-session policy belong to post-stable extensions.
+15. **Model animation as transaction-scoped presentation state.** A committed state or property value is the authoritative target; animation derives a time-varying presentation value without writing source state on every frame. Sample related animations atomically, preserve presentation-value and velocity continuity across compatible interruptions, and execute each property at its declared structure, layout, paint, semantics, hit-test, or composite impact. Compiler assistance must not be required for these semantics.
 
 ### 1.4 Default technology choices
 
@@ -222,15 +223,16 @@ Runtime correctness and the baseline application API must not depend on source r
 Invalidate only the phase consumer that read a reactive value and its required successors:
 
 ```text
-STRUCTURE -> {MEASURE, PLACE, PAINT, SEMANTICS, HIT_TEST_INDEX} as topology or node results require
-MEASURE   -> {PLACE, PAINT, SEMANTICS, HIT_TEST_INDEX} as geometry changes require
-PLACE     -> {PAINT, SEMANTICS, HIT_TEST_INDEX} as geometry changes require
-PAINT
+STRUCTURE -> {MEASURE, PLACE, PAINT, COMPOSITE, SEMANTICS, HIT_TEST_INDEX} as topology or node results require
+MEASURE   -> {PLACE, PAINT, COMPOSITE, SEMANTICS, HIT_TEST_INDEX} as geometry changes require
+PLACE     -> {PAINT, COMPOSITE, SEMANTICS, HIT_TEST_INDEX} as geometry changes require
+PAINT     -> {COMPOSITE}
+COMPOSITE
 SEMANTICS
 HIT_TEST_INDEX
 ```
 
-`STRUCTURE` denotes the smallest callback that may change mounted-node topology; it does not imply that component functions are always rerun. Keep structure, measure, placement, paint, and semantics consumers independently restartable. A reactive property binding must declare which phases its value can affect instead of mutating a mounted node from an unclassified generic effect.
+`STRUCTURE` denotes the smallest callback that may change mounted-node topology; it does not imply that component functions are always rerun. `COMPOSITE` updates retained-layer properties, damage, and presentation state without rerecording otherwise unchanged drawing commands. Keep structure, measure, placement, paint, composite, semantics, and hit-test consumers independently restartable. A reactive or animated property binding must declare which phases its value can affect instead of mutating a mounted node from an unclassified generic effect.
 
 ### ADR-005: Make the software renderer normative
 
@@ -286,6 +288,16 @@ The shared implementation may use stable Java 25 language and runtime features. 
 
 Define a canonical, versioned, pointer-free encoding for immutable scene/display-list data, resources, semantics snapshots, and normalized input. The encoding must survive a process and language boundary, use explicit feature negotiation and resource limits, and remain independent of Java object layout, `MemorySegment` identity, FFM handles, RHI objects, and native GPU commands. Internal implementations may continue to use Java 25 APIs and `MemorySegment`; only the encoded form is constrained. Core modules own deterministic codecs and offline replay, not sockets, TLS, authentication, discovery, congestion control, video codecs, clipboard/file redirection, or session policy. A future remote renderer is a target-specific consumer of this boundary, not a runtime renderer provider SPI.
 
+### ADR-018: Make animation transaction-scoped, interruptible, and phase-aware
+
+Treat each committed state or mounted-property value as an authoritative model target and derive a separate presentation value while animation is active. Propagate immutable animation metadata with the state-publication and `UiCommitTransaction` path; an implicit animation selects metadata from the current transaction rather than writing hidden global state. Sample all due presentation values against one monotonic timestamp and publish them as one internal presentation epoch. Animation sampling must not write application `State`, execute effects, or expose intermediate values.
+
+Every animatable property declares a typed interpolation adapter and its earliest phase impact. Layout-affecting values may drive measure or placement on each presentation epoch; paint-affecting values rerecord only the required display lists; transform, opacity, clip, and other eligible layer properties may update only `COMPOSITE`. A declarative, bounded layer animation may be sampled by the render executor or a future remote client only when it contains no application callback and the UI runtime can reproduce the same presentation value for authoritative hit testing and reconciliation.
+
+On interruption, first sample the running animation at the replacement timestamp. Compatible spring, decay, gesture-handoff, and custom motion models preserve the current presentation value and velocity; models without meaningful velocity must at least preserve the value. Restart, blend, preserve-velocity, and snap behavior must be explicit policies rather than incidental consequences of object replacement. Structural insertion/removal transitions and matched-geometry transitions use stable identity and lifecycle state machines; they are not ordinary scalar property interpolation.
+
+SwiftUI's transaction, animatable-data, stateful custom-animation, spring-retargeting, phase/keyframe, transition, and matched-geometry semantics are primary design references. Do not copy its compiler- and macro-dependent surface API, per-frame content-closure model, or opaque identity behavior into the ordinary-Java API.
+
 ---
 
 ## 5. Target Architecture
@@ -339,14 +351,16 @@ flowchart TD
 host / OS events
   -> normalized event queue
   -> input routing / gesture / focus / IME
-  -> state transaction
+  -> state transaction + optional animation transaction
   -> publish one state epoch
   -> push reactive invalidation
   -> pull derived values at affected consumers
   -> run affected property bindings or structural scopes
+  -> commit model targets, topology, and animation metadata atomically
+  -> sample due presentation values at one FrameClock timestamp
   -> incremental measure/place
   -> paint invalidation and display-list recording
-  -> layer diff + damage
+  -> layer diff + composite-property updates + damage
   -> immutable SceneSnapshot
   -> render mailbox by default, or canonical encoded scene sink
   -> frame compiler / render graph
@@ -361,6 +375,7 @@ host / OS events
 - **Optional worker execution**: use a bounded platform-thread pool for desktop CPU work and virtual threads for blocking desktop I/O where appropriate. A target may provide no workers, limited workers, or browser workers; correctness must not depend on their presence.
 - **Host-driven event loop**: platform scheduling must accept callbacks from a host event loop and must not require a blocking message-pump API.
 - **No user callbacks in render execution**: never run application callbacks, component code, or state writes from the render executor, whether it is a thread, worker, or same-thread render phase.
+- **Bounded compositor animation**: the render executor may sample an immutable framework-defined animation program for eligible retained-layer properties. It must not execute application interpolation code, effects, or state writes. The program uses a clock mapping shared with the UI runtime so authoritative hit testing, traces, and replacement generations can reproduce or supersede its presentation state.
 - **Frame handoff**: when UI and rendering execute separately, scene snapshots may use latest-wins replacement while resource creation, upload, destruction, configuration, and correlated semantics updates remain ordered and non-droppable. A same-context implementation preserves the same ordering without requiring a mailbox. The logical contract must not require a shared address space even though the default implementation passes immutable Java objects in-process.
 - **Explicit frame ownership**: hand off only immutable values or objects with documented ownership transfer.
 
@@ -609,8 +624,9 @@ Implement these model-independent structures before committing to a structural r
 - **MountedElement**: connect the selected declaration or binding model to persistent layout and semantics nodes and hold local invalidation state.
 - **StructuralRuntime**: implement the M1-selected branch, collection, identity, and local-state model.
 - **NodeApplier**: apply staged structural changes incrementally to mounted, layout, and semantics nodes.
-- **PhaseDependencyIndex**: map reactive versions to structure, measure, placement, paint, semantics, and hit-test consumers.
-- **UiCommitTransaction**: stage mounted-property and topology changes and commit atomically; cancellation must leave no nodes or effects behind.
+- **PhaseDependencyIndex**: map reactive and presentation versions to structure, measure, placement, paint, composite, semantics, and hit-test consumers.
+- **UiCommitTransaction**: stage mounted-property targets, topology changes, and inherited animation metadata and commit atomically; cancellation must leave no nodes, animation instances, completions, or effects behind.
+- **AnimationRegistry**: own active presentation values, velocities, transition states, completion groups, replacement generations, and next-frame deadlines without making them application state.
 - **EffectRegistry**: define deterministic `mount`, `update`, and `dispose` ordering and aggregate failures for reporting.
 
 The grouped-recomposition prototype may contain a `SlotTable`; the one-shot prototype may instead use owners, anchors, and explicit collection records. Do not promote either storage layout to a production deliverable before the M1 ADR is accepted.
@@ -633,7 +649,7 @@ The reactive graph must provide:
 - owner disposal and liveness rules that do not retain unreachable consumers;
 - defined caching, propagation, and retry behavior for failed derivations.
 
-`StateTransaction` and `UiCommitTransaction` are distinct. A state transaction atomically publishes source values as one epoch; a UI commit transaction atomically publishes property and topology changes derived from that epoch. Neither observers nor effects may observe an intermediate source combination, a partially updated set of bound properties, or a partially applied tree.
+`StateTransaction` and `UiCommitTransaction` are distinct. A state transaction atomically publishes source values as one epoch; a UI commit transaction atomically publishes property targets, topology changes, and inherited animation metadata derived from that epoch. Neither observers nor effects may observe an intermediate source combination, a partially updated set of bound properties, a partially applied tree, or only part of an animation group. Running animations publish separate internal presentation epochs sampled at one timestamp; those epochs never rewrite the committed source values.
 
 Enforce these write rules:
 
@@ -664,11 +680,12 @@ NEEDS_STRUCTURE
 NEEDS_MEASURE
 NEEDS_PLACE
 NEEDS_PAINT
+NEEDS_COMPOSITE
 NEEDS_SEMANTICS
 NEEDS_HIT_TEST_INDEX
 ```
 
-Track reactive reads in their execution context. Reads from structural, measure, placement, paint, and semantics callbacks register the corresponding consumer. A typed property binding must declare phase-impact metadata; changing text may require measure, paint, and semantics, while changing color may require only paint. Mark the earliest affected phase and its required successors rather than inferring impact from an unclassified setter.
+Track reactive and presentation reads in their execution context. Reads from structural, measure, placement, paint, composite, and semantics callbacks register the corresponding consumer. A typed property binding must declare phase-impact metadata; changing text may require measure, paint, and semantics, changing color may require paint, while a retained-layer opacity change may require only composite. Mark the earliest affected phase and its required successors rather than inferring impact from an unclassified setter.
 
 A signal write only marks consumers dirty and requests scheduled work. It must never mutate mounted, layout, semantics, or render nodes directly. A scroll offset should therefore be able to invalidate placement, paint, and hit testing without rerunning an unrelated component or structural scope.
 
@@ -777,12 +794,13 @@ protocol/version/features
 streamEpoch + snapshotId + optional baseSnapshotId
 viewport + scale + color-space/presentation configuration
 layer snapshot or delta + display-list references + damage
+optional bounded layer-animation programs + clock mapping + replacement generations
 resource manifest + ordered add/release records + content hashes
 correlated semantics snapshot/delta identifier
 frame timing metadata and diagnostics
 ```
 
-Full snapshots establish recovery points; deltas may refer only to an acknowledged base snapshot and available resource generation. Scene frames may be latest-wins, but resource, configuration, and semantics records required by an accepted frame are ordered and non-droppable. Consumers acknowledge accepted snapshots and resource generations so producers can apply backpressure and reclaim data safely. The server or local runtime remains authoritative for layout, text shaping, hit testing, focus, and application state. Client-side scrolling, cursor movement, or animation prediction is permitted only as a reversible optimization reconciled against later authoritative snapshots.
+Full snapshots establish recovery points; deltas may refer only to an acknowledged base snapshot and available resource generation. Scene frames may be latest-wins, but resource, configuration, animation-replacement, and semantics records required by an accepted frame are ordered and non-droppable. Consumers acknowledge accepted snapshots and resource generations so producers can apply backpressure and reclaim data safely. The server or local runtime remains authoritative for layout, text shaping, hit testing, focus, application state, and animation targets. A transmitted animation program is restricted to negotiated framework-defined operations over eligible layer properties; it carries no callback, expression, component code, or arbitrary executable payload. Client-side scrolling, cursor movement, or animation sampling is permitted only as a reversible optimization reconciled against later authoritative snapshots and replacement generations.
 
 The encoded envelope may be produced from `MemorySegment`-backed internal storage, but it must contain no address, arena lifetime, Java reference, FFM handle, RHI object, or backend command. Keep transport framing, compression, encryption, authentication, and session policy outside this format.
 
@@ -1319,7 +1337,54 @@ Use a gap buffer for small single-line fields and a piece table or rope for larg
 
 ### 16.4 Animation
 
-Implement a `FrameClock`, tween/keyframe/spring/decay models, implicit and explicit animation, transition state machines, phase-aware reactive reads, visibility/lifecycle behavior, reduced-motion policy, replayable traces, and zero or near-zero steady-state per-frame allocation.
+Animation is the transaction-scoped evolution of presentation state toward committed model targets. It is not a loop that writes application `State`, and it must not depend on a component function or content closure running on every frame. The ordinary-Java API must make simple motion concise while retaining explicit identity, interruption, lifecycle, and phase behavior.
+
+#### 16.4.1 Model, presentation, and transaction semantics
+
+- Keep the committed model target distinct from the current presentation value. Application state reads observe the committed target by default; layout, paint, hit-test, semantics, and layer consumers receive the appropriate presentation value through typed bindings. Provide controlled presentation-value and velocity inspection for gesture handoff and diagnostics without turning them into ordinary reactive sources.
+- Propagate an immutable `AnimationTransaction` from a state-changing action through `UiCommitTransaction`. It carries the effective motion specification, disabled/reduced-motion state, replacement policy, completion group, causal/trace identifier, and scoped overrides. It must not rely on process-global mutable animation state or thread identity that a browser event loop cannot reproduce.
+- An explicit animation associates a transaction with an action. An implicit animation associates a default specification with a particular bound property and target change. The explicit transaction, local property policy, subtree policy, and accessibility policy must have documented precedence.
+- Commit all model targets and structural changes first, then create, replace, reverse, or cancel their animation instances atomically. A failed or cancelled UI commit creates no visible animation and fires no success completion.
+- A completion callback fires exactly once with an explicit completed, replaced, cancelled, failed, or skipped outcome. Completion criteria distinguish logical timeline completion from physical spring settling/removal. A transaction that produces no effective animation, including after reduced-motion transformation, completes after its UI commit stabilization barrier rather than waiting for a frame.
+
+#### 16.4.2 Animatable values and motion specifications
+
+- Define typed, deterministic interpolation adapters that map a framework value to and from allocation-free scalar or fixed-width vector storage. Provide specialized paths for primitive values, points, sizes, rectangles, transforms, colors, radii, and other hot types; do not require boxing or allocate generic vector objects per sample.
+- Keep value interpolation separate from temporal motion. An adapter defines decomposition, reconstruction, equality tolerance, clamping/normalization, and valid velocity units. A motion specification defines progress or physical evolution over time.
+- Interpolate colors in an explicitly selected color space, transforms with documented decomposition/fallback rules, and cyclic or constrained values with type-specific policies. Discrete values must use a defined threshold or structural transition instead of accidental numeric interpolation.
+- Provide tween/unit-curve, perceptual and physical spring, decay/inertial, phase-sequence, and multi-track keyframe specifications. Support delay, speed, repeat, autoreverse, and sequencing as higher-order specifications without duplicating timeline engines.
+- A custom motion model may retain per-instance state and must define deterministic sampling, completion, and, when supported, velocity and merge/retarget behavior. Arbitrary application sampling code runs only on the UI execution context. Only a framework-defined bounded declarative representation may be offloaded to a renderer or encoded into a scene.
+
+#### 16.4.3 Clock, sampling, interruption, and gesture handoff
+
+- Use a monotonic `FrameClock` and evaluate motion from elapsed time, not frame count. Define pause/resume, time scaling, delayed starts, missed frames, variable refresh, and surface-not-presented behavior. Headless supplies a manually advanced clock so any timestamp can be reproduced without sleeping.
+- Sample every due UI-side animation against one timestamp and publish all results as one presentation epoch. Consumers must never observe half of a coordinated animation group at a different time.
+- Request a new frame only while an animation has future work or another subsystem requires presentation. Sampling after a delayed or dropped frame advances directly to the value for the current time rather than replaying every missed frame.
+- Before replacing an active animation, sample its current value and velocity at the replacement timestamp. Compatible springs, decays, gesture handoffs, and custom motion preserve both; other replacements preserve at least value continuity. Expose explicit preserve-velocity, blend, restart, and snap policies, with preserve-velocity as the default for compatible spring retargeting.
+- Normalize gesture velocity into the animated property's coordinate space and timestamp domain. Drag-to-decay, drag-to-spring, and interruption by a new pointer gesture must not introduce a position or velocity discontinuity.
+- Give springs both approachable perceptual duration/bounce parameters and physical mass/stiffness/damping parameters. Define a stable settling threshold separately from perceptual or logical duration so user-facing completion does not depend on an asymptotic tail.
+
+#### 16.4.4 Phase execution and compositor eligibility
+
+- Each animated property declares the same earliest-impact metadata required by ADR-004. Size and intrinsic-content animation may require `MEASURE`; position may require `PLACE`; drawing parameters may require `PAINT`; retained transform, opacity, clip, and eligible filter changes may require only `COMPOSITE`. Geometry-affecting motion must also invalidate authoritative hit-test and semantics geometry as required.
+- Layer-only animation must not rerun structural scopes, layout, or display-list recording. A renderer may sample a bounded layer-animation program without UI callbacks, but the program, clock mapping, replacement generation, and result must be reproducible by the UI runtime and deterministic replay.
+- At input time, authoritative hit testing samples or obtains the same presentation transform used for the visible frame; it must not silently test only the final model geometry. Focus and accessibility remain UI-runtime decisions even when visual sampling is offloaded.
+- A future browser or remote client may sample only negotiated compositor-eligible programs. A new authoritative target or generation supersedes client work deterministically. Unsupported, custom, layout-affecting, or non-reproducible animation remains host-sampled and is delivered through ordinary scene updates.
+
+#### 16.4.5 Structural transitions and matched geometry
+
+- Treat insertion/removal, visibility, and replacement as explicit transition state machines rather than scalar property changes. Support asymmetric enter/exit specifications, composition, interruption, reversal, and a declared policy for whether an exiting presentation participates in layout or moves to an overlay.
+- Stable branch and collection identity determine whether a transition retargets an existing presentation or represents a new element. Diagnose duplicate identities and ambiguous transition sources instead of selecting by traversal or allocation order.
+- On logical removal, dispose the element's `ReactiveOwner` and remove it from focus, hit testing, and semantics by default. An exit transition retains only the immutable presentation data and resource leases needed to draw it. Any alternative interactive or accessibility lifetime must be an explicit control policy, not a side effect of animation duration.
+- Keep hidden, detached, and removed states distinct. Visibility changes may retain local state; removal follows normal lifecycle disposal even if an exit presentation is still visible.
+- Provide matched-geometry/shared-element transitions keyed by an explicit namespace and stable identity. Capture source and destination geometry after their respective layout passes, animate through a transition-owned overlay or layer proxy, and specify anchors, coordinate-space conversion, clipping, z-order, scroll movement, resource ownership, and multiple-source conflict behavior. Geometry matching links presentation only; it does not transfer application state or element ownership.
+
+#### 16.4.6 Motion policy, diagnostics, and performance
+
+- Model reduced motion as a per-presentation-target transformation of motion specifications, not only a global Boolean. Resolve platform/user preference, application policy, and explicit essential-motion exceptions with documented precedence; apply dynamic policy changes at an atomic presentation epoch. Policy may shorten duration, remove bounce, replace large translation/scale with opacity, or snap nonessential motion while preserving state and completion semantics. Record both requested and effective specifications. A remote client reports its preference as session configuration so the authoritative host selects the effective specification; the client must not reinterpret an already transmitted program independently.
+- Trace animation transaction IDs, target and presentation values, velocity, effective motion specification, start/sample/completion times, replacement generations, phase invalidations, offload decisions, and completion outcomes. Replay must reproduce presentation values and frames at declared timestamps.
+- The inspector must show active animations and transition identities, model targets, current presentation values, velocity, remaining logical time, settling state, owning transaction, invalidated phases, compositor eligibility, and reduced-motion substitutions.
+- Require zero or near-zero steady-state per-frame allocation. Benchmark 60 Hz, 120 Hz, variable-refresh, skipped-frame, simultaneous-animation, layout-animation, paint-animation, and compositor-only cases, including the cost of authoritative hit testing during offloaded motion.
 
 ---
 
@@ -1420,6 +1485,7 @@ Create fixed end-to-end benchmark scenes for:
 - Large sets of rounded rectangles and shadows.
 - Image grids and blur/backdrop effects.
 - Multiple windows.
+- Coordinated animation groups with 100 layout-affecting and 10,000 compositor-only properties, including interruption and gesture handoff.
 - Software rendering at 1080p and 4K.
 - GPU presentation at 60 Hz and 120 Hz.
 
@@ -1434,17 +1500,38 @@ Initial engineering targets:
 
 Set absolute regression thresholds on M3 baseline machines and enforce them thereafter.
 
-### 18.9 Future local browser/Wasm validation
+### 18.9 Animation conformance
+
+Use the Headless manual clock to sample every motion model at exact timestamps, at frame rates from 30 Hz through 240 Hz, and across variable-refresh and deliberately skipped frames. Require deterministic results independent of sampling frequency except where a specification explicitly models discrete steps.
+
+Cover:
+
+- atomic model-target commits and coordinated presentation epochs;
+- model-versus-presentation read semantics and the absence of per-frame application-state writes;
+- tween boundaries, keyframe-track alignment, phase sequencing, repeat/autoreverse, delays, and decay termination;
+- analytic spring values and velocities, gesture velocity handoff, compatible retargeting, incompatible replacement, reversal, snapping, and settling thresholds;
+- exactly-once completed, replaced, cancelled, failed, and reduced-motion-skipped outcomes, including groups that create no animation;
+- earliest-phase invalidation counts proving that compositor-only motion performs no structure, measure, place, or paint work;
+- authoritative hit testing and semantics geometry during layout-, placement-, and compositor-driven motion;
+- insertion, removal, visibility, replacement, transition reversal, owner disposal, resource leases, focus transfer, and noninteractive exit presentations;
+- matched-geometry identity, coordinate conversion, clipping, z-order, scrolling, duplicate-source diagnostics, interruption, and fallback behavior;
+- requested-versus-effective reduced-motion policies and deterministic completion after substitution;
+- trace/replay equality for target, presentation, velocity, transition state, phase invalidation, and frame output at each declared timestamp;
+- allocation and retained-memory stability after repeated creation, interruption, completion, and disposal.
+
+Where a layer animation is offloaded, run the same timestamp corpus through the UI reference sampler, local render sampler, scene-codec round trip, and any activated browser or remote sampler. Compare presentation values before comparing pixels, and reject offload when an implementation cannot meet the declared tolerance or replacement-generation semantics.
+
+### 18.10 Future local browser/Wasm validation
 
 When the post-stable Web track begins, add browser integration tests for host-driven single-thread execution, optional Web Worker rendering, asynchronous startup and permissions, WebGPU and Canvas fallback, pointer/keyboard/IME normalization, DOM semantics mirroring, fetched fonts/assets, device loss, and deterministic replay. Run a defined browser/WebGPU matrix and compare portable subsystem fixtures with JVM Headless results.
 
-### 18.10 Future mobile AOT validation
+### 18.11 Future mobile AOT validation
 
 When the post-stable mobile track begins, first compile and execute a representative slice of the unchanged Java 25 core on each candidate AOT toolchain. Cover every stable Java 25 API family used by production modules, including `MemorySegment`, `Arena`, concurrency, exceptions, garbage collection, resources, and static initialization where applicable. Test target host calls and callbacks separately; do not infer mobile downcall/upcall support from successful core memory access. After feasibility passes, run lifecycle, input, IME, accessibility, software/GPU differential, device-loss, suspend/resume, memory-pressure, signing, installation, and package-reproducibility matrices on Android and iOS devices and simulators/emulators.
 
-### 18.11 Future remote-rendering validation
+### 18.12 Future remote-rendering validation
 
-When the post-stable remote track begins, validate the canonical scene protocol first through offline files and a separate local process, then through the browser client and real transports. Require byte-for-byte canonical encoding, cross-implementation fixtures, full/delta recovery, resource deduplication and reclamation, unknown-feature rejection, malformed-input fuzzing, and identical software output for decoded scenes. Exercise latency, bandwidth limits, fragmentation, disconnect/reconnect, stale input, missing resources, dropped frames, bounded backpressure, stream-epoch changes, and recovery snapshots. Compare browser WebGPU and Canvas/software output with Headless, verify correlated DOM semantics and IME behavior, and measure input-to-present latency by production, transport, client queue, and presentation stages. Assert that no component, Java runtime, FFM, RHI, or native GPU object appears in the wire format.
+When the post-stable remote track begins, validate the canonical scene protocol first through offline files and a separate local process, then through the browser client and real transports. Require byte-for-byte canonical encoding, cross-implementation fixtures, full/delta recovery, resource deduplication and reclamation, unknown-feature rejection, malformed-input fuzzing, and identical software output for decoded scenes. Exercise latency, bandwidth limits, fragmentation, disconnect/reconnect, stale input, missing resources, dropped frames, bounded backpressure, stream-epoch changes, and recovery snapshots. For transmitted layer animations, additionally test clock mapping, timestamp sampling, interruption, replacement generations, unsupported-program fallback, long suspension, reconnection, and reconciliation against authoritative host snapshots; no callback or arbitrary executable payload may cross the boundary. Compare browser WebGPU and Canvas/software output with Headless, verify correlated DOM semantics and IME behavior, and measure input-to-present latency by production, transport, client queue, and presentation stages. Assert that no component, Java runtime, FFM, RHI, or native GPU object appears in the wire format.
 
 ---
 
@@ -1559,13 +1646,13 @@ Fallback reasons
 
 ### 20.2 Inspector
 
-Inspect reactive owners, structural scopes, mounted elements, layout, layer, and semantics trees; dependency edges and versions; binding and structural-scope execution counts; measure/place/paint invalidations; bounds, clips, and hit testing; frame timelines; display lists; render graphs; GPU resources/caches; font fallback and shaping runs; and accessibility properties.
+Inspect reactive owners, structural scopes, mounted elements, layout, layer, and semantics trees; dependency edges and versions; binding and structural-scope execution counts; measure/place/paint/composite invalidations; animation transactions, transition identities, model targets, presentation values, velocities, replacement generations, completion state, reduced-motion substitutions, and offload decisions; bounds, clips, and hit testing; frame timelines; display lists; render graphs; GPU resources/caches; font fallback and shaping runs; and accessibility properties.
 
 Use a versioned pure-Java protocol. The inspector UI may be built with HimariUI or exposed through WebSocket/JSON to an external tool.
 
 ### 20.3 Capture and replay
 
-Record normalized input events, state-transaction summaries, canonical scene/display-list envelopes, resource manifests and hashes, correlated semantics snapshots, frame timing, platform scale/configuration, and renderer capabilities in `FrameTrace`.
+Record normalized input events, state-transaction summaries, animation transactions and outcomes, requested and effective motion specifications, presentation timestamps/values/velocities, transition identities and states, replacement generations, canonical scene/display-list envelopes and bounded layer-animation programs, resource manifests and hashes, correlated semantics snapshots, frame timing, platform scale/configuration, and renderer capabilities in `FrameTrace`.
 
 Replay traces with Headless and the software renderer so platform or GPU failures can become deterministic repository fixtures. The `scene-replay` tool must render from the encoded trace and declared resources alone, without references to producer-process objects or ambient system fonts. This offline boundary is the first-stable proof of transport readiness; it is not a live network implementation.
 
@@ -1678,6 +1765,7 @@ The milestones are dependency-ordered, not calendar-bound. Do not advance the de
 - **MOUNT-001**: Mounted elements, typed property bindings, phase impacts, and incremental apply.
 - **EFFECT-001**: Effect lifecycle.
 - **SCHED-001**: UI scheduling and frame-request coalescing.
+- **ANIM-CORE-001**: Animation-transaction propagation, model/presentation separation, manual-clock sampling, presentation epochs, allocation-free scalar adapters, and reference tween/spring retargeting.
 - **TRACE-001**: Initial deterministic trace format.
 
 **Exit criteria:**
@@ -1688,6 +1776,7 @@ The milestones are dependency-ordered, not calendar-bound. Do not advance the de
 - Conditional, loop, keyed-reordering, changing-input, and local-state-retention tests pass under the selected model.
 - Failed or cancelled staged UI work leaks no nodes, graph edges, or effects.
 - Local value changes invalidate only their dependent bindings or phase consumers; topology changes rerun only the selected structural scope.
+- Headless animation tests prove atomic presentation epochs, no per-frame application-state writes, deterministic timestamp sampling, value-continuous replacement, and velocity-continuous compatible spring retargeting.
 - A Headless sample runs deterministically.
 - Runtime-core execution loads no native library.
 
@@ -1723,11 +1812,13 @@ The milestones are dependency-ordered, not calendar-bound. Do not advance the de
 - **SW-004**: Tile scheduler.
 - **CODEC-001**: PNG encoding and decoding.
 - **GOLDEN-001**: Golden infrastructure and reviewer.
+- **ANIM-SCENE-001**: Bounded retained-layer animation programs, clock mappings, replacement generations, canonical encoding, and Headless/software reference sampling for compositor-eligible properties.
 
 **Exit criteria:**
 
 - A Headless control prototype renders to PNG.
 - Display lists and full `SceneEnvelope` fixtures serialize canonically, reject configured limit violations, and replay without producer-process object references.
+- Transform and opacity animation fixtures produce the same presentation values at declared timestamps before and after scene-codec round trips, while invalidating only `COMPOSITE` plus required hit-test or semantics geometry.
 - Path/property fuzz tests produce no crash.
 - Scalar and tiled outputs agree.
 - Exact goldens remain stable for core scenes.
@@ -1775,6 +1866,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - Users can select software or Vulkan rendering.
 - Resize, DPI/scaling, and presentation behavior are correct.
 - Continuous scrolling does not grow resource usage.
+- Host frame callbacks pace a compositor-only animation, no application callback runs on the render executor, and frame requests stop after completion.
 - Vulkan validation reports no errors.
 - JVM and Native Image FFM smoke tests pass.
 
@@ -1853,6 +1945,8 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **THEME-001**: Tokens, default theme, and high contrast.
 - **A11Y-CORE-001**: Semantics actions, ranges, and live regions.
 - **GESTURE-001**: Gesture arena.
+- **ANIM-001**: Complete motion specifications, gesture handoff, transaction precedence, completion outcomes, phase/compositor integration, reduced-motion transformation, tracing, and replay.
+- **TRANSITION-001**: Enter/exit/visibility state machines plus matched-geometry/shared-element transitions and retained-presentation resource ownership.
 
 **Exit criteria:**
 
@@ -1861,6 +1955,8 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - Basic screen-reader flows pass.
 - Multilingual IME editing passes.
 - RTL, high-contrast, and reduced-motion modes pass.
+- The animation conformance suite passes for interruption, velocity continuity, phase isolation, structural lifecycle, matched geometry, completion outcomes, and deterministic replay.
+- Compositor-only animation triggers no structure, measure, placement, or paint callbacks, and authoritative hit testing follows its visible presentation geometry.
 - Control accessibility tests are required merge gates.
 
 ### M10 — Performance, tools, and Native Image productization
@@ -1930,7 +2026,7 @@ This track begins only after the stable desktop release unless a separate projec
 
 - **W0 — Toolchain and host-binding feasibility**: evaluate Java 25 language/runtime coverage, closed-world linking, exceptions, garbage collection, code size, startup, browser debugging, generated Wasm imports, and content-security-policy constraints. Select the Java-to-Wasm toolchain only after this evidence exists.
 - **W1 — Browser platform baseline**: implement `host/web` and `platform/web`, host-driven single-thread scheduling, canvas surface creation, normalized browser events, fetch-based assets, and software-renderer presentation for scenes produced by the local Wasm runtime.
-- **W2 — WebGPU backend**: implement asynchronous adapter/device acquisition, WGSL output, WebGPU resource mapping, render-graph validation, device/context loss, and CPU/GPU differential scenes.
+- **W2 — WebGPU backend**: implement asynchronous adapter/device acquisition, WGSL output, WebGPU resource mapping, render-graph validation, device/context loss, bounded compositor-animation sampling, and CPU/GPU differential scenes.
 - **W3 — Browser integration**: implement clipboard/permissions, drag-and-drop, hidden text-input bridge, DOM semantics mirror, application/downloaded fonts, lifecycle/visibility handling, and optional Web Worker rendering.
 - **W4 — Productization**: define Web artifacts, loader/bootstrap code, cache/version policy, browser compatibility matrix, diagnostics, deployment samples, performance budgets, reproducible packaging, and the logical browser-presentation conformance surface reusable by a future remote Web client.
 
@@ -1943,16 +2039,17 @@ This track begins only after the stable desktop release unless a separate projec
 - IME and accessibility operate through target-specific bridges while HimariUI retains authoritative text, layout, paint, and semantics models.
 - No JavaScript, DOM, WebGPU, or Wasm runtime object appears in common public APIs.
 - Browser scene presentation passes the same canonical display-list, resource, and visual fixtures later consumed by the remote Web client; this does not require live transport support in W0–W4.
+- Browser animation sampling passes the shared timestamp, phase-isolation, replacement-generation, and reduced-motion corpus; unsupported offload falls back to local UI-runtime sampling.
 - Browser integration, security, compatibility, and performance gates pass on the defined matrix.
 
 ### Post-stable R0–R4 — Remote scene rendering and Web client track
 
 This track begins only after the stable desktop release unless a separate project decision changes the priority. It does not block M0–M11 and may proceed even if compiling the full Java runtime to browser/Wasm remains infeasible. It reuses the canonical scene boundary and browser rendering semantics without placing networking in core modules.
 
-- **R0 — Protocol and threat-model hardening**: freeze the supported-major-version scene, resource, semantics, interaction, capability, acknowledgement, and recovery records for the first remote experiment. Define quotas, required-feature negotiation, stream epochs, full/delta rules, resource generations, redaction, fuzz corpora, cross-implementation fixtures, and compatibility policy. Do not expose RHI or native GPU commands.
+- **R0 — Protocol and threat-model hardening**: freeze the supported-major-version scene, resource, bounded layer-animation, clock-mapping, replacement-generation, semantics, interaction, capability, acknowledgement, and recovery records for the first remote experiment. Define quotas, required-feature negotiation, stream epochs, full/delta rules, resource generations, redaction, fuzz corpora, cross-implementation fixtures, and compatibility policy. Do not expose callbacks, arbitrary executable payloads, RHI, or native GPU commands.
 - **R1 — Authoritative host and reference transport**: implement `remote/server`, a separate-process client, full and delta scene delivery, resource deduplication, acknowledgements, latest-wins frames, ordered non-droppable records, bounded backpressure, disconnect/reconnect recovery, and per-stage latency diagnostics. Keep transport, authentication, and session policy behind the remote extension rather than the scene codec.
-- **R2 — Remote Web client**: decode the canonical protocol in a browser without the full HimariUI Java runtime, render through WebGPU with Canvas/software fallback, verify resource hashes, request missing data and recovery snapshots, and pass the shared browser presentation corpus. Reuse W-track artifacts when practical but require protocol conformance rather than a particular implementation language.
-- **R3 — Interaction, IME, semantics, and responsiveness**: return normalized input to the authoritative runtime, bridge text input through a controlled browser element, mirror correlated semantics into DOM accessibility nodes, handle focus and pointer capture, add reversible client prediction where evidence justifies it, and test latency, stale input, permissions, privacy, and reconnect behavior.
+- **R2 — Remote Web client**: decode the canonical protocol in a browser without the full HimariUI Java runtime, render through WebGPU with Canvas/software fallback, sample negotiated bounded layer-animation programs, verify resource hashes, request missing data and recovery snapshots, and pass the shared browser presentation and animation timestamp corpora. Reuse W-track artifacts when practical but require protocol conformance rather than a particular implementation language.
+- **R3 — Interaction, IME, semantics, and responsiveness**: return normalized input and presentation preferences such as reduced motion to the authoritative runtime, bridge text input through a controlled browser element, mirror correlated semantics into DOM accessibility nodes, handle focus and pointer capture, reconcile client animation clocks and replacement generations against authoritative presentation snapshots, add other reversible client prediction only where evidence justifies it, and test latency, stale input, permissions, privacy, and reconnect behavior.
 - **R4 — Productization**: define remote artifacts, standard secure transport adapters, authentication/authorization integration points, deployment topology, session lifecycle, observability, compatibility matrices, bandwidth/memory/latency budgets, reproducible browser assets, and optional pixel/video fallback policy.
 
 **Track exit criteria:**
@@ -1960,6 +2057,7 @@ This track begins only after the stable desktop release unless a separate projec
 - A Java 25 application running on the JVM and, where supported, Native Image renders and accepts input through the remote Web client without requiring the application or full runtime to execute in the browser.
 - Headless, local browser/Wasm where available, remote WebGPU, and remote Canvas/software consume the same scene conformance corpus and meet documented visual tolerances.
 - The server remains authoritative for application state, layout, shaping, hit testing, focus, pointer capture, and IME; client prediction is bounded and recoverable.
+- Remote animation sampling passes the shared timestamp corpus and deterministically yields to newer target/replacement generations or authoritative snapshots.
 - Full/delta recovery, resource lifetime, acknowledgements, backpressure, reconnect, capability negotiation, semantics, and input ordering pass deterministic and impaired-network tests.
 - Decoders pass fuzzing and configured CPU, memory, bandwidth, resource, recursion, and retained-state limits; security and privacy threat reviews are complete.
 - No component tree, Java runtime object, `MemorySegment` identity, FFM handle, target handle, RHI object, shader/pipeline command, or native GPU command appears in the wire format.
@@ -1997,21 +2095,23 @@ These issues are sufficient to begin implementation without waiting for visual c
 24. **RUNTIME-SPIKE-HYBRID-001**: Prototype fine-grained bindings plus small structural scopes.
 25. **RUNTIME-ADR-001**: Select the production structural-reactivity model from the checked-in evidence.
 26. **STRUCTURE-001**: Implement the selected identity, branch, collection, local-state, and failure semantics.
-27. **LAYOUT-001**: Prototype constraints and single-measure enforcement.
-28. **DL-001**: Define the canonical pointer-free primitive-buffer display-list format, `SceneEnvelope`, resource manifest, versioning, limits, and replay codec.
-29. **PATH-001**: Implement `PathBuilder`, bounds, and reference flattening.
-30. **RASTER-001**: Implement scalar rectangle and path coverage.
-31. **PNG-001**: Implement a pure-Java PNG writer for golden output.
-32. **FONT-READER-001**: Implement a checked big-endian font reader.
-33. **FONT-SFNT-001**: Implement table directories, metrics, and `cmap`.
-34. **HB-ORACLE-001**: Build a HarfBuzz JSON runner.
-35. **FT-ORACLE-001**: Build a FreeType outline/bitmap JSON runner.
-36. **UNICODE-001**: Add the ICU4J provider and Unicode conformance-data harness.
-37. **GOLDEN-001**: Define the exact image/hash fixture format.
-38. **FUZZ-001**: Add starter Jazzer targets for fonts, paths, and canonical scene decoding.
-39. **TRACE-001**: Define the normalized input plus scene/resource/semantics trace format.
-40. **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
-41. **SAMPLE-001**: Build a deterministic Headless counter sample and golden using the selected runtime model.
+27. **ANIM-CORE-001**: Implement animation-transaction propagation, atomic presentation epochs, a manual-clock reference sampler, allocation-free scalar adapters, and deterministic tween/spring interruption tests.
+28. **LAYOUT-001**: Prototype constraints and single-measure enforcement.
+29. **DL-001**: Define the canonical pointer-free primitive-buffer display-list format, `SceneEnvelope`, resource manifest, versioning, limits, and replay codec.
+30. **ANIM-SCENE-001**: Implement bounded retained-layer animation programs, clock mappings, replacement generations, canonical encoding, and a Headless/software reference sampler.
+31. **PATH-001**: Implement `PathBuilder`, bounds, and reference flattening.
+32. **RASTER-001**: Implement scalar rectangle and path coverage.
+33. **PNG-001**: Implement a pure-Java PNG writer for golden output.
+34. **FONT-READER-001**: Implement a checked big-endian font reader.
+35. **FONT-SFNT-001**: Implement table directories, metrics, and `cmap`.
+36. **HB-ORACLE-001**: Build a HarfBuzz JSON runner.
+37. **FT-ORACLE-001**: Build a FreeType outline/bitmap JSON runner.
+38. **UNICODE-001**: Add the ICU4J provider and Unicode conformance-data harness.
+39. **GOLDEN-001**: Define the exact image/hash fixture format.
+40. **FUZZ-001**: Add starter Jazzer targets for fonts, paths, and canonical scene decoding.
+41. **TRACE-001**: Define the normalized input plus scene/resource/semantics/animation trace format.
+42. **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
+43. **SAMPLE-001**: Build a deterministic Headless counter sample and golden using the selected runtime model.
 
 Every issue must use the standard work-package template or Port Unit template and include an executable acceptance command.
 
@@ -2078,7 +2178,18 @@ Meet the general DoD and all of the following:
 - Interaction tests and goldens pass.
 - Disabled, read-only, and error states are defined.
 
-### 24.6 Future local browser/Wasm feature
+### 24.6 Animation feature
+
+- Model targets and presentation values remain distinct, and sampling never writes application state.
+- Transaction precedence, interruption, replacement, cancellation, reversal, completion outcomes, and failure cleanup are specified and tested.
+- The manual-clock corpus covers exact values and velocities across variable sample rates, skipped frames, gesture handoff, and retargeting.
+- Phase-impact tests prove that each property performs no earlier work than declared; compositor-only motion executes no structure, layout, or paint callbacks.
+- Hit testing, semantics geometry, focus, lifecycle disposal, and resource ownership remain correct throughout value and structural transitions.
+- Reduced-motion substitution preserves final state and exactly-once completion behavior.
+- Trace/replay reproduces presentation values and images at declared timestamps.
+- Steady-state allocation, scheduling, 60/120 Hz frame budgets, and idle frame-request behavior meet the established thresholds.
+
+### 24.7 Future local browser/Wasm feature
 
 - Single-thread, host-driven execution passes before worker acceleration is considered complete.
 - Asynchronous initialization, permissions, clipboard, resource loading, and GPU acquisition cover success, denial, cancellation, and unavailability.
@@ -2089,7 +2200,7 @@ Meet the general DoD and all of the following:
 - Browser lifecycle, device/context loss, detached surfaces, and aborted fetches have defined recovery or shutdown behavior.
 - Packaging is reproducible and passes the supported browser/security-policy matrix.
 
-### 24.7 Future Android/iOS AOT feature
+### 24.8 Future Android/iOS AOT feature
 
 - The selected toolchain compiles the normal Java 25 source sets; no ART-compatible common fork, source rewrite, or compatibility substitution is required.
 - Every stable Java 25 API family used by the included modules has a representative compile-and-run test on each supported mobile target.
@@ -2099,13 +2210,14 @@ Meet the general DoD and all of the following:
 - Lifecycle, input, IME, accessibility, permissions, software presentation, GPU differential behavior, suspend/resume, surface/device loss, and memory pressure pass on the supported matrix.
 - Packaging is reproducible before signing; installation, signing, and store-oriented validation procedures are documented and repeatable.
 
-### 24.8 Future remote-rendering feature
+### 24.9 Future remote-rendering feature
 
 - The canonical scene protocol is versioned, pointer-free, deterministic, bounded, and independent of Java object layout, implementation language, FFM, RHI, and native GPU APIs.
 - Full snapshots, deltas, resource manifests, content hashes, acknowledgements, reclamation, required-feature negotiation, stream epochs, recovery, and backpressure pass cross-process and cross-implementation tests.
 - Decoders reject malformed or unsupported input before unbounded allocation or work and pass fuzzing plus configured CPU, memory, bandwidth, recursion, decompression, and retained-resource limits.
 - Remote WebGPU and Canvas/software output pass the shared scene corpus against Headless references; optional pixel/video fallback is tested and documented separately.
 - Normalized input, focus, pointer capture, IME, semantics, lifecycle, configuration changes, disconnect/reconnect, stale events, and redaction preserve authoritative server state and defined ordering.
+- Transmitted layer-animation programs are bounded and declarative, carry explicit clock and replacement generations, contain no callback or executable payload, reconcile with authoritative snapshots, and pass the shared animation timestamp corpus.
 - Authentication, authorization, encryption, transport, discovery, codecs, and session policy remain isolated in optional remote artifacts and use documented standard mechanisms.
 - Per-stage production, encoding, transport, decode, queue, render, and presentation latency plus bandwidth and memory diagnostics are available and meet the supported-profile budgets.
 
@@ -2131,6 +2243,7 @@ Meet the general DoD and all of the following:
 | Required system libraries are absent | Linux startup failure | Vulkan or Wayland libraries cannot be resolved | Report capabilities and fall back to software, Headless, or X11 where documented |
 | The compiler-free structural runtime has unacceptable ceremony | Public API lock-in and poor usability | Grouped samples require pervasive keys or boundaries, or signal samples require pervasive deferred getters and control-flow wrappers | Complete all M1 runtime prototypes with ordinary Java, publish ceremony and execution metrics, and select the production model before building widgets; treat optional tooling only as a later enhancement |
 | Fine-grained dependencies introduce glitches, cycles, or owner leaks | Inconsistent UI or unbounded memory growth | Diamond, dynamic-branch, equality, or disposal tests observe intermediate values or retained consumers | Use two-phase push/pull propagation, semantic versions, cycle diagnostics, explicit ownership, and adversarial graph/liveness tests |
+| Animation is implemented as curves without transaction, presentation, or lifecycle semantics | Visible jumps, incorrect input geometry, leaked exit nodes, inaccessible motion, and public API lock-in | Retargeting restarts from stale values, gestures lose velocity, animation writes `State` every frame, or opacity triggers layout/paint | Enforce ADR-018 in M1, keep model and presentation values separate, test atomic timestamp sampling and replacement outcomes, require phase metadata, and complete structural/reduced-motion conformance before control stabilization |
 | Published modules are too granular | Dependency confusion | Users must understand internal module boundaries | Use ADR-013, the BOM, and `himari-desktop`; keep fine-grained artifacts out of the default user surface |
 | Mobile AOT tooling cannot compile the unchanged Java 25 core or required stable APIs | Android/iOS targets are delayed | A0 requires an older common source set, rejects `MemorySegment`/`Arena`, or needs source rewriting | Keep mobile post-stable and feasibility-gated; evaluate updated or alternative AOT tooling and defer the target rather than lowering the Java baseline or adding ART compatibility constraints |
 | Mobile host integration requires a separate native ABI path | Lifecycle, input, graphics, or accessibility gaps | A0–A2 cannot express required Android/iOS callbacks through the candidate toolchain | Generate narrow target host glue outside desktop FFM and core artifacts; validate it independently and do not turn it into a runtime provider SPI |
@@ -2177,6 +2290,7 @@ The entries below must not block M0 unless marked accepted. Use the working defa
 | Text indices | UTF-16 offsets plus grapheme/cluster APIs |
 | Value reactivity | **Accepted:** ADR-015 fine-grained producer/consumer graph with push invalidation and lazy pull recomputation |
 | Structural reactivity | No working default before M1 evidence; `RUNTIME-ADR-001` selects grouped, one-shot, or hybrid semantics |
+| Animation semantics | **Accepted:** ADR-018 transaction-scoped model/presentation separation, atomic presentation epochs, velocity-preserving compatible retargeting, phase-aware execution, and explicit structural transitions |
 | Compiler plugin | Optional; never a correctness or baseline-usability dependency |
 | Arbitrary user shaders | Defer until after the stable release |
 | Linux keyboard | Pure-Java XKB target; system xkbcommon is transitional or an Oracle only |
@@ -2199,6 +2313,7 @@ The first demonstrable release must validate the architecture rather than show o
 9. The same scene has a CPU/GPU golden comparison.
 10. The inspector displays reactive owners, structural scopes, mounted elements, layout, layer, and semantics trees.
 11. The counter scene, declared resources, correlated semantics, and normalized input trace round-trip through the canonical codec and replay in a fresh process.
+12. A counter change exercises the animation-transaction and model/presentation path; Headless reproduces declared intermediate timestamps, and a compositor-eligible property crosses the canonical scene codec without application callbacks.
 
 This increment is the earliest credible proof that the architecture works end to end.
 
@@ -2236,6 +2351,19 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 - [Jetpack Compose Phases](https://developer.android.com/develop/ui/compose/phases)
 - [Compose Layout Basics](https://developer.android.com/develop/ui/compose/layouts/basics)
 - [Flutter Architectural Overview](https://docs.flutter.dev/resources/architectural-overview)
+
+### Animation and motion
+
+- [SwiftUI `Transaction`](https://developer.apple.com/documentation/swiftui/transaction)
+- [SwiftUI `withAnimation` Completion Semantics](https://developer.apple.com/documentation/SwiftUI/withAnimation%28_%3AcompletionCriteria%3A_%3Acompletion%3A%29)
+- [SwiftUI `Animatable`](https://developer.apple.com/documentation/swiftui/animatable)
+- [SwiftUI `VectorArithmetic`](https://developer.apple.com/documentation/swiftui/vectorarithmetic)
+- [SwiftUI `CustomAnimation`](https://developer.apple.com/documentation/swiftui/customanimation)
+- [Explore SwiftUI Animation](https://developer.apple.com/videos/play/wwdc2023/10156/)
+- [Animate with Springs](https://developer.apple.com/videos/play/wwdc2023/10158/)
+- [Controlling the Timing and Movements of SwiftUI Animations](https://developer.apple.com/documentation/swiftui/controlling-the-timing-and-movements-of-your-animations)
+- [SwiftUI `Transition`](https://developer.apple.com/documentation/swiftui/transition)
+- [SwiftUI `matchedGeometryEffect`](https://developer.apple.com/documentation/swiftui/view/matchedgeometryeffect%28id%3Ain%3Aproperties%3Aanchor%3Aissource%3A%29)
 
 ### Rendering architecture
 
@@ -2284,7 +2412,7 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 
 At the first stable desktop release, automated evidence must support this public statement:
 
-> HimariUI's core, text engine, software renderer, GPU abstraction, desktop platform backends, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. A versioned, bounded, pointer-free scene/display-list codec plus offline replay proves that scenes, declared resources, correlated semantics, and normalized input survive a process boundary without placing networking or remote-session policy in the core. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
+> HimariUI's core, text engine, software renderer, GPU abstraction, desktop platform backends, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. Animation keeps committed model targets separate from atomically sampled presentation values, preserves value and compatible spring velocity across interruption, respects declared phase impacts and reduced-motion policy, and replays deterministically without per-frame application-state writes. A versioned, bounded, pointer-free scene/display-list codec plus offline replay proves that scenes, declared resources, correlated semantics, and normalized input survive a process boundary without placing networking or remote-session policy in the core. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
 
 ### 29.2 Future local browser/Wasm release
 
@@ -2302,4 +2430,4 @@ When the post-stable mobile track is complete, automated evidence must additiona
 
 When the post-stable remote track is complete, automated evidence must additionally support this statement:
 
-> HimariUI can keep an application and its authoritative Java 25 runtime on a JVM or Native Image host while presenting and interacting with the same GUI in a browser through a versioned, bounded, pointer-free scene protocol. The browser renders immutable scene/display-list semantics and content-addressed resources through WebGPU or Canvas/software, mirrors correlated semantics for accessibility, and returns normalized input and IME transactions. No component tree, Java runtime object, FFM handle, RHI object, or native GPU command crosses the wire. Networking, security, codecs, and session policy remain isolated in optional remote artifacts and do not become core renderer providers or dependencies.
+> HimariUI can keep an application and its authoritative Java 25 runtime on a JVM or Native Image host while presenting and interacting with the same GUI in a browser through a versioned, bounded, pointer-free scene protocol. The browser renders immutable scene/display-list semantics and content-addressed resources through WebGPU or Canvas/software, samples only negotiated bounded layer-animation programs with explicit clocks and replacement generations, mirrors correlated semantics for accessibility, and returns normalized input and IME transactions. No callback, arbitrary executable payload, component tree, Java runtime object, FFM handle, RHI object, or native GPU command crosses the wire. Networking, security, codecs, and session policy remain isolated in optional remote artifacts and do not become core renderer providers or dependencies.
