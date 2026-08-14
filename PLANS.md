@@ -1,6 +1,6 @@
 # HimariUI Implementation Plan
 
-> Status: Draft 0.8<br>
+> Status: Draft 0.9<br>
 > Runtime baseline: Java 25<br>
 > Initial platforms: Windows, macOS, Linux, and Headless<br>
 > Future mobile policy: Android and iOS are post-stable Java 25 AOT targets and do not define the core compatibility baseline<br>
@@ -186,7 +186,7 @@ Deliver all of the following:
 - Multiple windows, DPI/scaling, mouse, touch, pen, keyboard, IME, clipboard, and drag-and-drop support.
 - A first-class Headless platform and deterministic software rendering.
 - Declarative UI, state, layout, animation, scrolling, virtualized lists, and common controls.
-- An extensible complete Unicode text pipeline, with stable-release coverage for common complex scripts, Bidi, font fallback, variable fonts, and major color-font formats.
+- An extensible complete Unicode text pipeline with Bidi, font fallback, variable fonts, and major color-font formats. The first stable release blocks only on the Tier-1 script set: default/Latin/Greek/Cyrillic, Arabic, Hebrew, Hangul, and Thai/Lao, with Han and Kana covered by the default shaping path. Indic, Universal Shaping Engine scripts, Khmer, Myanmar, and Tibetan form a separately versioned Tier-2 shaping profile that may ship with 1.0 but does not block it.
 - Accessibility bridges for Windows UI Automation, macOS Accessibility, and Linux AT-SPI2.
 - Vulkan, D3D12, and Metal GPU backends plus CPU fallback.
 - Color-managed sRGB SDR presentation; tagged Display-P3 values and conversion with direct P3 presentation only on verified capable surfaces; tagged extended-range color and profile resources; an extended-linear software reference path; deterministic HDR/WCG-to-SDR fallback; and truthful per-surface color/HDR capability reporting.
@@ -199,6 +199,8 @@ The first stable release is blocked only by the required common, Windows, macOS,
 
 - Android or iOS product support; both belong to the post-stable AOT extension track.
 - Completion of the optional Linux X11 compatibility profile.
+- Completion of the Tier-2 complex-script shaping profile (Indic, USE, Khmer, Myanmar, Tibetan).
+- TrueType and CFF hinting interpretation. First stable renders unhinted outlines with gamma-correct grayscale antialiasing, optional vertical-only grid fitting, and embedded bitmap strikes where fonts provide them; the TrueType and CFF hinting virtual machines form a separately versioned hinting fidelity profile.
 - Live remote sessions, network transports, authentication, adaptive streaming, and remote-desktop product features.
 - Browser DOM/CSS compatibility.
 - Swing or JavaFX control interoperability as a core architectural requirement.
@@ -219,6 +221,9 @@ The first stable release is blocked only by the required common, Windows, macOS,
 - **Advanced color and HDR presentation**: add production BT.2020/BT.2100 PQ and HLG, extended-linear/EDR, high-bit-depth and floating-point swapchains, per-display luminance/headroom updates, static and future negotiated dynamic metadata, versioned gamut/tone-mapping policies, HDR image/media ingestion, and calibrated output matrices. Keep content encoding independent of output capability so unsupported surfaces receive an explicit deterministic SDR mapping rather than reinterpretation or clipping.
 - **Linux X11 compatibility profile**: complete and release the XCB/XInput2/XIM/selection/XDnD/Vulkan-XCB/software-presentation backend independently of the required Wayland profile. It may be developed before 1.0, but an incomplete X11 profile does not delay the first stable release.
 - **Media**: add a pure-Java `himari-media` API, WAV/PCM baseline implementations, and optional FFmpeg, GStreamer, or platform-codec providers.
+- **Tier-2 complex-script shaping profile**: complete SHAPE-INDIC, SHAPE-USE, Khmer, Myanmar, and Tibetan against the frozen HarfBuzz corpora as a separately versioned profile that upgrades text coverage without changing the shaping contract.
+- **Hinting fidelity profile**: complete the TrueType VM (`fpgm`, `prep`, glyph programs, CVT, storage, twilight zone), CFF hinting, and auto-hinting port units with FreeType differential evidence as a separately versioned profile; the unhinted default path remains supported.
+- **AWT/Swing embedding interop**: an optional `himari-interop-awt` artifact that presents HimariUI scenes inside existing AWT/Swing applications through the software renderer's `PixelBuffer` output and forwards normalized input and focus. It may depend on `java.desktop`, is excluded from core purity gates through its own allowlist, and must never become a core or BOM-default dependency.
 
 ### 3.4 Pre-stable standalone releases
 
@@ -227,6 +232,7 @@ Publish independently useful subsystems as explicitly unstable `0.x` artifacts b
 - `himari-font` and `himari-text` once their M4 gates pass: pure-Java OpenType parsing and shaping are independently valuable to the wider Java ecosystem and attract the real-world font and text corpus that differential testing needs most.
 - `himari-render-software` plus the graphics value types once the M3 gates pass.
 - The ABI generator tooling once M0 proves the generation path.
+- `himari-state` and `himari-runtime` once the M1 gates and `RUNTIME-ADR-001` pass: the declarative runtime is the API surface that most needs external feedback, carries no native dependency, and must be exercised by real users before M9 stabilizes the public controls API. The Section 7 API-charter samples ship with it as executable documentation.
 
 Pre-stable artifacts use `0.x` versions, carry an explicit instability notice, and pass the same pure-Java distribution gates as stable artifacts. They create no API-stability obligation and must never delay or veto a first-stable API change; their purpose is early corpus exposure, external users, and contributor acquisition for a multi-year project that would otherwise receive no external feedback before its first stable release.
 
@@ -262,7 +268,7 @@ SEMANTICS
 HIT_TEST_INDEX
 ```
 
-`STRUCTURE` denotes the smallest callback that may change mounted-node topology; it does not imply that component functions are always rerun. `COMPOSITE` updates retained-layer properties, damage, and presentation state without rerecording otherwise unchanged drawing commands. Keep structure, measure, placement, paint, composite, semantics, and hit-test consumers independently restartable. A reactive or animated property binding must declare which phases its value can affect instead of mutating a mounted node from an unclassified generic effect.
+`STRUCTURE` denotes the smallest callback that may change mounted-node topology; it does not imply that component functions are always rerun. `COMPOSITE` updates retained-layer properties, damage, and presentation state without rerecording otherwise unchanged drawing commands. Keep structure, measure, placement, paint, composite, semantics, and hit-test consumers independently restartable. A reactive or animated property binding must declare which phases its value can affect instead of mutating a mounted node from an unclassified generic effect. ADR-020 defines the only permitted ordering exception: explicitly scoped measure-time structural materialization for viewport-driven containers.
 
 ### ADR-005: Make the software renderer normative
 
@@ -282,7 +288,7 @@ Require a readable reference implementation, Oracle runner, fixed corpus, and fu
 
 ### ADR-009: Lay out in logical pixels
 
-Use `float` logical pixels for layout. Resolve DPI, fractional scaling, pixel snapping, and subpixel placement during layer compilation and rendering.
+Use `float` logical pixels for layout. Resolve DPI, fractional scaling, pixel snapping, and subpixel placement during layer compilation and rendering. Cumulative scroll offsets and other coordinates that can grow beyond local component bounds must use anchor-relative computation or double-precision accumulation; `float` precision applies to local layout math, never to unbounded running sums.
 
 ### ADR-010: Use UTF-16 public indices with explicit grapheme and cluster maps
 
@@ -337,6 +343,18 @@ Framework color values and canonical scene records preserve finite extended-rang
 Each output surface reports supported format/encoding combinations, precision, color-volume information, current SDR reference white or HDR headroom where available, metadata support, and whether framework, system, or display tone mapping will occur. Capabilities are per surface/display and may change when a window moves, display settings change, or a browser/mobile host reconfigures. Selection returns an explicit effective `PresentationColorConfiguration` and fallback reason; it never silently treats unsupported HDR/WCG content as sRGB. A single `hdrSupported` flag is insufficient.
 
 First stable requires tagged color values, extended-range scene round trips, reference BT.2020/PQ/HLG conversion math, a programmable Headless HDR-capability model, deterministic gamut/tone-mapped SDR fallback, and backend-neutral capability reporting. It does not require a backend to advertise production HDR output. A backend may advertise HDR/EDR only after its format/color-space pairing, display-change handling, tone-mapping ownership, precision, metadata, screenshot/trace behavior, and platform conformance tests pass.
+
+### ADR-020: Make measure-time structural materialization an explicit contract
+
+Viewport-driven containers such as `LazyList` decide which children exist only when constraints and available size are known, which requires structural work initiated during measure or a defined one-frame-lagged alternative. The frame flow in Section 5 is otherwise strictly phase-ordered, so this capability must be an explicitly scoped contract rather than an emergent behavior. `RUNTIME-ADR-001` must select and specify the mechanism — scoped measure-time materialization with defined state, phase-tracking, and commit semantics, or a previous-viewport scheme with documented one-frame lag — and the M1 comparison fixtures must exercise it. Retrofitting subcomposition into a phase-ordered runtime after the structural model is fixed is not acceptable.
+
+### ADR-021: Contain application callback failures at declared error boundaries
+
+Define the developer-facing failure contract for every rerunnable application callback across structure, measure, placement, paint, and effect execution. A failure must be caught at a declared boundary, must not corrupt committed trees or leak staged work, and must produce a deterministic developer-visible outcome: a diagnosed containment subtree with a defined fallback presentation in debug builds and a documented release-build policy. Containment scope, recovery, retry, and diagnostics are specified from M1 fixture evidence. Failures must never escape through a native callback boundary, and containment must compose with the `UiCommitTransaction` cleanup guarantees.
+
+### ADR-022: Run UI work on the platform main thread with explicit continuity and scoping rules
+
+For first stable, reactive bindings, structural updates, layout, input, and semantics run on the platform-required main execution context as described in Section 5.3. A dedicated UI thread separate from the platform thread was considered and rejected for its IME, accessibility, and host-reentrancy marshaling cost. This choice carries two explicit obligations. First, modal-loop continuity: scheduled UI work, layout-affecting animation, and frame production must continue from within OS modal loops — Windows move/resize and menu loops, macOS live resize — through timer-driven reentry, and the render executor must keep presenting compositor-eligible animation throughout. Second, explicit scoping: one reactive graph and state-epoch domain per application, one frame scheduler per window, and cross-window invalidation routed through ordinary scheduling rather than shared mutable traversal of another window's trees. Re-evaluate this ADR only with profiling evidence from the M5–M7 conformance runs.
 
 ---
 
@@ -415,6 +433,8 @@ host / OS events
 - **Render execution capability**: desktop targets initially use a dedicated render thread that owns the GPU device, queue, and most GPU resources. Platform-neutral contracts must also permit rendering on the UI context or in a Web Worker.
 - **Optional worker execution**: use a bounded platform-thread pool for desktop CPU work and virtual threads for blocking desktop I/O where appropriate. A target may provide no workers, limited workers, or browser workers; correctness must not depend on their presence.
 - **Host-driven event loop**: platform scheduling must accept callbacks from a host event loop and must not require a blocking message-pump API.
+- **Modal-loop continuity**: scheduled UI work, layout-affecting animation, and frame production continue from within OS modal loops through timer-driven reentry per ADR-022; the render executor keeps presenting compositor-eligible animation throughout.
+- **Multi-window scoping**: one reactive graph and state-epoch domain per application; one frame scheduler per window; cross-window invalidation is routed through ordinary scheduling and never through shared mutable traversal of another window's trees (ADR-022).
 - **No user callbacks in render execution**: never run application callbacks, component code, or state writes from the render executor, whether it is a thread, worker, or same-thread render phase.
 - **Bounded compositor animation**: the render executor may sample an immutable framework-defined animation program for eligible retained-layer properties. It must not execute application interpolation code, effects, or state writes. The program uses a clock mapping shared with the UI runtime so authoritative hit testing, traces, and replacement generations can reproduce or supersede its presentation state.
 - **Frame handoff**: when UI and rendering execute separately, scene snapshots may use latest-wins replacement while resource creation, upload, destruction, configuration, and correlated semantics updates remain ordered and non-droppable. A same-context implementation preserves the same ordering without requiring a mailbox. The logical contract must not require a shared address space even though the default implementation passes immutable Java objects in-process.
@@ -631,6 +651,7 @@ source state and derived state
 phase-aware property binding
 conditional structural scope
 keyed collection scope
+ambient inherited value scope
 mounted node declaration
 owned effect and cleanup
 ```
@@ -638,6 +659,8 @@ owned effect and cleanup
 M1 determines the final names, callback shapes, and ownership rules. Do not accept an API merely because optional code generation makes it concise. Samples used for the decision must call the same runtime surface available through standard Java compilation without an annotation processor, compiler plugin, source generator, or bytecode transformer.
 
 The API must preserve the point at which a reactive value is read. An eagerly evaluated argument such as a computed `String` cannot become a property-level binding: a grouped model can attribute it only to the current structural scope, while a one-shot model must reject or diagnose an uncaptured read. A deferred property getter may become a narrower phase consumer. The runtime must not claim property-level invalidation after the application has already erased the dependency by passing an eager value.
+
+Ambient inherited values are part of the public execution model, not a controls-layer convenience. Theme tokens, density, locale, text direction, reduced-motion policy, and similar tree-scoped values must be readable through typed ambient keys, overridable for a subtree, and tracked as ordinary reactive dependencies. Each M1 candidate must demonstrate its ambient representation, and the selected model must define the invalidation scope of an ambient change — which consumers rerun, which phases are marked, and how overrides interact with structural identity — rather than treating context as an untracked global.
 
 ### 7.2 M1 structural-reactivity decision
 
@@ -659,13 +682,16 @@ Run all three prototypes through one checked-in comparison suite:
 - high-frequency text, color, size, and offset changes that exercise different phase impacts;
 - cross-scope geometry propagation in which a simulated child measure result feeds a parent placement consumer, standing in for layout integration before M2 exists;
 - a controlled text-editing fixture in which an editor-owned buffer synchronizes with application-owned value state through transactional updates that are asynchronously filtered, partially accepted, or rejected, without reentrant writes, lost updates, or composition corruption;
+- ambient inherited values (a theme token, density, locale, and text direction) with subtree overrides, dynamic changes, and measured invalidation scope;
+- viewport-driven lazy materialization in which available size determines which keyed children exist, exercising the ADR-020 measure-time structural contract as a stand-in for `LazyList` before M2 exists;
+- an application callback that throws during structure, measure, placement, and paint, verifying the ADR-021 containment scope, fallback presentation, diagnostics, and cleanup;
 - failed staged work with deterministic cleanup and retry, plus cancelled work only for a candidate that claims preemption or cancellation as part of its model.
 
-Before implementing any candidate, freeze a checked-in decision rubric containing correctness disqualifiers, required diagnostics, measured ergonomics dimensions, performance and memory dimensions, and the method used to resolve tradeoffs. Then record source lines of code, explicit keys, deferred getters, structural-control primitives, generic type noise, callbacks executed, nodes visited, dependency edges, steady-state allocations, retained memory, and phase invalidations. Include debug trace quality and Native Image compatibility. Performance alone cannot select a model whose ordinary-Java samples require pervasive accidental ceremony.
+Before implementing any candidate, freeze a checked-in decision rubric containing correctness disqualifiers, required diagnostics, measured ergonomics dimensions, performance and memory dimensions, and the method used to resolve tradeoffs. Then record source lines of code, explicit keys, deferred getters, structural-control primitives, generic type noise, callbacks executed, nodes visited, dependency edges, steady-state allocations, retained memory, and phase invalidations. Include debug trace quality, Native Image compatibility, and whether the candidate can preserve structural identity across development-time code reload for the optional ADR-003 tooling. Performance alone cannot select a model whose ordinary-Java samples require pervasive accidental ceremony. The frozen rubric must also define early-disqualification checkpoints: a candidate that exhibits a correctness disqualifier or pervasive ceremony in the micro-fixtures is stopped and its result recorded before the realistic-application port begins, so the three-way comparison stays timeboxed.
 
 Micro-fixtures cannot expose ceremony at application scale. Before the decision review, port one realistic application of roughly five hundred lines — for example a settings form plus a chat-style keyed list — to each candidate API and include it in the recorded metrics. Keep these samples in the repository as the API charter: they are the concrete statement of acceptable ergonomics, and later public-API changes must keep them compiling and comparably concise.
 
-Accept the production structural-runtime ADR only after the comparison is reviewed. The decision may select one prototype or specify a measured hybrid, but it must define component input semantics, local state ownership, branch and list identity, failure recovery, and the boundary between value propagation and structural work.
+Accept the production structural-runtime ADR only after the comparison is reviewed. The decision may select one prototype or specify a measured hybrid, but it must define component input semantics, local state ownership, branch and list identity, failure recovery, the boundary between value propagation and structural work, ambient value propagation and its invalidation scope, the ADR-020 measure-time structural contract, and the ADR-021 application error-containment contract.
 
 ### 7.3 Runtime structures
 
@@ -673,6 +699,7 @@ Implement these model-independent structures before committing to a structural r
 
 - **ReactiveGraph**: maintain producer/consumer edges, value versions, dynamic dependencies, liveness, and dirty propagation.
 - **ReactiveOwner**: own computations, structural scopes, effects, and cleanup independently of any particular slot representation.
+- **AmbientScope**: provide typed ambient keys, subtree overrides, and reactive read tracking for inherited values independently of the selected structural representation.
 - **MountedElement**: connect the selected declaration or binding model to persistent layout and semantics nodes and hold local invalidation state.
 - **StructuralRuntime**: implement the M1-selected branch, collection, identity, and local-state model.
 - **NodeApplier**: apply staged structural changes incrementally to mounted, layout, and semantics nodes.
@@ -712,6 +739,8 @@ Enforce these write rules:
 5. Prevent state-epoch interleaving during a non-preemptive UI attempt. If `RUNTIME-ADR-001` selects speculative or preemptible work, detect conflicts, cancel, and retry without committing a partial tree or mixed state epoch.
 6. Schedule each affected effect at most once per committed epoch and run it only after affected UI work has committed or established that the epoch requires no UI mutation.
 7. Reject reentrant writes and illegal side effects from derived computations or rerunnable structural callbacks in debug mode.
+
+Validate the reactive graph and structural runtime with model-based differential testing in addition to fixed fixtures: run randomized operation sequences — writes, transactions, dependency-shape changes, branch flips, keyed reorders, disposals — against a naive recompute-everything reference evaluator and compare observable values, invalidation sets, effect schedules, and disposal behavior after every step.
 
 ### 7.5 Identity and dynamic structure
 
@@ -782,7 +811,7 @@ Use immutable, typed modifier chains and flatten them when mounted. Each modifie
 
 ### 8.4 Virtualization requirements
 
-`LazyList` and related primitives must provide stable item keys, viewport-based materialization, overscan/prefetch, variable-height estimation and correction, anchor-preserving updates, internal-node reuse without state-identity leakage, logical accessibility information for unmounted items, and deterministic Headless scrolling tests.
+`LazyList` and related primitives must provide stable item keys, viewport-based materialization, overscan/prefetch, variable-height estimation and correction, anchor-preserving updates, internal-node reuse without state-identity leakage, logical accessibility information for unmounted items, and deterministic Headless scrolling tests. Viewport-based materialization consumes the ADR-020 measure-time structural contract selected by `RUNTIME-ADR-001`. Anchor-preserving updates and cumulative scroll offsets follow the ADR-009 precision rule for unbounded running sums.
 
 ### 8.5 Hit testing
 
@@ -1215,11 +1244,15 @@ Implement script support in this order:
 10. Tibetan.
 11. Remaining upstream shapers.
 
+Scripts 1–5 are the Tier-1 first-stable blocking set; Han and Kana require no complex shaper and are covered by the default path. Scripts 6–11 form the separately versioned Tier-2 shaping profile defined in Section 3, developed against the same frozen corpora without blocking the first stable release.
+
 Convert HarfBuzz-generated tables with tools. Do not manually transcribe them with AI.
 
 ### 13.6 FreeType capability ports
 
 Split the work into independently accepted units for the TrueType outline loader, composite transforms, TrueType VM (`fpgm`, `prep`, glyph programs, CVT, storage, twilight zone), fixed-point arithmetic, CFF/CFF2 charstrings, CFF hinting, outline decomposition, mono/grayscale/LCD coverage, auto-hinting, bitmap strikes, and color glyphs.
+
+The TrueType VM, CFF hinting, and auto-hinting units belong to the optional, separately versioned hinting fidelity profile defined in Section 3 and do not block first stable. The first-stable default renders unhinted outlines with gamma-correct grayscale antialiasing, may apply vertical-only grid fitting, and uses embedded bitmap strikes where fonts provide them; `gasp`-style rendering hints are honored where meaningful without bytecode execution. The FreeType differential corpus for unhinted outlines and rasterization gates first stable; the hinting corpus gates the fidelity profile.
 
 Keep a faithful reference path that follows FreeType stages and numeric formats where practical. Do not replace it with the shared optimized GUI path renderer unless a differential corpus proves equivalence.
 
@@ -1258,6 +1291,8 @@ Do not call DirectWrite, CoreText, or Pango for production shaping or rasterizat
 
 Define a platform backend contract for capabilities, host-driven event scheduling, surface/window creation, clipboard, cursors, font sources, and accessibility. Backend initialization, GPU/surface acquisition, clipboard access, permission-gated operations, and resource loading must be able to complete asynchronously. A platform window or surface must expose logical/physical size, scale factor, visibility/title/state where supported, a target-neutral surface descriptor, redraw requests, cursor/IME/drag-and-drop controls, frame-timing callbacks, current display/presentation color capabilities and generation, color-capability change notifications, and explicit close. Moving a window between displays or changing host HDR/color settings must re-negotiate presentation without changing application color values or silently reinterpreting scene content.
 
+Platform backends must distinguish toplevel and popup surface roles. A popup surface provides owner-relative positioning, activation/dismissal and grab semantics where the host defines them, and truthful capability reporting; where a host provides no popup surface, the platform reports the capability as unavailable so higher layers select the in-window overlay fallback.
+
 Do not expose `HWND`, `NSWindow*`, `wl_surface*`, DOM nodes, JavaScript objects, or WebGPU handles from core APIs. Make typed target handles available only through explicit interop modules.
 
 ### 14.2 Headless
@@ -1272,6 +1307,8 @@ Implement:
 - Generated typed proxies and event bindings from Wayland XML.
 - xdg-shell, presentation timing/frame callbacks, pointer/keyboard/touch/tablet protocols, data-device clipboard/drag-and-drop, text-input-v3, fractional-scale/viewporter, `wl_shm`, Vulkan WSI, and negotiated color-management/output-description protocols when available.
 - `xdg-decoration` negotiation plus complete client-side decorations — titlebar, window controls, and interactive move/resize regions — for compositors that provide no server-side decorations. M5 implements decorations with the private platform-neutral `UI-BOOTSTRAP-001` primitives so it does not depend on M9; the public controls/theme layer may later reuse the same behavior and tokens.
+- `xdg_popup` surfaces with positioner and grab/dismiss semantics for menus, tooltips, and dropdowns.
+- `cursor-shape-v1` where available, plus a pure-Java XCursor theme parser fallback for compositors without it.
 
 For keyboard handling, consume compositor-provided XKB keymaps, implement a pure-Java parser/state machine, and differentially test it against `libxkbcommon`. A system xkbcommon adapter may be transitional but must not remain the only implementation.
 
@@ -1532,14 +1569,14 @@ Define media contracts for timestamps/timebases, PCM audio buffers, video planes
 | Subsystem | Java reference | External Oracle | Comparison |
 |---|---|---|---|
 | SFNT/OpenType parser | Checked parser | FreeType/fonttools runner | Tables, metrics, outlines |
-| TrueType VM | Faithful Java VM | FreeType | Points, CVT, advances, bitmaps |
+| TrueType VM (hinting fidelity profile) | Faithful Java VM | FreeType | Points, CVT, advances, bitmaps |
 | CFF/CFF2 | Java charstrings | FreeType | Outlines, hint masks, bitmaps |
 | Shaping | Java shaper | `hb-shape`/HarfBuzz runner | Glyph IDs, clusters, advances, offsets, flags |
 | Bidi/segmentation | ICU4J adapter | Unicode conformance data | Exact boundaries and order |
 | Path rasterization | Scalar software path | Skia/FreeType/Impeller runner | Coverage masks and goldens |
 | Blending/filters | Scalar formulas | Reference image runner | Exact pixels or bounded tolerance |
 | Color conversion/HDR math | Extended-linear scalar transforms plus versioned mapping | ICC reference implementation and published ICC/ITU/W3C vectors | Components, XYZ values, luminance, mapping output, and bounded quantization error |
-| Layout | Invariants/reference policies | Curated Compose/Flutter cases | Size, position, baseline |
+| Layout | Invariants/reference policies | Curated Compose/Flutter cases plus Taffy/Yoga flex-grid corpora | Size, position, baseline |
 | Event normalization | Recorded model | SDL/LWJGL/platform traces | Sequence, timestamp class, buttons |
 | Vulkan/D3D12/Metal | CPU-rendered scene | GPU backend plus reference tooling | Frame image and resource diagnostics |
 | Accessibility | Semantics snapshot | OS inspection harness | Role, name, value, actions, ranges |
@@ -1916,6 +1953,7 @@ Work in one track proceeds while an unrelated criterion in another track remains
 - **EFFECT-001**: Effect lifecycle.
 - **SCHED-001**: UI scheduling and frame-request coalescing.
 - **ANIM-CORE-001**: Animation-transaction propagation, model/presentation separation, manual-clock sampling, presentation epochs, allocation-free scalar adapters, and reference tween/spring retargeting.
+- **RUNTIME-MBT-001**: Model-based differential harness running randomized operation sequences against a naive recompute-everything reference evaluator.
 - **TRACE-001**: Initial deterministic trace format.
 
 **Exit criteria:**
@@ -1926,6 +1964,8 @@ Work in one track proceeds while an unrelated criterion in another track remains
 - Conditional, loop, keyed-reordering, changing-input, and local-state-retention tests pass under the selected model.
 - Failed staged UI work leaks no nodes, graph edges, or effects; every candidate that claims cancellation or preemption passes the same cleanup gate for cancelled attempts.
 - Local value changes invalidate only their dependent bindings or phase consumers; topology changes rerun only the selected structural scope.
+- Ambient-value propagation and override fixtures pass with measured invalidation scope; viewport-driven materialization passes under the selected ADR-020 contract; per-phase application exceptions stay within their declared ADR-021 containment scope with deterministic fallback and diagnostics.
+- The model-based differential harness completes randomized operation sequences against the recompute-everything reference evaluator without divergence.
 - Headless animation tests prove atomic presentation epochs, no per-frame application-state writes, deterministic timestamp sampling, value-continuous replacement, and velocity-continuous compatible spring retargeting.
 - A Headless sample runs deterministically.
 - Runtime-core execution loads no native library.
@@ -2034,6 +2074,8 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **WAYLAND-004**: Clipboard and drag-and-drop.
 - **WAYLAND-DECOR-001**: `xdg-decoration` negotiation and complete client-side decorations with titlebar, window controls, and interactive move/resize regions.
 - **WAYLAND-IME-001**: `text-input-v3` sessions and composition/candidate-rectangle plumbing through `TextInputSession`, validated with a test editing surface before full text controls exist.
+- **WAYLAND-POPUP-001**: `xdg_popup` surfaces, positioner semantics, and grab/dismiss behavior for menus, tooltips, and dropdowns.
+- **WAYLAND-CURSOR-001**: `cursor-shape-v1` where available plus a pure-Java XCursor theme parser fallback.
 - **VULKAN-001**: Registry generator, loader, and device.
 - **VULKAN-002**: Swapchain, passes, pipelines, resources, and target-neutral surface color capability/effective-configuration mapping.
 - **RHI-001**: RHI API and render-graph MVP.
@@ -2067,6 +2109,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **WIN-IME-001**: TSF with IMM32 fallback.
 - **WIN-A11Y-001**: UI Automation.
 - **WIN-DND-001**: OLE drag-and-drop.
+- **WIN-POPUP-001**: Owned popup windows with activation, z-order, and dismissal policy for menus and tooltips.
 
 **Exit criteria:**
 
@@ -2075,6 +2118,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - Advanced Color and ordinary SDR displays report distinct truthful capabilities and deterministic SDR fallback; Windows HDR remains disabled unless its optional conformance profile passes.
 - The Windows IME corpus passes composition, surrounding-text, candidate-rectangle, reconversion, and cancellation fixtures.
 - The UI Automation inspection corpus passes.
+- Scheduled UI work and animation continue during move/resize modal loops within the ADR-022 continuity contract.
 - The Native Image sample runs.
 
 ### M7 — Complete macOS backend
@@ -2092,6 +2136,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **MAC-IME-001**: `NSTextInputClient`.
 - **MAC-A11Y-001**: NSAccessibility.
 - **MAC-DND-001**: Pasteboard and dragging.
+- **MAC-POPUP-001**: NSPanel/child-window popup surfaces with activation and dismissal policy.
 
 **Exit criteria:**
 
@@ -2110,9 +2155,9 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 **Deliverables:**
 
-- **SHAPE-ARABIC-001 / SHAPE-INDIC-001 / SHAPE-USE-001** and other script modules.
-- **TT-VM-001**: TrueType interpreter.
-- **CFF-001**: CFF and CFF2.
+- **SHAPE-ARABIC-001** and the remaining Tier-1 script modules as first-stable blockers; **SHAPE-INDIC-001 / SHAPE-USE-001** and later scripts belong to the separately versioned Tier-2 shaping profile.
+- **TT-VM-001**: TrueType interpreter, owned by the optional hinting fidelity profile; it does not block first stable.
+- **CFF-001**: CFF and CFF2 charstring interpretation for outlines; CFF hinting application belongs to the hinting fidelity profile.
 - **VARFONT-001**: Variation tables.
 - **COLORFONT-001**: COLR, CPAL, CBDT, and sbix.
 - **TEXT-BIDI-001**: Complete visual caret and selection behavior.
@@ -2121,9 +2166,9 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 **Exit criteria:**
 
-- The HarfBuzz upstream shaping corpus reaches the pass rate frozen in `DIFFERENCE_POLICY.md` before M8 begins, with every difference recorded.
-- The FreeType outline, hinting, and raster corpus reaches the pass rate frozen in `DIFFERENCE_POLICY.md` before M8 begins.
-- Arabic, Indic, and Bidi editing scenarios pass.
+- The HarfBuzz upstream shaping corpus for Tier-1 scripts reaches the pass rate frozen in `DIFFERENCE_POLICY.md` before M8 begins, with every difference recorded; Tier-2 corpora gate the Tier-2 shaping profile instead of first stable.
+- The FreeType unhinted outline and raster corpus reaches the pass rate frozen in `DIFFERENCE_POLICY.md` before M8 begins; the hinting corpus gates the hinting fidelity profile.
+- Arabic and Bidi editing scenarios pass; Indic editing scenarios gate the Tier-2 shaping profile.
 - Variable- and color-font goldens pass.
 - Malformed-font fuzzing is a release gate.
 
@@ -2139,7 +2184,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **CTRL-002**: Buttons, toggles, and sliders.
 - **CTRL-003**: Scrolling, lazy-list, and table primitives.
 - **EDIT-001**: TextField, TextArea, and undo.
-- **POPUP-001**: Popup, menu, dialog, and tooltip.
+- **POPUP-001**: Popup, menu, dialog, and tooltip, consuming the platform popup surfaces from `WAYLAND-POPUP-001`, `WIN-POPUP-001`, and `MAC-POPUP-001` with an in-window overlay fallback where a host provides no popup surface.
 - **THEME-001**: Tokens, default theme, and high contrast.
 - **A11Y-CORE-001**: Semantics actions, ranges, and live regions.
 - **DBUS-001**: Pure-Java D-Bus client shared by Linux accessibility and input-method integration.
@@ -2321,6 +2366,7 @@ These issues are the initial project-board view of canonical work packages, not 
 - **RUNTIME-ADR-001**: Select and specify the production structural-reactivity model from reviewed evidence.
 - **STRUCTURE-001**: Implement the selected branch, keyed-collection, identity, local-state, and failure-recovery semantics.
 - **ANIM-CORE-001**: Animation-transaction propagation, model/presentation separation, manual-clock sampling, presentation epochs, allocation-free scalar adapters, and reference tween/spring retargeting.
+- **RUNTIME-MBT-001**: Model-based differential harness running randomized operation sequences against a naive recompute-everything reference evaluator.
 - **TRACE-001**: Initial deterministic trace format.
 - **SAMPLE-001**: Build a deterministic Headless counter sample and golden using the selected runtime model.
 
@@ -2510,12 +2556,14 @@ Meet the general DoD and all of the following:
 | WebGPU capability and browser behavior vary | Rendering gaps or unstable performance | Adapter acquisition, limits, or presentation differs across the browser matrix | Use capability tiers, logical resource dependencies, Canvas/software fallback, and a real browser/WebGPU matrix |
 | Browser system fonts are unavailable as font bytes | Incorrect fallback or inconsistent text | The backend attempts to delegate shaping/rasterization to browser text APIs | Use bundled/application/fetched fonts and report system-font discovery as unavailable |
 | Wasm/JavaScript host glue expands the attack surface | Security or CSP failures | Dynamic code generation, unchecked linear-memory offsets, or ambient browser access appears | Generate narrow imports, validate every boundary value, avoid dynamic evaluation, and test strict content-security policies |
+| Unhinted text looks inferior on low-DPI Windows | User-perceived quality gap versus DirectWrite | Small-ppem Latin/CJK screenshots compare poorly on 96–120 DPI displays | Use gamma-correct grayscale AA, embedded bitmap strikes, and optional vertical grid fitting; ship the hinting fidelity profile when the TT/CFF VM ports pass their FreeType gates |
+| Popup semantics are discovered late | M9 menu/tooltip/dialog rework against missing platform features | `POPUP-001` needs surface roles absent from M5–M7 deliverables | Deliver popup surfaces and dismissal policy per platform milestone (`WAYLAND-POPUP-001`, `WIN-POPUP-001`, `MAC-POPUP-001`) with a documented in-window overlay fallback |
 
 ---
 
 ## 26. Decision Register and Working Defaults
 
-ADR-001 through ADR-019 are accepted at the execution-summary level in this draft. ADR-015 accepts fine-grained value reactivity and the separation of structural updates, but deliberately leaves the grouped/one-shot/hybrid structural subdecision to `RUNTIME-ADR-001`. `ADR-BOOTSTRAP-001` must materialize these decisions with their evidence and dates before downstream implementation treats the files as canonical.
+ADR-001 through ADR-019 and ADR-022 are accepted at the execution-summary level in this draft. ADR-015 accepts fine-grained value reactivity and the separation of structural updates, but deliberately leaves the grouped/one-shot/hybrid structural subdecision to `RUNTIME-ADR-001`. ADR-020 and ADR-021 are unresolved requirement statements: ADR-020 is decided together with `RUNTIME-ADR-001`, and ADR-021 is fixed from M1 fixture evidence. `ADR-BOOTSTRAP-001` must materialize these decisions with their evidence and dates before downstream implementation treats the files as canonical.
 
 The remaining entries below must not block M0 unless marked accepted. Use a working default only until the decision milestone recorded by `ADR-BOOTSTRAP-001`; no default may remain undated.
 
@@ -2556,6 +2604,12 @@ The remaining entries below must not block M0 unless marked accepted. Use a work
 | Arbitrary user shaders | Defer until after the stable release |
 | Linux keyboard | Pure-Java XKB target; system xkbcommon is transitional or an Oracle only |
 | X11 | Optional separately versioned compatibility profile; Wayland is the required Linux profile for first stable |
+| First-stable script coverage | Tier-1 blocking set (default/Latin/Greek/Cyrillic, Arabic, Hebrew, Hangul, Thai/Lao); Tier-2 (Indic, USE, Khmer, Myanmar, Tibetan) is a separately versioned shaping profile |
+| Hinting | Unhinted default with embedded-bitmap and vertical-snap mitigations; TrueType/CFF hinting VMs form an optional separately versioned fidelity profile |
+| Measure-time structural materialization | No working default before M1 evidence; ADR-020 is decided with `RUNTIME-ADR-001` |
+| Application error containment | ADR-021 contract fixed at M1 from per-phase failure fixtures |
+| UI execution context | **Accepted:** ADR-022 platform main thread plus modal-loop continuity and per-application graph / per-window scheduler scoping |
+| AWT/Swing embedding | Optional post-stable `himari-interop-awt` with its own allowlist; never a core or BOM-default dependency |
 
 ---
 
@@ -2624,6 +2678,8 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 - [Svelte Lifecycle Hooks](https://svelte.dev/docs/svelte/lifecycle-hooks)
 - [Svelte Derived State and Push-Pull Propagation](https://svelte.dev/docs/svelte/%24derived)
 - [Vue Core Releases and Vapor Mode Status](https://github.com/vuejs/core/releases)
+- [TC39 Signals Proposal](https://github.com/tc39/proposal-signals)
+- [Xilem: an Architecture for UI in Rust](https://raphlinus.github.io/rust/gui/2022/05/07/ui-architecture.html)
 - [How Compose Works](https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/compose/runtime/design/how-compose-works.md)
 - [Thinking in Compose](https://developer.android.com/develop/ui/compose/mental-model)
 - [Compose UI Architecture](https://developer.android.com/develop/ui/compose/architecture)
@@ -2664,6 +2720,7 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 - [Firefox Rendering Overview and WebRender Display Lists](https://firefox-source-docs.mozilla.org/gfx/RenderingOverview.html)
 - [Chromium GPU-Accelerated Compositing and GPU Process](https://www.chromium.org/developers/design-documents/gpu-accelerated-compositing-in-chrome/)
 - [Remote Desktop Graphics Pipeline Extension](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpegfx/da5c75f9-cd99-450c-98c4-014a496942b0)
+- [Vello GPU Vector Renderer](https://github.com/linebender/vello)
 
 ### Text, fonts, and Unicode
 
@@ -2672,6 +2729,8 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 - [FreeType Outline Processing](https://freetype.org/freetype2/docs/reference/ft2-outline_processing.html)
 - [HarfBuzz Manual](https://harfbuzz.github.io/)
 - [HarfBuzz Shaping Concepts](https://harfbuzz.github.io/shaping-concepts.html)
+- [Fontations: Memory-Safe Font Parsing (read-fonts/skrifa)](https://github.com/googlefonts/fontations)
+- [Parley Rich Text Layout](https://github.com/linebender/parley)
 - [ICU4J Documentation](https://unicode-org.github.io/icu/userguide/icu4j/)
 - [ICU Boundary Analysis](https://unicode-org.github.io/icu/userguide/boundaryanalysis/)
 - [Unicode Bidirectional Algorithm](https://www.unicode.org/reports/tr9/)
@@ -2692,6 +2751,20 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 - [Wayland Message Definition Language](https://wayland.freedesktop.org/docs/book/Message_XML.html)
 - [Vulkan Specification](https://registry.khronos.org/vulkan/specs/latest/html/vkspec.html)
 - [Vulkan Registry](https://registry.khronos.org/vulkan/specs/latest/registry.html)
+
+### Layout, input, and accessibility
+
+- [CSS Flexible Box Layout Module Level 1](https://www.w3.org/TR/css-flexbox-1/)
+- [CSS Grid Layout Module Level 2](https://www.w3.org/TR/css-grid-2/)
+- [Taffy Layout Engine](https://github.com/DioxusLabs/taffy)
+- [Yoga Layout Engine](https://www.yogalayout.dev/)
+- [W3C UI Events](https://www.w3.org/TR/uievents/)
+- [AccessKit Cross-Platform Accessibility Schema](https://github.com/AccessKit/accesskit)
+- [Windows UI Automation](https://learn.microsoft.com/en-us/windows/win32/winauto/entry-uiauto-win32)
+- [Apple Accessibility (NSAccessibility)](https://developer.apple.com/documentation/appkit/nsaccessibility)
+- [AT-SPI2 Core Documentation](https://gitlab.gnome.org/GNOME/at-spi2-core)
+- [D-Bus Specification](https://dbus.freedesktop.org/doc/dbus-specification.html)
+- [libxkbcommon Documentation](https://xkbcommon.org/doc/current/)
 
 ### Test tooling
 
