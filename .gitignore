@@ -8,7 +8,6 @@ build/
 /external/
 .codex
 /teavm-local.properties
-gradle.properties
 
 ### IntelliJ IDEA ###
 .idea/

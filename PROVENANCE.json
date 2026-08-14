@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "path": "gradle/wrapper/GradleWrapperNeo.java",
+      "kind": "third-party-source",
+      "source": "https://github.com/Glavo/gradle-wrapper-neo",
+      "version": "unversioned snapshot retrieved 2026-08-14",
+      "license": "Apache-2.0",
+      "sha256": "c5aa8611f0011340697412b9ff37bbe23d48a653e91610d376dddbb2b16a6412"
+    }
+  ]
+}
