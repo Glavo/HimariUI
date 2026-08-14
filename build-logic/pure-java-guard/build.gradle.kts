@@ -28,5 +28,11 @@ gradlePlugin {
             displayName = "HimariUI pure-Java guard"
             description = "Enforces the staged pure-Java runtime and distribution constraints."
         }
+        create("repositoryGovernance") {
+            id = "org.glavo.himari.repository-governance"
+            implementationClass = "org.glavo.himari.buildlogic.RepositoryGovernancePlugin"
+            displayName = "HimariUI repository governance"
+            description = "Validates canonical ADRs, references, provenance, and conformance profiles."
+        }
     }
 }

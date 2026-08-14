@@ -1,0 +1,359 @@
+{
+  "$schema": "schema/platform-conformance.schema.json",
+  "schemaVersion": 1,
+  "policyVersion": "1.0",
+  "reviewed": "2026-08-14",
+  "defaults": {
+    "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+    "durations": { "timeoutSeconds": 600, "soakSeconds": 60, "repetitions": 10 },
+    "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 1073741824, "maxHandles": 512, "maxThreads": 24 }
+  },
+  "profiles": [
+    {
+      "id": "m0-ffi-schema",
+      "profileVersion": 1,
+      "workPackage": "FFI-SCHEMA-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "ffi-schema",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :tools:ffi-schema:check"],
+      "fixtures": ["ffi-minimum-schema-v1"],
+      "assertions": [
+        "Canonical primitive, pointer, structure, function, and callback records round-trip without target-specific Java types.",
+        "Generation is deterministic and rejects duplicate names, unresolved types, illegal alignments, and unsupported callback signatures."
+      ],
+      "capabilityModes": ["canonical-schema-v1"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 3 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 4 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-ffi-schema/schema.json", "build/conformance/m0-ffi-schema/report.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m0-ffi-ffm",
+      "profileVersion": 1,
+      "workPackage": "FFI-FFM-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "ffi-runtime",
+      "environments": [
+        { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "linux-arm64-jvm", "os": "linux", "architecture": "arm64", "runtime": "jvm" },
+        { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "windows-arm64-jvm", "os": "windows", "architecture": "arm64", "runtime": "jvm" },
+        { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "macos-arm64-jvm", "os": "macos", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:ffi-ffm:conformance"],
+      "fixtures": ["ffi-primitives-v1", "ffi-struct-by-value-v1", "ffi-callback-reentrant-v1"],
+      "assertions": [
+        "Generated fixed-signature downcalls and upcalls produce the expected primitive, pointer, structure, and callback results.",
+        "Repeated and reentrant callbacks preserve arena lifetime, thread confinement, exception containment, and exact invocation types.",
+        "The runtime graph contains no FFI provider registry, JNA, handwritten JNI, reflection dispatch, or Object-array invocation."
+      ],
+      "capabilityModes": ["ffm-downcall", "ffm-upcall", "reentrant-callback"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 300, "soakSeconds": 60, "repetitions": 1000 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 268435456, "maxHandles": 64, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-ffi-ffm/results.json", "build/conformance/m0-ffi-ffm/native-load.log"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m0-abi-probe",
+      "profileVersion": 1,
+      "workPackage": "ABI-PROBE-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "ffi-abi",
+      "environments": [
+        { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "linux-arm64-jvm", "os": "linux", "architecture": "arm64", "runtime": "jvm" },
+        { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "windows-arm64-jvm", "os": "windows", "architecture": "arm64", "runtime": "jvm" },
+        { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "macos-arm64-jvm", "os": "macos", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:abi-probe:conformance"],
+      "fixtures": ["abi-minimum-layouts-v1", "abi-callback-conventions-v1"],
+      "assertions": [
+        "C-probe JSON and generated Java layouts agree exactly on size, alignment, offsets, scalar widths, and callback calling convention.",
+        "Probe output is versioned, target-identified, deterministic, and rejects incomplete or mismatched records."
+      ],
+      "capabilityModes": ["c-probe-json-v1", "java-layout-comparison"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 300, "soakSeconds": 0, "repetitions": 10 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 134217728, "maxHandles": 32, "maxThreads": 4 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-abi-probe/probe.json", "build/conformance/m0-abi-probe/comparison.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m0-wayland-window",
+      "profileVersion": 1,
+      "workPackage": "SPIKE-WAYLAND-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "platform-linux-wayland",
+      "environments": [
+        { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "linux-arm64-jvm", "os": "linux", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:wayland:conformance"],
+      "fixtures": ["wayland-window-lifecycle-v1", "wayland-input-v1", "wayland-output-color-v1", "wayland-software-clear-v1"],
+      "assertions": [
+        "A generated FFM path connects, opens and closes a window, receives resize and normalized input events, and survives callback reentrancy.",
+        "Output scale and available color-management information are reported without inventing unsupported HDR capability.",
+        "A software surface presents a deterministic SDR clear and records an explicit effective presentation configuration."
+      ],
+      "capabilityModes": ["window-events", "output-capability-snapshot", "software-sdr-presentation"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.00392156862745098 },
+        "durations": { "timeoutSeconds": 300, "soakSeconds": 120, "repetitions": 25 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 536870912, "maxHandles": 256, "maxThreads": 16 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-wayland-window/events.json", "build/conformance/m0-wayland-window/capabilities.json", "build/conformance/m0-wayland-window/presentation.json", "build/conformance/m0-wayland-window/native-load.log"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m0-vulkan-surface",
+      "profileVersion": 1,
+      "workPackage": "SPIKE-VK-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "rhi-vulkan",
+      "environments": [
+        { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "linux-arm64-jvm", "os": "linux", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:vulkan:conformance"],
+      "fixtures": ["vulkan-device-v1", "vulkan-surface-formats-v1", "vulkan-sdr-clear-v1"],
+      "assertions": [
+        "Generated bindings create and destroy an instance, device, queue, surface, and swapchain without validation errors or lifetime leaks.",
+        "All reported surface format/color-space pairs are preserved without assuming HDR extensions.",
+        "A selected SDR configuration presents a deterministic clear and reports fallback ownership explicitly."
+      ],
+      "capabilityModes": ["vulkan-device", "surface-format-enumeration", "swapchain-sdr-presentation"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.00392156862745098 },
+        "durations": { "timeoutSeconds": 600, "soakSeconds": 300, "repetitions": 20 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 2147483648, "maxHandles": 1024, "maxThreads": 32 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-vulkan-surface/capabilities.json", "build/conformance/m0-vulkan-surface/validation.log", "build/conformance/m0-vulkan-surface/presentation.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m0-win32-window",
+      "profileVersion": 1,
+      "workPackage": "SPIKE-WIN-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "platform-windows",
+      "environments": [
+        { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "windows-arm64-jvm", "os": "windows", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:win32:conformance"],
+      "fixtures": ["win32-window-lifecycle-v1", "win32-wndproc-reentrant-v1", "win32-input-v1", "win32-advanced-color-v1"],
+      "assertions": [
+        "Generated FFM bindings open and close a window, receive resize/input events through WndProc, and contain callback exceptions and reentrancy.",
+        "The current DXGI output and Advanced Color state are reported as a dynamic capability snapshot without inferring support from format alone."
+      ],
+      "capabilityModes": ["window-events", "wndproc-callback", "advanced-color-snapshot"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 300, "soakSeconds": 120, "repetitions": 25 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 536870912, "maxHandles": 256, "maxThreads": 16 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-win32-window/events.json", "build/conformance/m0-win32-window/capabilities.json", "build/conformance/m0-win32-window/native-load.log"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m0-d3d12-surface",
+      "profileVersion": 1,
+      "workPackage": "SPIKE-D3D12-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "rhi-d3d12",
+      "environments": [
+        { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "windows-arm64-jvm", "os": "windows", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:d3d12:conformance"],
+      "fixtures": ["d3d12-device-v1", "dxgi-surface-formats-v1", "d3d12-sdr-clear-v1"],
+      "assertions": [
+        "Generated bindings create and destroy a D3D12 device, queue, factory, surface, and swapchain without debug-layer errors or lifetime leaks.",
+        "The effective SDR presentation configuration is mapped explicitly and a deterministic clear is presented."
+      ],
+      "capabilityModes": ["d3d12-device", "dxgi-surface-enumeration", "swapchain-sdr-presentation"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.00392156862745098 },
+        "durations": { "timeoutSeconds": 600, "soakSeconds": 300, "repetitions": 20 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 2147483648, "maxHandles": 1024, "maxThreads": 32 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-d3d12-surface/capabilities.json", "build/conformance/m0-d3d12-surface/debug-layer.log", "build/conformance/m0-d3d12-surface/presentation.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m0-macos-window",
+      "profileVersion": 1,
+      "workPackage": "SPIKE-MAC-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "platform-macos",
+      "environments": [
+        { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "macos-arm64-jvm", "os": "macos", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:macos:conformance"],
+      "fixtures": ["macos-window-lifecycle-v1", "macos-input-v1", "macos-display-color-v1", "macos-cametal-layer-v1"],
+      "assertions": [
+        "Generated Objective-C runtime bindings open and close an NSWindow, receive lifecycle/input events, and attach a CAMetalLayer on the platform main thread.",
+        "Display color space and EDR headroom are reported as dynamic capabilities with an explicit SDR fallback."
+      ],
+      "capabilityModes": ["nswindow-events", "cametal-layer", "display-color-edr-snapshot"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 300, "soakSeconds": 120, "repetitions": 25 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 536870912, "maxHandles": 256, "maxThreads": 16 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-macos-window/events.json", "build/conformance/m0-macos-window/capabilities.json", "build/conformance/m0-macos-window/native-load.log"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m0-metal-surface",
+      "profileVersion": 1,
+      "workPackage": "SPIKE-METAL-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "rhi-metal",
+      "environments": [
+        { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "macos-arm64-jvm", "os": "macos", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:metal:conformance"],
+      "fixtures": ["metal-device-v1", "metal-layer-formats-v1", "metal-sdr-clear-v1"],
+      "assertions": [
+        "Generated bindings create and release a Metal device, command queue, layer configuration, and presentation resources without validation errors.",
+        "A deterministic SDR clear is presented through the effective layer color/pixel configuration with explicit fallback ownership."
+      ],
+      "capabilityModes": ["metal-device", "layer-format-enumeration", "layer-sdr-presentation"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.00392156862745098 },
+        "durations": { "timeoutSeconds": 600, "soakSeconds": 300, "repetitions": 20 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 2147483648, "maxHandles": 1024, "maxThreads": 32 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-metal-surface/capabilities.json", "build/conformance/m0-metal-surface/validation.log", "build/conformance/m0-metal-surface/presentation.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m0-objc-block",
+      "profileVersion": 1,
+      "workPackage": "SPIKE-OBJC-BLOCK-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "platform-macos-abi",
+      "environments": [
+        { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "macos-arm64-jvm", "os": "macos", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:objc-block:conformance"],
+      "fixtures": ["objc-block-create-invoke-v1", "objc-block-lifetime-v1", "objc-block-reentrant-v1", "objc-block-exception-v1"],
+      "assertions": [
+        "Representative Objective-C blocks are created, copied, invoked, released, and reentered with verified ABI layout and lifetime.",
+        "Java exceptions are contained before crossing the native boundary and cleanup remains deterministic after failure.",
+        "The evidence produces an ADR that either forbids production blocks or defines their verified use policy."
+      ],
+      "capabilityModes": ["block-abi", "block-lifetime", "callback-containment"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 300, "soakSeconds": 60, "repetitions": 1000 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 268435456, "maxHandles": 128, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-objc-block/results.json", "build/conformance/m0-objc-block/lifetime.json", "build/conformance/m0-objc-block/native-load.log"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m0-native-image-ffm",
+      "profileVersion": 1,
+      "workPackage": "NI-FFM-001",
+      "milestone": "M0",
+      "required": true,
+      "status": "planned",
+      "owner": "native-image",
+      "environments": [
+        { "id": "linux-x86_64-native-image", "os": "linux", "architecture": "x86_64", "runtime": "native-image" },
+        { "id": "linux-arm64-native-image", "os": "linux", "architecture": "arm64", "runtime": "native-image" },
+        { "id": "windows-x86_64-native-image", "os": "windows", "architecture": "x86_64", "runtime": "native-image" },
+        { "id": "windows-arm64-native-image", "os": "windows", "architecture": "arm64", "runtime": "native-image" },
+        { "id": "macos-x86_64-native-image", "os": "macos", "architecture": "x86_64", "runtime": "native-image" },
+        { "id": "macos-arm64-native-image", "os": "macos", "architecture": "arm64", "runtime": "native-image" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:native-image-ffm:conformance"],
+      "fixtures": ["native-image-ffi-minimum-v1", "native-image-platform-clear-v1"],
+      "assertions": [
+        "Native Image builds and runs the same generated FFM binding sources used by the JVM without an SVM-specific system-call backend.",
+        "Reachability, downcall, and upcall metadata are generated or declared reproducibly and callback/lifetime behavior matches the JVM profile.",
+        "The produced executable opens the selected platform window, presents a clear, and records only allowlisted system-library loads."
+      ],
+      "capabilityModes": ["shared-ffm-bindings", "native-image-metadata", "platform-clear"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.00392156862745098 },
+        "durations": { "timeoutSeconds": 900, "soakSeconds": 120, "repetitions": 5 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 1073741824, "maxHandles": 512, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m0-native-image-ffm/build.json", "build/conformance/m0-native-image-ffm/results.json", "build/conformance/m0-native-image-ffm/native-load.log"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    }
+  ]
+}

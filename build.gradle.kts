@@ -11,6 +11,7 @@ import org.gradle.external.javadoc.StandardJavadocDocletOptions
 plugins {
     base
     id("org.glavo.himari.pure-java-guard") apply false
+    id("org.glavo.himari.repository-governance")
 }
 
 group = "org.glavo.himari"

@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://himari-ui.dev/schema/platform-conformance-v1.json",
+  "title": "HimariUI platform conformance register",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "policyVersion", "reviewed", "defaults", "profiles"],
+  "properties": {
+    "$schema": { "const": "schema/platform-conformance.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "policyVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "reviewed": { "type": "string", "format": "date" },
+    "defaults": { "$ref": "#/$defs/limits" },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/profile" }
+    }
+  },
+  "$defs": {
+    "tolerances": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numericAbsolute", "numericRelative", "imageMaxChannelDelta"],
+      "properties": {
+        "numericAbsolute": { "type": "number", "minimum": 0 },
+        "numericRelative": { "type": "number", "minimum": 0 },
+        "imageMaxChannelDelta": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "durations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeoutSeconds", "soakSeconds", "repetitions"],
+      "properties": {
+        "timeoutSeconds": { "type": "integer", "minimum": 1 },
+        "soakSeconds": { "type": "integer", "minimum": 0 },
+        "repetitions": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxHeapBytes", "maxNativeBytes", "maxHandles", "maxThreads"],
+      "properties": {
+        "maxHeapBytes": { "type": "integer", "minimum": 0 },
+        "maxNativeBytes": { "type": "integer", "minimum": 0 },
+        "maxHandles": { "type": "integer", "minimum": 0 },
+        "maxThreads": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tolerances", "durations", "budgets"],
+      "properties": {
+        "tolerances": { "$ref": "#/$defs/tolerances" },
+        "durations": { "$ref": "#/$defs/durations" },
+        "budgets": { "$ref": "#/$defs/budgets" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "os", "architecture", "runtime"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "os": { "enum": ["any", "linux", "windows", "macos"] },
+        "architecture": { "enum": ["any", "x86_64", "arm64"] },
+        "runtime": { "enum": ["jvm", "native-image"] }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requiredArtifacts", "recordedArtifacts"],
+      "properties": {
+        "requiredArtifacts": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "recordedArtifacts": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "waiver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "assertion", "issue", "reviewer", "approved", "expires", "environments", "rationale"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "assertion": { "type": "string", "minLength": 1 },
+        "issue": { "type": "string", "minLength": 1 },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "approved": { "type": "string", "format": "date" },
+        "expires": { "type": "string", "format": "date" },
+        "environments": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "profileVersion", "workPackage", "milestone", "required", "status", "owner", "environments", "commands", "fixtures", "assertions", "capabilityModes", "limits", "evidence", "waivers"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "profileVersion": { "type": "integer", "minimum": 1 },
+        "workPackage": { "type": "string", "pattern": "^[A-Z0-9]+(?:-[A-Z0-9]+)+$" },
+        "milestone": { "type": "string", "minLength": 1 },
+        "required": { "type": "boolean" },
+        "status": { "enum": ["planned", "active", "passed", "failed", "waived"] },
+        "owner": { "type": "string", "minLength": 1 },
+        "environments": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/environment" } },
+        "commands": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^\\./gradlew -g \\.gradle-user-home " } },
+        "fixtures": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "assertions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "capabilityModes": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "limits": { "$ref": "#/$defs/limits" },
+        "evidence": { "$ref": "#/$defs/evidence" },
+        "waivers": { "type": "array", "items": { "$ref": "#/$defs/waiver" } }
+      }
+    }
+  }
+}

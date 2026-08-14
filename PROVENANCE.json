@@ -1,6 +1,15 @@
 {
+  "$schema": "schema/provenance.schema.json",
   "schemaVersion": 1,
   "entries": [
+    {
+      "path": "LICENSE",
+      "kind": "license-text",
+      "source": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "version": "Apache License 2.0",
+      "license": "Apache-2.0",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
     {
       "path": "gradle/wrapper/GradleWrapperNeo.java",
       "kind": "third-party-source",
