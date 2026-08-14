@@ -1,10 +1,11 @@
 # HimariUI Implementation Plan
 
-> Status: Draft 0.5<br>
+> Status: Draft 0.6<br>
 > Runtime baseline: Java 25<br>
 > Initial platforms: Windows, macOS, Linux, and Headless<br>
 > Future mobile policy: Android and iOS are post-stable Java 25 AOT targets and do not define the core compatibility baseline<br>
 > Future remote policy: the scene boundary is transport-ready, while networking and remote-session products remain post-stable extensions<br>
+> Future color policy: first-stable color values, scene encodings, render paths, and surface contracts preserve extended-range and HDR semantics, while production hardware HDR presentation is capability-gated and not a first-stable release requirement<br>
 > Primary distribution constraint: published core and desktop artifacts must not ship project-built or third-party CPU-native libraries; future mobile bundles may contain only declared target-generated AOT code and host glue<br>
 > Last reviewed: 2026-08-14
 
@@ -41,7 +42,7 @@ Terms used throughout this plan:
 
 Deliver a modern declarative GUI framework whose runtime, layout engine, text stack, software renderer, GPU abstraction, platform backends, and generated native bindings are implemented in Java 25. Published Java artifacts and first-stable desktop distributions must contain no project-built or third-party CPU-native libraries. Desktop platforms must be reached through generated, strongly typed FFM bindings to system APIs.
 
-The first stable release must support deterministic Headless execution, software fallback, modern GPU backends, complete input and accessibility paths, a practical control set, JVM execution, and GraalVM Native Image packaging.
+The first stable release must support deterministic Headless execution, software fallback, modern GPU backends, complete input and accessibility paths, a practical control set, color-managed SDR presentation with HDR-safe values/codecs/capability contracts, JVM execution, and GraalVM Native Image packaging.
 
 ### 1.2 Execution order
 
@@ -72,6 +73,7 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 13. **Treat mobile as a post-stable AOT extension.** Android and iOS support is contingent on a mobile AOT toolchain compiling the representative Java 25 core without source rewrites or a reduced Java profile. If no such toolchain is viable, defer the mobile target instead of lowering the runtime baseline, banning stable Java 25 APIs, or maintaining an ART-compatible common implementation.
 14. **Make the scene boundary transport-ready without putting networking in the core.** `SceneSnapshot`, display-list, resource, semantics, and normalized-input encodings must be versioned, pointer-free, bounded, and replayable outside the producing process. The default renderer remains in-process. Authentication, encryption, discovery, congestion control, codecs, and remote-session policy belong to post-stable extensions.
 15. **Model animation as transaction-scoped presentation state.** A committed state or property value is the authoritative target; animation derives a time-varying presentation value without writing source state on every frame. Sample related animations atomically, preserve presentation-value and velocity continuity across compatible interruptions, and execute each property at its declared structure, layout, paint, semantics, hit-test, or composite impact. Compiler assistance must not be required for these semantics.
+16. **Keep gamut, transfer, luminance, and presentation capabilities orthogonal.** Represent primaries/white point, transfer function, scene- or display-referred interpretation, reference white/content luminance, numeric range, pixel format, and output-surface capabilities explicitly. Do not model HDR as a Boolean, equate P3 or BT.2020 with HDR, clamp finite color components to `[0, 1]` before an explicit gamut/tone-mapping or quantization step, or bake an SDR-only assumption into public values, display lists, scenes, images, RHI surfaces, or remote negotiation.
 
 ### 1.4 Default technology choices
 
@@ -88,6 +90,7 @@ Correctness gates precede optimization at every stage. A visible demo does not r
 | UI model | Declarative, signal-driven, phase-aware, unidirectional data flow | Select the structural-update strategy in M1; no mandatory compiler plugin |
 | Layout | Downward constraints, upward sizes, one measure per child by default | Treat intrinsic measurement as explicit and expensive |
 | Drawing | Immutable display lists plus a retained layer tree | Support partial repaint and caching |
+| Color and dynamic range | Color-managed SDR presentation first; tagged extensible encodings and extended-linear floating-point reference paths | First-stable APIs/codecs must preserve wide-gamut and HDR information even where hardware HDR output remains unavailable |
 | Scene/process boundary | Versioned `SceneSnapshot` envelopes plus content-addressed resources | In-process mailbox by default; canonical encoding supports replay, process isolation, and future transport |
 | CPU rendering | Tile-based pure-Java rasterizer | Scalar normative path plus optional Vector API acceleration |
 | GPU rendering | Vulkan, D3D12, and Metal | Use a backend-neutral explicit RHI |
@@ -176,6 +179,7 @@ Deliver all of the following:
 - An extensible complete Unicode text pipeline, with stable-release coverage for common complex scripts, Bidi, font fallback, variable fonts, and major color-font formats.
 - Accessibility bridges for Windows UI Automation, macOS Accessibility, and Linux AT-SPI2.
 - Vulkan, D3D12, and Metal GPU backends plus CPU fallback.
+- Color-managed sRGB SDR presentation; tagged Display-P3 values and conversion with direct P3 presentation only on verified capable surfaces; tagged extended-range color and profile resources; an extended-linear software reference path; deterministic HDR/WCG-to-SDR fallback; and truthful per-surface color/HDR capability reporting.
 - JVM and GraalVM Native Image distribution paths.
 - Inspector, versioned transport-ready scene/frame traces, deterministic offline replay, and golden-test tooling.
 
@@ -188,6 +192,7 @@ Deliver all of the following:
 - Arbitrary user shaders; expose only a controlled set of brushes, filters, and effects initially.
 - General video codecs or media-container parsing as a release blocker.
 - Pixel-identical output between software and GPU backends. Require semantic agreement for geometry, coverage, color, and blending, with bounded GPU tolerances.
+- Production HDR/EDR output on every desktop, browser, or mobile backend. The first stable release must preserve tagged extended-range values and validate HDR reference math and capability fallback, but may advertise only SDR presentation on a platform whose HDR path has not passed its dedicated conformance gates.
 - Bundling MoltenVK, ANGLE, SwiftShader, Mesa, FreeType, HarfBuzz, or similar native components to fill platform gaps.
 - Requiring application developers to understand FFM, COM, the Objective-C runtime, or Wayland protocols.
 
@@ -198,6 +203,7 @@ Deliver all of the following:
 - **Mobile compatibility rule**: require representative mobile AOT spikes to cover stable Java 25 APIs used by the core, including `MemorySegment` and `Arena` where applicable. A toolchain failure postpones Android/iOS support; it must not cause the main source set to adopt an older Java profile, avoid stable Java 25 features, or maintain parallel ART-compatible algorithms.
 - **Browser/Wasm**: compile the portable Java subsystems to WebAssembly; use generated Wasm imports and JavaScript/browser host bindings, WebGPU with a Canvas fallback, host-driven event delivery, asynchronous browser capabilities, and a DOM-backed semantics/IME bridge. Reuse the backend-neutral RHI contract without requiring FFM or runtime JPMS. This target does not provide DOM/CSS visual compatibility.
 - **Remote scene rendering and Web client**: keep the authoritative Java 25 runtime, layout, text shaping, hit testing, focus, and application state on a JVM or Native Image host. Stream versioned scene/display-list envelopes, content-addressed resources, correlated semantics updates, and lifecycle/configuration changes to a browser client that presents through WebGPU or Canvas/software and returns normalized input and IME transactions. This path must not require the full Java runtime to execute in the browser and must not expose component trees, RHI commands, native GPU commands, or target handles on the wire. Pixel/video streaming may be an optional fallback, not the normative scene protocol.
+- **Advanced color and HDR presentation**: add production BT.2020/BT.2100 PQ and HLG, extended-linear/EDR, high-bit-depth and floating-point swapchains, per-display luminance/headroom updates, static and future negotiated dynamic metadata, versioned gamut/tone-mapping policies, HDR image/media ingestion, and calibrated output matrices. Keep content encoding independent of output capability so unsupported surfaces receive an explicit deterministic SDR mapping rather than reinterpretation or clipping.
 - **Media**: add a pure-Java `himari-media` API, WAV/PCM baseline implementations, and optional FFmpeg, GStreamer, or platform-codec providers.
 
 ---
@@ -298,6 +304,16 @@ On interruption, first sample the running animation at the replacement timestamp
 
 SwiftUI's transaction, animatable-data, stateful custom-animation, spring-retargeting, phase/keyframe, transition, and matched-geometry semantics are primary design references. Do not copy its compiler- and macro-dependent surface API, per-frame content-closure model, or opaque identity behavior into the ordinary-Java API.
 
+### ADR-019: Preserve extended-range color and HDR semantics without making HDR output a first-stable blocker
+
+Model color encoding as structured data rather than a closed list of display names. A `ColorEncoding` combines a color model, primaries, white point, transfer function, numeric range, and scene- or display-referred interpretation. Luminance information such as SDR reference white, diffuse white, content peak, minimum luminance, and mastering/content-light metadata remains explicit and separate from gamut. ICC profiles are content-addressed transform resources, not substitutes for the dynamic-range and presentation contract. Named encodings are conveniences over this model; adding BT.2020, BT.2100 PQ/HLG, extended-linear spaces, ICC-based spaces, or future encodings must not require changing `Color`, display-list command layouts, the backend-neutral scene schema, or the RHI type hierarchy.
+
+Framework color values and canonical scene records preserve finite extended-range components, including values below `0` or above `1`, until an explicit conversion, gamut mapping, tone mapping, or destination-format quantization step. Reject non-finite components at public and codec boundaries. Keep pixel storage format separate from color encoding and alpha interpretation. Blending and filters use an explicitly declared working encoding and operate in linear light by default; premultiplication, interpolation, adaptation, and any exception to linear processing must have specified behavior. The first-stable reference path uses extended-linear floating-point intermediates so an optimized SDR path can be checked for semantic equivalence without defining the architecture around 8-bit sRGB.
+
+Each output surface reports supported format/encoding combinations, precision, color-volume information, current SDR reference white or HDR headroom where available, metadata support, and whether framework, system, or display tone mapping will occur. Capabilities are per surface/display and may change when a window moves, display settings change, or a browser/mobile host reconfigures. Selection returns an explicit effective `PresentationColorConfiguration` and fallback reason; it never silently treats unsupported HDR/WCG content as sRGB. A single `hdrSupported` flag is insufficient.
+
+First stable requires tagged color values, extended-range scene round trips, reference BT.2020/PQ/HLG conversion math, a programmable Headless HDR-capability model, deterministic gamut/tone-mapped SDR fallback, and backend-neutral capability reporting. It does not require a backend to advertise production HDR output. A backend may advertise HDR/EDR only after its format/color-space pairing, display-change handling, tone-mapping ownership, precision, metadata, screenshot/trace behavior, and platform conformance tests pass.
+
 ---
 
 ## 5. Target Architecture
@@ -365,6 +381,7 @@ host / OS events
   -> render mailbox by default, or canonical encoded scene sink
   -> frame compiler / render graph
   -> CPU tiles or GPU command buffers
+  -> declared gamut/tone mapping + output color transform
   -> present + timing feedback
 ```
 
@@ -745,7 +762,9 @@ Use immutable, typed modifier chains and flatten them when mounted. Each modifie
 
 ### 9.1 Framework-owned value types
 
-Implement framework types for points, sizes, rectangles, rounded rectangles, matrices, colors, color spaces, transfer functions, paths, brushes, strokes, paints, blend modes, images, pixel buffers, text blobs, glyph-run lists, and filters. Do not reuse `java.awt.*` types.
+Implement framework types for points, sizes, rectangles, rounded rectangles, matrices, colors, color primaries, white points, transfer functions, structured color encodings, ICC profile resources, luminance/content-light metadata, presentation color configurations, gamut/tone-mapping policies, paths, brushes, strokes, paints, blend modes, images, pixel buffers, text blobs, glyph-run lists, and filters. Do not reuse `java.awt.*` types or expose backend color-space enums.
+
+Keep `Color`, `PixelFormat`, `AlphaType`, and `ColorEncoding` independent. `Color` stores finite floating-point components plus an encoding; it does not clamp extended-range components on construction. `PixelBuffer` declares component layout/type/precision, alpha interpretation, row/plane layout, and encoding separately. Named spaces such as sRGB, linear-sRGB, Display-P3, linear Display-P3, BT.2020, BT.2100 PQ/HLG, and extended-linear encodings are canonical predefined values over the same extensible representation rather than Java enum exhaustiveness assumptions.
 
 ### 9.2 Recording Canvas
 
@@ -774,12 +793,13 @@ Operations:
 Side tables:
   immutable paths
   content-addressed images
+  color encodings + content-addressed ICC profiles
   pre-shaped text blobs and glyph resources
   filters
   nested display lists
 ```
 
-Use a canonical little-endian encoding independent of Java object layout and native byte order. Require reusable builders that freeze on completion, no per-command Java object allocation, hashing and serialization, trace/replay support, conservative bounds for culling and damage, debug source/resource labels, and explicit format versioning. Resource references use stable IDs scoped by a manifest plus content hashes; they never use pointers or object identity. Text blobs carry authoritative glyph IDs, positions, clusters, and required glyph data rather than asking a consumer to reshape with ambient system fonts. Reject unknown required features and malformed payloads. Do not promise permanent compatibility across major versions.
+Use a canonical little-endian encoding independent of Java object layout and native byte order. Require reusable builders that freeze on completion, no per-command Java object allocation, hashing and serialization, trace/replay support, conservative bounds for culling and damage, debug source/resource labels, and explicit format versioning. Resource references use stable IDs scoped by a manifest plus content hashes; they never use pointers or object identity. Text blobs carry authoritative glyph IDs, positions, clusters, and required glyph data rather than asking a consumer to reshape with ambient system fonts. Color payloads use finite floating-point components and stable encoding/profile references; the format must not assume 8-bit sRGB, `[0, 1]` component bounds, a fixed set of gamuts, or that source encoding equals presentation encoding. Reject unknown required features, non-finite values, oversized profiles/LUTs, and malformed payloads. Do not promise permanent compatibility across major versions.
 
 ### 9.4 Retained layer tree
 
@@ -792,7 +812,8 @@ Encode an immutable `SceneEnvelope` that can feed offline replay, another local 
 ```text
 protocol/version/features
 streamEpoch + snapshotId + optional baseSnapshotId
-viewport + scale + color-space/presentation configuration
+viewport + scale + requested/effective presentation color configuration
+declared compositing + content encodings + reference white/luminance/content-light metadata
 layer snapshot or delta + display-list references + damage
 optional bounded layer-animation programs + clock mapping + replacement generations
 resource manifest + ordered add/release records + content hashes
@@ -800,7 +821,7 @@ correlated semantics snapshot/delta identifier
 frame timing metadata and diagnostics
 ```
 
-Full snapshots establish recovery points; deltas may refer only to an acknowledged base snapshot and available resource generation. Scene frames may be latest-wins, but resource, configuration, animation-replacement, and semantics records required by an accepted frame are ordered and non-droppable. Consumers acknowledge accepted snapshots and resource generations so producers can apply backpressure and reclaim data safely. The server or local runtime remains authoritative for layout, text shaping, hit testing, focus, application state, and animation targets. A transmitted animation program is restricted to negotiated framework-defined operations over eligible layer properties; it carries no callback, expression, component code, or arbitrary executable payload. Client-side scrolling, cursor movement, or animation sampling is permitted only as a reversible optimization reconciled against later authoritative snapshots and replacement generations.
+Full snapshots establish recovery points; deltas may refer only to an acknowledged base snapshot and available resource generation. Scene frames may be latest-wins, but resource, color/presentation configuration, animation-replacement, and semantics records required by an accepted frame are ordered and non-droppable. Consumers acknowledge accepted snapshots and resource generations so producers can apply backpressure and reclaim data safely. Color capability negotiation happens before accepting a required encoding or output intent; an unsupported consumer requests an authoritative mapped fallback or rejects the required feature rather than reinterpreting it. ICC profiles and versioned mapping parameters are content-addressed resources, while live display capability/headroom remains presentation configuration rather than scene content identity. The server or local runtime remains authoritative for layout, text shaping, hit testing, focus, application state, animation targets, and any host-side color mapping. A transmitted animation program is restricted to negotiated framework-defined operations over eligible layer properties; it carries no callback, expression, component code, or arbitrary executable payload. Client-side scrolling, cursor movement, animation sampling, or negotiated final color mapping is permitted only as a reversible optimization reconciled against later authoritative snapshots, configurations, and replacement generations.
 
 The encoded envelope may be produced from `MemorySegment`-backed internal storage, but it must contain no address, arena lifetime, Java reference, FFM handle, RHI object, or backend command. Keep transport framing, compression, encryption, authentication, and session policy outside this format.
 
@@ -826,14 +847,16 @@ geometry normalization
   -> tile scheduling
   -> coverage rasterization
   -> brush sampling
-  -> blending / filters
-  -> color transform
+  -> conversion to declared linear working encoding
+  -> blending / filters in declared working encoding
+  -> gamut mapping + tone mapping when required
+  -> output color transform + transfer function
   -> pixel output
 ```
 
 ### 10.3 Scalar reference implementation
 
-Build the first implementation as a single-threaded readable scalar path. Include fixed-point edge coverage, non-zero/even-odd filling, quadratic/cubic/conic curves, cap/join/miter/dash stroke semantics, premultiplied alpha, common Porter-Duff and blend modes, nearest/bilinear sampling, solid and linear/radial/sweep gradients, grayscale glyph masks, clip stacks, basic blur, and color matrices.
+Build the first implementation as a single-threaded readable scalar path. Include fixed-point edge coverage, non-zero/even-odd filling, quadratic/cubic/conic curves, cap/join/miter/dash stroke semantics, explicitly encoded extended-range floating-point color, linear-light premultiplied alpha, common Porter-Duff and blend modes, nearest/bilinear sampling, solid and linear/radial/sweep gradients, grayscale glyph masks, clip stacks, basic blur, color matrices, chromatic adaptation, reference color transforms, and deterministic gamut/tone-mapped SDR output. Preserve finite negative and above-one intermediate components; clamp only where the selected mapping or destination numeric format requires it.
 
 Avoid opaque bit-level micro-optimizations in this path. It must remain debuggable and suitable for field-by-field differential comparison.
 
@@ -858,6 +881,7 @@ Any referenced or ported tessellator must retain upstream mapping, licensing, an
 - Use a DIB or shared upload surface on Windows without Java2D.
 - Upload CPU buffers to Metal textures or use an appropriate public system bitmap/display API on macOS.
 - Emit `PixelBuffer` values or PNG files directly in Headless mode.
+- Provide Headless extended-linear `RGBA16F` and `RGBA32F` capture surfaces plus a separately configured deterministic SDR mapping for PNG output; a PNG golden must not become the semantic definition of HDR values.
 
 ---
 
@@ -865,7 +889,9 @@ Any referenced or ported tessellator must retain upstream mapping, licensing, an
 
 ### 11.1 RHI object model
 
-Define explicit device, queue, buffer, texture, texture-view, sampler, shader-module, pipeline-layout, graphics-pipeline, compute-pipeline, command-buffer, render-pass, compute-pass, transfer-pass, submission-completion token/timeline, swapchain/surface, resource-usage/access, pass-dependency, submission-order, and debug-label abstractions. Device and surface acquisition must support asynchronous completion.
+Define explicit device, queue, buffer, texture, texture-view, sampler, shader-module, pipeline-layout, graphics-pipeline, compute-pipeline, command-buffer, render-pass, compute-pass, transfer-pass, submission-completion token/timeline, swapchain/surface, resource-usage/access, pass-dependency, submission-order, and debug-label abstractions. Keep raw texture/pixel format separate from framework color encoding and presentation configuration. Device and surface acquisition, capability queries, and reconfiguration must support asynchronous completion.
+
+Every surface exposes `SurfaceColorCapabilities`: supported format/encoding/alpha combinations; integer and floating-point precision; SDR, wide-gamut, extended-linear, PQ, and HLG presentation modes where actually available; current/maximum luminance or relative headroom when the host reports it; supported static or future metadata classes; system color-management and tone-mapping behavior; and a capability generation that changes with the display or host configuration. Surface selection returns an effective `PresentationColorConfiguration`, mapping ownership, and fallback reason. Keep backend constants such as `VkColorSpaceKHR`, `DXGI_COLOR_SPACE_TYPE`, and `CGColorSpaceRef` behind target modules.
 
 ### 11.2 Capability tiers
 
@@ -878,14 +904,16 @@ Use stable capability tiers instead of scattered platform checks:
 
 The frame compiler selects algorithms from capabilities, never from checks such as `isVulkan()`.
 
+Treat presentation color as a surface capability axis rather than a GPU tier: an otherwise G2 device may expose only SDR on a particular surface, while a G0 device/surface pair may support a high-precision extended-linear target.
+
 ### 11.3 Frame compiler responsibilities
 
-Implement culling, clip-strategy selection, save-layer/offscreen planning, transient-texture lifetime, draw batching, pipeline keys, upload coalescing, glyph/image-atlas updates, logical resource transitions, GPU-resource retirement, and damage-aware presentation. Emit a backend-neutral render graph with declared resource access and pass dependencies; each backend derives its required barriers, validation, and submission commands.
+Implement culling, clip-strategy selection, save-layer/offscreen planning, transient-texture lifetime, draw batching, pipeline keys, upload coalescing, glyph/image-atlas updates, logical resource transitions, GPU-resource retirement, and damage-aware presentation. Track each imported texture's encoding and alpha interpretation, choose adequate intermediate precision, and insert explicit conversion, gamut mapping, tone mapping, output-transfer, and quantization passes only at declared boundaries. Include the effective presentation configuration and mapping algorithm/version in cache and replay keys. Emit a backend-neutral render graph with declared resource access and pass dependencies; each backend derives its required barriers, validation, and submission commands.
 
 ### 11.4 Shader toolchain
 
 1. Define a typed pure-Java shader IR without SPIR-V-, HLSL-, MSL-, or WGSL-specific assumptions in its common model.
-2. Maintain a small fixed shader set for built-in brushes, clips, glyphs, images, and filters.
+2. Maintain a small fixed shader set for built-in brushes, clips, glyphs, images, filters, color conversion, chromatic adaptation, and versioned gamut/tone mapping.
 3. Generate SPIR-V in Java.
 4. Generate HLSL and MSL source in Java.
 5. Preserve WGSL as a first-class future target for the WebGPU backend.
@@ -905,6 +933,7 @@ Do not expose arbitrary user shaders in the first stable release.
 - Generate constants, structures, functions, and extension metadata from the official registry XML.
 - Resolve functions through `vkGetInstanceProcAddr` and `vkGetDeviceProcAddr`.
 - Select broadly available modern capabilities through runtime capability checks rather than hard-coded version assumptions.
+- Enumerate surface format/color-space pairs and map extended color-space and HDR-metadata extensions when present; report unsupported combinations rather than manufacturing HDR capability.
 - Use validation layers only in tests/development and never bundle them.
 - Keep Wayland and X11 WSI adapters separate.
 
@@ -912,6 +941,7 @@ Do not expose arbitrary user shaders in the first stable release.
 
 - Generate Win32 typedefs, structures, enums, GUIDs, and COM vtable bindings.
 - Create devices through `D3D12CreateDevice`, DXGI factories, and swapchains.
+- Map DXGI Advanced Color output descriptions, supported swapchain format/color-space pairs, luminance data, color-space selection, and metadata/tone-mapping ownership into the common surface contract.
 - Use typed COM handles with explicit `AddRef`/`Release` ownership.
 - Manage command allocators/lists, descriptor heaps, barriers, and fences explicitly.
 - Load offline-generated DXIL/DXBC resources.
@@ -921,6 +951,7 @@ Do not expose arbitrary user shaders in the first stable release.
 - Resolve classes and selectors through the Objective-C runtime and generate typed `objc_msgSend` downcalls per signature.
 - Create delegate/callback classes with `objc_allocateClassPair`, `class_addMethod`, and FFM upcalls.
 - Use AppKit windows, `CAMetalLayer`, and Metal devices/queues.
+- Map `CAMetalLayer` pixel format/color space, EDR enablement and metadata, per-display headroom, and display-change notifications into the common surface contract without exposing Core Graphics color-space objects.
 - Manage autorelease pools on every thread entering Cocoa.
 - Prefer delegates, selectors, and `dispatch_*_f`; require a separate ABI feasibility spike before using Objective-C blocks.
 
@@ -1188,13 +1219,13 @@ Do not call DirectWrite, CoreText, or Pango for production shaping or rasterizat
 
 ### 14.1 Platform SPI
 
-Define a platform backend contract for capabilities, host-driven event scheduling, surface/window creation, clipboard, cursors, font sources, and accessibility. Backend initialization, GPU/surface acquisition, clipboard access, permission-gated operations, and resource loading must be able to complete asynchronously. A platform window or surface must expose logical/physical size, scale factor, visibility/title/state where supported, a target-neutral surface descriptor, redraw requests, cursor/IME/drag-and-drop controls, frame-timing callbacks, and explicit close.
+Define a platform backend contract for capabilities, host-driven event scheduling, surface/window creation, clipboard, cursors, font sources, and accessibility. Backend initialization, GPU/surface acquisition, clipboard access, permission-gated operations, and resource loading must be able to complete asynchronously. A platform window or surface must expose logical/physical size, scale factor, visibility/title/state where supported, a target-neutral surface descriptor, redraw requests, cursor/IME/drag-and-drop controls, frame-timing callbacks, current display/presentation color capabilities and generation, color-capability change notifications, and explicit close. Moving a window between displays or changing host HDR/color settings must re-negotiate presentation without changing application color values or silently reinterpreting scene content.
 
 Do not expose `HWND`, `NSWindow*`, `wl_surface*`, DOM nodes, JavaScript objects, or WebGPU handles from core APIs. Make typed target handles available only through explicit interop modules.
 
 ### 14.2 Headless
 
-Treat Headless as a first-class platform, not a testing shortcut. Implement a deterministic clock, virtual displays and scale factors, programmable event injection, software surfaces, frame capture, accessibility-tree capture, zero OS-library loading, and complete component/layout/text execution without a display server.
+Treat Headless as a first-class platform, not a testing shortcut. Implement a deterministic clock, virtual displays and scale factors, programmable display primaries/luminance/reference-white/headroom and presentation modes, configurable software surface formats/encodings, programmable event injection, extended-linear and mapped-SDR frame capture, accessibility-tree capture, zero OS-library loading, and complete component/layout/text execution without a display server.
 
 ### 14.3 Linux Wayland
 
@@ -1202,7 +1233,7 @@ Implement:
 
 - `libwayland-client` as the system transport.
 - Generated typed proxies and event bindings from Wayland XML.
-- xdg-shell, presentation timing/frame callbacks, pointer/keyboard/touch/tablet protocols, data-device clipboard/drag-and-drop, text-input-v3, fractional-scale/viewporter, `wl_shm`, and Vulkan WSI.
+- xdg-shell, presentation timing/frame callbacks, pointer/keyboard/touch/tablet protocols, data-device clipboard/drag-and-drop, text-input-v3, fractional-scale/viewporter, `wl_shm`, Vulkan WSI, and negotiated color-management/output-description protocols when available.
 
 For keyboard handling, consume compositor-provided XKB keymaps, implement a pure-Java parser/state machine, and differentially test it against `libxkbcommon`. A system xkbcommon adapter may be transitional but must not remain the only implementation.
 
@@ -1218,7 +1249,7 @@ Implement:
 
 - User32 window classes, generated `WndProc` upcalls, message pumps, per-monitor DPI, DWM/window state, multiple windows, modal loops, clipboard, and OLE drag-and-drop.
 - Unified mouse/touch/pen input through `WM_POINTER`, raw keyboard plus logical mapping, separate key and text events, TSF as the target IME, IMM32 as a transitional fallback, pointer capture, cursors, and high-resolution wheels.
-- DXGI plus D3D12, frame-latency waitable objects/present feedback, and software-buffer upload fallback.
+- DXGI plus D3D12, frame-latency waitable objects/present feedback, Advanced Color/output capability and change detection, explicit swapchain color-space selection, and software-buffer upload fallback.
 - A UI Automation provider whose COM vtables/callbacks are generated and whose TextPattern/TextRange implementation maps to the HimariUI text model.
 
 ### 14.6 macOS
@@ -1227,7 +1258,7 @@ Implement:
 
 - Objective-C runtime access, NSApplication/NSWindow/NSView, dynamically registered delegate classes, main-thread enforcement, autorelease pools, backing-scale handling, and multiple displays.
 - NSEvent, tracking areas, gestures/tablets, `NSTextInputClient`, NSPasteboard, and dragging.
-- `CAMetalLayer`, Metal device/queue/command buffers, display timing, and CPU-buffer upload fallback.
+- `CAMetalLayer`, Metal device/queue/command buffers, display timing, display color-space/EDR headroom and change detection, explicit layer color/pixel-format configuration, and CPU-buffer upload fallback.
 - NSAccessibility roles/actions/values, text markers/ranges, and main-thread marshaling.
 
 Validate Objective-C block ABI, method-return ABI, selector signatures, and dynamic-class lifetime during M0. Prefer block-free APIs until the spike establishes a safe contract.
@@ -1235,7 +1266,7 @@ Validate Objective-C block ABI, method-return ABI, selector signatures, and dyna
 ### 14.7 Future local browser/Wasm backend
 
 - Map the primary application surface to a browser canvas. Treat multiple top-level windows as a capability that may be unavailable rather than emulating desktop windows silently.
-- Acquire WebGPU adapters, devices, and canvas configuration asynchronously. Use the software renderer plus Canvas presentation as the documented fallback.
+- Acquire WebGPU adapters, devices, canvas color/tone-mapping configuration, and display gamut/dynamic-range capabilities asynchronously. Use the software renderer plus Canvas presentation as the documented fallback, and never infer browser HDR support merely from GPU texture-format support.
 - Receive pointer, keyboard, wheel, focus, visibility, resize, and timing events through generated browser host bindings and normalize them before they enter the runtime.
 - Bridge IME through a narrowly controlled hidden textarea or content-editable element while keeping HimariUI's text model authoritative.
 - Mirror the semantics tree into a DOM accessibility structure without using DOM/CSS for visual layout or rendering.
@@ -1394,6 +1425,7 @@ Animation is the transaction-scoped evolution of presentation state toward commi
 
 - Keep `PixelBuffer` independent of `BufferedImage`.
 - Define premultiplied/unpremultiplied semantics, stride, planes, and formats explicitly.
+- Associate every decoded image or plane with an explicit `ColorEncoding`, alpha interpretation, and, where present, ICC/cICP-style primaries, transfer, matrix, range, reference-white, and content-light metadata. Preserve unknown-but-bounded metadata for a compatible codec round trip without allowing it to alter rendering implicitly.
 - Implement a pure-Java PNG codec first.
 - Add BMP or QOI as simple debug formats if useful.
 - Add JPEG, GIF, WebP, and AVIF through independent codec providers.
@@ -1402,12 +1434,36 @@ Animation is the transaction-scoped evolution of presentation state toward commi
 
 ### 17.2 Color
 
-- Associate internal color calculations with explicit color spaces.
-- Default to sRGB and support linear-sRGB plus Display-P3.
-- Document the space in which blending and filters execute.
-- Let output surfaces perform the final transform.
-- Implement common pure-Java ICC v2/v4 profile parsing and transforms; defer unusually complex profiles.
-- Fix the color profile used by golden tests so system color management cannot perturb results.
+#### 17.2.1 Encodings and values
+
+- Define `ColorPrimaries`, `WhitePoint`, `TransferFunction`, `ColorEncoding`, `ColorProfile`, `LuminanceRange`, `ContentLightMetadata`, and scene/display-referred interpretation as framework-owned immutable values. Do not make supported spaces a closed enum or use one `isHdr` property as the semantic model.
+- Treat gamut and dynamic range independently. Display-P3 or BT.2020 may carry SDR or extended/HDR values; an sRGB-primary extended-linear encoding may carry values above SDR white. A format or gamut name alone never proves HDR output capability.
+- Support sRGB, linear-sRGB, Display-P3, and linear Display-P3 as first-stable named encodings. Implement and fixture BT.2020 plus BT.2100 PQ/HLG reference conversions and serialization during first stable so their later use does not change the value or scene model. Leave room for A98 RGB, ProPhoto RGB, XYZ/Lab-family, ACES-family, ICC, and future parameterized encodings without changing command layouts.
+- Accept only finite components, but preserve valid negative and above-one values through interpolation and conversion. Clamp only at an explicit gamut/tone-mapping or destination-format boundary and report lossy fallback in diagnostics.
+
+#### 17.2.2 Working space, alpha, and precision
+
+- Use an explicitly tagged extended-linear floating-point working encoding in the scalar reference renderer; extended-linear sRGB is the first-stable default unless corpus evidence selects another ADR-compatible default. Conversions into it must retain out-of-gamut components rather than clipping.
+- Perform Porter-Duff composition and ordinary blend/filter math in linear light with documented premultiplied-alpha semantics. A blend mode, filter, gradient, interpolation, or image operation that intentionally uses another space declares that space and conversion boundary.
+- Provide `RGBA8`, 10-bit packed, `RGBA16F`, and `RGBA32F`-class pixel formats in the framework model even when a platform implements only a subset. Use adequate precision for every intermediate and test half-float/packed quantization separately from color-conversion error.
+- Keep raw GPU texture formats untagged numeric storage at the RHI level; track content encoding and alpha interpretation in framework resources and render-graph edges so sampling or render-target hardware conversions cannot occur accidentally.
+
+#### 17.2.3 Profiles and transforms
+
+- Implement common pure-Java ICC v2/v4 profile parsing and matrix/TRC plus bounded LUT transforms; defer unusually complex profiles. Treat profiles as untrusted, content-addressed resources with explicit size, grid, channel, recursion, and work limits.
+- Keep an extension seam for iccMAX or future profile architectures without requiring them for first stable. ICC processing does not replace explicit PQ/HLG, reference-white, content-luminance, or presentation metadata.
+- Implement chromatic adaptation and conversion reference paths from published formulas and fixed vectors. Version gamut-mapping and tone-mapping algorithms because their output participates in goldens, traces, caches, and remote replay.
+
+#### 17.2.4 Presentation and fallback
+
+- Negotiate a requested and effective `PresentationColorConfiguration` per surface. It identifies format, encoding, alpha mode, reference white/headroom or luminance range, mapping ownership, metadata, and capability generation.
+- Let the final presentation stage perform the declared output transform. If native HDR/EDR output is unavailable or unverified, apply the selected deterministic framework SDR tone/gamut mapping, preserve the original content/scene encoding for other outputs, and report the fallback. Never silently clip, relabel, or reinterpret content as sRGB.
+- Re-evaluate presentation when the display, window placement, OS/browser color setting, headroom, or surface changes. Keep application colors and recorded display lists stable; invalidate only output conversion, caches, and presentation work that depend on the effective configuration.
+- Fix source encoding, working encoding, reference white, luminance/headroom, mapping algorithm/version, and destination encoding in golden tests so ambient system color management cannot perturb results.
+
+#### 17.2.5 Delivery boundary
+
+First stable completes the extensible values/codecs, extended-linear software reference path, BT.2020/PQ/HLG conversion fixtures, Headless virtual HDR surfaces, deterministic HDR/WCG-to-SDR fallback, and platform/RHI capability reporting. Hardware HDR presentation remains disabled unless a backend passes its dedicated tests. Later advanced-color work enables and productizes native Vulkan HDR, Windows Advanced Color, Metal EDR, browser HDR, mobile HDR, calibrated workflows, and HDR image/media formats without changing these contracts.
 
 ### 17.3 Later media SPI
 
@@ -1420,7 +1476,7 @@ Define media contracts for timestamps/timebases, PCM audio buffers, video planes
 ### 18.1 Test layers
 
 1. **Pure unit tests**: load no system GUI or GPU libraries.
-2. **Conformance tests**: cover Unicode, OpenType, ABI, and layout invariants.
+2. **Conformance tests**: cover Unicode, OpenType, color/HDR reference math and codecs, ABI, and layout invariants.
 3. **Differential tests**: compare with FreeType, HarfBuzz, SDL, platform APIs, and LWJGL.
 4. **Golden tests**: require exact software output and bounded GPU differences.
 5. **Property/fuzz tests**: target parsers, geometry, state, and events.
@@ -1440,6 +1496,7 @@ Define media contracts for timestamps/timebases, PCM audio buffers, video planes
 | Bidi/segmentation | ICU4J adapter | Unicode conformance data | Exact boundaries and order |
 | Path rasterization | Scalar software path | Skia/FreeType/Impeller runner | Coverage masks and goldens |
 | Blending/filters | Scalar formulas | Reference image runner | Exact pixels or bounded tolerance |
+| Color conversion/HDR math | Extended-linear scalar transforms plus versioned mapping | ICC reference implementation and published ICC/ITU/W3C vectors | Components, XYZ values, luminance, mapping output, and bounded quantization error |
 | Layout | Invariants/reference policies | Curated Compose/Flutter cases | Size, position, baseline |
 | Event normalization | Recorded model | SDL/LWJGL/platform traces | Sequence, timestamp class, buttons |
 | Vulkan/D3D12/Metal | CPU-rendered scene | GPU backend plus reference tooling | Frame image and resource diagnostics |
@@ -1457,15 +1514,16 @@ Maintain separate groups for minimal synthetic fonts, open-source Latin/CJK/Arab
 
 ### 18.5 Golden policy
 
-- Use fixed seeds, fonts, and color profiles for exact software hashes.
-- Store reference images, diff images, maximum error, mean error, and edge-mask error for GPU goldens.
+- Use fixed seeds, fonts, source/working/destination color encodings and profiles, reference white/luminance/headroom, and gamut/tone-mapping algorithm versions for exact software hashes.
+- Store numeric extended-linear fixtures separately from mapped SDR reference images. PNG or the current display cannot define whether an HDR intermediate is correct.
+- Store reference images, diff images, maximum error, mean error, edge-mask error, and color-conversion/mapping error for GPU goldens; compare pre-presentation linear values before mapped pixels where practical.
 - Compare glyphs, clusters, and outlines numerically before relying on screenshots for text.
 - Require reviewer inspection for every golden update; never mass-accept new output automatically.
 - Provide a `golden-reviewer` that shows before/after, blink, and heatmap views.
 
 ### 18.6 Fuzzing and parser safety
 
-Target font tables, charstrings, TrueType bytecode, image headers/compressed streams, paths/dashes/transforms, display-list/scene/resource/semantics/input deserialization, Wayland/X11 message decoding, ABI string/array marshaling, and text-editing operations.
+Target font tables, charstrings, TrueType bytecode, image headers/compressed streams, ICC profiles/LUTs and color metadata, paths/dashes/transforms, display-list/scene/resource/semantics/input deserialization, Wayland/X11 message decoding, ABI string/array marshaling, and text-editing operations.
 
 Use Jazzer and property-based tests, import relevant OSS-Fuzz corpora, run differential fuzzers, enforce time/allocation/recursion limits, minimize crashes into regression fixtures, and use checked `long` arithmetic for parser offsets.
 
@@ -1486,6 +1544,7 @@ Create fixed end-to-end benchmark scenes for:
 - Image grids and blur/backdrop effects.
 - Multiple windows.
 - Coordinated animation groups with 100 layout-affecting and 10,000 compositor-only properties, including interruption and gesture handoff.
+- 4K extended-linear compositing plus wide-gamut conversion, tone/gamut mapping, and `RGBA16F` presentation conversion.
 - Software rendering at 1080p and 4K.
 - GPU presentation at 60 Hz and 120 Hz.
 
@@ -1521,17 +1580,35 @@ Cover:
 
 Where a layer animation is offloaded, run the same timestamp corpus through the UI reference sampler, local render sampler, scene-codec round trip, and any activated browser or remote sampler. Compare presentation values before comparing pixels, and reject offload when an implementation cannot meet the declared tolerance or replacement-generation semantics.
 
-### 18.10 Future local browser/Wasm validation
+### 18.10 Color and HDR-readiness conformance
 
-When the post-stable Web track begins, add browser integration tests for host-driven single-thread execution, optional Web Worker rendering, asynchronous startup and permissions, WebGPU and Canvas fallback, pointer/keyboard/IME normalization, DOM semantics mirroring, fetched fonts/assets, device loss, and deterministic replay. Run a defined browser/WebGPU matrix and compare portable subsystem fixtures with JVM Headless results.
+Keep hardware HDR enablement optional, but make the architecture and reference behavior first-stable gates. Cover:
 
-### 18.11 Future mobile AOT validation
+- predefined sRGB, linear-sRGB, Display-P3, linear Display-P3, BT.2020, BT.2100 PQ, and BT.2100 HLG encodings against published matrices, transfer-function vectors, white points, and luminance values;
+- chromatic adaptation, ICC matrix/TRC and bounded LUT transforms, profile hashing, malformed-profile rejection, and configured resource/work limits;
+- finite negative and above-one component round trips through `Color`, animation interpolation, display lists, `SceneEnvelope`, traces, `PixelBuffer`, and `RGBA16F`/`RGBA32F` Headless surfaces without premature clamping;
+- explicit rejection of NaN, infinities, unknown required encodings, invalid luminance/headroom, inconsistent metadata, and unsupported required presentation features;
+- linear-light blending and premultiplied-alpha invariants for extended-range and out-of-gamut inputs;
+- half-float, 10-bit packed, and 8-bit quantization error independently from conversion and mapping error;
+- deterministic, versioned gamut/tone mapping from wide-gamut and PQ/HLG fixtures to SDR sRGB and Display-P3, including reference-white changes and highlight/color-volume stress cases;
+- virtual Headless displays whose gamut, luminance, SDR reference white, headroom, metadata support, and capability generation change while a window is active;
+- cache invalidation and frame/trace reproducibility across effective presentation changes without rerecording unchanged application colors or display lists;
+- requested/effective configuration, mapping ownership, fallback reason, and original-content preservation in capability diagnostics;
+- software/GPU agreement before any backend advertises a hardware HDR mode.
 
-When the post-stable mobile track begins, first compile and execute a representative slice of the unchanged Java 25 core on each candidate AOT toolchain. Cover every stable Java 25 API family used by production modules, including `MemorySegment`, `Arena`, concurrency, exceptions, garbage collection, resources, and static initialization where applicable. Test target host calls and callbacks separately; do not infer mobile downcall/upcall support from successful core memory access. After feasibility passes, run lifecycle, input, IME, accessibility, software/GPU differential, device-loss, suspend/resume, memory-pressure, signing, installation, and package-reproducibility matrices on Android and iOS devices and simulators/emulators.
+For a backend that opts into HDR/EDR, additionally test supported format/color-space pair selection, actual precision, display migration/configuration changes, screenshot/capture semantics, system-versus-framework tone-mapping ownership, metadata behavior, SDR UI overlay appearance, and deterministic fallback after device/surface loss. Failure disables that advertised mode rather than blocking an SDR release.
 
-### 18.12 Future remote-rendering validation
+### 18.11 Future local browser/Wasm validation
 
-When the post-stable remote track begins, validate the canonical scene protocol first through offline files and a separate local process, then through the browser client and real transports. Require byte-for-byte canonical encoding, cross-implementation fixtures, full/delta recovery, resource deduplication and reclamation, unknown-feature rejection, malformed-input fuzzing, and identical software output for decoded scenes. Exercise latency, bandwidth limits, fragmentation, disconnect/reconnect, stale input, missing resources, dropped frames, bounded backpressure, stream-epoch changes, and recovery snapshots. For transmitted layer animations, additionally test clock mapping, timestamp sampling, interruption, replacement generations, unsupported-program fallback, long suspension, reconnection, and reconciliation against authoritative host snapshots; no callback or arbitrary executable payload may cross the boundary. Compare browser WebGPU and Canvas/software output with Headless, verify correlated DOM semantics and IME behavior, and measure input-to-present latency by production, transport, client queue, and presentation stages. Assert that no component, Java runtime, FFM, RHI, or native GPU object appears in the wire format.
+When the post-stable Web track begins, add browser integration tests for host-driven single-thread execution, optional Web Worker rendering, asynchronous startup and permissions, WebGPU and Canvas fallback, pointer/keyboard/IME normalization, DOM semantics mirroring, fetched fonts/assets, device loss, and deterministic replay. Include canvas color-space/tone-mapping negotiation, extended-range texture-versus-output capability separation, display-gamut/dynamic-range changes, and explicit SDR fallback. Run a defined browser/WebGPU matrix and compare portable subsystem fixtures with JVM Headless results.
+
+### 18.12 Future mobile AOT validation
+
+When the post-stable mobile track begins, first compile and execute a representative slice of the unchanged Java 25 core on each candidate AOT toolchain. Cover every stable Java 25 API family used by production modules, including `MemorySegment`, `Arena`, concurrency, exceptions, garbage collection, resources, and static initialization where applicable. Test target host calls and callbacks separately; do not infer mobile downcall/upcall support from successful core memory access. After feasibility passes, run lifecycle, input, IME, accessibility, software/GPU differential, device-loss, suspend/resume, memory-pressure, color/HDR capability and display-change behavior, explicit SDR fallback, signing, installation, and package-reproducibility matrices on Android and iOS devices and simulators/emulators.
+
+### 18.13 Future remote-rendering validation
+
+When the post-stable remote track begins, validate the canonical scene protocol first through offline files and a separate local process, then through the browser client and real transports. Require byte-for-byte canonical encoding, cross-implementation fixtures, full/delta recovery, resource deduplication and reclamation, unknown-feature rejection, malformed-input fuzzing, and identical software output for decoded scenes. Exercise latency, bandwidth limits, fragmentation, disconnect/reconnect, stale input, missing resources, dropped frames, bounded backpressure, stream-epoch changes, and recovery snapshots. Negotiate color encodings, output gamut/dynamic range, precision, reference white/headroom, mapping ownership, profile resources, and HDR metadata; test capability changes, authoritative mapped fallbacks, and rejection of unsupported required encodings without relabeling or clipping. For transmitted layer animations, additionally test clock mapping, timestamp sampling, interruption, replacement generations, unsupported-program fallback, long suspension, reconnection, and reconciliation against authoritative host snapshots; no callback or arbitrary executable payload may cross the boundary. Compare browser WebGPU and Canvas/software output with Headless, verify correlated DOM semantics and IME behavior, and measure input-to-present latency by production, transport, client queue, and presentation stages. Assert that no component, Java runtime, FFM, RHI, or native GPU object appears in the wire format.
 
 ---
 
@@ -1638,7 +1715,10 @@ Host integration status
 Loaded system libraries
 Selected renderer
 GPU adapter/capabilities
-Color space
+Working/content color encodings
+Requested/effective presentation format + color encoding
+SDR reference white / luminance / HDR headroom where available
+Color-management and gamut/tone-mapping ownership + fallback reason
 Font catalog summary
 IME/accessibility capability
 Fallback reasons
@@ -1646,13 +1726,13 @@ Fallback reasons
 
 ### 20.2 Inspector
 
-Inspect reactive owners, structural scopes, mounted elements, layout, layer, and semantics trees; dependency edges and versions; binding and structural-scope execution counts; measure/place/paint/composite invalidations; animation transactions, transition identities, model targets, presentation values, velocities, replacement generations, completion state, reduced-motion substitutions, and offload decisions; bounds, clips, and hit testing; frame timelines; display lists; render graphs; GPU resources/caches; font fallback and shaping runs; and accessibility properties.
+Inspect reactive owners, structural scopes, mounted elements, layout, layer, and semantics trees; dependency edges and versions; binding and structural-scope execution counts; measure/place/paint/composite invalidations; animation transactions, transition identities, model targets, presentation values, velocities, replacement generations, completion state, reduced-motion substitutions, and offload decisions; color/profile resources, working and content encodings, extended-range values, requested/effective surface configurations, luminance/headroom, capability generations, mapping algorithms/ownership, and fallback reasons; bounds, clips, and hit testing; frame timelines; display lists; render graphs; GPU resources/caches; font fallback and shaping runs; and accessibility properties.
 
 Use a versioned pure-Java protocol. The inspector UI may be built with HimariUI or exposed through WebSocket/JSON to an external tool.
 
 ### 20.3 Capture and replay
 
-Record normalized input events, state-transaction summaries, animation transactions and outcomes, requested and effective motion specifications, presentation timestamps/values/velocities, transition identities and states, replacement generations, canonical scene/display-list envelopes and bounded layer-animation programs, resource manifests and hashes, correlated semantics snapshots, frame timing, platform scale/configuration, and renderer capabilities in `FrameTrace`.
+Record normalized input events, state-transaction summaries, animation transactions and outcomes, requested and effective motion specifications, presentation timestamps/values/velocities, transition identities and states, replacement generations, canonical scene/display-list envelopes and bounded layer-animation programs, color/profile resources, working/content encodings, reference white/luminance/headroom and content-light metadata, requested/effective presentation configurations, mapping algorithm/version/ownership and fallback reasons, resource manifests and hashes, correlated semantics snapshots, frame timing, platform scale/configuration, and renderer capabilities in `FrameTrace`.
 
 Replay traces with Headless and the software renderer so platform or GPU failures can become deterministic repository fixtures. The `scene-replay` tool must render from the encoded trace and declared resources alone, without references to producer-process objects or ambient system fonts. This offline boundary is the first-stable proof of transport readiness; it is not a live network implementation.
 
@@ -1662,10 +1742,10 @@ Replay traces with Headless and the software renderer so platform or GPU failure
 
 ### 21.1 Untrusted input
 
-Treat fonts, images, clipboard data, drag-and-drop data, and protocol messages as untrusted.
+Treat fonts, images, color profiles/LUTs, HDR/content-light metadata, clipboard data, drag-and-drop data, and protocol messages as untrusted.
 
 - Use checked arithmetic for every length and offset.
-- Configure limits for table count, glyph count, outline points, recursion depth, image dimensions, and decompression ratio.
+- Configure limits for table count, glyph count, outline points, recursion depth, image dimensions, decompression ratio, ICC/profile size, transform stages, LUT dimensions/grid points/channels, metadata records, and color-conversion work.
 - Avoid single large allocations whose size is controlled by input.
 - Return structured parser failures.
 - Budget memory before operations that could trigger OOM.
@@ -1708,8 +1788,8 @@ Treat fonts, images, clipboard data, drag-and-drop data, and protocol messages a
 
 ### 21.6 Future remote scene boundary
 
-- Treat scene envelopes, resource payloads, semantics deltas, input events, acknowledgements, capability messages, and session-control records as untrusted regardless of transport security.
-- Validate magic, protocol version, required features, stream epoch, sequence/base IDs, lengths, counts, offsets, hashes, compression ratios, recursion, total retained resources, and per-frame work before allocating or dispatching.
+- Treat scene envelopes, color encodings/profiles/LUTs and luminance metadata, resource payloads, semantics deltas, input events, acknowledgements, capability messages, and session-control records as untrusted regardless of transport security.
+- Validate magic, protocol version, required features, stream epoch, sequence/base IDs, lengths, counts, offsets, hashes, finite color/luminance values, profile/LUT dimensions and transform depth, supported encoding/mapping identifiers, compression ratios, recursion, total retained resources, and per-frame work before allocating or dispatching.
 - Authenticate peers and apply authorization, origin, rate, replay, timeout, and resource quotas in the remote extension. Encryption and authentication do not belong to the scene codec and must not be replaced by a custom cryptographic protocol.
 - Prevent remote input from naming arbitrary runtime objects or semantics nodes. Resolve actions only through capability-scoped, generation-checked IDs valid for the current authoritative snapshot and session.
 - Redact password fields, private semantics, clipboard content, logs, traces, and diagnostic labels according to explicit session policy. Remote diagnostics must not silently widen the data exposed to a client.
@@ -1732,10 +1812,10 @@ The milestones are dependency-ordered, not calendar-bound. Do not advance the de
 - **GUARD-001**: Implement all `pure-java-guard` gates.
 - **FFI-001**: Implement the minimum canonical ABI schema.
 - **FFI-002**: Implement the minimum shared FFM binding infrastructure.
-- **SPIKE-LINUX-001**: Open a Wayland window, receive events, clear a software surface, and present it.
-- **SPIKE-VK-001**: Create a Vulkan device and swapchain and present a clear.
-- **SPIKE-WIN-001**: Open a Win32 window, receive `WndProc` callbacks, and present a D3D12 clear.
-- **SPIKE-MAC-001**: Open an NSWindow with `CAMetalLayer` and present a Metal clear.
+- **SPIKE-LINUX-001**: Open a Wayland window, receive events, enumerate available output/color-management information, clear a software surface, and present it.
+- **SPIKE-VK-001**: Create a Vulkan device and swapchain, enumerate surface format/color-space pairs without assuming HDR extensions, and present a clear.
+- **SPIKE-WIN-001**: Open a Win32 window, receive `WndProc` callbacks, query the current DXGI output/Advanced Color description, and present a D3D12 clear.
+- **SPIKE-MAC-001**: Open an NSWindow with `CAMetalLayer`, query display color space/EDR headroom, and present a Metal clear.
 - **SPIKE-NI-001**: Build and run at least one platform spike with Native Image and FFM.
 - **ABI-001**: Compare C-probe output with generated Java layouts.
 
@@ -1745,6 +1825,7 @@ The milestones are dependency-ordered, not calendar-bound. Do not advance the de
 - Generated FFM bindings are the only system-call path; no runtime FFI provider registry exists.
 - JAR and dependency scans pass.
 - Each platform can open a window, receive close/resize/input events, and present a solid color.
+- Each platform reports a truthful target-neutral surface color capability snapshot and a tested SDR fallback; discovering an HDR-capable display is not required.
 - Native callbacks remain stable under repeated execution and reentrancy tests.
 - Native Image uses the same FFM bindings as the JVM and has reproducible run evidence.
 - The macOS block-ABI spike produces an ADR that either avoids blocks or defines a verified use policy.
@@ -1805,6 +1886,7 @@ The milestones are dependency-ordered, not calendar-bound. Do not advance the de
 **Deliverables:**
 
 - **GFX-001**: Geometry, color, `Path`, and `PathBuilder`.
+- **COLOR-CORE-001**: Extensible color encodings, finite extended-range values, first-stable named spaces, BT.2020/PQ/HLG reference math, linear-light alpha/blending rules, ICC baseline, and versioned gamut/tone-mapped SDR fallback.
 - **DL-001**: Canonical pointer-free display-list encoding, scene envelope, resource manifest, and replay.
 - **SW-001**: Solid rectangle, rounded-rectangle, and path filling.
 - **SW-002**: Clip, transform, and blend operations.
@@ -1817,7 +1899,9 @@ The milestones are dependency-ordered, not calendar-bound. Do not advance the de
 **Exit criteria:**
 
 - A Headless control prototype renders to PNG.
+- Headless extended-linear float captures preserve tagged negative and above-one components; separately configured SDR PNG output uses the declared versioned mapping rather than implicit clipping.
 - Display lists and full `SceneEnvelope` fixtures serialize canonically, reject configured limit violations, and replay without producer-process object references.
+- BT.2020/PQ/HLG values, luminance/content-light metadata, and bounded ICC resources survive canonical scene/trace round trips even though hardware HDR presentation is not an M3 requirement.
 - Transform and opacity animation fixtures produce the same presentation values at declared timestamps before and after scene-codec round trips, while invalidating only `COMPOSITE` plus required hit-test or semantics geometry.
 - Path/property fuzz tests produce no crash.
 - Scalar and tiled outputs agree.
@@ -1856,7 +1940,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **XKB-001**: Pure-Java keymap parser and state machine.
 - **WAYLAND-004**: Clipboard and drag-and-drop.
 - **VULKAN-001**: Registry generator, loader, and device.
-- **VULKAN-002**: Swapchain, passes, pipelines, and resources.
+- **VULKAN-002**: Swapchain, passes, pipelines, resources, and target-neutral surface color capability/effective-configuration mapping.
 - **RHI-001**: RHI API and render-graph MVP.
 - **GPU-DIFF-001**: CPU/GPU scene comparison.
 
@@ -1865,6 +1949,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - The controls demo runs in a real Wayland session.
 - Users can select software or Vulkan rendering.
 - Resize, DPI/scaling, and presentation behavior are correct.
+- Moving or reconfiguring the output updates the surface capability generation and preserves deterministic SDR presentation; Vulkan HDR remains disabled unless its optional conformance profile passes.
 - Continuous scrolling does not grow resource usage.
 - Host frame callbacks pace a compositor-only animation, no application callback runs on the render executor, and frame requests stop after completion.
 - Vulkan validation reports no errors.
@@ -1877,7 +1962,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **WINABI-001**: Win32 and COM generator.
 - **WIN-001**: Windows, DPI, and message loop.
 - **WIN-002**: Pointer, keyboard, cursor, and clipboard.
-- **D3D12-001**: Device, swapchain, queue, and fences.
+- **D3D12-001**: Device, swapchain, queue, fences, and DXGI Advanced Color capability/effective-configuration mapping.
 - **D3D12-002**: Resources, pipelines, and descriptors.
 - **WIN-IME-001**: TSF with IMM32 fallback.
 - **WIN-A11Y-001**: UI Automation.
@@ -1887,6 +1972,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 - Multiple windows, per-monitor DPI, and move/resize modal loops behave correctly.
 - D3D12 validation/debug layers report no errors.
+- Advanced Color and ordinary SDR displays report distinct truthful capabilities and deterministic SDR fallback; Windows HDR remains disabled unless its optional conformance profile passes.
 - IME composition and candidate rectangles are correct.
 - The UI Automation inspection corpus passes.
 - The Native Image sample runs.
@@ -1897,7 +1983,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 
 - **OBJC-001**: Class, selector, and typed `objc_msgSend` generator.
 - **COCOA-001**: NSApplication, NSWindow, and NSView.
-- **METAL-001**: Device, layer, and swapchain-equivalent presentation.
+- **METAL-001**: Device, layer, swapchain-equivalent presentation, and `CAMetalLayer` color-space/EDR capability/effective-configuration mapping.
 - **MAC-INPUT-001**: NSEvent, gestures, and tablet input.
 - **MAC-IME-001**: `NSTextInputClient`.
 - **MAC-A11Y-001**: NSAccessibility.
@@ -1908,6 +1994,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - arm64 and x86-64 CI pass.
 - Scaling and multi-display behavior are correct.
 - Metal validation/capture reports no material errors.
+- Display color-space/headroom changes update the surface capability generation and preserve deterministic SDR fallback; Metal EDR remains disabled unless its optional conformance profile passes.
 - IME and accessibility corpora pass.
 - Autorelease and native-resource soak tests pass.
 - The Native Image path has a documented, evidence-backed status.
@@ -1967,15 +2054,16 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **CACHE-001**: Raster, glyph, and pipeline cache budgets.
 - **VECTOR-001**: Optional `himari-render-vector` renderer.
 - **INSPECT-001**: Tree, frame, and render inspector.
-- **REPLAY-001**: Canonical scene/resource/semantics/event trace and offline replay in a fresh process.
+- **REPLAY-001**: Canonical scene/resource/color-profile/presentation/semantics/event trace and offline replay in a fresh process.
 - **NI-001**: Reachability generator and static platform/renderer backend registries.
 - **PACK-001**: jlink and Native Image packaging plugin.
-- **DIAG-001**: Capability and fallback report.
+- **DIAG-001**: Capability and fallback report, including requested/effective surface color configuration, precision, luminance/headroom, mapping ownership, and disabled HDR reasons.
 
 **Exit criteria:**
 
 - Regression budgets are fixed and enforced.
 - Idle, scrolling, animation, and large-text scenarios meet their targets.
+- Extended-linear compositing, color conversion, mapped-SDR output, and profile/resource limits meet their correctness and performance targets.
 - JVM and Native Image sample matrices pass.
 - The inspector can localize reactive propagation, structural-update, layout, and render faults.
 - `scene-replay` reproduces reference frames from encoded traces and declared resources alone, with no ambient font or producer-object access.
@@ -2000,6 +2088,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - License and provenance audits pass.
 - Core artifacts contain no native payload or dependency.
 - Public limitations and accepted differences are complete.
+- Documentation distinguishes color gamut, transfer function, precision, and dynamic range and does not imply production HDR support on a backend that advertises only the SDR fallback.
 
 ### Post-stable A0–A4 — Android/iOS AOT extension track
 
@@ -2008,7 +2097,7 @@ This track begins only after the stable desktop release unless a separate projec
 - **A0 — Java 25 mobile AOT feasibility**: evaluate candidate AOT toolchains, initially GraalVM Native Image-derived tooling such as Gluon Substrate/GluonFX, against representative runtime, state, layout, text, software-rendering, RHI, and resource-loading code. Cover stable Java 25 APIs in actual use, including `MemorySegment` and `Arena`; closed-world analysis; static initialization; exceptions; garbage collection; threads; callbacks; code size; startup; debugging; and target packaging. Reject any path that requires rewriting or downgrading common source sets unless a replacement ADR explicitly changes the project baseline.
 - **A1 — Android host baseline**: build a thin Activity/host shell, generated JNI/NDK boundary, host-driven lifecycle, normalized input, IME, clipboard, permissions, accessibility, assets, and software-renderer presentation on Android AArch64 devices and emulators.
 - **A2 — iOS host baseline**: build generated Objective-C/C host glue, application and scene lifecycle, UIKit surface/event integration, text input, clipboard, permissions, accessibility, assets, and software-renderer presentation on iOS arm64 devices and supported simulators.
-- **A3 — Mobile GPU and lifecycle completion**: add Android Vulkan and iOS Metal behind the existing RHI, then complete surface/device loss, background/foreground transitions, memory pressure, safe areas, scale changes, orientation, and CPU/GPU differential scenes.
+- **A3 — Mobile GPU and lifecycle completion**: add Android Vulkan and iOS Metal behind the existing RHI, map per-display color/dynamic-range capabilities and deterministic SDR fallback, then complete surface/device loss, background/foreground transitions, memory pressure, safe areas, scale changes, orientation, and CPU/GPU differential scenes. Enable native mobile HDR only after the shared optional HDR conformance profile passes.
 - **A4 — Productization**: define isolated mobile artifacts, AOT and host-glue manifests, signing and store packaging, compatibility matrices, diagnostics, deployment samples, performance budgets, and reproducible package generation.
 
 **Track exit criteria:**
@@ -2018,6 +2107,7 @@ This track begins only after the stable desktop release unless a separate projec
 - Target launchers, generated host glue, and AOT output remain outside core and desktop JARs and are covered by explicit provenance and boundary tests.
 - Software presentation is complete before Vulkan or Metal is accepted; GPU implementations pass the existing RHI and differential contracts.
 - Lifecycle, input, IME, accessibility, permissions, packaging, signing, installation, compatibility, and performance gates pass on the defined device matrix.
+- Mobile presentation preserves the common extended-range scene contract and reports color/HDR capability and fallback truthfully even when native HDR output remains disabled.
 - Failure at any feasibility gate defers the affected mobile target without changing the Java 25 baseline or blocking desktop releases.
 
 ### Post-stable W0–W4 — Browser/Wasm extension track
@@ -2025,9 +2115,9 @@ This track begins only after the stable desktop release unless a separate projec
 This track begins only after the stable desktop release unless a separate project decision changes the priority. It does not block M0–M11.
 
 - **W0 — Toolchain and host-binding feasibility**: evaluate Java 25 language/runtime coverage, closed-world linking, exceptions, garbage collection, code size, startup, browser debugging, generated Wasm imports, and content-security-policy constraints. Select the Java-to-Wasm toolchain only after this evidence exists.
-- **W1 — Browser platform baseline**: implement `host/web` and `platform/web`, host-driven single-thread scheduling, canvas surface creation, normalized browser events, fetch-based assets, and software-renderer presentation for scenes produced by the local Wasm runtime.
-- **W2 — WebGPU backend**: implement asynchronous adapter/device acquisition, WGSL output, WebGPU resource mapping, render-graph validation, device/context loss, bounded compositor-animation sampling, and CPU/GPU differential scenes.
-- **W3 — Browser integration**: implement clipboard/permissions, drag-and-drop, hidden text-input bridge, DOM semantics mirror, application/downloaded fonts, lifecycle/visibility handling, and optional Web Worker rendering.
+- **W1 — Browser platform baseline**: implement `host/web` and `platform/web`, host-driven single-thread scheduling, canvas surface creation and color/dynamic-range capability reporting, normalized browser events, fetch-based assets, and deterministic software-renderer SDR presentation for scenes produced by the local Wasm runtime.
+- **W2 — WebGPU backend**: implement asynchronous adapter/device acquisition, canvas format/color/tone-mapping negotiation, WGSL output, WebGPU resource mapping, render-graph validation, device/context loss, bounded compositor-animation sampling, extended-range preservation, and CPU/GPU differential scenes.
+- **W3 — Browser integration**: implement clipboard/permissions, drag-and-drop, hidden text-input bridge, DOM semantics mirror, application/downloaded fonts and profiles, display gamut/dynamic-range and lifecycle/visibility changes, and optional Web Worker rendering.
 - **W4 — Productization**: define Web artifacts, loader/bootstrap code, cache/version policy, browser compatibility matrix, diagnostics, deployment samples, performance budgets, reproducible packaging, and the logical browser-presentation conformance surface reusable by a future remote Web client.
 
 **Track exit criteria:**
@@ -2040,16 +2130,17 @@ This track begins only after the stable desktop release unless a separate projec
 - No JavaScript, DOM, WebGPU, or Wasm runtime object appears in common public APIs.
 - Browser scene presentation passes the same canonical display-list, resource, and visual fixtures later consumed by the remote Web client; this does not require live transport support in W0–W4.
 - Browser animation sampling passes the shared timestamp, phase-isolation, replacement-generation, and reduced-motion corpus; unsupported offload falls back to local UI-runtime sampling.
+- Browser color presentation passes the shared encoding/extended-range/mapped-SDR corpus; native browser HDR remains capability-gated and never inferred from raw WebGPU texture support.
 - Browser integration, security, compatibility, and performance gates pass on the defined matrix.
 
 ### Post-stable R0–R4 — Remote scene rendering and Web client track
 
 This track begins only after the stable desktop release unless a separate project decision changes the priority. It does not block M0–M11 and may proceed even if compiling the full Java runtime to browser/Wasm remains infeasible. It reuses the canonical scene boundary and browser rendering semantics without placing networking in core modules.
 
-- **R0 — Protocol and threat-model hardening**: freeze the supported-major-version scene, resource, bounded layer-animation, clock-mapping, replacement-generation, semantics, interaction, capability, acknowledgement, and recovery records for the first remote experiment. Define quotas, required-feature negotiation, stream epochs, full/delta rules, resource generations, redaction, fuzz corpora, cross-implementation fixtures, and compatibility policy. Do not expose callbacks, arbitrary executable payloads, RHI, or native GPU commands.
+- **R0 — Protocol and threat-model hardening**: freeze the supported-major-version scene, resource, color encoding/profile, luminance/content-light, requested/effective presentation, bounded layer-animation, clock-mapping, replacement-generation, semantics, interaction, capability, acknowledgement, and recovery records for the first remote experiment. Define quotas, required-feature negotiation, stream epochs, full/delta rules, resource generations, redaction, fuzz corpora, cross-implementation fixtures, and compatibility policy. Do not expose callbacks, arbitrary executable payloads, RHI, or native GPU commands.
 - **R1 — Authoritative host and reference transport**: implement `remote/server`, a separate-process client, full and delta scene delivery, resource deduplication, acknowledgements, latest-wins frames, ordered non-droppable records, bounded backpressure, disconnect/reconnect recovery, and per-stage latency diagnostics. Keep transport, authentication, and session policy behind the remote extension rather than the scene codec.
-- **R2 — Remote Web client**: decode the canonical protocol in a browser without the full HimariUI Java runtime, render through WebGPU with Canvas/software fallback, sample negotiated bounded layer-animation programs, verify resource hashes, request missing data and recovery snapshots, and pass the shared browser presentation and animation timestamp corpora. Reuse W-track artifacts when practical but require protocol conformance rather than a particular implementation language.
-- **R3 — Interaction, IME, semantics, and responsiveness**: return normalized input and presentation preferences such as reduced motion to the authoritative runtime, bridge text input through a controlled browser element, mirror correlated semantics into DOM accessibility nodes, handle focus and pointer capture, reconcile client animation clocks and replacement generations against authoritative presentation snapshots, add other reversible client prediction only where evidence justifies it, and test latency, stale input, permissions, privacy, and reconnect behavior.
+- **R2 — Remote Web client**: decode the canonical protocol in a browser without the full HimariUI Java runtime, render through WebGPU with Canvas/software fallback, preserve negotiated extended-range color or apply the authoritative mapped-SDR fallback, sample negotiated bounded layer-animation programs, verify resource/profile hashes, request missing data and recovery snapshots, and pass the shared browser color, presentation, and animation timestamp corpora. Reuse W-track artifacts when practical but require protocol conformance rather than a particular implementation language.
+- **R3 — Interaction, IME, semantics, and responsiveness**: return normalized input and presentation preferences/capabilities such as reduced motion, output gamut, dynamic range, precision, and headroom to the authoritative runtime, bridge text input through a controlled browser element, mirror correlated semantics into DOM accessibility nodes, handle focus and pointer capture, reconcile client color configuration and animation clocks/replacement generations against authoritative presentation snapshots, add other reversible client prediction only where evidence justifies it, and test latency, stale input, permissions, privacy, and reconnect behavior.
 - **R4 — Productization**: define remote artifacts, standard secure transport adapters, authentication/authorization integration points, deployment topology, session lifecycle, observability, compatibility matrices, bandwidth/memory/latency budgets, reproducible browser assets, and optional pixel/video fallback policy.
 
 **Track exit criteria:**
@@ -2058,6 +2149,7 @@ This track begins only after the stable desktop release unless a separate projec
 - Headless, local browser/Wasm where available, remote WebGPU, and remote Canvas/software consume the same scene conformance corpus and meet documented visual tolerances.
 - The server remains authoritative for application state, layout, shaping, hit testing, focus, pointer capture, and IME; client prediction is bounded and recoverable.
 - Remote animation sampling passes the shared timestamp corpus and deterministically yields to newer target/replacement generations or authoritative snapshots.
+- Remote color negotiation preserves tagged source values, profiles, and luminance metadata and produces the same versioned mapped-SDR result as Headless when the client cannot accept the requested output intent.
 - Full/delta recovery, resource lifetime, acknowledgements, backpressure, reconnect, capability negotiation, semantics, and input ordering pass deterministic and impaired-network tests.
 - Decoders pass fuzzing and configured CPU, memory, bandwidth, resource, recursion, and retained-state limits; security and privacy threat reviews are complete.
 - No component tree, Java runtime object, `MemorySegment` identity, FFM handle, target handle, RHI object, shader/pipeline command, or native GPU command appears in the wire format.
@@ -2079,16 +2171,16 @@ These issues are sufficient to begin implementation without waiting for visual c
 8. **WAYLAND-GEN-001**: Generate interface/opcode/event decoding from minimal Wayland XML.
 9. **WIN-GEN-001**: Generate Win32 structures, functions, and `WndProc` bindings.
 10. **OBJC-GEN-001**: Generate typed selector and `objc_msgSend` bindings.
-11. **SPIKE-WAYLAND-001**: Create a surface through FFM and process configure/close events.
-12. **SPIKE-WIN-001**: Register a window class through FFM and receive `WM_*` messages.
-13. **SPIKE-MAC-001**: Create NSApplication and NSWindow through FFM.
-14. **SPIKE-VK-001**: Load Vulkan through FFM, create a device, and present a clear.
-15. **SPIKE-D3D12-001**: Create a COM device/swapchain through FFM and present a clear.
-16. **SPIKE-METAL-001**: Create a Metal device and `CAMetalLayer` through FFM and present a clear.
+11. **SPIKE-WAYLAND-001**: Create a surface through FFM, process configure/close events, and report available output/color-management information.
+12. **SPIKE-WIN-001**: Register a window class through FFM, receive `WM_*` messages, and query the current DXGI output/Advanced Color description.
+13. **SPIKE-MAC-001**: Create NSApplication and NSWindow and query display color space/EDR headroom through FFM.
+14. **SPIKE-VK-001**: Load Vulkan through FFM, create a device, enumerate surface format/color-space pairs, and present a clear.
+15. **SPIKE-D3D12-001**: Create a COM device/swapchain, map its effective SDR color configuration, and present a clear.
+16. **SPIKE-METAL-001**: Create a Metal device and `CAMetalLayer`, map its effective SDR color configuration, and present a clear.
 17. **NI-FFM-001**: Prototype Native Image downcall/upcall metadata.
 18. **STATE-001**: Implement versioned primitive state, atomic transactions, epochs, and external commits.
 19. **REACTIVE-001**: Implement dynamic dependencies, `DerivedState`, push/pull propagation, equality, liveness, and cycle diagnostics.
-20. **HEADLESS-001**: Implement virtual windows, event loops, and clocks.
+20. **HEADLESS-001**: Implement virtual windows, displays with programmable color/dynamic-range capabilities, event loops, and clocks.
 21. **RUNTIME-SAMPLE-001**: Implement the shared ordinary-Java comparison suite and metric report.
 22. **RUNTIME-SPIKE-GROUPED-001**: Prototype explicit grouped recomposition without compiler assistance.
 23. **RUNTIME-SPIKE-ONESHOT-001**: Prototype one-shot owners, typed signal bindings, and explicit structural control flow.
@@ -2097,21 +2189,22 @@ These issues are sufficient to begin implementation without waiting for visual c
 26. **STRUCTURE-001**: Implement the selected identity, branch, collection, local-state, and failure semantics.
 27. **ANIM-CORE-001**: Implement animation-transaction propagation, atomic presentation epochs, a manual-clock reference sampler, allocation-free scalar adapters, and deterministic tween/spring interruption tests.
 28. **LAYOUT-001**: Prototype constraints and single-measure enforcement.
-29. **DL-001**: Define the canonical pointer-free primitive-buffer display-list format, `SceneEnvelope`, resource manifest, versioning, limits, and replay codec.
+29. **DL-001**: Define the canonical pointer-free primitive-buffer display-list format, `SceneEnvelope`, color/profile resources and presentation configuration, resource manifest, versioning, limits, and replay codec.
 30. **ANIM-SCENE-001**: Implement bounded retained-layer animation programs, clock mappings, replacement generations, canonical encoding, and a Headless/software reference sampler.
-31. **PATH-001**: Implement `PathBuilder`, bounds, and reference flattening.
-32. **RASTER-001**: Implement scalar rectangle and path coverage.
-33. **PNG-001**: Implement a pure-Java PNG writer for golden output.
-34. **FONT-READER-001**: Implement a checked big-endian font reader.
-35. **FONT-SFNT-001**: Implement table directories, metrics, and `cmap`.
-36. **HB-ORACLE-001**: Build a HarfBuzz JSON runner.
-37. **FT-ORACLE-001**: Build a FreeType outline/bitmap JSON runner.
-38. **UNICODE-001**: Add the ICU4J provider and Unicode conformance-data harness.
-39. **GOLDEN-001**: Define the exact image/hash fixture format.
-40. **FUZZ-001**: Add starter Jazzer targets for fonts, paths, and canonical scene decoding.
-41. **TRACE-001**: Define the normalized input plus scene/resource/semantics/animation trace format.
-42. **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
-43. **SAMPLE-001**: Build a deterministic Headless counter sample and golden using the selected runtime model.
+31. **COLOR-CORE-001**: Implement extensible tagged color encodings, extended-linear finite values, first-stable named spaces, BT.2020/PQ/HLG reference conversions, bounded ICC transforms, linear-light composition rules, and deterministic versioned SDR mapping.
+32. **PATH-001**: Implement `PathBuilder`, bounds, and reference flattening.
+33. **RASTER-001**: Implement scalar rectangle and path coverage.
+34. **PNG-001**: Implement a pure-Java PNG writer for explicitly mapped SDR golden output.
+35. **FONT-READER-001**: Implement a checked big-endian font reader.
+36. **FONT-SFNT-001**: Implement table directories, metrics, and `cmap`.
+37. **HB-ORACLE-001**: Build a HarfBuzz JSON runner.
+38. **FT-ORACLE-001**: Build a FreeType outline/bitmap JSON runner.
+39. **UNICODE-001**: Add the ICU4J provider and Unicode conformance-data harness.
+40. **GOLDEN-001**: Define exact SDR image/hash and extended-linear numeric fixture formats.
+41. **FUZZ-001**: Add starter Jazzer targets for fonts, color profiles/LUTs, paths, and canonical scene decoding.
+42. **TRACE-001**: Define the normalized input plus scene/resource/color-profile/presentation/semantics/animation trace format.
+43. **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
+44. **SAMPLE-001**: Build a deterministic Headless counter sample and golden using the selected runtime model.
 
 Every issue must use the standard work-package template or Port Unit template and include an executable acceptance command.
 
@@ -2189,33 +2282,45 @@ Meet the general DoD and all of the following:
 - Trace/replay reproduces presentation values and images at declared timestamps.
 - Steady-state allocation, scheduling, 60/120 Hz frame budgets, and idle frame-request behavior meet the established thresholds.
 
-### 24.7 Future local browser/Wasm feature
+### 24.7 Color and presentation feature
+
+- Gamut/primaries, white point, transfer function, numeric range, scene/display interpretation, luminance/reference white, pixel format, alpha type, and surface capability remain explicit and are never collapsed into an HDR Boolean or native enum.
+- Finite extended-range and out-of-gamut components survive values, interpolation, display lists, scenes, traces, pixel buffers, and reference rendering until an explicit mapped/quantized boundary; non-finite values are rejected.
+- Working-space, alpha, blending, filtering, interpolation, chromatic-adaptation, gamut-mapping, tone-mapping, and quantization semantics are specified and tested independently.
+- Requested/effective presentation configuration, capability generation, mapping ownership, and fallback reasons are observable and replayable; display changes do not alter application color values.
+- ICC/profile and metadata parsing is bounded, fuzzed, content-addressed, and independent of ambient system profiles during deterministic tests.
+- A backend advertises only modes whose actual format/encoding/precision, display-change, mapping, capture, and fallback conformance profiles pass. Unverified HDR remains disabled without weakening SDR support.
+- Hardware-unavailable tests use programmable Headless surfaces and exercise the same selection and fallback contract.
+
+### 24.8 Future local browser/Wasm feature
 
 - Single-thread, host-driven execution passes before worker acceleration is considered complete.
 - Asynchronous initialization, permissions, clipboard, resource loading, and GPU acquisition cover success, denial, cancellation, and unavailability.
 - Generated host bindings validate linear-memory bounds, object handles, callback IDs, and encodings.
 - No FFM dependency or target runtime object leaks into common APIs.
 - WebGPU and Canvas/software paths have differential tests and documented fallback behavior.
+- Canvas/WebGPU color configuration, extended-range preservation, gamut/dynamic-range capability changes, and deterministic SDR fallback pass the shared color corpus; HDR is advertised only when the browser path passes its optional profile.
 - IME and DOM semantics bridges pass browser integration and accessibility tests.
 - Browser lifecycle, device/context loss, detached surfaces, and aborted fetches have defined recovery or shutdown behavior.
 - Packaging is reproducible and passes the supported browser/security-policy matrix.
 
-### 24.8 Future Android/iOS AOT feature
+### 24.9 Future Android/iOS AOT feature
 
 - The selected toolchain compiles the normal Java 25 source sets; no ART-compatible common fork, source rewrite, or compatibility substitution is required.
 - Every stable Java 25 API family used by the included modules has a representative compile-and-run test on each supported mobile target.
 - `MemorySegment`/`Arena` core behavior and target host-call/callback behavior have separate tests and diagnostics.
 - Generated launcher and JNI/NDK or Objective-C/C boundaries validate signatures, ownership, lifetimes, thread attachment, exception containment, and untrusted inputs.
 - Mobile AOT output and host glue remain isolated from core and desktop JARs and have complete provenance manifests.
-- Lifecycle, input, IME, accessibility, permissions, software presentation, GPU differential behavior, suspend/resume, surface/device loss, and memory pressure pass on the supported matrix.
+- Lifecycle, input, IME, accessibility, permissions, software presentation, GPU differential behavior, color/dynamic-range capability changes and SDR fallback, suspend/resume, surface/device loss, and memory pressure pass on the supported matrix.
 - Packaging is reproducible before signing; installation, signing, and store-oriented validation procedures are documented and repeatable.
 
-### 24.9 Future remote-rendering feature
+### 24.10 Future remote-rendering feature
 
 - The canonical scene protocol is versioned, pointer-free, deterministic, bounded, and independent of Java object layout, implementation language, FFM, RHI, and native GPU APIs.
 - Full snapshots, deltas, resource manifests, content hashes, acknowledgements, reclamation, required-feature negotiation, stream epochs, recovery, and backpressure pass cross-process and cross-implementation tests.
 - Decoders reject malformed or unsupported input before unbounded allocation or work and pass fuzzing plus configured CPU, memory, bandwidth, recursion, decompression, and retained-resource limits.
 - Remote WebGPU and Canvas/software output pass the shared scene corpus against Headless references; optional pixel/video fallback is tested and documented separately.
+- Color/profile resources, extended-range values, luminance metadata, client output capabilities, mapping ownership, and requested/effective configurations negotiate and recover deterministically; unsupported HDR/WCG produces the authoritative mapped fallback or a required-feature rejection, never relabeling.
 - Normalized input, focus, pointer capture, IME, semantics, lifecycle, configuration changes, disconnect/reconnect, stale events, and redaction preserve authoritative server state and defined ordering.
 - Transmitted layer-animation programs are bounded and declarative, carry explicit clock and replacement generations, contain no callback or executable payload, reconcile with authoritative snapshots, and pass the shared animation timestamp corpus.
 - Authentication, authorization, encryption, transport, discovery, codecs, and session policy remain isolated in optional remote artifacts and use documented standard mechanisms.
@@ -2235,11 +2340,12 @@ Meet the general DoD and all of the following:
 | XKB or IME complexity is underestimated | Incorrect keyboard/text behavior | Non-US layouts or compose keys fail | Port XKB in Java, compare with xkbcommon, and build IME corpora early |
 | Large AI-assisted HarfBuzz/FreeType ports drift semantically | Broken text | Screenshots appear plausible while clusters or metrics differ | Use small port units, field-level Oracles, official corpora, reference paths, and fuzzing |
 | CPU and GPU rendering semantics drift | Cross-platform graphics differences | Clip/blend edge differences accumulate | Keep software normative, compare complete scenes and individual operations, and enforce difference budgets |
+| Color APIs or scene/RHI formats harden around 8-bit sRGB or a Boolean HDR flag | Wide-gamut/HDR lockout, clipped highlights, hue shifts, and incompatible wire/API changes | Components are clamped to `[0, 1]`, color spaces become a closed enum, textures lose encoding metadata, or a backend advertises HDR from format support alone | Enforce ADR-019 in `COLOR-CORE-001`, preserve tagged extended-range floats and profiles through canonical codecs, separate surface format from encoding/luminance, require deterministic mapped-SDR fallback, and capability-gate every native HDR mode |
 | Optimization starts before behavior is verifiable | Long-term maintenance cost | Dense bit tricks or parallel code appear without a reference path | Require reference-first gates and benchmark evidence |
 | `java.desktop` enters accidentally | Headless/pure-Java goal failure | Utility code imports ImageIO or Color | Enforce JPMS and `jdeps` gates and use framework-owned types |
 | The ABI schema is wrong | JVM crash or memory corruption | Intermittent platform crashes | Run C probes, generator tests, SDK matrices, and debug fail-fast checks |
 | Native callbacks reenter the UI runtime | State-tree corruption | Nested dispatch during resize, IME, or modal loops | Add reentrancy guards, queue events, and commit through transactions |
-| Font or image parsers permit denial of service | Security failure | Extreme memory or CPU use | Enforce resource limits, checked arithmetic, fuzzing, and timeouts |
+| Font, image, or color-profile/LUT parsers permit denial of service | Security failure | Extreme memory or CPU use | Enforce dimensional/stage/work limits, checked arithmetic, fuzzing, and timeouts |
 | Required system libraries are absent | Linux startup failure | Vulkan or Wayland libraries cannot be resolved | Report capabilities and fall back to software, Headless, or X11 where documented |
 | The compiler-free structural runtime has unacceptable ceremony | Public API lock-in and poor usability | Grouped samples require pervasive keys or boundaries, or signal samples require pervasive deferred getters and control-flow wrappers | Complete all M1 runtime prototypes with ordinary Java, publish ceremony and execution metrics, and select the production model before building widgets; treat optional tooling only as a later enhancement |
 | Fine-grained dependencies introduce glitches, cycles, or owner leaks | Inconsistent UI or unbounded memory growth | Diamond, dynamic-branch, equality, or disposal tests observe intermediate values or retained consumers | Use two-phase push/pull propagation, semantic versions, cycle diagnostics, explicit ownership, and adversarial graph/liveness tests |
@@ -2282,8 +2388,8 @@ The entries below must not block M0 unless marked accepted. Use the working defa
 | Future local browser execution | Correct on the browser event context without workers; Web Workers are optional acceleration/capability |
 | Future local browser fonts/resources | Bundled, application-provided, or fetched bytes; system catalogs are optional |
 | Java-to-Wasm toolchain and Web artifact names | Defer to W0 feasibility evidence |
-| Core scene/process boundary | Canonical versioned `SceneEnvelope`, resource, semantics, and input codecs; in-process mailbox remains the default |
-| Future remote rendering level | Stream scene/display-list semantics and content-addressed resources; never component trees, RHI objects, or native GPU commands |
+| Core scene/process boundary | Canonical versioned `SceneEnvelope`, color/profile/presentation, resource, semantics, and input codecs; in-process mailbox remains the default |
+| Future remote rendering level | Stream scene/display-list semantics, tagged color/luminance intent, and content-addressed resources; never component trees, RHI objects, or native GPU commands |
 | Future remote authority | JVM or Native Image host owns state, layout, shaping, hit testing, focus, and IME; browser prediction is optional and recoverable |
 | Future remote Web client | WebGPU with Canvas/software fallback; independent of compiling the full Java runtime to Wasm and logically conformant with the local browser renderer |
 | Public coordinate precision | `float` logical pixels |
@@ -2291,6 +2397,9 @@ The entries below must not block M0 unless marked accepted. Use the working defa
 | Value reactivity | **Accepted:** ADR-015 fine-grained producer/consumer graph with push invalidation and lazy pull recomputation |
 | Structural reactivity | No working default before M1 evidence; `RUNTIME-ADR-001` selects grouped, one-shot, or hybrid semantics |
 | Animation semantics | **Accepted:** ADR-018 transaction-scoped model/presentation separation, atomic presentation epochs, velocity-preserving compatible retargeting, phase-aware execution, and explicit structural transitions |
+| Color and HDR semantics | **Accepted:** ADR-019 structured extensible encodings, finite extended-range values, explicit luminance/presentation capability, linear-light reference composition, and deterministic mapped fallback |
+| First-stable HDR output | Optional and disabled per backend until its dedicated conformance profile passes; tagged HDR reference math, codecs, Headless capability simulation, and truthful SDR fallback are mandatory |
+| Reference working color | Extended-linear floating point, initially extended-linear sRGB unless corpus evidence selects another ADR-019-compatible default |
 | Compiler plugin | Optional; never a correctness or baseline-usability dependency |
 | Arbitrary user shaders | Defer until after the stable release |
 | Linux keyboard | Pure-Java XKB target; system xkbcommon is transitional or an Oracle only |
@@ -2311,9 +2420,10 @@ The first demonstrable release must validate the architecture rather than show o
 7. Native Image runs on at least one platform.
 8. JAR and dependency scans prove that no native library is bundled.
 9. The same scene has a CPU/GPU golden comparison.
-10. The inspector displays reactive owners, structural scopes, mounted elements, layout, layer, and semantics trees.
-11. The counter scene, declared resources, correlated semantics, and normalized input trace round-trip through the canonical codec and replay in a fresh process.
+10. The inspector displays reactive owners, structural scopes, mounted elements, layout, layer, semantics, animation, and effective presentation-color state.
+11. The counter scene, declared color/profile and other resources, presentation configuration, correlated semantics, and normalized input trace round-trip through the canonical codec and replay in a fresh process.
 12. A counter change exercises the animation-transaction and model/presentation path; Headless reproduces declared intermediate timestamps, and a compositor-eligible property crosses the canonical scene codec without application callbacks.
+13. A tagged extended-range BT.2020/PQ fixture with negative or above-one intermediate components survives the canonical codec and Headless float capture, then produces a deterministic versioned SDR PNG fallback without implicit clipping; no hardware HDR display is required.
 
 This increment is the earliest credible proof that the architecture works end to end.
 
@@ -2365,6 +2475,20 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 - [SwiftUI `Transition`](https://developer.apple.com/documentation/swiftui/transition)
 - [SwiftUI `matchedGeometryEffect`](https://developer.apple.com/documentation/swiftui/view/matchedgeometryeffect%28id%3Ain%3Aproperties%3Aanchor%3Aissource%3A%29)
 
+### Color management and HDR
+
+- [ITU-R BT.2020: UHDTV Parameter Values](https://www.itu.int/rec/R-REC-BT.2020/en)
+- [ITU-R BT.2100: HDR Television](https://www.itu.int/rec/R-REC-BT.2100/en)
+- [CSS Color Module Level 4](https://www.w3.org/TR/css-color-4/)
+- [CSS Color HDR Module Level 1](https://www.w3.org/TR/css-color-hdr-1/)
+- [WebGPU Color Spaces, Canvas Configuration, and Tone Mapping](https://www.w3.org/TR/webgpu/)
+- [ICC Specifications, including v4 and iccMAX](https://www.color.org/icc_specs2.xalter)
+- [Windows Advanced Color](https://learn.microsoft.com/en-us/windows/win32/direct3darticles/high-dynamic-range)
+- [DXGI Swapchain Color-Space Selection](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_4/nf-dxgi1_4-idxgiswapchain3-setcolorspace1)
+- [Apple Metal HDR Color-Space Configuration](https://developer.apple.com/documentation/metal/using-color-spaces-to-display-hdr-content)
+- [Vulkan Extended Swapchain Color Spaces](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_EXT_swapchain_colorspace.html)
+- [Vulkan HDR Metadata](https://registry.khronos.org/vulkan/specs/latest/man/html/VK_EXT_hdr_metadata.html)
+
 ### Rendering architecture
 
 - [Impeller Rendering Engine](https://docs.flutter.dev/perf/impeller)
@@ -2412,22 +2536,22 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 
 At the first stable desktop release, automated evidence must support this public statement:
 
-> HimariUI's core, text engine, software renderer, GPU abstraction, desktop platform backends, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. Animation keeps committed model targets separate from atomically sampled presentation values, preserves value and compatible spring velocity across interruption, respects declared phase impacts and reduced-motion policy, and replays deterministically without per-frame application-state writes. A versioned, bounded, pointer-free scene/display-list codec plus offline replay proves that scenes, declared resources, correlated semantics, and normalized input survive a process boundary without placing networking or remote-session policy in the core. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
+> HimariUI's core, text engine, software renderer, GPU abstraction, desktop platform backends, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. Animation keeps committed model targets separate from atomically sampled presentation values, preserves value and compatible spring velocity across interruption, respects declared phase impacts and reduced-motion policy, and replays deterministically without per-frame application-state writes. Color values, image/display-list/scene encodings, the extended-linear reference renderer, and RHI surfaces keep gamut, transfer function, luminance, precision, and presentation capability explicit; finite extended-range values and HDR metadata survive canonical replay, and every backend provides a deterministic SDR fallback without claiming unverified hardware HDR support. A versioned, bounded, pointer-free scene/display-list codec plus offline replay proves that scenes, declared color/profile and other resources, presentation configuration, correlated semantics, and normalized input survive a process boundary without placing networking or remote-session policy in the core. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
 
 ### 29.2 Future local browser/Wasm release
 
 When the post-stable Web track is complete, automated evidence must additionally support this statement:
 
-> HimariUI's browser/Wasm target reuses the portable Java runtime, layout, text, display-list, semantics, and rendering subsystems. It accesses browser capabilities only through generated, target-specific Wasm imports and JavaScript/browser host bindings; it does not use FFM, JNI, JNA, or desktop platform modules. WebGPU and Canvas/software rendering follow the same backend-neutral resource-usage and scene semantics as desktop backends. Browser-specific DOM integration is limited to host services such as IME and accessibility and does not replace HimariUI's layout or visual rendering model.
+> HimariUI's browser/Wasm target reuses the portable Java runtime, layout, text, display-list, color, semantics, and rendering subsystems. It accesses browser capabilities only through generated, target-specific Wasm imports and JavaScript/browser host bindings; it does not use FFM, JNI, JNA, or desktop platform modules. WebGPU and Canvas/software rendering follow the same backend-neutral resource-usage, color/presentation, and scene semantics as desktop backends, preserve tagged extended-range content, and fall back through the versioned SDR mapping unless a native browser HDR mode passes its conformance profile. Browser-specific DOM integration is limited to host services such as IME and accessibility and does not replace HimariUI's layout or visual rendering model.
 
 ### 29.3 Future Android/iOS AOT release
 
 When the post-stable mobile track is complete, automated evidence must additionally support this statement:
 
-> HimariUI's Android and iOS targets compile the ordinary Java 25 runtime, layout, text, display-list, semantics, software-rendering, and RHI implementations through a validated mobile AOT toolchain without an ART-compatible common fork or restrictions on stable Java 25 features. Android and iOS platform services are reached through generated, target-specific host glue that is isolated from the desktop FFM path and from core JARs. Target-generated AOT code and host glue appear only in mobile application bundles, have complete provenance and boundary validation, and do not introduce a runtime FFI provider or third-party graphics stack.
+> HimariUI's Android and iOS targets compile the ordinary Java 25 runtime, layout, text, display-list, color, semantics, software-rendering, and RHI implementations through a validated mobile AOT toolchain without an ART-compatible common fork or restrictions on stable Java 25 features. Android and iOS platform services are reached through generated, target-specific host glue that is isolated from the desktop FFM path and from core JARs. Mobile surfaces preserve the common tagged extended-range and presentation-capability contract and advertise native HDR only after target-specific conformance, otherwise using the same deterministic SDR fallback. Target-generated AOT code and host glue appear only in mobile application bundles, have complete provenance and boundary validation, and do not introduce a runtime FFI provider or third-party graphics stack.
 
 ### 29.4 Future remote scene rendering release
 
 When the post-stable remote track is complete, automated evidence must additionally support this statement:
 
-> HimariUI can keep an application and its authoritative Java 25 runtime on a JVM or Native Image host while presenting and interacting with the same GUI in a browser through a versioned, bounded, pointer-free scene protocol. The browser renders immutable scene/display-list semantics and content-addressed resources through WebGPU or Canvas/software, samples only negotiated bounded layer-animation programs with explicit clocks and replacement generations, mirrors correlated semantics for accessibility, and returns normalized input and IME transactions. No callback, arbitrary executable payload, component tree, Java runtime object, FFM handle, RHI object, or native GPU command crosses the wire. Networking, security, codecs, and session policy remain isolated in optional remote artifacts and do not become core renderer providers or dependencies.
+> HimariUI can keep an application and its authoritative Java 25 runtime on a JVM or Native Image host while presenting and interacting with the same GUI in a browser through a versioned, bounded, pointer-free scene protocol. The browser renders immutable scene/display-list semantics and content-addressed color/profile and other resources through WebGPU or Canvas/software, negotiates output gamut/dynamic range and an authoritative mapped fallback without relabeling source content, samples only negotiated bounded layer-animation programs with explicit clocks and replacement generations, mirrors correlated semantics for accessibility, and returns normalized input and IME transactions. No callback, arbitrary executable payload, component tree, Java runtime object, FFM handle, RHI object, or native GPU command crosses the wire. Networking, security, codecs, and session policy remain isolated in optional remote artifacts and do not become core renderer providers or dependencies.
