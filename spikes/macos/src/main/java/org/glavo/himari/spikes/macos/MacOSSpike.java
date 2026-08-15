@@ -1,6 +1,6 @@
 package org.glavo.himari.spikes.macos;
 
-import org.glavo.himari.platform.macos.MacosProbe;
+import org.glavo.himari.platform.macos.MacOSProbe;
 import org.jetbrains.annotations.NotNullByDefault;
 
 import java.io.IOException;
@@ -10,9 +10,9 @@ import java.nio.file.Path;
 
 /// Writes M0 macOS evidence from the production backend.
 @NotNullByDefault
-public final class MacosSpike {
+public final class MacOSSpike {
     /// Prevents instantiation.
-    private MacosSpike() {
+    private MacOSSpike() {
     }
 
     /// Writes macOS probe evidence.
@@ -23,7 +23,7 @@ public final class MacosSpike {
         if (arguments.length != 1) {
             throw new IllegalArgumentException("Expected one output directory");
         }
-        MacosProbe probe = MacosProbe.run();
+        MacOSProbe probe = MacOSProbe.run();
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);
         Files.writeString(output.resolve("native-load.log"), "no-framework-native-load\n", StandardCharsets.UTF_8);

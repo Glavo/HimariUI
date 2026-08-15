@@ -8,9 +8,9 @@ import java.lang.foreign.MemorySegment;
 /// Resolves `NSObject` and the `alloc` selector through generated Objective-C bindings.
 @SuppressWarnings("restricted")
 @NotNullByDefault
-public final class MacosRuntime implements AutoCloseable {
+public final class MacOSRuntime implements AutoCloseable {
     /// Shared libraries.
-    private final MacosLibraries libraries;
+    private final MacOSLibraries libraries;
 
     /// Temporary string storage.
     private final Arena arena;
@@ -30,8 +30,8 @@ public final class MacosRuntime implements AutoCloseable {
     /// @param arena the arena
     /// @param nsObject the class
     /// @param alloc the selector
-    private MacosRuntime(
-            MacosLibraries libraries,
+    private MacOSRuntime(
+            MacOSLibraries libraries,
             Arena arena,
             MemorySegment nsObject,
             MemorySegment alloc
@@ -45,8 +45,8 @@ public final class MacosRuntime implements AutoCloseable {
     /// Opens the Objective-C runtime and resolves `NSObject`/`alloc`.
     ///
     /// @return the runtime
-    public static MacosRuntime open() {
-        MacosLibraries libraries = MacosLibraries.open();
+    public static MacOSRuntime open() {
+        MacOSLibraries libraries = MacOSLibraries.open();
         Arena arena = Arena.ofConfined();
         try {
             MemorySegment nsObject = libraries.bindings().objcGetClass(arena.allocateFrom("NSObject"));
@@ -57,7 +57,7 @@ public final class MacosRuntime implements AutoCloseable {
             if (alloc.address() == 0L) {
                 throw new IllegalStateException("sel_registerName(alloc) returned NULL");
             }
-            return new MacosRuntime(libraries, arena, nsObject, alloc);
+            return new MacOSRuntime(libraries, arena, nsObject, alloc);
         } catch (RuntimeException | Error failure) {
             arena.close();
             libraries.close();

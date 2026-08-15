@@ -8,9 +8,9 @@ import java.nio.file.Path;
 
 /// Writes production macOS Objective-C runtime evidence or an environment block.
 @NotNullByDefault
-public final class MacosConformance {
+public final class MacOSConformance {
     /// Prevents instantiation.
-    private MacosConformance() {
+    private MacOSConformance() {
     }
 
     /// Probes the Objective-C runtime and writes artifacts.
@@ -21,7 +21,7 @@ public final class MacosConformance {
         if (arguments.length != 1) {
             throw new IllegalArgumentException("Expected one output directory");
         }
-        MacosProbe probe = MacosProbe.run();
+        MacOSProbe probe = MacOSProbe.run();
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);
         Files.writeString(

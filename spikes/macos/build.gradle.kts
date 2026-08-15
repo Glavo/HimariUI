@@ -13,7 +13,7 @@ tasks.register<JavaExec>("conformance") {
     description = "Probes the production macOS backend."
     dependsOn("pureJavaGuard")
     classpath = sourceSets.named("main").get().runtimeClasspath
-    mainClass.set("org.glavo.himari.spikes.macos.MacosSpike")
+    mainClass.set("org.glavo.himari.spikes.macos.MacOSSpike")
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     args(output.get().asFile.absolutePath)
     outputs.dir(output)

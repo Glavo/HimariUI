@@ -11,7 +11,7 @@ import java.util.Locale;
 /// Owns the `libobjc` lookup for one macOS session.
 @SuppressWarnings("restricted")
 @NotNullByDefault
-final class MacosLibraries implements AutoCloseable {
+final class MacOSLibraries implements AutoCloseable {
     /// The arena controlling library lookups.
     private final Arena arena;
 
@@ -22,7 +22,7 @@ final class MacosLibraries implements AutoCloseable {
     ///
     /// @param arena the lookup arena
     /// @param bindings the bindings
-    private MacosLibraries(Arena arena, ObjcFfmBindings bindings) {
+    private MacOSLibraries(Arena arena, ObjcFfmBindings bindings) {
         this.arena = arena;
         this.bindings = bindings;
     }
@@ -37,14 +37,14 @@ final class MacosLibraries implements AutoCloseable {
     /// Opens `libobjc`, AppKit, and QuartzCore.
     ///
     /// @return the library owner
-    static MacosLibraries open() {
+    static MacOSLibraries open() {
         if (!supportedHost()) {
             throw new IllegalStateException("macOS platform requires macOS, got "
                     + System.getProperty("os.name", ""));
         }
         Arena arena = Arena.ofConfined();
         try {
-            return new MacosLibraries(arena, new ObjcFfmBindings(openRuntime(arena)));
+            return new MacOSLibraries(arena, new ObjcFfmBindings(openRuntime(arena)));
         } catch (RuntimeException | Error failure) {
             arena.close();
             throw failure;

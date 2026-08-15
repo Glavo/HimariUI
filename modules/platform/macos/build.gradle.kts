@@ -83,7 +83,7 @@ val macosSmoke = tasks.register<JavaExec>("macosSmoke") {
     description = "Captures the macOS native-load allowlist trace or an environment block."
     dependsOn("testClasses")
     classpath = sourceSets.named("test").get().runtimeClasspath
-    mainClass.set("org.glavo.himari.platform.macos.MacosConformance")
+    mainClass.set("org.glavo.himari.platform.macos.MacOSConformance")
     workingDir = project.projectDir
     jvmArgs(
         "--enable-native-access=ALL-UNNAMED",
@@ -102,7 +102,7 @@ val conformance = tasks.register<JavaExec>("conformance") {
     description = "Runs the production macOS Objective-C runtime profile."
     dependsOn("testClasses", "test", "pureJavaGuard")
     classpath = sourceSets.named("test").get().runtimeClasspath
-    mainClass.set("org.glavo.himari.platform.macos.MacosConformance")
+    mainClass.set("org.glavo.himari.platform.macos.MacOSConformance")
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     args(conformanceDirectory.get().asFile.absolutePath)
     outputs.file(conformanceDirectory.map { it.file("results.json") })

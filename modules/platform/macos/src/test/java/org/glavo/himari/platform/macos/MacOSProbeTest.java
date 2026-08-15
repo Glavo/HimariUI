@@ -9,14 +9,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// Verifies the shipped macOS probe reports a runtime resolve or an environment block.
 @NotNullByDefault
-final class MacosProbeTest {
+final class MacOSProbeTest {
     /// Runs the probe and checks the truthful SDR contract.
     @Test
     void reportsResolveOrEnvironmentBlock() {
-        MacosProbe probe = MacosProbe.run();
+        MacOSProbe probe = MacOSProbe.run();
         assertFalse(probe.hdrAssumed());
         assertTrue(probe.status().equals("resolved") || probe.status().equals("environment-blocked"));
-        if (!MacosLibraries.supportedHost()) {
+        if (!MacOSLibraries.supportedHost()) {
             assertEquals("environment-blocked", probe.status());
         }
     }

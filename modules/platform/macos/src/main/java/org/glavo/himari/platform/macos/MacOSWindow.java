@@ -13,7 +13,7 @@ import java.util.Objects;
 /// Creates one `NSWindow` and attaches a `CAMetalLayer` through generated `objc_msgSend` variants.
 @SuppressWarnings("restricted")
 @NotNullByDefault
-public final class MacosWindow implements AutoCloseable {
+public final class MacOSWindow implements AutoCloseable {
     /// `NSWindowStyleMaskTitled | NSWindowStyleMaskClosable`.
     private static final long NS_WINDOW_STYLE_TITLED_CLOSABLE = 1L | 2L;
 
@@ -21,7 +21,7 @@ public final class MacosWindow implements AutoCloseable {
     private static final long NS_BACKING_STORE_BUFFERED = 2L;
 
     /// Shared libraries.
-    private final MacosLibraries libraries;
+    private final MacOSLibraries libraries;
 
     /// Temporary selector and rect storage.
     private final Arena arena;
@@ -36,8 +36,8 @@ public final class MacosWindow implements AutoCloseable {
     private boolean closed;
 
     /// Creates one window owner.
-    private MacosWindow(
-            MacosLibraries libraries,
+    private MacOSWindow(
+            MacOSLibraries libraries,
             Arena arena,
             MemorySegment window,
             MemorySegment metalLayer
@@ -51,8 +51,8 @@ public final class MacosWindow implements AutoCloseable {
     /// Creates an `NSWindow` with a `CAMetalLayer` content layer.
     ///
     /// @return the window
-    public static MacosWindow open() {
-        MacosLibraries libraries = MacosLibraries.open();
+    public static MacOSWindow open() {
+        MacOSLibraries libraries = MacOSLibraries.open();
         Arena arena = Arena.ofConfined();
         try {
             ObjcFfmBindings bindings = libraries.bindings();
@@ -130,7 +130,7 @@ public final class MacosWindow implements AutoCloseable {
                     MemorySegment.NULL
             );
             Objects.requireNonNull(application, "application");
-            return new MacosWindow(libraries, arena, window, metalLayer);
+            return new MacOSWindow(libraries, arena, window, metalLayer);
         } catch (RuntimeException | Error failure) {
             arena.close();
             libraries.close();

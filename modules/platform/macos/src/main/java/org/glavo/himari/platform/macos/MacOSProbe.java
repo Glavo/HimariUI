@@ -12,7 +12,7 @@ import java.util.Objects;
 /// @param metalLayerAttached whether a `CAMetalLayer` was attached
 /// @param hdrAssumed always `false`
 @NotNullByDefault
-public record MacosProbe(
+public record MacOSProbe(
         String status,
         String detail,
         boolean nsWindowCreated,
@@ -20,7 +20,7 @@ public record MacosProbe(
         boolean hdrAssumed
 ) {
     /// Validates the observation.
-    public MacosProbe {
+    public MacOSProbe {
         Objects.requireNonNull(status, "status");
         Objects.requireNonNull(detail, "detail");
         if (hdrAssumed) {
@@ -31,9 +31,9 @@ public record MacosProbe(
     /// Creates an `NSWindow` on macOS and records a block on every other host.
     ///
     /// @return the observation
-    public static MacosProbe run() {
-        if (!MacosLibraries.supportedHost()) {
-            return new MacosProbe(
+    public static MacOSProbe run() {
+        if (!MacOSLibraries.supportedHost()) {
+            return new MacOSProbe(
                     "environment-blocked",
                     "NSWindow requires macOS; host is " + System.getProperty("os.name", ""),
                     false,
@@ -41,11 +41,11 @@ public record MacosProbe(
                     false
             );
         }
-        try (MacosWindow window = MacosWindow.open()) {
+        try (MacOSWindow window = MacOSWindow.open()) {
             if (window.nativeHandle().address() == 0L || window.metalLayer().address() == 0L) {
                 throw new IllegalStateException("NSWindow or CAMetalLayer handle was NULL");
             }
-            return new MacosProbe(
+            return new MacOSProbe(
                     "resolved",
                     "NSWindow created with an attached CAMetalLayer",
                     true,
@@ -53,7 +53,7 @@ public record MacosProbe(
                     false
             );
         } catch (RuntimeException failure) {
-            return new MacosProbe(
+            return new MacOSProbe(
                     "environment-blocked",
                     "NSWindow creation failed: " + failure.getMessage(),
                     false,

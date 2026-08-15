@@ -23,7 +23,7 @@ import org.glavo.himari.platform.api.LogicalRect;
 import org.glavo.himari.platform.api.WindowConfiguration;
 import org.glavo.himari.platform.api.WindowRequest;
 import org.glavo.himari.platform.api.WindowState;
-import org.glavo.himari.platform.macos.MacosProbe;
+import org.glavo.himari.platform.macos.MacOSProbe;
 import org.glavo.himari.platform.wayland.WaylandProbe;
 import org.glavo.himari.platform.windows.WindowsBackend;
 import org.glavo.himari.platform.windows.WindowsPlatform;
@@ -74,7 +74,7 @@ public final class DesktopLaunch {
     public static DesktopLaunchResult run(boolean smoke, @Nullable Path output) throws Exception {
         DesktopHost host = DesktopHost.detect();
         WaylandProbe wayland = WaylandProbe.run();
-        MacosProbe macos = MacosProbe.run();
+        MacOSProbe macos = MacOSProbe.run();
         MetalProbe metal = MetalProbe.run();
         ObjcBlockProbe objc = ObjcBlockProbe.run();
         StateDomain domain = new StateDomain();
