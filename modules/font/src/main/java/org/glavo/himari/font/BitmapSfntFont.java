@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -265,7 +264,7 @@ public final class BitmapSfntFont {
     /// @return the file
     private static byte[] wrap(Map<String, byte[]> tables) {
         List<Map.Entry<String, byte[]>> ordered = new ArrayList<>(tables.entrySet());
-        ordered.sort(Comparator.comparing(Map.Entry::getKey));
+        ordered.sort(Map.Entry.comparingByKey());
         int header = 12 + ordered.size() * 16;
         int offset = header;
         ArrayList<Integer> offsets = new ArrayList<>();
