@@ -1,4 +1,3 @@
-import org.gradle.api.artifacts.dsl.LockMode
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
@@ -71,11 +70,6 @@ configure(guardedJavaModules) {
         add("testRuntimeOnly", junitLauncher)
     }
 
-    dependencyLocking {
-        lockMode.set(LockMode.STRICT)
-        lockAllConfigurations()
-    }
-
     configurations.configureEach {
         resolutionStrategy.failOnVersionConflict()
     }
@@ -108,23 +102,6 @@ configure(guardedJavaModules) {
     tasks.withType<AbstractArchiveTask>().configureEach {
         isPreserveFileTimestamps = false
         isReproducibleFileOrder = true
-    }
-
-    tasks.register("resolveAndLockAll") {
-        group = "build setup"
-        description = "Resolves every resolvable configuration and writes dependency locks."
-
-        doFirst {
-            require(gradle.startParameter.isWriteDependencyLocks) {
-                "resolveAndLockAll must be run with --write-locks"
-            }
-        }
-
-        doLast {
-            configurations
-                .filter { it.isCanBeResolved }
-                .forEach { it.resolve() }
-        }
     }
 }
 
@@ -160,10 +137,4 @@ tasks.register("pureJavaGuard") {
     group = "verification"
     description = "Runs the active pure-Java distribution gates for every guarded Java module."
     dependsOn(guardedJavaModules.map { "${it.path}:pureJavaGuard" })
-}
-
-tasks.register("resolveAndLockAll") {
-    group = "build setup"
-    description = "Writes dependency locks for every module."
-    dependsOn(guardedJavaModules.map { "${it.path}:resolveAndLockAll" })
 }

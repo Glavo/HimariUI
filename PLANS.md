@@ -1908,7 +1908,7 @@ Work in one track proceeds while an unrelated criterion in another track remains
 - **REFERENCE-LOCK-001**: Create `REFERENCES.lock` and pin the edition, release, commit, or retrieval date of every rolling source used as normative evidence.
 - **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
 - **CONFORMANCE-POLICY-001**: Create `CONFORMANCE.md` plus the `PLATFORM_CONFORMANCE.yaml` schema for profile ownership, fixtures, tolerances, durations, budgets, and reviewed waivers; populate the initial M0 spike profiles.
-- **BUILD-001**: Create the Gradle multi-project build, JPMS setup, Java 25 toolchain, and dependency locking according to ADR-013.
+- **BUILD-001**: Create the Gradle multi-project build, JPMS setup, and Java 25 toolchain according to ADR-013.
 - **GUARD-FRAMEWORK-001**: Implement the staged `pure-java-guard` registry and activate gates 1–11 for every artifact and module present in M0.
 - **FFI-SCHEMA-001**: Define the minimum canonical primitive, pointer, structure, function, and callback schema.
 - **FFI-FFM-001**: Generate typed FFM downcalls and upcalls for the minimum schema and execute them on the JVM.
@@ -2341,7 +2341,7 @@ These issues are the initial project-board view of canonical work packages, not 
 - **REFERENCE-LOCK-001**: Create `REFERENCES.lock` and pin the edition, release, commit, or retrieval date of every rolling source used as normative evidence.
 - **PROVENANCE-001**: Define `PROVENANCE.json` and its CI validator.
 - **CONFORMANCE-POLICY-001**: Create `CONFORMANCE.md` plus the `PLATFORM_CONFORMANCE.yaml` schema for profile ownership, fixtures, tolerances, durations, budgets, and reviewed waivers; populate the initial M0 spike profiles.
-- **BUILD-001**: Create the Gradle multi-project build, JPMS setup, Java 25 toolchain, and dependency locking according to ADR-013.
+- **BUILD-001**: Create the Gradle multi-project build, JPMS setup, and Java 25 toolchain according to ADR-013.
 - **GUARD-FRAMEWORK-001**: Implement the staged `pure-java-guard` registry and activate gates 1–11 for every artifact and module present in M0.
 - **FFI-SCHEMA-001**: Define the minimum canonical primitive, pointer, structure, function, and callback schema.
 - **FFI-FFM-001**: Generate typed FFM downcalls and upcalls for the minimum schema and execute them on the JVM.
