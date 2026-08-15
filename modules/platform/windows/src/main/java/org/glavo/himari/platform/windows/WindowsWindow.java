@@ -204,7 +204,7 @@ public final class WindowsWindow implements PlatformWindow {
     /// @param width the pixel width
     /// @param height the pixel height
     /// @return the scanline count reported by `SetDIBitsToDevice`
-    public int presentSdrRgba(byte[] rgba, int width, int height) {
+    public int presentSdrRgba(MemorySegment rgba, int width, int height) {
         return nativeWindow.presentSdrRgba(rgba, width, height);
     }
 

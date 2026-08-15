@@ -43,7 +43,8 @@ import org.glavo.himari.text.ShapedGlyph;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.ByteBuffer;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -91,8 +92,8 @@ public final class DesktopLaunch {
         boolean popupHosted = false;
         String inspectorJson;
         String label;
-        byte[] png;
-        byte[] extendedLinear;
+        MemorySegment png;
+        MemorySegment extendedLinear;
         int inspectorNodes;
         try (StructuralRuntime runtime = new StructuralRuntime(domain, scope -> scope.mount(
                 "label",
@@ -164,7 +165,7 @@ public final class DesktopLaunch {
                     surface.replay(displayList);
                     png = surface.toSdrPng();
                     extendedLinear = floats(surface.extendedLinearPremultiplied());
-                    byte[] rgba = surface.toSdrRgba();
+                    MemorySegment rgba = surface.toSdrRgba();
                     presentedScanlines += primary.presentSdrRgba(rgba, WIDTH, HEIGHT);
                     presentedScanlines += secondary.presentSdrRgba(rgba, WIDTH, HEIGHT);
                     try (D3d12Device d3d12 = D3d12Device.open()) {
@@ -227,8 +228,8 @@ public final class DesktopLaunch {
                 count.get(),
                 label,
                 inspectorNodes,
-                png.length,
-                extendedLinear.length,
+                Math.toIntExact(png.byteSize()),
+                Math.toIntExact(extendedLinear.byteSize()),
                 presentedScanlines,
                 d3d12Presented,
                 popupHosted,
@@ -239,8 +240,8 @@ public final class DesktopLaunch {
         );
         if (output != null) {
             Files.createDirectories(output);
-            Files.write(output.resolve("counter.png"), png);
-            Files.write(output.resolve("counter.extlin"), extendedLinear);
+            Files.write(output.resolve("counter.png"), png.toArray(ValueLayout.JAVA_BYTE));
+            Files.write(output.resolve("counter.extlin"), extendedLinear.toArray(ValueLayout.JAVA_BYTE));
             Files.writeString(output.resolve("inspector.json"), inspectorJson, StandardCharsets.UTF_8);
             Files.writeString(output.resolve("results.json"), result.toJson(), StandardCharsets.UTF_8);
         }
@@ -310,12 +311,14 @@ public final class DesktopLaunch {
     ///
     /// @param values the components
     /// @return the bytes
-    private static byte[] floats(float[] values) {
+    private static MemorySegment floats(float[] values) {
         Objects.requireNonNull(values, "values");
-        ByteBuffer buffer = ByteBuffer.allocate(values.length * 4).order(ByteOrder.LITTLE_ENDIAN);
-        for (float value : values) {
-            buffer.putFloat(value);
+        byte[] bytes = new byte[values.length * 4];
+        MemorySegment segment = MemorySegment.ofArray(bytes);
+        ValueLayout.OfFloat layout = ValueLayout.JAVA_FLOAT_UNALIGNED.withOrder(ByteOrder.LITTLE_ENDIAN);
+        for (int index = 0; index < values.length; index++) {
+            segment.setAtIndex(layout, index, values[index]);
         }
-        return buffer.array();
+        return segment.asReadOnly();
     }
 }

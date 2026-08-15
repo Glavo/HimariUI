@@ -3,7 +3,6 @@ package org.glavo.himari.rhi.d3d12;
 import org.glavo.himari.rhi.d3d12.generated.D3d12FfmBindings;
 import org.glavo.himari.rhi.d3d12.generated.D3d12Layouts;
 import org.jetbrains.annotations.NotNullByDefault;
-import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -79,17 +78,18 @@ public final class D3d12GpuResource implements AutoCloseable {
     /// @param device the production device
     /// @param payload the bytes written through `ID3D12Resource::Map`
     /// @return the resource owner
-    public static D3d12GpuResource createUpload(D3d12Device device, byte[] payload) {
+    public static D3d12GpuResource createUpload(D3d12Device device, MemorySegment payload) {
         Objects.requireNonNull(device, "device");
         Objects.requireNonNull(payload, "payload");
-        if (payload.length == 0) {
+        if (payload.byteSize() == 0L) {
             throw new IllegalArgumentException("Upload payload must not be empty");
         }
+        byte[] bytes = payload.toArray(ValueLayout.JAVA_BYTE);
         Arena arena = device.arena();
         D3d12Native.ComTracker tracker = new D3d12Native.ComTracker();
         try {
-            MemorySegment resource = createUploadBuffer(device, arena, tracker, payload.length);
-            write(resource, arena, payload);
+            MemorySegment resource = createUploadBuffer(device, arena, tracker, bytes.length);
+            write(resource, arena, bytes);
             MemorySegment heap = createShaderVisibleHeap(device, arena, tracker);
             int increment = D3d12FfmBindings.invokeId3d12DeviceGetDescriptorHandleIncrementSizePointer(
                     D3d12Native.functionAt(
@@ -102,7 +102,7 @@ public final class D3d12GpuResource implements AutoCloseable {
             if (increment <= 0) {
                 throw new IllegalStateException("CBV/SRV/UAV descriptor increment must be positive");
             }
-            return new D3d12GpuResource(tracker, resource, heap, payload.clone(), increment);
+            return new D3d12GpuResource(tracker, resource, heap, bytes, increment);
         } catch (RuntimeException | Error failure) {
             tracker.close();
             throw failure;
@@ -112,8 +112,8 @@ public final class D3d12GpuResource implements AutoCloseable {
     /// Returns a copy of the bytes written through `Map`.
     ///
     /// @return the payload
-    public byte @Unmodifiable [] payload() {
-        return payload.clone();
+    public MemorySegment payload() {
+        return MemorySegment.ofArray(payload.clone()).asReadOnly();
     }
 
     /// Returns the CBV/SRV/UAV descriptor increment in bytes.
@@ -134,7 +134,7 @@ public final class D3d12GpuResource implements AutoCloseable {
     ///
     /// @param device the device that owns the arena used to allocate the map range
     /// @return the bytes currently visible to the CPU
-    public byte[] readBack(D3d12Device device) {
+    public MemorySegment readBack(D3d12Device device) {
         requireOpen();
         Objects.requireNonNull(device, "device");
         Arena arena = device.arena();
@@ -164,7 +164,7 @@ public final class D3d12GpuResource implements AutoCloseable {
                 0,
                 range
         );
-        return copy;
+        return MemorySegment.ofArray(copy).asReadOnly();
     }
 
     /// Releases the committed resource and descriptor heap.

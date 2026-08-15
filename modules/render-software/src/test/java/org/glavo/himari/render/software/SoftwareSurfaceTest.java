@@ -6,6 +6,8 @@ import org.glavo.himari.graphics.DisplayListOp;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,14 +24,14 @@ final class SoftwareSurfaceTest {
         surface.replay(new DisplayList(List.of(
                 new DisplayListOp.FillRect(1.0f, 1.0f, 4.0f, 4.0f, Color.SRGB_WHITE)
         )));
-        byte[] png = surface.toSdrPng();
-        assertEquals((byte) 0x89, png[0]);
-        assertEquals((byte) 0x50, png[1]);
-        assertEquals((byte) 0x4E, png[2]);
-        assertEquals((byte) 0x47, png[3]);
-        byte[] rgba = surface.toSdrRgba();
+        MemorySegment png = surface.toSdrPng();
+        assertEquals((byte) 0x89, png.get(ValueLayout.JAVA_BYTE, 0L));
+        assertEquals((byte) 0x50, png.get(ValueLayout.JAVA_BYTE, 1L));
+        assertEquals((byte) 0x4E, png.get(ValueLayout.JAVA_BYTE, 2L));
+        assertEquals((byte) 0x47, png.get(ValueLayout.JAVA_BYTE, 3L));
+        MemorySegment rgba = surface.toSdrRgba();
         int center = ((2 * 8) + 2) * 4;
-        assertTrue((rgba[center] & 0xFF) > 200);
+        assertTrue((rgba.get(ValueLayout.JAVA_BYTE, center) & 0xFF) > 200);
         assertTrue(surface.extendedLinearPremultiplied().length == 8 * 8 * 4);
     }
 }

@@ -26,7 +26,8 @@ import org.glavo.himari.text.ShapedGlyph;
 import org.jetbrains.annotations.NotNullByDefault;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -58,11 +59,11 @@ public final class V0CounterApp {
                 : Path.of(arguments[0]);
         Files.createDirectories(output);
         Result result = run(2);
-        Files.write(output.resolve("counter.png"), result.png());
-        Files.write(output.resolve("counter.extlin"), result.extendedLinear());
+        Files.write(output.resolve("counter.png"), result.png().toArray(ValueLayout.JAVA_BYTE));
+        Files.write(output.resolve("counter.extlin"), result.extendedLinear().toArray(ValueLayout.JAVA_BYTE));
         Files.writeString(output.resolve("scene.json"), result.sceneJson(), StandardCharsets.UTF_8);
         Files.writeString(output.resolve("results.json"), result.summaryJson(), StandardCharsets.UTF_8);
-        System.out.println("V0 CounterApp count=" + result.count() + " png=" + result.png().length);
+        System.out.println("V0 CounterApp count=" + result.count() + " png=" + result.png().byteSize());
     }
 
     /// Executes the injected sequence and returns the rendered artifacts.
@@ -156,12 +157,14 @@ public final class V0CounterApp {
     ///
     /// @param values the floats
     /// @return the bytes
-    private static byte[] floats(float[] values) {
-        ByteBuffer buffer = ByteBuffer.allocate(values.length * 4).order(ByteOrder.LITTLE_ENDIAN);
-        for (float value : values) {
-            buffer.putFloat(value);
+    private static MemorySegment floats(float[] values) {
+        byte[] bytes = new byte[values.length * 4];
+        MemorySegment segment = MemorySegment.ofArray(bytes);
+        ValueLayout.OfFloat layout = ValueLayout.JAVA_FLOAT_UNALIGNED.withOrder(ByteOrder.LITTLE_ENDIAN);
+        for (int index = 0; index < values.length; index++) {
+            segment.setAtIndex(layout, index, values[index]);
         }
-        return buffer.array();
+        return segment.asReadOnly();
     }
 
     /// Stores one V0 run.
@@ -179,8 +182,8 @@ public final class V0CounterApp {
             String label,
             boolean focusObserved,
             boolean semanticsExposeActivate,
-            byte[] png,
-            byte[] extendedLinear,
+            MemorySegment png,
+            MemorySegment extendedLinear,
             String sceneJson
     ) {
         /// Encodes a machine-readable summary.
@@ -204,8 +207,8 @@ public final class V0CounterApp {
                     label,
                     focusObserved,
                     semanticsExposeActivate,
-                    png.length,
-                    extendedLinear.length
+                    png.byteSize(),
+                    extendedLinear.byteSize()
             );
         }
     }

@@ -4,6 +4,8 @@ import org.jetbrains.annotations.NotNullByDefault;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Objects;
@@ -27,22 +29,24 @@ public final class PngEncoder {
     /// @param width the positive width
     /// @param height the positive height
     /// @param rgba row-major unassociated RGBA samples
-    /// @return the PNG file
-    public static byte[] encodeRgba(int width, int height, byte[] rgba) {
+    /// @return a read-only PNG file
+    public static MemorySegment encodeRgba(int width, int height, MemorySegment rgba) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("PNG extents must be positive");
         }
         Objects.requireNonNull(rgba, "rgba");
-        if (rgba.length != Math.multiplyExact(Math.multiplyExact(width, height), 4)) {
+        int expected = Math.multiplyExact(Math.multiplyExact(width, height), 4);
+        if (rgba.byteSize() != expected) {
             throw new IllegalArgumentException("RGBA buffer length does not match extents");
         }
+        byte[] pixels = rgba.toArray(ValueLayout.JAVA_BYTE);
         byte[] raw = new byte[height * (1 + width * 4)];
         int dest = 0;
         int source = 0;
         for (int row = 0; row < height; row++) {
             raw[dest++] = 0;
             int rowBytes = width * 4;
-            System.arraycopy(rgba, source, raw, dest, rowBytes);
+            System.arraycopy(pixels, source, raw, dest, rowBytes);
             dest += rowBytes;
             source += rowBytes;
         }
@@ -56,7 +60,7 @@ public final class PngEncoder {
         } catch (IOException exception) {
             throw new IllegalStateException("PNG encoding failed", exception);
         }
-        return output.toByteArray();
+        return MemorySegment.ofArray(output.toByteArray()).asReadOnly();
     }
 
     /// Builds the IHDR payload.

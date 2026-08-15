@@ -157,7 +157,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
     private int modalTimerTicks;
 
     /// Last presented unassociated 8-bit sRGB RGBA pixels, or `null` before the first present.
-    private byte @Nullable [] lastRgba;
+    private @Nullable MemorySegment lastRgba;
 
     /// Width of [#lastRgba].
     private int lastWidth;
@@ -346,8 +346,9 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// @param width the pixel width
     /// @param height the pixel height
     /// @return the scanline count reported by `SetDIBitsToDevice`
-    public int presentSdrRgba(byte[] rgba, int width, int height) {
+    public int presentSdrRgba(MemorySegment rgba, int width, int height) {
         requireOpen();
+        Objects.requireNonNull(rgba, "rgba");
         MemorySegment deviceContext = bindings.getDc(window);
         if (deviceContext.address() == 0L) {
             throw new IllegalStateException("GetDC returned NULL");
@@ -360,7 +361,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 throw new IllegalStateException("ReleaseDC failed");
             }
         }
-        lastRgba = rgba.clone();
+        lastRgba = MemorySegment.ofArray(rgba.toArray(ValueLayout.JAVA_BYTE));
         lastWidth = width;
         lastHeight = height;
         Win32FfmBindings.InvalidateRectResult invalidated = bindings.invalidateRect(window, MemorySegment.NULL, 0);

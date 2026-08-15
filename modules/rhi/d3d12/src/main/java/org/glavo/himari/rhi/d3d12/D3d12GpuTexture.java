@@ -97,13 +97,13 @@ public final class D3d12GpuTexture {
     /// @return the read-back observation
     public static D3d12TextureRoundTrip roundTripSdrRgba(
             D3d12Device device,
-            byte[] rgba,
+            MemorySegment rgba,
             int width,
             int height
     ) {
         Objects.requireNonNull(device, "device");
         Objects.requireNonNull(rgba, "rgba");
-        requireExtent(width, height, rgba);
+        byte[] pixels = requireExtent(width, height, rgba);
         int rowPitch = rowPitch(width);
         int packedSize = Math.multiplyExact(rowPitch, height);
         Arena arena = device.arena();
@@ -111,7 +111,7 @@ public final class D3d12GpuTexture {
         try {
             MemorySegment upload = committedBuffer(device, arena, tracker, packedSize,
                     D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
-            mapWrite(upload, arena, pack(rgba, width, height, rowPitch));
+            mapWrite(upload, arena, pack(pixels, width, height, rowPitch));
             MemorySegment texture = committedTexture(device, arena, tracker, width, height, 0,
                     D3D12_RESOURCE_STATE_COPY_DEST);
             MemorySegment readback = committedBuffer(device, arena, tracker, packedSize,
@@ -130,7 +130,7 @@ public final class D3d12GpuTexture {
             return new D3d12TextureRoundTrip(
                     width,
                     height,
-                    unpack(mapRead(readback, arena, packedSize), width, height, rowPitch),
+                    MemorySegment.ofArray(unpack(mapRead(readback, arena, packedSize), width, height, rowPitch)),
                     true
             );
         } finally {
@@ -234,7 +234,7 @@ public final class D3d12GpuTexture {
             return new D3d12TextureRoundTrip(
                     width,
                     height,
-                    unpack(mapRead(readback, arena, packedSize), width, height, rowPitch),
+                    MemorySegment.ofArray(unpack(mapRead(readback, arena, packedSize), width, height, rowPitch)),
                     true
             );
         } finally {
@@ -253,7 +253,7 @@ public final class D3d12GpuTexture {
     public static D3d12Presentation presentSdrRgba(
             D3d12Device device,
             MemorySegment hwnd,
-            byte[] rgba,
+            MemorySegment rgba,
             int width,
             int height
     ) {
@@ -263,7 +263,7 @@ public final class D3d12GpuTexture {
         if (hwnd.address() == 0L) {
             throw new IllegalArgumentException("HWND must not be NULL");
         }
-        requireExtent(width, height, rgba);
+        byte[] pixels = requireExtent(width, height, rgba);
         int rowPitch = rowPitch(width);
         int packedSize = Math.multiplyExact(rowPitch, height);
         Arena arena = device.arena();
@@ -271,7 +271,7 @@ public final class D3d12GpuTexture {
         try {
             MemorySegment upload = committedBuffer(device, arena, tracker, packedSize,
                     D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
-            mapWrite(upload, arena, pack(rgba, width, height, rowPitch));
+            mapWrite(upload, arena, pack(pixels, width, height, rowPitch));
             MemorySegment texture = committedTexture(device, arena, tracker, width, height, 0,
                     D3D12_RESOURCE_STATE_COPY_DEST);
             MemorySegment queue = commandQueue(device, arena, tracker);
@@ -806,13 +806,14 @@ public final class D3d12GpuTexture {
     }
 
     /// Requires a tightly packed RGBA buffer for `width` by `height`.
-    private static void requireExtent(int width, int height, byte[] rgba) {
+    private static byte[] requireExtent(int width, int height, MemorySegment rgba) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("Texture dimensions must be positive");
         }
         int expected = Math.multiplyExact(Math.multiplyExact(width, height), 4);
-        if (rgba.length != expected) {
+        if (rgba.byteSize() != expected) {
             throw new IllegalArgumentException("RGBA length must be width * height * 4");
         }
+        return rgba.toArray(ValueLayout.JAVA_BYTE);
     }
 }

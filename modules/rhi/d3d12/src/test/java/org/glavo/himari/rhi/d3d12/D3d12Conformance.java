@@ -59,26 +59,33 @@ public final class D3d12Conformance {
             if (!presentation.cleared() || !presentation.presented()) {
                 throw new IllegalStateException("D3D12 swapchain did not clear and present");
             }
-            try (D3d12GpuResource resource = device.createUploadResource(new byte[] { 7, 8, 9, 10 })) {
-                byte[] readBack = resource.readBack(device);
-                if (readBack.length != 4 || readBack[0] != 7 || readBack[3] != 10) {
+            try (D3d12GpuResource resource = device.createUploadResource(
+                    java.lang.foreign.MemorySegment.ofArray(new byte[] { 7, 8, 9, 10 }))) {
+                java.lang.foreign.MemorySegment readBack = resource.readBack(device);
+                if (readBack.byteSize() != 4L
+                        || readBack.get(java.lang.foreign.ValueLayout.JAVA_BYTE, 0L) != 7
+                        || readBack.get(java.lang.foreign.ValueLayout.JAVA_BYTE, 3L) != 10) {
                     throw new IllegalStateException("D3D12 upload buffer did not round-trip mapped bytes");
                 }
                 descriptorIncrement = resource.descriptorIncrement();
                 resourceReferences = resource.ownedReferences();
             }
-            byte[] copied = device.copyThroughDefaultHeap(new byte[] { 1, 2, 3, 4 });
-            gpuCopy = copied.length == 4 && copied[0] == 1 && copied[3] == 4;
+            java.lang.foreign.MemorySegment copied = device.copyThroughDefaultHeap(
+                    java.lang.foreign.MemorySegment.ofArray(new byte[] { 1, 2, 3, 4 }));
+            gpuCopy = copied.byteSize() == 4L
+                    && copied.get(java.lang.foreign.ValueLayout.JAVA_BYTE, 0L) == 1
+                    && copied.get(java.lang.foreign.ValueLayout.JAVA_BYTE, 3L) == 4;
             if (!gpuCopy) {
                 throw new IllegalStateException("D3D12 default-heap copy did not round-trip");
             }
-            byte[] expected = new byte[16 * 8 * 4];
-            for (int pixel = 0; pixel < expected.length; pixel += 4) {
-                expected[pixel] = 51;
-                expected[pixel + 1] = 102;
-                expected[pixel + 2] = (byte) 204;
-                expected[pixel + 3] = (byte) 255;
+            byte[] expectedBytes = new byte[16 * 8 * 4];
+            for (int pixel = 0; pixel < expectedBytes.length; pixel += 4) {
+                expectedBytes[pixel] = 51;
+                expectedBytes[pixel + 1] = 102;
+                expectedBytes[pixel + 2] = (byte) 204;
+                expectedBytes[pixel + 3] = (byte) 255;
             }
+            java.lang.foreign.MemorySegment expected = java.lang.foreign.MemorySegment.ofArray(expectedBytes);
             D3d12TextureRoundTrip trip = device.roundTripSdrRgba(expected, 16, 8);
             textureRoundTrip = trip.copied() && trip.maxChannelDelta(expected) == 0;
             if (!textureRoundTrip) {

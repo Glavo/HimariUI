@@ -37,7 +37,7 @@ final class WindowsSoftwarePresent {
     static int presentSdrRgba(
             Win32FfmBindings bindings,
             MemorySegment deviceContext,
-            byte[] rgba,
+            MemorySegment rgba,
             int width,
             int height
     ) {
@@ -51,10 +51,10 @@ final class WindowsSoftwarePresent {
             throw new IllegalArgumentException("Device context must not be NULL");
         }
         int expected = Math.multiplyExact(Math.multiplyExact(width, height), 4);
-        if (rgba.length != expected) {
+        if (rgba.byteSize() != expected) {
             throw new IllegalArgumentException("RGBA length must be width * height * 4");
         }
-        byte[] bgra = toTopDownBgra(rgba);
+        MemorySegment bgra = toTopDownBgra(rgba);
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment header = arena.allocate(Win32Layouts.BITMAPINFOHEADER);
             header.fill((byte) 0);
@@ -64,9 +64,9 @@ final class WindowsSoftwarePresent {
             header.set(ValueLayout.JAVA_SHORT, Win32Layouts.BITMAPINFOHEADER_BI_PLANES_OFFSET, (short) 1);
             header.set(ValueLayout.JAVA_SHORT, Win32Layouts.BITMAPINFOHEADER_BI_BIT_COUNT_OFFSET, (short) 32);
             header.set(ValueLayout.JAVA_INT, Win32Layouts.BITMAPINFOHEADER_BI_COMPRESSION_OFFSET, BI_RGB);
-            header.set(ValueLayout.JAVA_INT, Win32Layouts.BITMAPINFOHEADER_BI_SIZE_IMAGE_OFFSET, bgra.length);
-            MemorySegment bits = arena.allocate(bgra.length);
-            bits.copyFrom(MemorySegment.ofArray(bgra));
+            header.set(ValueLayout.JAVA_INT, Win32Layouts.BITMAPINFOHEADER_BI_SIZE_IMAGE_OFFSET, Math.toIntExact(bgra.byteSize()));
+            MemorySegment bits = arena.allocate(bgra.byteSize());
+            bits.copyFrom(bgra);
             Win32FfmBindings.SetDiBitsToDeviceResult result = bindings.setDiBitsToDevice(
                     deviceContext,
                     0,
@@ -92,14 +92,15 @@ final class WindowsSoftwarePresent {
     ///
     /// @param rgba the source pixels
     /// @return a new BGRA buffer of the same length
-    static byte[] toTopDownBgra(byte[] rgba) {
-        byte[] bgra = new byte[rgba.length];
-        for (int pixel = 0; pixel < rgba.length; pixel += 4) {
-            bgra[pixel] = rgba[pixel + 2];
-            bgra[pixel + 1] = rgba[pixel + 1];
-            bgra[pixel + 2] = rgba[pixel];
-            bgra[pixel + 3] = rgba[pixel + 3];
+    static MemorySegment toTopDownBgra(MemorySegment rgba) {
+        byte[] source = rgba.toArray(ValueLayout.JAVA_BYTE);
+        byte[] bgra = new byte[source.length];
+        for (int pixel = 0; pixel < source.length; pixel += 4) {
+            bgra[pixel] = source[pixel + 2];
+            bgra[pixel + 1] = source[pixel + 1];
+            bgra[pixel + 2] = source[pixel];
+            bgra[pixel + 3] = source[pixel + 3];
         }
-        return bgra;
+        return MemorySegment.ofArray(bgra);
     }
 }

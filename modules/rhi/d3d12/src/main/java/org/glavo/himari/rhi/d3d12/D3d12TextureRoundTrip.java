@@ -1,8 +1,9 @@
 package org.glavo.himari.rhi.d3d12;
 
 import org.jetbrains.annotations.NotNullByDefault;
-import org.jetbrains.annotations.Unmodifiable;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.util.Objects;
 
 /// Records one D3D12 texture upload or render-target clear that was copied back to the CPU.
@@ -15,7 +16,7 @@ import java.util.Objects;
 public record D3d12TextureRoundTrip(
         int width,
         int height,
-        byte[] rgba,
+        MemorySegment rgba,
         boolean copied
 ) {
     /// Validates the observation.
@@ -25,31 +26,26 @@ public record D3d12TextureRoundTrip(
             throw new IllegalArgumentException("Texture dimensions must be positive");
         }
         int expected = Math.multiplyExact(Math.multiplyExact(width, height), 4);
-        if (rgba.length != expected) {
+        if (rgba.byteSize() != expected) {
             throw new IllegalArgumentException("RGBA length must be width * height * 4");
         }
-        rgba = rgba.clone();
-    }
-
-    /// Returns a copy of the read-back pixels.
-    ///
-    /// @return the pixels
-    public byte @Unmodifiable [] rgba() {
-        return rgba.clone();
+        rgba = MemorySegment.ofArray(rgba.toArray(ValueLayout.JAVA_BYTE)).asReadOnly();
     }
 
     /// Returns the largest absolute 8-bit channel difference against `expected`.
     ///
     /// @param expected the reference RGBA buffer
     /// @return the maximum channel delta in `0..255`
-    public int maxChannelDelta(byte[] expected) {
+    public int maxChannelDelta(MemorySegment expected) {
         Objects.requireNonNull(expected, "expected");
-        if (expected.length != rgba.length) {
+        if (expected.byteSize() != rgba.byteSize()) {
             throw new IllegalArgumentException("Expected RGBA length must match the read-back buffer");
         }
+        byte[] left = expected.toArray(ValueLayout.JAVA_BYTE);
+        byte[] right = rgba.toArray(ValueLayout.JAVA_BYTE);
         int max = 0;
-        for (int index = 0; index < rgba.length; index++) {
-            int delta = Math.abs((expected[index] & 0xFF) - (rgba[index] & 0xFF));
+        for (int index = 0; index < left.length; index++) {
+            int delta = Math.abs((left[index] & 0xFF) - (right[index] & 0xFF));
             if (delta > max) {
                 max = delta;
             }
@@ -61,14 +57,16 @@ public record D3d12TextureRoundTrip(
     ///
     /// @param expected the reference RGBA buffer
     /// @return the matching byte count
-    public int matchedBytes(byte[] expected) {
+    public int matchedBytes(MemorySegment expected) {
         Objects.requireNonNull(expected, "expected");
-        if (expected.length != rgba.length) {
+        if (expected.byteSize() != rgba.byteSize()) {
             throw new IllegalArgumentException("Expected RGBA length must match the read-back buffer");
         }
+        byte[] left = expected.toArray(ValueLayout.JAVA_BYTE);
+        byte[] right = rgba.toArray(ValueLayout.JAVA_BYTE);
         int matched = 0;
-        for (int index = 0; index < rgba.length; index++) {
-            if (expected[index] == rgba[index]) {
+        for (int index = 0; index < left.length; index++) {
+            if (left[index] == right[index]) {
                 matched++;
             }
         }

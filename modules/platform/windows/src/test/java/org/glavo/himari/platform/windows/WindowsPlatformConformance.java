@@ -88,7 +88,7 @@ public final class WindowsPlatformConformance {
                 rgba[pixel + 2] = (byte) 0x80;
                 rgba[pixel + 3] = (byte) 0xFF;
             }
-            presentedScanlines = first.presentSdrRgba(rgba, 16, 8);
+            presentedScanlines = first.presentSdrRgba(java.lang.foreign.MemorySegment.ofArray(rgba), 16, 8);
             platform.pump();
             if (presentedScanlines != 8) {
                 throw new IllegalStateException("SetDIBitsToDevice did not present 8 scanlines");

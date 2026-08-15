@@ -65,34 +65,35 @@ public final class D3d12GpuCopy {
     /// @param device the production device
     /// @param payload the bytes to copy
     /// @return the bytes read from the readback heap
-    public static byte[] copyThroughDefaultHeap(D3d12Device device, byte[] payload) {
+    public static MemorySegment copyThroughDefaultHeap(D3d12Device device, MemorySegment payload) {
         Objects.requireNonNull(device, "device");
         Objects.requireNonNull(payload, "payload");
-        if (payload.length == 0) {
+        if (payload.byteSize() == 0L) {
             throw new IllegalArgumentException("Copy payload must not be empty");
         }
+        byte[] bytes = payload.toArray(ValueLayout.JAVA_BYTE);
         Arena arena = device.arena();
         D3d12Native.ComTracker tracker = new D3d12Native.ComTracker();
         try {
-            MemorySegment upload = committedBuffer(device, arena, tracker, payload.length,
+            MemorySegment upload = committedBuffer(device, arena, tracker, bytes.length,
                     D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
-            mapWrite(upload, arena, payload);
-            MemorySegment def = committedBuffer(device, arena, tracker, payload.length,
+            mapWrite(upload, arena, bytes);
+            MemorySegment def = committedBuffer(device, arena, tracker, bytes.length,
                     D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COPY_DEST);
-            MemorySegment readback = committedBuffer(device, arena, tracker, payload.length,
+            MemorySegment readback = committedBuffer(device, arena, tracker, bytes.length,
                     D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_STATE_COPY_DEST);
             MemorySegment queue = commandQueue(device, arena, tracker);
             MemorySegment allocator = commandAllocator(device, arena, tracker);
             MemorySegment list = commandList(device, arena, tracker, allocator);
             MemorySegment fence = fence(device, arena, tracker);
             reset(allocator, list);
-            copy(list, def, upload, payload.length);
+            copy(list, def, upload, bytes.length);
             barrier(list, arena, def, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COPY_SOURCE);
-            copy(list, readback, def, payload.length);
+            copy(list, readback, def, bytes.length);
             closeList(list);
             execute(queue, list, arena);
             signalAndWait(queue, fence, 1L);
-            return mapRead(readback, arena, payload.length);
+            return MemorySegment.ofArray(mapRead(readback, arena, bytes.length)).asReadOnly();
         } finally {
             tracker.close();
         }

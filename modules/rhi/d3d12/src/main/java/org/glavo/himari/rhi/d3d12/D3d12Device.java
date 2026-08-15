@@ -156,7 +156,7 @@ public final class D3d12Device implements AutoCloseable {
     ///
     /// @param payload the bytes written through `ID3D12Resource::Map`
     /// @return the resource owner
-    public D3d12GpuResource createUploadResource(byte[] payload) {
+    public D3d12GpuResource createUploadResource(MemorySegment payload) {
         requireOpen();
         return D3d12GpuResource.createUpload(this, payload);
     }
@@ -165,7 +165,7 @@ public final class D3d12Device implements AutoCloseable {
     ///
     /// @param payload the bytes to copy
     /// @return the GPU-round-tripped bytes
-    public byte[] copyThroughDefaultHeap(byte[] payload) {
+    public MemorySegment copyThroughDefaultHeap(MemorySegment payload) {
         requireOpen();
         return D3d12GpuCopy.copyThroughDefaultHeap(this, payload);
     }
@@ -176,7 +176,7 @@ public final class D3d12Device implements AutoCloseable {
     /// @param width the pixel width
     /// @param height the pixel height
     /// @return the read-back observation
-    public D3d12TextureRoundTrip roundTripSdrRgba(byte[] rgba, int width, int height) {
+    public D3d12TextureRoundTrip roundTripSdrRgba(MemorySegment rgba, int width, int height) {
         requireOpen();
         return D3d12GpuTexture.roundTripSdrRgba(this, rgba, width, height);
     }
@@ -209,7 +209,7 @@ public final class D3d12Device implements AutoCloseable {
     /// @param width the pixel width
     /// @param height the pixel height
     /// @return the present observation
-    public D3d12Presentation presentSdrRgba(MemorySegment hwnd, byte[] rgba, int width, int height) {
+    public D3d12Presentation presentSdrRgba(MemorySegment hwnd, MemorySegment rgba, int width, int height) {
         requireOpen();
         return D3d12GpuTexture.presentSdrRgba(this, hwnd, rgba, width, height);
     }

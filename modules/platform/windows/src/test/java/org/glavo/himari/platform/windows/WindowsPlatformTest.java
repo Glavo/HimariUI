@@ -157,7 +157,7 @@ final class WindowsPlatformTest {
                 rgba[pixel + 2] = (byte) 0x80;
                 rgba[pixel + 3] = (byte) 0xFF;
             }
-            int scanlines = window.presentSdrRgba(rgba, width, height);
+            int scanlines = window.presentSdrRgba(java.lang.foreign.MemorySegment.ofArray(rgba), width, height);
             platform.pump();
             assertEquals(height, scanlines);
         } finally {

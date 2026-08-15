@@ -3,6 +3,7 @@ package org.glavo.himari.font;
 import org.jetbrains.annotations.NotNullByDefault;
 
 import java.io.ByteArrayOutputStream;
+import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -34,10 +35,10 @@ public final class BitmapSfntFont {
         return new SfntFont(bytes());
     }
 
-    /// Builds the bundled sample font bytes.
+    /// Builds the bundled sample font image.
     ///
-    /// @return the SFNT file
-    public static byte[] bytes() {
+    /// @return a read-only SFNT file
+    public static MemorySegment bytes() {
         LinkedHashMap<String, byte[]> tables = new LinkedHashMap<>();
         tables.put("cmap", cmap());
         byte[] glyf = glyf();
@@ -49,7 +50,7 @@ public final class BitmapSfntFont {
         tables.put("maxp", maxp());
         tables.put("name", name());
         tables.put("post", post());
-        return wrap(tables);
+        return MemorySegment.ofArray(wrap(tables)).asReadOnly();
     }
 
     /// Glyph count including `.notdef`.

@@ -8,6 +8,7 @@ import org.glavo.himari.graphics.PathVerb;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.lang.foreign.MemorySegment;
 import java.util.Objects;
 
 /// Stores one extended-linear software surface and rasters display-list commands into it.
@@ -192,15 +193,15 @@ public final class SoftwareSurface {
 
     /// Encodes the surface as an 8-bit sRGB PNG.
     ///
-    /// @return the PNG bytes
-    public byte[] toSdrPng() {
+    /// @return a read-only PNG file
+    public MemorySegment toSdrPng() {
         return PngEncoder.encodeRgba(width, height, toSdrRgba());
     }
 
     /// Returns unassociated 8-bit sRGB pixels in row-major RGBA order.
     ///
-    /// @return the SDR pixels
-    public byte[] toSdrRgba() {
+    /// @return a read-only SDR pixel image
+    public MemorySegment toSdrRgba() {
         byte[] rgba = new byte[width * height * 4];
         for (int pixel = 0, dest = 0; pixel < pixels.length; pixel += 4, dest += 4) {
             float alpha = pixels[pixel + 3];
@@ -213,7 +214,7 @@ public final class SoftwareSurface {
             rgba[dest + 2] = (byte) Math.round(srgb.blue() * 255.0f);
             rgba[dest + 3] = (byte) Math.round(srgb.alpha() * 255.0f);
         }
-        return rgba;
+        return MemorySegment.ofArray(rgba).asReadOnly();
     }
 
     /// Fills a rectangle with uniform coverage.

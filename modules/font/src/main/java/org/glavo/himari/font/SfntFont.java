@@ -4,17 +4,23 @@ import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 /// Reads a checked SFNT directory, `cmap`, `hmtx`, `loca`, and `glyf`.
+///
+/// The font file is retained as a read-only [MemorySegment] so the same view can back a heap array
+/// or a later mapped file. Sequential table decoding uses [ByteBuffer] cursors over those slices.
 @NotNullByDefault
 public final class SfntFont {
-    /// The original font bytes.
-    private final byte @Unmodifiable [] bytes;
+    /// The retained font file.
+    private final MemorySegment data;
 
     /// Table directory by tag.
     private final @Unmodifiable Map<String, TableRecord> tables;
@@ -46,12 +52,23 @@ public final class SfntFont {
     /// loca offsets into glyf.
     private final int[] loca;
 
-    /// Creates a font from SFNT bytes.
+    /// Creates a font from heap SFNT bytes.
     ///
     /// @param bytes the complete font file
     public SfntFont(byte[] bytes) {
-        this.bytes = Objects.requireNonNull(bytes, "bytes").clone();
-        ByteBuffer buffer = ByteBuffer.wrap(this.bytes).order(ByteOrder.BIG_ENDIAN);
+        this(MemorySegment.ofArray(Objects.requireNonNull(bytes, "bytes").clone()));
+    }
+
+    /// Creates a font from an SFNT memory image.
+    ///
+    /// The constructor copies `bytes` onto the heap so the font does not retain the caller's arena
+    /// or array.
+    ///
+    /// @param bytes the complete font file
+    public SfntFont(MemorySegment bytes) {
+        Objects.requireNonNull(bytes, "bytes");
+        this.data = MemorySegment.ofArray(bytes.toArray(ValueLayout.JAVA_BYTE)).asReadOnly();
+        ByteBuffer buffer = cursor(data);
         if (buffer.remaining() < 12) {
             throw new IllegalArgumentException("SFNT header is truncated");
         }
@@ -70,10 +87,10 @@ public final class SfntFont {
             buffer.getInt();
             int offset = buffer.getInt();
             int length = buffer.getInt();
-            if (offset < 0 || length < 0 || offset + length > this.bytes.length) {
+            if (offset < 0 || length < 0 || (long) offset + (long) length > data.byteSize()) {
                 throw new IllegalArgumentException("SFNT table is out of range");
             }
-            directory.put(new String(tagBytes, java.nio.charset.StandardCharsets.US_ASCII), new TableRecord(offset, length));
+            directory.put(new String(tagBytes, StandardCharsets.US_ASCII), new TableRecord(offset, length));
         }
         this.tables = Map.copyOf(directory);
         ByteBuffer head = table("head");
@@ -96,6 +113,13 @@ public final class SfntFont {
         this.cmapGlyphIds = cmap.glyphIds;
         this.advances = readAdvances();
         this.loca = readLoca(head);
+    }
+
+    /// Returns the retained font file.
+    ///
+    /// @return a read-only file image
+    public MemorySegment bytes() {
+        return data;
     }
 
     /// Returns units per em.
@@ -140,33 +164,30 @@ public final class SfntFont {
         return new GlyphMetrics(glyphId, advances[glyphId], 0);
     }
 
-    /// Returns the glyf bytes for a glyph, or an empty buffer for a space.
+    /// Returns a big-endian glyf cursor, empty for a space or `.notdef` with no outline.
     ///
     /// @param glyphId the glyph id
-    /// @return the glyf slice
+    /// @return the glyf cursor
     public ByteBuffer glyf(int glyphId) {
         if (glyphId < 0 || glyphId + 1 >= loca.length) {
             throw new IllegalArgumentException("Unknown glyph " + glyphId);
         }
         int start = loca[glyphId];
         int end = loca[glyphId + 1];
+        if (end < start) {
+            throw new IllegalArgumentException("glyf loca range is inverted");
+        }
         TableRecord glyf = requireTable("glyf");
-        ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN);
-        buffer.position(glyf.offset + start);
-        buffer.limit(glyf.offset + end);
-        return buffer.slice().order(ByteOrder.BIG_ENDIAN);
+        return cursor(data.asSlice((long) glyf.offset + (long) start, (long) end - (long) start));
     }
 
-    /// Returns a table buffer.
+    /// Returns a big-endian table cursor.
     ///
     /// @param tag the table tag
     /// @return the table
     private ByteBuffer table(String tag) {
         TableRecord record = requireTable(tag);
-        ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN);
-        buffer.position(record.offset);
-        buffer.limit(record.offset + record.length);
-        return buffer.slice().order(ByteOrder.BIG_ENDIAN);
+        return cursor(data.asSlice(record.offset, record.length));
     }
 
     /// Requires a table record.
@@ -276,6 +297,14 @@ public final class SfntFont {
                     : locaTable.getInt();
         }
         return offsets;
+    }
+
+    /// Returns a big-endian cursor over `segment`.
+    ///
+    /// @param segment the slice
+    /// @return the cursor
+    private static ByteBuffer cursor(MemorySegment segment) {
+        return segment.asByteBuffer().order(ByteOrder.BIG_ENDIAN);
     }
 
     /// Stores one table directory record.

@@ -3,6 +3,9 @@ package org.glavo.himari.samples.counter;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,16 +21,16 @@ final class V0CounterAppTest {
         assertEquals("Count: 2", first.label());
         assertTrue(first.focusObserved());
         assertTrue(first.semanticsExposeActivate());
-        assertEquals((byte) 0x89, first.png()[0]);
-        assertEquals((byte) 0x50, first.png()[1]);
-        assertTrue(first.png().length > 64);
-        assertTrue(first.extendedLinear().length > 64);
+        assertEquals((byte) 0x89, first.png().get(ValueLayout.JAVA_BYTE, 0L));
+        assertEquals((byte) 0x50, first.png().get(ValueLayout.JAVA_BYTE, 1L));
+        assertTrue(first.png().byteSize() > 64L);
+        assertTrue(first.extendedLinear().byteSize() > 64L);
         assertEquals(first.sceneJson(), second.sceneJson());
-        byte[] firstPng = first.png();
-        byte[] secondPng = second.png();
-        assertEquals(firstPng.length, secondPng.length);
-        for (int index = 0; index < firstPng.length; index++) {
-            assertEquals(firstPng[index], secondPng[index]);
+        MemorySegment firstPng = first.png();
+        MemorySegment secondPng = second.png();
+        assertEquals(firstPng.byteSize(), secondPng.byteSize());
+        for (long index = 0L; index < firstPng.byteSize(); index++) {
+            assertEquals(firstPng.get(ValueLayout.JAVA_BYTE, index), secondPng.get(ValueLayout.JAVA_BYTE, index));
         }
     }
 }

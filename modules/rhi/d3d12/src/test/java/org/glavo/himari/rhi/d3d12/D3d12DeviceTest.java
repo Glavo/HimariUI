@@ -96,12 +96,13 @@ final class D3d12DeviceTest {
     @Test
     void uploadBufferRoundTripsMappedBytes() {
         try (D3d12Device device = D3d12Device.open();
-             D3d12GpuResource resource = device.createUploadResource(new byte[] { 0x11, 0x22, 0x33, 0x44 })) {
+             D3d12GpuResource resource = device.createUploadResource(
+                     java.lang.foreign.MemorySegment.ofArray(new byte[] { 0x11, 0x22, 0x33, 0x44 }))) {
             assertTrue(resource.descriptorIncrement() > 0);
             assertTrue(resource.ownedReferences() >= 2);
-            assertEquals(4, resource.payload().length);
-            assertEquals(0x11, resource.readBack(device)[0] & 0xFF);
-            assertEquals(0x44, resource.readBack(device)[3] & 0xFF);
+            assertEquals(4, resource.payload().byteSize());
+            assertEquals(0x11, resource.readBack(device).get(java.lang.foreign.ValueLayout.JAVA_BYTE, 0L) & 0xFF);
+            assertEquals(0x44, resource.readBack(device).get(java.lang.foreign.ValueLayout.JAVA_BYTE, 3L) & 0xFF);
         }
     }
 
@@ -110,12 +111,12 @@ final class D3d12DeviceTest {
     void textureRoundTripMatchesSoftwareRgba() {
         SoftwareSurface surface = new SoftwareSurface(16, 8);
         surface.clear(Color.srgb(0.2f, 0.4f, 0.8f, 1.0f));
-        byte[] expected = surface.toSdrRgba();
+        java.lang.foreign.MemorySegment expected = surface.toSdrRgba();
         try (D3d12Device device = D3d12Device.open()) {
             D3d12TextureRoundTrip trip = device.roundTripSdrRgba(expected, 16, 8);
             assertTrue(trip.copied());
             assertEquals(0, trip.maxChannelDelta(expected));
-            assertEquals(expected.length, trip.matchedBytes(expected));
+            assertEquals(expected.byteSize(), trip.matchedBytes(expected));
         }
     }
 
@@ -124,7 +125,7 @@ final class D3d12DeviceTest {
     void gpuClearDiffersFromSoftwareByAtMostOneChannel() {
         SoftwareSurface surface = new SoftwareSurface(16, 8);
         surface.clear(Color.srgb(0.2f, 0.4f, 0.8f, 1.0f));
-        byte[] expected = surface.toSdrRgba();
+        java.lang.foreign.MemorySegment expected = surface.toSdrRgba();
         try (D3d12Device device = D3d12Device.open()) {
             D3d12TextureRoundTrip trip = device.clearSdrAndReadback(0.2f, 0.4f, 0.8f, 1.0f, 16, 8);
             assertTrue(trip.copied());
@@ -137,7 +138,7 @@ final class D3d12DeviceTest {
     void presentsSoftwareRgbaToWindowsWindow() throws Exception {
         SoftwareSurface surface = new SoftwareSurface(32, 16);
         surface.clear(Color.srgb(0.1f, 0.5f, 0.3f, 1.0f));
-        byte[] rgba = surface.toSdrRgba();
+        java.lang.foreign.MemorySegment rgba = surface.toSdrRgba();
         WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
         try (D3d12Device device = D3d12Device.open()) {
             WindowsWindow window = platform.createWindow(
@@ -164,12 +165,15 @@ final class D3d12DeviceTest {
     /// Copies bytes through a default-heap buffer and reads them back.
     @Test
     void copiesUploadThroughDefaultHeap() {
-        byte[] payload = { 0x10, 0x20, 0x30, 0x40, 0x50 };
+        java.lang.foreign.MemorySegment payload = java.lang.foreign.MemorySegment.ofArray(
+                new byte[] { 0x10, 0x20, 0x30, 0x40, 0x50 });
         try (D3d12Device device = D3d12Device.open()) {
-            byte[] copied = device.copyThroughDefaultHeap(payload);
-            assertEquals(payload.length, copied.length);
-            for (int index = 0; index < payload.length; index++) {
-                assertEquals(payload[index], copied[index]);
+            java.lang.foreign.MemorySegment copied = device.copyThroughDefaultHeap(payload);
+            assertEquals(payload.byteSize(), copied.byteSize());
+            for (long index = 0L; index < payload.byteSize(); index++) {
+                assertEquals(
+                        payload.get(java.lang.foreign.ValueLayout.JAVA_BYTE, index),
+                        copied.get(java.lang.foreign.ValueLayout.JAVA_BYTE, index));
             }
         }
     }
