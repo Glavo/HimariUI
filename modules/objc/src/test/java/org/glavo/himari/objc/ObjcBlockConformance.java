@@ -22,6 +22,23 @@ public final class ObjcBlockConformance {
             throw new IllegalArgumentException("Expected one output directory");
         }
         ObjcBlockProbe probe = ObjcBlockProbe.run();
+        boolean objectFilled;
+        try (java.lang.foreign.Arena arena = java.lang.foreign.Arena.ofConfined()) {
+            ObjcBlockObject object = ObjcBlockObject.allocate(
+                    arena,
+                    java.lang.foreign.MemorySegment.ofAddress(1L),
+                    0,
+                    java.lang.foreign.MemorySegment.ofAddress(2L),
+                    java.lang.foreign.MemorySegment.ofAddress(3L)
+            );
+            objectFilled = object.pointer().byteSize() == 32L
+                    && object.isa().address() == 1L
+                    && object.invoke().address() == 2L
+                    && object.descriptor().address() == 3L;
+        }
+        if (!objectFilled) {
+            throw new IllegalStateException("Objective-C block object fill failed");
+        }
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);
         Files.writeString(
@@ -33,19 +50,22 @@ public final class ObjcBlockConformance {
                           "status": "%s",
                           "policy": "%s",
                           "layoutByteSize": %d,
+                          "objectFilled": %s,
                           "detail": "%s"
                         }
                         """.formatted(
                         probe.status(),
                         probe.policy().name(),
                         probe.layoutByteSize(),
+                        objectFilled,
                         escape(probe.detail())
                 ),
                 StandardCharsets.UTF_8
         );
         Files.writeString(
                 output.resolve("lifetime.json"),
-                "{\"copied\":false,\"layoutByteSize\":" + probe.layoutByteSize() + "}\n",
+                "{\"copied\":false,\"layoutByteSize\":" + probe.layoutByteSize()
+                        + ",\"objectFilled\":" + objectFilled + "}\n",
                 StandardCharsets.UTF_8
         );
         if (!Files.exists(output.resolve("native-load.log"))) {

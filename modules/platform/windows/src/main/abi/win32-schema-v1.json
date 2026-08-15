@@ -19,6 +19,7 @@
     { "kind": "primitive", "name": "i64", "primitiveKind": "integer", "byteSize": 8, "alignment": 8, "signedness": "signed", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "primitive", "name": "u64", "primitiveKind": "integer", "byteSize": 8, "alignment": 8, "signedness": "unsigned", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "primitive", "name": "f32", "primitiveKind": "floating", "byteSize": 4, "alignment": 4, "signedness": "none", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "f64", "primitiveKind": "floating", "byteSize": 8, "alignment": 8, "signedness": "none", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
 
     { "kind": "pointer", "name": "void_ptr", "pointee": "void", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "const_wchar_ptr", "pointee": "u16", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
@@ -55,6 +56,57 @@
     { "kind": "pointer", "name": "compositionform_ptr", "pointee": "compositionform", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "handle", "name": "himc", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "i32_ptr", "pointee": "i32", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "wchar_ptr", "pointee": "u16", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "f64_ptr", "pointee": "f64", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "ts_status_ptr", "pointee": "ts_status", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "ts_selection_acp_ptr", "pointee": "ts_selection_acp", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_ts_selection_acp_ptr", "pointee": "ts_selection_acp", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "ts_textchange_ptr", "pointee": "ts_textchange", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "ts_runinfo_ptr", "pointee": "ts_runinfo", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_point_ptr", "pointee": "point", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_guid_array_ptr", "pointee": "guid", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    {
+      "kind": "aggregate", "name": "ts_status", "aggregateKind": "struct", "byteSize": 8, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "dw_dynamic_flags", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "dw_static_flags", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "ts_selection_style", "aggregateKind": "struct", "byteSize": 8, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "ase", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "interim", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "ts_selection_acp", "aggregateKind": "struct", "byteSize": 16, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "acp_start", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "acp_end", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "style", "type": "ts_selection_style", "byteOffset": 8, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "ts_textchange", "aggregateKind": "struct", "byteSize": 12, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "acp_start", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "acp_old_end", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "acp_new_end", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "ts_runinfo", "aggregateKind": "struct", "byteSize": 8, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "count", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "type", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
 
     {
       "kind": "aggregate", "name": "formatetc", "aggregateKind": "struct", "byteSize": 32, "alignment": 8, "packing": 0,
@@ -510,6 +562,517 @@
         { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
         { "name": "propertyId", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
         { "name": "value", "type": "variant_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itf_thread_mgr_activate",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "clientId", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itf_thread_mgr_deactivate",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itf_thread_mgr_create_document_mgr",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "documentMgr", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itf_thread_mgr_set_focus",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "documentMgr", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itf_document_mgr_create_context",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "clientId", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "punk", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "context", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "editCookie", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itf_document_mgr_push",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "context", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itf_document_mgr_pop",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itf_text_store_acp_sink_on_lock_granted",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "lockFlags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_unused",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_advise_sink",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "punk", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "mask", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_unadvise_sink",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "punk", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_request_lock",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "lockFlags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "sessionResult", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_status",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "status", "type": "ts_status_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_query_insert",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "testStart", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "testEnd", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "cch", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "resultStart", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "resultEnd", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_selection",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "index", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "count", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "selection", "type": "ts_selection_acp_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "fetched", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_set_selection",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "count", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "selection", "type": "const_ts_selection_acp_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_text",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "acpStart", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpEnd", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "plain", "type": "wchar_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "cch", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "written", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "runInfo", "type": "ts_runinfo_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "cRunInfo", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "runWritten", "type": "u32_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "acpNext", "type": "i32_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_set_text",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpStart", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpEnd", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "text", "type": "const_wchar_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "cch", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "change", "type": "ts_textchange_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_insert_text_at_selection",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "text", "type": "const_wchar_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "cch", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpStart", "type": "i32_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "acpEnd", "type": "i32_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "change", "type": "ts_textchange_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_end_acp",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "acp", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_active_view",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "view", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_text_ext",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "view", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpStart", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpEnd", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "rect", "type": "rect_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "clipped", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_wnd",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "view", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "window", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_formatted_text",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "acpStart", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpEnd", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "dataObject", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_embedded",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "acpPos", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "service", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "unknown", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_query_insert_embedded",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "service", "type": "const_guid_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "format", "type": "const_formatetc_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "insertable", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_insert_embedded",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpStart", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpEnd", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "dataObject", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "change", "type": "ts_textchange_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_insert_embedded_at_selection",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "dataObject", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "acpStart", "type": "i32_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "acpEnd", "type": "i32_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "change", "type": "ts_textchange_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_request_supported_attrs",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "filterCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "filterAttrs", "type": "const_guid_array_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_request_attrs_at_position",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "acpPos", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "filterCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "filterAttrs", "type": "const_guid_array_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_request_attrs_transitioning_at_position",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "acpPos", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "filterCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "filterAttrs", "type": "const_guid_array_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_find_next_attr_transition",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "acpStart", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpHalt", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "filterCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "filterAttrs", "type": "const_guid_array_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acpNext", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "found", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "foundOffset", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_retrieve_requested_attrs",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "count", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "values", "type": "void_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "fetched", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_acp_from_point",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "view", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "point", "type": "const_point_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "acp", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_store_get_screen_ext",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "view", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "rect", "type": "rect_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_get_pattern_provider",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "patternId", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "provider", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iinvoke_provider_invoke",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itoggle_provider_toggle",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itoggle_provider_get_toggle_state",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "state", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "irange_value_provider_set_value",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "value", "type": "f64", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "irange_value_provider_get_value",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "value", "type": "f64_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "irange_value_provider_get_is_read_only",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "value", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "irange_value_provider_get_maximum",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "value", "type": "f64_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "irange_value_provider_get_minimum",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "value", "type": "f64_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
       ],
       "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
       "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }

@@ -68,7 +68,8 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
     public Color toSrgb() {
         return switch (encoding) {
             case SRGB -> this;
-            case LINEAR_SRGB, EXTENDED_LINEAR, DISPLAY_P3, LINEAR_DISPLAY_P3 -> {
+            case LINEAR_SRGB, EXTENDED_LINEAR, DISPLAY_P3, LINEAR_DISPLAY_P3,
+                 BT2020, LINEAR_BT2020, BT2100_PQ, BT2100_HLG -> {
                 Color linear = toExtendedLinear();
                 yield srgb(
                         encodeSrgb(clamp01(linear.red)),
@@ -82,7 +83,9 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
 
     /// Converts this color to extended-linear sRGB working values.
     ///
-    /// Display-P3 conversions keep out-of-sRGB components. They are not clipped here.
+    /// Display-P3 and BT.2020 conversions keep out-of-sRGB components. They are not clipped here.
+    /// BT.2100 PQ is decoded to nits and divided by 100-nit reference white. BT.2100 HLG uses the
+    /// inverse OETF; scene-linear `1.0` is the HLG system peak.
     ///
     /// @return the extended-linear color
     public Color toExtendedLinear() {
@@ -92,6 +95,15 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
             case SRGB -> extendedLinear(decodeSrgb(red), decodeSrgb(green), decodeSrgb(blue), alpha);
             case LINEAR_DISPLAY_P3 -> p3LinearToExtended(red, green, blue, alpha);
             case DISPLAY_P3 -> p3LinearToExtended(decodeSrgb(red), decodeSrgb(green), decodeSrgb(blue), alpha);
+            case LINEAR_BT2020 -> bt2020LinearToExtended(red, green, blue, alpha);
+            case BT2020 -> bt2020LinearToExtended(decodeBt2020(red), decodeBt2020(green), decodeBt2020(blue), alpha);
+            case BT2100_PQ -> bt2020LinearToExtended(
+                    decodePq(red) / PQ_REFERENCE_WHITE_NITS,
+                    decodePq(green) / PQ_REFERENCE_WHITE_NITS,
+                    decodePq(blue) / PQ_REFERENCE_WHITE_NITS,
+                    alpha
+            );
+            case BT2100_HLG -> bt2020LinearToExtended(decodeHlg(red), decodeHlg(green), decodeHlg(blue), alpha);
         };
     }
 
@@ -105,6 +117,9 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
                 | (Math.round(srgb.green * 255.0f) << 8)
                 | Math.round(srgb.blue * 255.0f);
     }
+
+    /// PQ reference white used when converting BT.2100 PQ into extended-linear.
+    static final float PQ_REFERENCE_WHITE_NITS = 100.0f;
 
     /// Converts linear Display-P3 D65 into extended-linear sRGB.
     ///
@@ -120,6 +135,98 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
                 -0.019637555f * red + -0.078636046f * green + 1.098273601f * blue,
                 alpha
         );
+    }
+
+    /// Converts linear BT.2020 D65 into extended-linear sRGB through CIE XYZ.
+    ///
+    /// @param red the linear BT.2020 red
+    /// @param green the linear BT.2020 green
+    /// @param blue the linear BT.2020 blue
+    /// @param alpha the alpha
+    /// @return the extended-linear color
+    private static Color bt2020LinearToExtended(float red, float green, float blue, float alpha) {
+        float x = 0.6369580483f * red + 0.1446169036f * green + 0.1688809752f * blue;
+        float y = 0.2627002120f * red + 0.6779980716f * green + 0.0593017165f * blue;
+        float z = 0.0280726930f * green + 1.0609850577f * blue;
+        return xyzD65ToExtended(x, y, z, alpha);
+    }
+
+    /// Converts CIE XYZ D65 into extended-linear sRGB.
+    ///
+    /// @param x the X tristimulus
+    /// @param y the Y tristimulus
+    /// @param z the Z tristimulus
+    /// @param alpha the alpha
+    /// @return the extended-linear color
+    static Color xyzD65ToExtended(float x, float y, float z, float alpha) {
+        return extendedLinear(
+                3.2409699419f * x + -1.5373831776f * y + -0.4986107603f * z,
+                -0.9692436363f * x + 1.8759675015f * y + 0.0415550574f * z,
+                0.0556300797f * x + -0.2039769589f * y + 1.0569715142f * z,
+                alpha
+        );
+    }
+
+    /// Decodes one BT.2020/BT.709 OETF component.
+    ///
+    /// @param encoded the encoded component
+    /// @return the linear component
+    static float decodeBt2020(float encoded) {
+        if (encoded < 0.0812428583f) {
+            return encoded / 4.5f;
+        }
+        return (float) Math.pow((encoded + 0.0992968268f) / 1.0992968268f, 1.0 / 0.45);
+    }
+
+    /// Encodes one linear component with the BT.2020/BT.709 OETF.
+    ///
+    /// @param linear the linear component
+    /// @return the encoded component
+    static float encodeBt2020(float linear) {
+        if (linear < 0.0180539685f) {
+            return linear * 4.5f;
+        }
+        return Math.fma(1.0992968268f, (float) Math.pow(linear, 0.45), -0.0992968268f);
+    }
+
+    /// Decodes one BT.2100 PQ component to absolute nits.
+    ///
+    /// @param encoded the PQ-encoded component
+    /// @return the luminance in nits
+    static float decodePq(float encoded) {
+        if (encoded <= 0.0f) {
+            return 0.0f;
+        }
+        double n = Math.pow(encoded, 1.0 / 78.84375);
+        double numerator = Math.max(n - 0.8359375, 0.0);
+        double denominator = 18.8515625 - 18.6875 * n;
+        if (denominator <= 0.0) {
+            return 0.0f;
+        }
+        return (float) (10_000.0 * Math.pow(numerator / denominator, 1.0 / 0.1593017578125));
+    }
+
+    /// Encodes an absolute luminance in nits as BT.2100 PQ.
+    ///
+    /// @param nits the luminance in nits
+    /// @return the PQ-encoded component
+    static float encodePq(float nits) {
+        double y = Math.clamp(nits / 10_000.0, 0.0, 1.0);
+        double n = Math.pow(y, 0.1593017578125);
+        return (float) Math.pow((0.8359375 + 18.8515625 * n) / (1.0 + 18.6875 * n), 78.84375);
+    }
+
+    /// Applies the BT.2100 HLG inverse OETF.
+    ///
+    /// Scene-linear `1.0` is the HLG system peak, not SDR reference white.
+    ///
+    /// @param encoded the HLG-encoded component
+    /// @return the scene-linear component
+    static float decodeHlg(float encoded) {
+        if (encoded <= 0.5f) {
+            return (encoded * encoded) / 3.0f;
+        }
+        return (float) ((Math.exp((encoded - 0.5599107295) / 0.17883277) + 0.28466892) / 12.0);
     }
 
     /// Encodes one linear sRGB component.

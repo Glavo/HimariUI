@@ -1,12 +1,18 @@
 package org.glavo.himari.platform.windows;
 
+import org.glavo.himari.layout.Alignment;
 import org.glavo.himari.layout.Constraints;
+import org.glavo.himari.layout.LayoutFactory;
+import org.glavo.himari.layout.LayoutNode;
 import org.glavo.himari.layout.LayoutTree;
+import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.bootstrap.BootstrapCounterPane;
 import org.glavo.himari.layout.input.LogicalKey;
 import org.glavo.himari.layout.input.PointerEvent;
 import org.glavo.himari.layout.input.PointerEventType;
 import org.glavo.himari.layout.semantics.SemanticsAction;
+import org.glavo.himari.layout.semantics.SemanticsNode;
+import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.glavo.himari.platform.api.LogicalRect;
 import org.glavo.himari.platform.api.SurfaceRole;
 import org.glavo.himari.platform.api.WindowConfiguration;
@@ -15,6 +21,8 @@ import org.glavo.himari.platform.api.WindowLifecycle;
 import org.glavo.himari.platform.api.WindowRequest;
 import org.glavo.himari.platform.api.WindowSnapshot;
 import org.glavo.himari.platform.api.WindowState;
+import org.glavo.himari.rhi.vulkan.VulkanDevice;
+import org.glavo.himari.rhi.vulkan.VulkanPresentation;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -269,6 +277,153 @@ final class WindowsPlatformTest {
                 assertEquals(1, target.dropCount());
                 assertEquals(40, target.lastDropX());
                 assertEquals(50, target.lastDropY());
+            }
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Extracts Unicode text through `IDataObject::GetData` during `IDropTarget::Drop`.
+    @Test
+    void oleDropExtractsUnicodeThroughGetData() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "GetData", 72.0, 72.0);
+            platform.pump();
+            try (
+                    WindowsDropTarget target = window.registerDropTarget();
+                    WindowsDataObject data = window.createUnicodeDataObject("HimariUI-drop")
+            ) {
+                target.invokeDrop(data.nativeObject(), 24, 32);
+                assertEquals(1, target.dropCount());
+                assertEquals("HimariUI-drop", target.lastDroppedText());
+            }
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Creates the TSF thread manager, applies IMM32 placement, and reads a UIA control type.
+    @Test
+    void tsfImm32AndUiaUseNativeCom() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "TsfUia", 88.0, 88.0);
+            platform.pump();
+            window.ime().setCandidateRectangle(6.0f, 10.0f, 20.0f, 14.0f);
+            window.applyImeCandidate();
+            window.ime().setSurroundingText("hello", 5);
+            try (
+                    WindowsTsfSession tsf = window.openTsf();
+                    WindowsTextStore store = window.createTextStore()
+            ) {
+                assertTrue(tsf.available(), "CoCreateInstance(ITfThreadMgr) HRESULT=" + tsf.createResult());
+                assertTrue(tsf.activate(), "ITfThreadMgr::Activate HRESULT=" + tsf.activateResult());
+                assertTrue(tsf.clientId() != 0);
+                assertEquals(0, store.invokeRequestLock(WindowsTextStore.TS_LF_READWRITE));
+                assertTrue(store.lockCount() >= 1);
+                store.invokeSetText(0, 5, "nihao");
+                assertEquals("nihao", store.invokeGetText(0, -1));
+                assertEquals("nihao", window.ime().surroundingText());
+                assertEquals(0, store.invokeGetAcpFromPoint(6, 10));
+                assertEquals(5, store.invokeGetAcpFromPoint(26, 10));
+                WindowsTextStore.ScreenExtent extent = store.invokeGetScreenExt();
+                assertEquals(6, extent.left());
+                assertEquals(10, extent.top());
+                assertEquals(26, extent.right());
+                assertEquals(24, extent.bottom());
+                assertFalse(store.invokeQueryInsertEmbedded());
+                assertTrue(store.invokeGetFormattedText() < 0);
+                assertEquals(0, store.invokeRetrieveRequestedAttrs());
+                assertFalse(store.invokeFindNextAttrTransition());
+                assertTrue(tsf.attach(store), "CreateDocumentMgr/CreateContext/Push failed");
+                assertTrue(tsf.documentAttached());
+            }
+            LayoutTree tree = new LayoutTree();
+            tree.setRoot(BootstrapCounterPane.create(tree, new AtomicInteger()));
+            tree.measure(Constraints.loose(200.0f, 200.0f));
+            tree.place();
+            SemanticsNode increment = tree.semantics().nodeWith(SemanticsAction.ACTIVATE);
+            try (WindowsAutomationProvider provider = window.automationProvider(increment)) {
+                assertEquals(
+                        WindowsAutomationProvider.UIA_BUTTON_CONTROL_TYPE_ID,
+                        provider.invokePropertyValue(WindowsAutomationProvider.UIA_CONTROL_TYPE_PROPERTY_ID)
+                );
+                assertTrue(provider.invokePatternProvider(WindowsAutomationProvider.UIA_INVOKE_PATTERN_ID));
+                assertEquals(1, provider.invoke());
+            }
+            LayoutTree valueTree = new LayoutTree();
+            LayoutFactory factory = new LayoutFactory(valueTree);
+            LayoutNode toggle = factory.leaf(
+                    "toggle",
+                    new Size(48.0f, 24.0f),
+                    List.of(),
+                    true,
+                    SemanticsRole.TOGGLE,
+                    "Muted",
+                    java.util.Set.of(SemanticsAction.ACTIVATE),
+                    () -> { }
+            );
+            toggle.setSelected(false);
+            LayoutNode slider = factory.leaf(
+                    "slider",
+                    new Size(160.0f, 24.0f),
+                    List.of(),
+                    true,
+                    SemanticsRole.SLIDER,
+                    "Volume",
+                    java.util.Set.of(SemanticsAction.INCREMENT, SemanticsAction.DECREMENT),
+                    null
+            );
+            slider.setRangeValue(3.0);
+            valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider));
+            valueTree.measure(Constraints.loose(400.0f, 400.0f));
+            valueTree.place();
+            SemanticsNode toggleNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.TOGGLE)
+                    .findFirst()
+                    .orElseThrow();
+            SemanticsNode sliderNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.SLIDER)
+                    .findFirst()
+                    .orElseThrow();
+            try (WindowsAutomationProvider toggleProvider = window.automationProvider(toggleNode)) {
+                assertTrue(toggleProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TOGGLE_PATTERN_ID));
+                assertEquals(WindowsAutomationProvider.TOGGLE_STATE_OFF, toggleProvider.toggleState());
+                assertEquals(WindowsAutomationProvider.TOGGLE_STATE_ON, toggleProvider.toggle());
+            }
+            try (WindowsAutomationProvider rangeProvider = window.automationProvider(sliderNode)) {
+                assertTrue(rangeProvider.invokePatternProvider(WindowsAutomationProvider.UIA_RANGE_VALUE_PATTERN_ID));
+                assertEquals(3.0, rangeProvider.rangeValue());
+                assertEquals(7.5, rangeProvider.setRangeValue(7.5));
+                assertEquals(7.5, rangeProvider.rangeValue());
+            }
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Creates a Vulkan logical device and a `VkSurfaceKHR` for the production HWND.
+    @Test
+    void vulkanCreatesWin32SurfaceForHwnd() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "VulkanSurface", 96.0, 96.0);
+            platform.pump();
+            try (VulkanDevice device = VulkanDevice.open()) {
+                assertTrue(device.capabilities().logicalDeviceCreated());
+                assertTrue(device.capabilities().graphicsQueueFamily() >= 0);
+                VulkanPresentation presentation = device.presentSdr(
+                        window.moduleHandle(),
+                        window.nativeHandle(),
+                        window.nativeWindow().clientWidth(),
+                        window.nativeWindow().clientHeight()
+                );
+                assertTrue(presentation.swapchainCreated());
+                assertTrue(presentation.cleared());
+                assertTrue(presentation.presented());
+                assertTrue(device.capabilities().win32SurfaceCreated());
+                assertFalse(presentation.hdrMetadataApplied());
             }
         } finally {
             platform.close();

@@ -32,10 +32,24 @@ public final class WaylandConformance {
                           "workPackage": "WAYLAND-001",
                           "status": "%s",
                           "fileDescriptor": %d,
+                          "xdgWmBaseAdvertised": %s,
+                          "toplevelCreated": %s,
+                          "shmAdvertised": %s,
+                          "seatAdvertised": %s,
+                          "decorationManagerAdvertised": %s,
                           "hdrAssumed": false,
                           "detail": "%s"
                         }
-                        """.formatted(probe.status(), probe.fileDescriptor(), escape(probe.detail())),
+                        """.formatted(
+                        probe.status(),
+                        probe.fileDescriptor(),
+                        probe.xdgWmBaseAdvertised(),
+                        probe.toplevelCreated(),
+                        probe.shmAdvertised(),
+                        probe.seatAdvertised(),
+                        probe.decorationManagerAdvertised(),
+                        escape(probe.detail())
+                ),
                 StandardCharsets.UTF_8
         );
         Files.writeString(

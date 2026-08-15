@@ -78,7 +78,7 @@ public final class WindowsDataObject implements AutoCloseable {
         this.bindings = bindings;
         this.text = text;
         this.arena = Arena.ofConfined();
-        this.vtable = arena.allocate(ValueLayout.ADDRESS, 6);
+        this.vtable = arena.allocate(ValueLayout.ADDRESS, 12);
         this.object = arena.allocate(ValueLayout.ADDRESS);
         object.set(ValueLayout.ADDRESS, 0L, vtable);
         vtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryInterface, failures, arena));

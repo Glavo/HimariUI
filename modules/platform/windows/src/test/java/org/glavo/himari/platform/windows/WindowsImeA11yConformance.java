@@ -8,6 +8,7 @@ import org.glavo.himari.layout.LayoutTree;
 import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.bootstrap.BootstrapCounterPane;
 import org.glavo.himari.layout.semantics.SemanticsAction;
+import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.jetbrains.annotations.NotNullByDefault;
 
@@ -96,6 +97,96 @@ public final class WindowsImeA11yConformance {
         if (!toggleOff || !sliderRange) {
             throw new IllegalStateException("UIA projection omitted toggle or range values");
         }
+        boolean uiaGetPropertyValue = false;
+        boolean tsfAvailable = false;
+        boolean imm32Applied = false;
+        boolean textStoreLock = false;
+        boolean textStoreGeometry = false;
+        boolean documentAttached = false;
+        boolean uiaInvoke = false;
+        boolean uiaToggleCom = false;
+        boolean uiaRangeCom = false;
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = platform.createWindow(
+                    org.glavo.himari.platform.api.WindowRequest.toplevel(
+                            new org.glavo.himari.platform.api.WindowConfiguration(
+                                    "IME-A11Y",
+                                    new org.glavo.himari.platform.api.LogicalRect(16.0, 16.0, 240.0, 160.0),
+                                    true,
+                                    org.glavo.himari.platform.api.WindowState.NORMAL
+                            )
+                    ),
+                    event -> { }
+            ).toCompletableFuture().get();
+            platform.pump();
+            window.ime().setCandidateRectangle(4.0f, 8.0f, 16.0f, 12.0f);
+            imm32Applied = window.applyImeCandidate();
+            window.ime().setSurroundingText("hello", 5);
+            try (
+                    WindowsTsfSession tsf = window.openTsf();
+                    WindowsTextStore store = window.createTextStore()
+            ) {
+                tsfAvailable = tsf.available() && tsf.activate();
+                if (tsfAvailable) {
+                    store.invokeSetText(0, 5, "nihao");
+                    textStoreLock = store.invokeRequestLock(WindowsTextStore.TS_LF_READWRITE) == 0
+                            && "nihao".equals(store.invokeGetText(0, -1));
+                    WindowsTextStore.ScreenExtent extent = store.invokeGetScreenExt();
+                    textStoreGeometry = store.invokeGetAcpFromPoint(4, 8) == 0
+                            && store.invokeGetAcpFromPoint(20, 8) == 5
+                            && extent.left() == 4
+                            && extent.top() == 8
+                            && extent.right() == 20
+                            && extent.bottom() == 20
+                            && !store.invokeQueryInsertEmbedded()
+                            && store.invokeGetFormattedText() < 0
+                            && store.invokeRetrieveRequestedAttrs() == 0
+                            && !store.invokeFindNextAttrTransition();
+                    documentAttached = tsf.attach(store);
+                }
+            }
+            SemanticsNode incrementNode = tree.semantics().nodeWith(SemanticsAction.ACTIVATE);
+            try (WindowsAutomationProvider provider = window.automationProvider(incrementNode)) {
+                uiaGetPropertyValue = provider.invokePropertyValue(
+                        WindowsAutomationProvider.UIA_CONTROL_TYPE_PROPERTY_ID
+                ) == WindowsAutomationProvider.UIA_BUTTON_CONTROL_TYPE_ID;
+                uiaInvoke = provider.invokePatternProvider(WindowsAutomationProvider.UIA_INVOKE_PATTERN_ID)
+                        && provider.invoke() == 1;
+            }
+            SemanticsNode toggleNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.TOGGLE)
+                    .findFirst()
+                    .orElseThrow();
+            SemanticsNode sliderNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.SLIDER)
+                    .findFirst()
+                    .orElseThrow();
+            try (WindowsAutomationProvider toggleProvider = window.automationProvider(toggleNode)) {
+                uiaToggleCom = toggleProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TOGGLE_PATTERN_ID)
+                        && toggleProvider.toggle() == WindowsAutomationProvider.TOGGLE_STATE_ON;
+            }
+            try (WindowsAutomationProvider rangeProvider = window.automationProvider(sliderNode)) {
+                uiaRangeCom = rangeProvider.invokePatternProvider(WindowsAutomationProvider.UIA_RANGE_VALUE_PATTERN_ID)
+                        && rangeProvider.setRangeValue(8.0) == 8.0;
+            }
+            if (!textStoreLock || !textStoreGeometry || !documentAttached) {
+                throw new IllegalStateException("ITextStoreACP lock, geometry, or TSF document attach failed");
+            }
+            if (!uiaInvoke || !uiaToggleCom || !uiaRangeCom) {
+                throw new IllegalStateException("UIA Invoke/Toggle/Range COM patterns failed");
+            }
+            window.closeAsync().toCompletableFuture().get();
+            platform.pump();
+        } finally {
+            platform.close();
+        }
+        if (!tsfAvailable) {
+            throw new IllegalStateException("ITfThreadMgr was not created or activated");
+        }
+        if (!uiaGetPropertyValue) {
+            throw new IllegalStateException("IRawElementProviderSimple::GetPropertyValue missed Button");
+        }
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);
         Files.writeString(
@@ -111,9 +202,29 @@ public final class WindowsImeA11yConformance {
                           "uiaBounds": true,
                           "uiaToggle": true,
                           "uiaRange": true,
+                          "uiaGetPropertyValue": %s,
+                          "uiaInvokeCom": %s,
+                          "uiaToggleCom": %s,
+                          "uiaRangeCom": %s,
+                          "tsfThreadMgr": %s,
+                          "textStoreAcp": %s,
+                          "textStoreGeometry": %s,
+                          "documentAttached": %s,
+                          "imm32Candidate": %s,
                           "nodeCount": %d
                         }
-                        """.formatted(nodes.size()),
+                        """.formatted(
+                        uiaGetPropertyValue,
+                        uiaInvoke,
+                        uiaToggleCom,
+                        uiaRangeCom,
+                        tsfAvailable,
+                        textStoreLock,
+                        textStoreGeometry,
+                        documentAttached,
+                        imm32Applied,
+                        nodes.size()
+                ),
                 StandardCharsets.UTF_8
         );
     }

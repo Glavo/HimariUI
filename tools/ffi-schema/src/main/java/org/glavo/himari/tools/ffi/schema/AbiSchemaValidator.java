@@ -528,7 +528,6 @@ public final class AbiSchemaValidator {
             List<Issue> issues
     ) {
         Set<String> names = new HashSet<>();
-        Set<String> symbols = new HashSet<>();
         for (int index = 0; index < schema.functions().size(); index++) {
             AbiSchema.FunctionDefinition function = schema.functions().get(index);
             String path = "functions[" + index + "]";
@@ -538,8 +537,6 @@ public final class AbiSchemaValidator {
             }
             if (function.symbol().isBlank()) {
                 issue(issues, path + ".symbol", "must not be blank");
-            } else if (!symbols.add(function.symbol())) {
-                issue(issues, path + ".symbol", "duplicates native symbol '" + function.symbol() + "'");
             }
             validateAvailability(function.availability(), path + ".availability", issues);
             validateCallable(function.result(), function.parameters(), path, types, callbacks, issues);

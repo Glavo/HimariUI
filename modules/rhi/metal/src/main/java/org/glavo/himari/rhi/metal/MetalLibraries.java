@@ -44,7 +44,8 @@ final class MetalLibraries implements AutoCloseable {
         Arena arena = Arena.ofConfined();
         try {
             SymbolLookup symbols = openLibrary("/System/Library/Frameworks/Metal.framework/Metal", arena)
-                    .or(openLibrary("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation", arena));
+                    .or(openLibrary("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation", arena))
+                    .or(openLibrary("/usr/lib/libobjc.A.dylib", arena));
             return new MetalLibraries(arena, new MetalFfmBindings(symbols));
         } catch (RuntimeException | Error failure) {
             arena.close();

@@ -38,6 +38,9 @@ public final class ControlsConformance {
         SemanticsNode button = first(tree, SemanticsRole.BUTTON);
         tree.dispatch(new PointerEvent(PointerEventType.DOWN, button.bounds().x() + 1.0f, button.bounds().y() + 1.0f));
         tree.dispatch(new PointerEvent(PointerEventType.UP, button.bounds().x() + 1.0f, button.bounds().y() + 1.0f));
+        if (!tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ENTER))) {
+            throw new IllegalStateException("ENTER did not activate the focused button");
+        }
         SemanticsNode toggle = first(tree, SemanticsRole.TOGGLE);
         tree.dispatch(new PointerEvent(PointerEventType.DOWN, toggle.bounds().x() + 1.0f, toggle.bounds().y() + 1.0f));
         tree.dispatch(new PointerEvent(PointerEventType.UP, toggle.bounds().x() + 1.0f, toggle.bounds().y() + 1.0f));
@@ -61,7 +64,7 @@ public final class ControlsConformance {
             throw new IllegalStateException("Popup or theme tokens were incorrect");
         }
         gallery.popup().dismiss();
-        if (gallery.button().activations() != 1 || !gallery.toggle().isOn() || gallery.slider().value() != 5.0f) {
+        if (gallery.button().activations() != 2 || !gallery.toggle().isOn() || gallery.slider().value() != 5.0f) {
             throw new IllegalStateException("Control gallery outcomes were incorrect");
         }
         if (gallery.scroll().offset() != 16.0f || gallery.list().firstVisible() != 1
@@ -78,6 +81,7 @@ public final class ControlsConformance {
                           "workPackage": "CTRL-001",
                           "status": "passed",
                           "buttonActivations": %d,
+                          "enterActivated": true,
                           "toggleOn": %s,
                           "sliderValue": %s,
                           "scrollOffset": %s,

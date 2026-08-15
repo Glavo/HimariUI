@@ -233,6 +233,14 @@ public final class WindowsNativeWindow implements AutoCloseable {
         return window;
     }
 
+    /// Returns the module handle used to create the HWND.
+    ///
+    /// @return the `HINSTANCE`
+    public MemorySegment instance() {
+        requireOpen();
+        return instance;
+    }
+
     /// Returns the latest client width in physical pixels.
     ///
     /// @return the width

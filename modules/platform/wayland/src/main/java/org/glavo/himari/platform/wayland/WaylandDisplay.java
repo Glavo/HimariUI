@@ -1,5 +1,6 @@
 package org.glavo.himari.platform.wayland;
 
+import org.glavo.himari.platform.wayland.generated.WaylandClientFfmBindings;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,6 +51,14 @@ public final class WaylandDisplay implements AutoCloseable {
     public MemorySegment nativeHandle() {
         requireOpen();
         return display;
+    }
+
+    /// Returns the generated client bindings.
+    ///
+    /// @return the bindings
+    WaylandClientFfmBindings bindings() {
+        requireOpen();
+        return libraries.bindings();
     }
 
     /// Runs one `wl_display_roundtrip`.

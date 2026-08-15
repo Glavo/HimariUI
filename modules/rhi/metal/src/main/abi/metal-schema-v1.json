@@ -12,8 +12,12 @@
   },
   "types": [
     { "kind": "primitive", "name": "void", "primitiveKind": "void", "byteSize": 0, "alignment": 1, "signedness": "none", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "u8", "primitiveKind": "integer", "byteSize": 1, "alignment": 1, "signedness": "unsigned", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "void_ptr", "pointee": "void", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
-    { "kind": "handle", "name": "mtl_device", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } }
+    { "kind": "pointer", "name": "const_char_ptr", "pointee": "u8", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "handle", "name": "mtl_device", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "handle", "name": "objc_object", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "handle", "name": "objc_selector", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } }
   ],
   "callbacks": [],
   "functions": [
@@ -34,6 +38,62 @@
       "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
       "parameters": [
         { "name": "value", "type": "mtl_device", "direction": "in", "nullability": "non_null", "ownership": "transferred" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "selRegisterName",
+      "symbol": "sel_registerName",
+      "result": { "type": "objc_selector", "nullability": "non_null", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "name", "type": "const_char_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "objcMsgSendId",
+      "symbol": "objc_msgSend",
+      "result": { "type": "objc_object", "nullability": "nullable", "ownership": "owned" },
+      "parameters": [
+        { "name": "receiver", "type": "objc_object", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "selector", "type": "objc_selector", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "objcMsgSendVoid",
+      "symbol": "objc_msgSend",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "receiver", "type": "objc_object", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "selector", "type": "objc_selector", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "objcMsgSendVoidObject",
+      "symbol": "objc_msgSend",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "receiver", "type": "objc_object", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "selector", "type": "objc_selector", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "object", "type": "objc_object", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
       ],
       "callingConvention": "system",
       "variadicFrom": null,

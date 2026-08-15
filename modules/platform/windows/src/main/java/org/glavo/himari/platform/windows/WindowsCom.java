@@ -9,6 +9,7 @@ import java.lang.foreign.ValueLayout;
 import java.util.UUID;
 
 /// Encodes and compares Windows GUID values for production COM objects.
+@SuppressWarnings("restricted")
 @NotNullByDefault
 final class WindowsCom {
     /// Prevents instantiation.

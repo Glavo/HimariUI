@@ -14,6 +14,7 @@ dependencies {
     api(project(":modules:platform-api"))
     api(project(":modules:layout"))
     implementation(project(":modules:ffi"))
+    testImplementation(project(":modules:rhi-vulkan"))
     add(ffiSchemaGenerator.name, project(":tools:ffi-schema"))
 }
 

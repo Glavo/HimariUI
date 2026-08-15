@@ -33,6 +33,7 @@ val productionModules = listOf(
     project(":modules:controls"),
     project(":modules:inspector"),
     project(":modules:packaging"),
+    project(":modules:desktop"),
     project(":modules:rhi-d3d12"),
     project(":modules:rhi-vulkan"),
     project(":modules:rhi-metal"),

@@ -30,7 +30,12 @@ public record VulkanProbe(String status, String detail, @Nullable VulkanCapabili
             );
         }
         try (VulkanDevice device = VulkanDevice.open()) {
-            return new VulkanProbe("passed", "vkCreateInstance enumerated physical devices", device.capabilities());
+            return new VulkanProbe(
+                    "passed",
+                    "vkCreateDevice created a logical device on queue family "
+                            + device.capabilities().graphicsQueueFamily(),
+                    device.capabilities()
+            );
         } catch (RuntimeException failure) {
             return new VulkanProbe(
                     "environment-blocked",

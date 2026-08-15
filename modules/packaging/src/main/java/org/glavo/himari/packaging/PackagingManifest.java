@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.List;
 
-/// Emits first-stable BOM, SBOM, NOTICE, and Native Image backend registry documents.
+/// Emits first-stable BOM, SBOM, NOTICE, Native Image backend registry, and jlink recipe documents.
 @NotNullByDefault
 public final class PackagingManifest {
     /// Production modules shipped by the first-stable desktop BOM.
@@ -29,7 +29,8 @@ public final class PackagingManifest {
             "org.glavo.himari.text",
             "org.glavo.himari.controls",
             "org.glavo.himari.inspector",
-            "org.glavo.himari.packaging"
+            "org.glavo.himari.packaging",
+            "org.glavo.himari.desktop"
     );
 
     /// Generated Native Image metadata resource names.
@@ -107,6 +108,15 @@ public final class PackagingManifest {
                 First-stable desktop artifacts contain no project-built native libraries.
                 Native access uses generated FFM bindings to operating-system libraries only.
                 """;
+    }
+
+    /// Returns the first-stable `jlink` recipe.
+    ///
+    /// The recipe describes the intended invocation. [JlinkImage] records whether an image exists.
+    ///
+    /// @return the recipe
+    public static JlinkRecipe jlinkRecipe() {
+        return JlinkRecipe.firstStable();
     }
 
     /// Encodes the static Native Image backend registry.

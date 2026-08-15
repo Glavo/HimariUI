@@ -34,7 +34,7 @@ final class MacosLibraries implements AutoCloseable {
         return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("mac");
     }
 
-    /// Opens `libobjc`.
+    /// Opens `libobjc`, AppKit, and QuartzCore.
     ///
     /// @return the library owner
     static MacosLibraries open() {
@@ -44,17 +44,10 @@ final class MacosLibraries implements AutoCloseable {
         }
         Arena arena = Arena.ofConfined();
         try {
-            SymbolLookup symbols = openLibrary("libobjc.A.dylib", arena);
-            return new MacosLibraries(arena, new ObjcFfmBindings(symbols));
+            return new MacosLibraries(arena, new ObjcFfmBindings(openRuntime(arena)));
         } catch (RuntimeException | Error failure) {
-            try {
-                SymbolLookup symbols = openLibrary("/usr/lib/libobjc.A.dylib", arena);
-                return new MacosLibraries(arena, new ObjcFfmBindings(symbols));
-            } catch (RuntimeException | Error retry) {
-                arena.close();
-                failure.addSuppressed(retry);
-                throw failure;
-            }
+            arena.close();
+            throw failure;
         }
     }
 
@@ -69,6 +62,24 @@ final class MacosLibraries implements AutoCloseable {
     @Override
     public void close() {
         arena.close();
+    }
+
+    /// Opens libobjc plus AppKit and QuartzCore so `NSWindow` and `CAMetalLayer` resolve.
+    private static SymbolLookup openRuntime(Arena arena) {
+        try {
+            return openLibrary("libobjc.A.dylib", arena)
+                    .or(openLibrary("/System/Library/Frameworks/AppKit.framework/AppKit", arena))
+                    .or(openLibrary("/System/Library/Frameworks/QuartzCore.framework/QuartzCore", arena));
+        } catch (RuntimeException first) {
+            try {
+                return openLibrary("/usr/lib/libobjc.A.dylib", arena)
+                        .or(openLibrary("/System/Library/Frameworks/AppKit.framework/AppKit", arena))
+                        .or(openLibrary("/System/Library/Frameworks/QuartzCore.framework/QuartzCore", arena));
+            } catch (RuntimeException retry) {
+                first.addSuppressed(retry);
+                throw first;
+            }
+        }
     }
 
     /// Opens one system library.

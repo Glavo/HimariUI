@@ -31,6 +31,9 @@ final class ControlGalleryTest {
         click(tree, button);
         assertEquals(1, gallery.button().activations());
         assertEquals(1, gallery.externalClicks());
+        assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ENTER)));
+        assertEquals(2, gallery.button().activations());
+        assertEquals(2, gallery.externalClicks());
         SemanticsNode toggle = first(tree, SemanticsRole.TOGGLE);
         assertEquals(Boolean.FALSE, toggle.selected());
         click(tree, toggle);

@@ -68,6 +68,26 @@ public final class WindowsImeSession {
         this.compositionEnd = caret + (composition == null ? 0 : composition.length());
     }
 
+    /// Replaces `[start, end)` of the surrounding document and moves the caret to the insert end.
+    ///
+    /// @param start the inclusive start ACP
+    /// @param end the exclusive end ACP
+    /// @param text the replacement
+    public void replaceRange(int start, int end, String text) {
+        Objects.requireNonNull(text, "text");
+        if (start < 0 || end < start || end > surroundingText.length()) {
+            throw new IllegalArgumentException("range must lie within surrounding text");
+        }
+        surroundingText = surroundingText.substring(0, start) + text + surroundingText.substring(end);
+        composition = null;
+        compositionStart = start + text.length();
+        compositionEnd = compositionStart;
+        if (!text.isEmpty()) {
+            lastCommitted = text;
+            committed = true;
+        }
+    }
+
     /// Publishes the candidate-window rectangle in logical pixels.
     ///
     /// @param x the origin x

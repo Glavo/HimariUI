@@ -12,6 +12,7 @@ val ffiSchemaGenerator = configurations.create("ffiSchemaGenerator") {
 
 dependencies {
     implementation(project(":modules:ffi"))
+    testImplementation(project(":modules:platform-windows"))
     add(ffiSchemaGenerator.name, project(":tools:ffi-schema"))
 }
 

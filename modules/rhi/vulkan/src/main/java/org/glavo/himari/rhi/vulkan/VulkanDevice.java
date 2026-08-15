@@ -42,6 +42,9 @@ public final class VulkanDevice implements AutoCloseable {
     /// Native instance.
     private final MemorySegment instance;
 
+    /// Native physical device.
+    private final MemorySegment physicalDevice;
+
     /// Native logical device.
     private final MemorySegment device;
 
@@ -50,6 +53,9 @@ public final class VulkanDevice implements AutoCloseable {
 
     /// Selected graphics queue family.
     private final int graphicsQueueFamily;
+
+    /// Whether `VK_KHR_swapchain` was enabled on the logical device.
+    private final boolean swapchainExtensionEnabled;
 
     /// Optional Win32 surface handle.
     private long surface;
@@ -65,17 +71,21 @@ public final class VulkanDevice implements AutoCloseable {
             VulkanLibraries libraries,
             Arena arena,
             MemorySegment instance,
+            MemorySegment physicalDevice,
             MemorySegment device,
             MemorySegment queue,
             int graphicsQueueFamily,
+            boolean swapchainExtensionEnabled,
             VulkanCapabilities capabilities
     ) {
         this.libraries = libraries;
         this.arena = arena;
         this.instance = instance;
+        this.physicalDevice = physicalDevice;
         this.device = device;
         this.queue = queue;
         this.graphicsQueueFamily = graphicsQueueFamily;
+        this.swapchainExtensionEnabled = swapchainExtensionEnabled;
         this.capabilities = capabilities;
     }
 
@@ -91,9 +101,19 @@ public final class VulkanDevice implements AutoCloseable {
         try {
             VulkanFfmBindings bindings = libraries.bindings();
             instance = createInstance(bindings, arena);
-            MemorySegment physical = firstPhysicalDevice(bindings, arena, instance);
-            int family = graphicsQueueFamily(bindings, arena, physical);
-            MemorySegment device = createLogicalDevice(bindings, arena, physical, family);
+            PhysicalDevices physicals = enumeratePhysicalDevices(bindings, arena, instance);
+            int family = graphicsQueueFamily(bindings, arena, physicals.first());
+            boolean swapchain = System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("windows");
+            MemorySegment device;
+            try {
+                device = createLogicalDevice(bindings, arena, physicals.first(), family, swapchain);
+            } catch (IllegalStateException first) {
+                if (!swapchain) {
+                    throw first;
+                }
+                swapchain = false;
+                device = createLogicalDevice(bindings, arena, physicals.first(), family, false);
+            }
             MemorySegment queueCell = arena.allocate(ValueLayout.ADDRESS);
             queueCell.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
             bindings.vkGetDeviceQueue(device, family, 0, queueCell);
@@ -106,10 +126,19 @@ public final class VulkanDevice implements AutoCloseable {
                     libraries,
                     arena,
                     instance,
+                    physicals.first(),
                     device,
                     queue,
                     family,
-                    new VulkanCapabilities(1, true, family, false, false, "color-managed-sdr")
+                    swapchain,
+                    new VulkanCapabilities(
+                            physicals.count(),
+                            true,
+                            family,
+                            false,
+                            false,
+                            "color-managed-sdr"
+                    )
             );
         } catch (RuntimeException | Error failure) {
             if (instance.address() != 0L) {
@@ -171,6 +200,29 @@ public final class VulkanDevice implements AutoCloseable {
         return surface;
     }
 
+    /// Creates a swapchain for the current Win32 surface, clears one image, and presents it.
+    ///
+    /// @param hinstance the module handle
+    /// @param hwnd the window handle
+    /// @param width the positive width in pixels
+    /// @param height the positive height in pixels
+    /// @return the present observation
+    public VulkanPresentation presentSdr(
+            MemorySegment hinstance,
+            MemorySegment hwnd,
+            int width,
+            int height
+    ) {
+        requireOpen();
+        if (!swapchainExtensionEnabled) {
+            throw new IllegalStateException("VK_KHR_swapchain was not enabled on the logical device");
+        }
+        if (surface == 0L) {
+            createWin32Surface(hinstance, hwnd);
+        }
+        return VulkanSwapChain.presentSdr(this, width, height);
+    }
+
     /// Returns the queried SDR snapshot.
     ///
     /// @return the snapshot
@@ -185,6 +237,54 @@ public final class VulkanDevice implements AutoCloseable {
     public MemorySegment queue() {
         requireOpen();
         return queue;
+    }
+
+    /// Returns the generated bindings.
+    ///
+    /// @return the bindings
+    VulkanFfmBindings bindings() {
+        requireOpen();
+        return libraries.bindings();
+    }
+
+    /// Returns the confined arena.
+    ///
+    /// @return the arena
+    Arena arena() {
+        requireOpen();
+        return arena;
+    }
+
+    /// Returns the selected physical device.
+    ///
+    /// @return the physical device
+    MemorySegment physicalDevice() {
+        requireOpen();
+        return physicalDevice;
+    }
+
+    /// Returns the logical device.
+    ///
+    /// @return the device
+    MemorySegment logicalDevice() {
+        requireOpen();
+        return device;
+    }
+
+    /// Returns the current Win32 surface handle.
+    ///
+    /// @return the surface
+    long surfaceHandle() {
+        requireOpen();
+        return surface;
+    }
+
+    /// Returns the selected graphics queue family.
+    ///
+    /// @return the family index
+    int graphicsQueueFamily() {
+        requireOpen();
+        return graphicsQueueFamily;
     }
 
     /// Destroys the surface, device, and instance.
@@ -241,13 +341,25 @@ public final class VulkanDevice implements AutoCloseable {
         }
     }
 
-    /// Creates the instance, enabling Win32 WSI extensions on Windows.
+    /// Creates the instance, enabling Win32 WSI extensions on Windows when the loader accepts them.
     private static MemorySegment createInstance(VulkanFfmBindings bindings, Arena arena) {
+        if (System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("windows")) {
+            try {
+                return createInstance(bindings, arena, true);
+            } catch (IllegalStateException ignored) {
+                return createInstance(bindings, arena, false);
+            }
+        }
+        return createInstance(bindings, arena, false);
+    }
+
+    /// Creates one instance, optionally enabling Win32 WSI extensions.
+    private static MemorySegment createInstance(VulkanFfmBindings bindings, Arena arena, boolean win32Wsi) {
         MemorySegment createInfo = arena.allocate(VulkanLayouts.VK_INSTANCE_CREATE_INFO);
         createInfo.fill((byte) 0);
         createInfo.set(ValueLayout.JAVA_INT, VulkanLayouts.VK_INSTANCE_CREATE_INFO_S_TYPE_OFFSET,
                 VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO);
-        if (System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("windows")) {
+        if (win32Wsi) {
             MemorySegment names = arena.allocate(ValueLayout.ADDRESS, 2);
             names.setAtIndex(ValueLayout.ADDRESS, 0L, arena.allocateFrom("VK_KHR_surface"));
             names.setAtIndex(ValueLayout.ADDRESS, 1L, arena.allocateFrom("VK_KHR_win32_surface"));
@@ -271,8 +383,8 @@ public final class VulkanDevice implements AutoCloseable {
         return instance;
     }
 
-    /// Returns the first physical device.
-    private static MemorySegment firstPhysicalDevice(
+    /// Enumerates physical devices and returns the first handle plus the count.
+    private static PhysicalDevices enumeratePhysicalDevices(
             VulkanFfmBindings bindings,
             Arena arena,
             MemorySegment instance
@@ -296,7 +408,14 @@ public final class VulkanDevice implements AutoCloseable {
         if (physical.address() == 0L) {
             throw new IllegalStateException("vkEnumeratePhysicalDevices returned a NULL physical device");
         }
-        return physical;
+        return new PhysicalDevices(count, physical);
+    }
+
+    /// Holds the enumerated physical-device count and the first handle.
+    ///
+    /// @param count the enumerated count
+    /// @param first the first physical device
+    private record PhysicalDevices(int count, MemorySegment first) {
     }
 
     /// Selects the first graphics-capable queue family.
@@ -330,7 +449,8 @@ public final class VulkanDevice implements AutoCloseable {
             VulkanFfmBindings bindings,
             Arena arena,
             MemorySegment physical,
-            int family
+            int family,
+            boolean swapchain
     ) {
         MemorySegment priority = arena.allocate(ValueLayout.JAVA_FLOAT);
         priority.set(ValueLayout.JAVA_FLOAT, 0L, 1.0f);
@@ -347,6 +467,20 @@ public final class VulkanDevice implements AutoCloseable {
                 VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
         deviceInfo.set(ValueLayout.JAVA_INT, VulkanLayouts.VK_DEVICE_CREATE_INFO_QUEUE_CREATE_INFO_COUNT_OFFSET, 1);
         deviceInfo.set(ValueLayout.ADDRESS, VulkanLayouts.VK_DEVICE_CREATE_INFO_QUEUE_CREATE_INFOS_OFFSET, queueInfo);
+        if (swapchain) {
+            MemorySegment names = arena.allocate(ValueLayout.ADDRESS, 1);
+            names.setAtIndex(ValueLayout.ADDRESS, 0L, arena.allocateFrom("VK_KHR_swapchain"));
+            deviceInfo.set(
+                    ValueLayout.JAVA_INT,
+                    VulkanLayouts.VK_DEVICE_CREATE_INFO_ENABLED_EXTENSION_COUNT_OFFSET,
+                    1
+            );
+            deviceInfo.set(
+                    ValueLayout.ADDRESS,
+                    VulkanLayouts.VK_DEVICE_CREATE_INFO_ENABLED_EXTENSION_NAMES_OFFSET,
+                    names
+            );
+        }
         MemorySegment deviceCell = arena.allocate(ValueLayout.ADDRESS);
         deviceCell.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
         int created = bindings.vkCreateDevice(physical, deviceInfo, MemorySegment.NULL, deviceCell);

@@ -16,6 +16,8 @@ final class VulkanDeviceTest {
         assertTrue(probe.status().equals("passed") || probe.status().equals("environment-blocked"));
         if (probe.capabilities() != null) {
             assertTrue(probe.capabilities().physicalDeviceCount() > 0);
+            assertTrue(probe.capabilities().logicalDeviceCreated());
+            assertTrue(probe.capabilities().graphicsQueueFamily() >= 0);
             assertFalse(probe.capabilities().hdrPresentationEnabled());
         }
     }

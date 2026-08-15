@@ -24,6 +24,8 @@ public final class MetalConformance {
         MetalProbe probe = MetalProbe.run();
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);
+        boolean queue = probe.capabilities() != null && probe.capabilities().commandQueueCreated();
+        boolean committed = probe.capabilities() != null && probe.capabilities().commandBufferCommitted();
         Files.writeString(
                 output.resolve("results.json"),
                 """
@@ -31,17 +33,30 @@ public final class MetalConformance {
                           "profile": "m7-metal",
                           "workPackage": "METAL-001",
                           "status": "%s",
+                          "commandQueueCreated": %s,
+                          "commandBufferCommitted": %s,
                           "hdrAssumed": false,
                           "detail": "%s"
                         }
-                        """.formatted(probe.status(), escape(probe.detail())),
+                        """.formatted(probe.status(), queue, committed, escape(probe.detail())),
                 StandardCharsets.UTF_8
         );
-        Files.writeString(output.resolve("capabilities.json"), "{\"hdrAssumed\":false}\n", StandardCharsets.UTF_8);
+        Files.writeString(
+                output.resolve("capabilities.json"),
+                """
+                        {
+                          "hdrAssumed": false,
+                          "commandQueueCreated": %s,
+                          "commandBufferCommitted": %s,
+                          "presentationMode": "color-managed-sdr"
+                        }
+                        """.formatted(queue, committed),
+                StandardCharsets.UTF_8
+        );
         Files.writeString(output.resolve("validation.log"), "not-run\n", StandardCharsets.UTF_8);
         Files.writeString(
                 output.resolve("presentation.json"),
-                "{\"mode\":\"uninitialized\",\"hdrMetadataApplied\":false}\n",
+                "{\"mode\":\"command-queue\",\"hdrMetadataApplied\":false}\n",
                 StandardCharsets.UTF_8
         );
         if (!Files.exists(output.resolve("native-load.log"))) {

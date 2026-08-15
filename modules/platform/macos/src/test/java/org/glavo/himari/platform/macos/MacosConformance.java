@@ -31,10 +31,17 @@ public final class MacosConformance {
                           "profile": "m7-macos",
                           "workPackage": "COCOA-001",
                           "status": "%s",
+                          "nsWindowCreated": %s,
+                          "metalLayerAttached": %s,
                           "hdrAssumed": false,
                           "detail": "%s"
                         }
-                        """.formatted(probe.status(), escape(probe.detail())),
+                        """.formatted(
+                        probe.status(),
+                        probe.nsWindowCreated(),
+                        probe.metalLayerAttached(),
+                        escape(probe.detail())
+                ),
                 StandardCharsets.UTF_8
         );
         Files.writeString(

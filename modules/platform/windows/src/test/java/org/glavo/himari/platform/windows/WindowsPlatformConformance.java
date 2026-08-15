@@ -34,6 +34,8 @@ public final class WindowsPlatformConformance {
         boolean clipboardRoundTrip = false;
         boolean modalTick = false;
         boolean oleDrop = false;
+        boolean dataObjectGetData = false;
+        boolean tsfThreadMgr = false;
         WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
         try {
             WindowsWindow first = platform.createWindow(
@@ -95,12 +97,26 @@ public final class WindowsPlatformConformance {
             }
             first.nativeWindow().postMessage(0x0232, 0L, 0L);
             platform.pump();
-            try (WindowsDropTarget target = first.registerDropTarget()) {
+            try (
+                    WindowsDropTarget target = first.registerDropTarget();
+                    WindowsDataObject data = first.createUnicodeDataObject("HimariUI-conformance-drop")
+            ) {
                 target.invokeDrop(12, 16);
                 oleDrop = target.dropCount() == 1;
+                target.invokeDrop(data.nativeObject(), 20, 24);
+                dataObjectGetData = "HimariUI-conformance-drop".equals(target.lastDroppedText());
             }
             if (!oleDrop) {
                 throw new IllegalStateException("OLE IDropTarget::Drop was not dispatched");
+            }
+            if (!dataObjectGetData) {
+                throw new IllegalStateException("IDataObject::GetData did not yield Unicode text");
+            }
+            try (WindowsTsfSession tsf = first.openTsf()) {
+                tsfThreadMgr = tsf.available() && tsf.activate();
+            }
+            if (!tsfThreadMgr) {
+                throw new IllegalStateException("ITfThreadMgr was not created or activated");
             }
             first.closeAsync().toCompletableFuture().get();
             platform.pump();
@@ -130,6 +146,8 @@ public final class WindowsPlatformConformance {
                           "clipboard": %s,
                           "modalLoop": %s,
                           "oleDrop": %s,
+                          "dataObjectGetData": %s,
+                          "tsfThreadMgr": %s,
                           "sdrFallback": true
                         }
                         """.formatted(
@@ -139,7 +157,9 @@ public final class WindowsPlatformConformance {
                         pointerCount,
                         clipboardRoundTrip,
                         modalTick,
-                        oleDrop
+                        oleDrop,
+                        dataObjectGetData,
+                        tsfThreadMgr
                 ),
                 StandardCharsets.UTF_8
         );

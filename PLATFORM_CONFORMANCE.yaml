@@ -1056,6 +1056,8 @@
         "CF_UNICODETEXT clipboard writes and reads through generated User32 and Kernel32 bindings.",
         "WM_ENTERSIZEMOVE starts a timer that drains scheduled UI work before WM_EXITSIZEMOVE.",
         "RegisterDragDrop installs an IDropTarget whose Drop vtable entry records a drop.",
+        "IDropTarget::Drop extracts CF_UNICODETEXT through IDataObject::GetData.",
+        "CoCreateInstance creates ITfThreadMgr and Activate assigns a client id.",
         "Display topology reports SDR fallback without inventing HDR presentation."
       ],
       "capabilityModes": ["window-lifecycle", "sdr-fallback"],
@@ -1115,7 +1117,7 @@
       "commands": ["./gradlew -g .gradle-user-home :modules:controls:conformance"],
       "fixtures": ["controls-gallery-v1"],
       "assertions": [
-        "Button, toggle, slider, scroll viewport, lazy-list, and text-field produce the declared keyboard and pointer outcomes.",
+        "Button, toggle, slider, scroll viewport, lazy-list, and text-field produce the declared keyboard and pointer outcomes, including ENTER on a focused button.",
         "Every control exposes semantics roles and actions without depending on a platform backend."
       ],
       "capabilityModes": ["unstyled-controls", "keyboard-activation"],
@@ -1147,9 +1149,13 @@
         "The shipped IME session commits injected composition without writing application state itself.",
         "WM_CHAR printable text is committed through the window-attached IME session.",
         "The UIA projection exposes the increment control invoke action from the semantics snapshot.",
-        "Toggle selected and slider range values from the semantics snapshot appear as UIA patterns."
+        "Toggle selected and slider range values from the semantics snapshot appear as UIA patterns.",
+        "IRawElementProviderSimple::GetPropertyValue reports the Button control type through a COM VARIANT.",
+        "IInvokeProvider, IToggleProvider, and IRangeValueProvider dispatch through generated COM vtables.",
+        "ITextStoreACP grants document locks and exchanges UTF-16 text; ITfDocumentMgr pushes the store.",
+        "ITextStoreACP maps GetACPFromPoint through the candidate rectangle and reports GetScreenExt; embedded and attribute slots return honest empty or not-supported results."
       ],
-      "capabilityModes": ["ime-composition", "uia-projection"],
+      "capabilityModes": ["ime-composition", "uia-projection", "tsf-thread-mgr", "itext-store-acp"],
       "limits": {
         "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
         "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
@@ -1234,17 +1240,48 @@
       "fixtures": ["packaging-bom-sbom-v1"],
       "assertions": [
         "BOM, SBOM, NOTICE, and Native Image backend registry name the first-stable desktop modules.",
-        "The documents claim no project-built native payload."
+        "The documents claim no project-built native payload.",
+        "The jlink recipe names himari-desktop and the first-stable modules.",
+        "A real jlink image is produced when the module path is supplied; the documents still claim no project-built native payload."
       ],
-      "capabilityModes": ["bom", "sbom", "native-image-registry"],
+      "capabilityModes": ["bom", "sbom", "native-image-registry", "jlink-image"],
       "limits": {
         "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
         "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
         "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 8 }
       },
       "evidence": {
-        "requiredArtifacts": ["build/conformance/m11-packaging/results.json", "build/conformance/m11-packaging/bom.json", "build/conformance/m11-packaging/sbom.json", "build/conformance/m11-packaging/notice.txt", "build/conformance/m11-packaging/native-image-registry.json", "build/conformance/m11-packaging/diagnostics.json"],
-        "recordedArtifacts": ["build/conformance/m11-packaging/results.json", "build/conformance/m11-packaging/bom.json", "build/conformance/m11-packaging/sbom.json", "build/conformance/m11-packaging/notice.txt", "build/conformance/m11-packaging/native-image-registry.json", "build/conformance/m11-packaging/diagnostics.json"]
+        "requiredArtifacts": ["build/conformance/m11-packaging/results.json", "build/conformance/m11-packaging/bom.json", "build/conformance/m11-packaging/sbom.json", "build/conformance/m11-packaging/notice.txt", "build/conformance/m11-packaging/native-image-registry.json", "build/conformance/m11-packaging/jlink-recipe.json", "build/conformance/m11-packaging/jlink-image.json", "build/conformance/m11-packaging/diagnostics.json"],
+        "recordedArtifacts": ["build/conformance/m11-packaging/results.json", "build/conformance/m11-packaging/bom.json", "build/conformance/m11-packaging/sbom.json", "build/conformance/m11-packaging/notice.txt", "build/conformance/m11-packaging/native-image-registry.json", "build/conformance/m11-packaging/jlink-recipe.json", "build/conformance/m11-packaging/jlink-image.json", "build/conformance/m11-packaging/diagnostics.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m11-desktop",
+      "profileVersion": 1,
+      "workPackage": "DESKTOP-001",
+      "milestone": "M11",
+      "required": true,
+      "status": "passed",
+      "owner": "desktop",
+      "environments": [
+        { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:desktop:conformance"],
+      "fixtures": ["desktop-counter-v1"],
+      "assertions": [
+        "HimariDesktop opens a Windows HWND, runs the CounterApp tree to count 2, and captures inspector plus software PNG artifacts.",
+        "Smoke mode closes the session. Wayland, macOS, Metal, and Objective-C probes remain honest environment blocks on this host."
+      ],
+      "capabilityModes": ["himari-desktop", "counter-app", "host-window-smoke"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 268435456, "maxHandles": 64, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m11-desktop/results.json", "build/conformance/m11-desktop/counter.png", "build/conformance/m11-desktop/inspector.json"],
+        "recordedArtifacts": ["build/conformance/m11-desktop/results.json", "build/conformance/m11-desktop/counter.png", "build/conformance/m11-desktop/inspector.json"]
       },
       "waivers": []
     },
@@ -1263,10 +1300,10 @@
       "commands": ["./gradlew -g .gradle-user-home :modules:platform-wayland:conformance"],
       "fixtures": ["wayland-display-connect-v1"],
       "assertions": [
-        "Generated FFM bindings connect to a Wayland compositor and disconnect without inventing HDR capability.",
+        "Generated FFM bindings connect to a Wayland compositor, bind xdg_wm_base when advertised, and record wl_shm, wl_seat, and zxdg_decoration_manager_v1 advertisement without inventing HDR capability.",
         "A non-Linux host records an environment block instead of claiming a compositor session."
       ],
-      "capabilityModes": ["display-connect", "sdr-fallback"],
+      "capabilityModes": ["display-connect", "xdg-shell", "sdr-fallback"],
       "limits": {
         "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
         "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
@@ -1274,7 +1311,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m5-wayland/results.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m5-wayland/results.json"]
       },
       "waivers": []
     },
@@ -1294,10 +1331,11 @@
       "commands": ["./gradlew -g .gradle-user-home :modules:rhi-vulkan:conformance"],
       "fixtures": ["vulkan-instance-enumerate-v1"],
       "assertions": [
-        "Generated bindings create a Vulkan instance and enumerate physical devices without claiming HDR output.",
+        "Generated bindings create a Vulkan instance, logical device, graphics queue, and Win32 swapchain without claiming HDR output.",
+        "A selected SDR configuration presents a deterministic clear through vkCmdClearColorImage and vkQueuePresentKHR.",
         "A host without a Vulkan loader records an environment block."
       ],
-      "capabilityModes": ["vulkan-instance", "sdr-fallback"],
+      "capabilityModes": ["vulkan-instance", "vulkan-device", "swapchain-sdr-presentation", "sdr-fallback"],
       "limits": {
         "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
         "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
@@ -1324,10 +1362,10 @@
       "commands": ["./gradlew -g .gradle-user-home :modules:platform-macos:conformance"],
       "fixtures": ["macos-objc-runtime-v1"],
       "assertions": [
-        "Generated Objective-C bindings resolve NSObject and the alloc selector.",
+        "Generated Objective-C bindings create an NSWindow and attach a CAMetalLayer.",
         "A non-macOS host records an environment block instead of claiming an NSWindow session."
       ],
-      "capabilityModes": ["objc-runtime", "sdr-fallback"],
+      "capabilityModes": ["objc-runtime", "nswindow", "cametal-layer", "sdr-fallback"],
       "limits": {
         "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
         "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
@@ -1335,7 +1373,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m7-macos/results.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m7-macos/results.json"]
       },
       "waivers": []
     },
@@ -1354,10 +1392,10 @@
       "commands": ["./gradlew -g .gradle-user-home :modules:rhi-metal:conformance"],
       "fixtures": ["metal-default-device-v1"],
       "assertions": [
-        "Generated bindings create and release the system-default Metal device without claiming EDR output.",
+        "Generated bindings create the system-default Metal device, a command queue, and a committed command buffer, and compile the presentDrawable command-buffer path without claiming EDR output.",
         "A non-macOS host records an environment block."
       ],
-      "capabilityModes": ["metal-device", "sdr-fallback"],
+      "capabilityModes": ["metal-device", "metal-command-queue", "sdr-fallback"],
       "limits": {
         "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
         "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
@@ -1365,7 +1403,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m7-metal/results.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m7-metal/results.json"]
       },
       "waivers": []
     },
@@ -1384,7 +1422,7 @@
       "commands": ["./gradlew -g .gradle-user-home :modules:objc:conformance"],
       "fixtures": ["objc-block-layout-v1"],
       "assertions": [
-        "The generated 64-bit block object layout matches the documented Apple ABI.",
+        "The generated 64-bit block object layout matches the documented Apple ABI and a 32-byte object can be filled without loading libobjc.",
         "Production policy prefers block-free APIs; a non-macOS host records an environment block for symbol resolution."
       ],
       "capabilityModes": ["block-abi", "prefer-block-free-apis"],
@@ -1395,7 +1433,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m7-objc-block/results.json", "build/conformance/m7-objc-block/lifetime.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m7-objc-block/results.json", "build/conformance/m7-objc-block/lifetime.json"]
       },
       "waivers": []
     }

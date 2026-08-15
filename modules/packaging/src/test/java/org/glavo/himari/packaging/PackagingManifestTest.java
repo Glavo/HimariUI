@@ -17,6 +17,11 @@ final class PackagingManifestTest {
         assertTrue(PackagingManifest.notice().contains("Apache License"));
         assertTrue(PackagingManifest.nativeImageRegistryJson().contains("himari-rhi-d3d12"));
         assertFalse(PackagingManifest.modules().isEmpty());
+        JlinkRecipe recipe = PackagingManifest.jlinkRecipe();
+        assertTrue(recipe.commandLine().getFirst().equals("jlink"));
+        assertTrue(recipe.addModules().contains("org.glavo.himari.desktop"));
+        assertTrue(recipe.launcher() != null && recipe.launcher().contains("HimariDesktop"));
+        assertTrue(recipe.addModules().contains("org.glavo.himari.platform.windows"));
         CapabilityDiagnostics diagnostics = CapabilityDiagnostics.windowsD3d12Sdr();
         assertFalse(diagnostics.hdrEnabled());
         assertTrue(diagnostics.toCanonicalJson().contains("color-managed-sdr"));

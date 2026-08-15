@@ -2,6 +2,7 @@ package org.glavo.himari.platform.windows;
 
 import org.glavo.himari.layout.input.KeyEvent;
 import org.glavo.himari.layout.input.PointerEvent;
+import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.platform.api.PlatformWindow;
 import org.glavo.himari.platform.api.SurfaceDescriptor;
 import org.glavo.himari.platform.api.WindowConfiguration;
@@ -137,6 +138,50 @@ public final class WindowsWindow implements PlatformWindow {
     /// @return the registered target
     public WindowsDropTarget registerDropTarget() {
         return WindowsDropTarget.register(platform.libraries(), nativeHandle());
+    }
+
+    /// Creates a Unicode `IDataObject` owned by this session.
+    ///
+    /// @param text the payload
+    /// @return the data object
+    public WindowsDataObject createUnicodeDataObject(String text) {
+        return WindowsDataObject.unicode(platform.libraries(), text);
+    }
+
+    /// Pushes the IME candidate rectangle through IMM32.
+    ///
+    /// @return whether `ImmSetCompositionWindow` succeeded
+    public boolean applyImeCandidate() {
+        return WindowsImmSession.applyCandidateRectangle(platform.libraries(), nativeHandle(), ime);
+    }
+
+    /// Creates the in-process TSF thread manager.
+    ///
+    /// @return the session
+    public WindowsTsfSession openTsf() {
+        return WindowsTsfSession.open(platform.libraries());
+    }
+
+    /// Creates an `ITextStoreACP` bound to this window's IME session.
+    ///
+    /// @return the store
+    public WindowsTextStore createTextStore() {
+        return WindowsTextStore.of(platform.libraries(), ime, nativeHandle());
+    }
+
+    /// Creates an `IRawElementProviderSimple` for one semantics node.
+    ///
+    /// @param node the projected node
+    /// @return the provider
+    public WindowsAutomationProvider automationProvider(SemanticsNode node) {
+        return WindowsAutomationProvider.of(platform.libraries(), node);
+    }
+
+    /// Returns the module handle used to create this HWND.
+    ///
+    /// @return the `HINSTANCE`
+    public MemorySegment moduleHandle() {
+        return nativeWindow.instance();
     }
 
     /// Returns whether a move/resize modal loop is active.

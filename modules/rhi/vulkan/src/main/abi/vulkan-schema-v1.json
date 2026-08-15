@@ -15,6 +15,7 @@
     { "kind": "primitive", "name": "i32", "primitiveKind": "integer", "byteSize": 4, "alignment": 4, "signedness": "signed", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "primitive", "name": "u32", "primitiveKind": "integer", "byteSize": 4, "alignment": 4, "signedness": "unsigned", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "primitive", "name": "u64", "primitiveKind": "integer", "byteSize": 8, "alignment": 8, "signedness": "unsigned", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "f32", "primitiveKind": "floating", "byteSize": 4, "alignment": 4, "signedness": "none", "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "void_ptr", "pointee": "void", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "const_void_ptr", "pointee": "void", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "void_ptr_ptr", "pointee": "void_ptr", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
@@ -127,6 +128,247 @@
         { "name": "flags", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
         { "name": "hinstance", "type": "void_ptr", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
         { "name": "hwnd", "type": "void_ptr", "byteOffset": 32, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "const_swapchain_create_info_ptr", "pointee": "vk_swapchain_create_info_khr", "constant": true, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "surface_capabilities_ptr", "pointee": "vk_surface_capabilities_khr", "constant": false, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "surface_format_ptr", "pointee": "vk_surface_format_khr", "constant": false, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_command_pool_create_info_ptr", "pointee": "vk_command_pool_create_info", "constant": true, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_command_buffer_allocate_info_ptr", "pointee": "vk_command_buffer_allocate_info", "constant": true, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_command_buffer_begin_info_ptr", "pointee": "vk_command_buffer_begin_info", "constant": true, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_image_memory_barrier_ptr", "pointee": "vk_image_memory_barrier", "constant": true, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_clear_color_ptr", "pointee": "vk_clear_color_value", "constant": true, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_image_subresource_range_ptr", "pointee": "vk_image_subresource_range", "constant": true, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_submit_info_ptr", "pointee": "vk_submit_info", "constant": true, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_present_info_ptr", "pointee": "vk_present_info_khr", "constant": true, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_fence_create_info_ptr", "pointee": "vk_fence_create_info", "constant": true, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "i32_ptr", "pointee": "i32", "constant": false, "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    { "kind": "handle", "name": "vk_command_buffer", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false } },
+    {
+      "kind": "aggregate",
+      "name": "vk_extent2d",
+      "aggregateKind": "struct",
+      "byteSize": 8,
+      "alignment": 4,
+      "packing": 0,
+      "fields": [
+        { "name": "width", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "height", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_surface_capabilities_khr",
+      "aggregateKind": "struct",
+      "byteSize": 52,
+      "alignment": 4,
+      "packing": 0,
+      "fields": [
+        { "name": "min_image_count", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "max_image_count", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "current_extent", "type": "vk_extent2d", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "min_image_extent", "type": "vk_extent2d", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "max_image_extent", "type": "vk_extent2d", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "max_image_array_layers", "type": "u32", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
+        { "name": "supported_transforms", "type": "u32", "byteOffset": 36, "bitOffset": null, "bitWidth": null },
+        { "name": "current_transform", "type": "u32", "byteOffset": 40, "bitOffset": null, "bitWidth": null },
+        { "name": "supported_composite_alpha", "type": "u32", "byteOffset": 44, "bitOffset": null, "bitWidth": null },
+        { "name": "supported_usage_flags", "type": "u32", "byteOffset": 48, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_surface_format_khr",
+      "aggregateKind": "struct",
+      "byteSize": 8,
+      "alignment": 4,
+      "packing": 0,
+      "fields": [
+        { "name": "format", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "color_space", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_swapchain_create_info_khr",
+      "aggregateKind": "struct",
+      "byteSize": 104,
+      "alignment": 8,
+      "packing": 0,
+      "fields": [
+        { "name": "s_type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "p_next", "type": "const_void_ptr", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "surface", "type": "u64", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "min_image_count", "type": "u32", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
+        { "name": "image_format", "type": "i32", "byteOffset": 36, "bitOffset": null, "bitWidth": null },
+        { "name": "image_color_space", "type": "i32", "byteOffset": 40, "bitOffset": null, "bitWidth": null },
+        { "name": "image_extent", "type": "vk_extent2d", "byteOffset": 44, "bitOffset": null, "bitWidth": null },
+        { "name": "image_array_layers", "type": "u32", "byteOffset": 52, "bitOffset": null, "bitWidth": null },
+        { "name": "image_usage", "type": "u32", "byteOffset": 56, "bitOffset": null, "bitWidth": null },
+        { "name": "image_sharing_mode", "type": "i32", "byteOffset": 60, "bitOffset": null, "bitWidth": null },
+        { "name": "queue_family_index_count", "type": "u32", "byteOffset": 64, "bitOffset": null, "bitWidth": null },
+        { "name": "queue_family_indices", "type": "const_void_ptr", "byteOffset": 72, "bitOffset": null, "bitWidth": null },
+        { "name": "pre_transform", "type": "u32", "byteOffset": 80, "bitOffset": null, "bitWidth": null },
+        { "name": "composite_alpha", "type": "u32", "byteOffset": 84, "bitOffset": null, "bitWidth": null },
+        { "name": "present_mode", "type": "i32", "byteOffset": 88, "bitOffset": null, "bitWidth": null },
+        { "name": "clipped", "type": "u32", "byteOffset": 92, "bitOffset": null, "bitWidth": null },
+        { "name": "old_swapchain", "type": "u64", "byteOffset": 96, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_command_pool_create_info",
+      "aggregateKind": "struct",
+      "byteSize": 24,
+      "alignment": 8,
+      "packing": 0,
+      "fields": [
+        { "name": "s_type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "p_next", "type": "const_void_ptr", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "queue_family_index", "type": "u32", "byteOffset": 20, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_command_buffer_allocate_info",
+      "aggregateKind": "struct",
+      "byteSize": 32,
+      "alignment": 8,
+      "packing": 0,
+      "fields": [
+        { "name": "s_type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "p_next", "type": "const_void_ptr", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "command_pool", "type": "u64", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "level", "type": "i32", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "command_buffer_count", "type": "u32", "byteOffset": 28, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_command_buffer_begin_info",
+      "aggregateKind": "struct",
+      "byteSize": 32,
+      "alignment": 8,
+      "packing": 0,
+      "fields": [
+        { "name": "s_type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "p_next", "type": "const_void_ptr", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "inheritance_info", "type": "const_void_ptr", "byteOffset": 24, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_image_subresource_range",
+      "aggregateKind": "struct",
+      "byteSize": 20,
+      "alignment": 4,
+      "packing": 0,
+      "fields": [
+        { "name": "aspect_mask", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "base_mip_level", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "level_count", "type": "u32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "base_array_layer", "type": "u32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "layer_count", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_image_memory_barrier",
+      "aggregateKind": "struct",
+      "byteSize": 72,
+      "alignment": 8,
+      "packing": 0,
+      "fields": [
+        { "name": "s_type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "p_next", "type": "const_void_ptr", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "src_access_mask", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "dst_access_mask", "type": "u32", "byteOffset": 20, "bitOffset": null, "bitWidth": null },
+        { "name": "old_layout", "type": "i32", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "new_layout", "type": "i32", "byteOffset": 28, "bitOffset": null, "bitWidth": null },
+        { "name": "src_queue_family_index", "type": "u32", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
+        { "name": "dst_queue_family_index", "type": "u32", "byteOffset": 36, "bitOffset": null, "bitWidth": null },
+        { "name": "image", "type": "u64", "byteOffset": 40, "bitOffset": null, "bitWidth": null },
+        { "name": "subresource_range", "type": "vk_image_subresource_range", "byteOffset": 48, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_clear_color_value",
+      "aggregateKind": "struct",
+      "byteSize": 16,
+      "alignment": 4,
+      "packing": 0,
+      "fields": [
+        { "name": "float32_0", "type": "f32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "float32_1", "type": "f32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "float32_2", "type": "f32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "float32_3", "type": "f32", "byteOffset": 12, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_submit_info",
+      "aggregateKind": "struct",
+      "byteSize": 72,
+      "alignment": 8,
+      "packing": 0,
+      "fields": [
+        { "name": "s_type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "p_next", "type": "const_void_ptr", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "wait_semaphore_count", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "wait_semaphores", "type": "const_void_ptr", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "wait_dst_stage_mask", "type": "const_void_ptr", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
+        { "name": "command_buffer_count", "type": "u32", "byteOffset": 40, "bitOffset": null, "bitWidth": null },
+        { "name": "command_buffers", "type": "const_void_ptr", "byteOffset": 48, "bitOffset": null, "bitWidth": null },
+        { "name": "signal_semaphore_count", "type": "u32", "byteOffset": 56, "bitOffset": null, "bitWidth": null },
+        { "name": "signal_semaphores", "type": "const_void_ptr", "byteOffset": 64, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_present_info_khr",
+      "aggregateKind": "struct",
+      "byteSize": 64,
+      "alignment": 8,
+      "packing": 0,
+      "fields": [
+        { "name": "s_type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "p_next", "type": "const_void_ptr", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "wait_semaphore_count", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "wait_semaphores", "type": "const_void_ptr", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "swapchain_count", "type": "u32", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
+        { "name": "swapchains", "type": "const_void_ptr", "byteOffset": 40, "bitOffset": null, "bitWidth": null },
+        { "name": "image_indices", "type": "const_void_ptr", "byteOffset": 48, "bitOffset": null, "bitWidth": null },
+        { "name": "results", "type": "void_ptr", "byteOffset": 56, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "vk_fence_create_info",
+      "aggregateKind": "struct",
+      "byteSize": 24,
+      "alignment": 8,
+      "packing": 0,
+      "fields": [
+        { "name": "s_type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "p_next", "type": "const_void_ptr", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null }
       ],
       "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
     }
@@ -262,6 +504,353 @@
         { "name": "instance", "type": "vk_instance", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
         { "name": "surface", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
         { "name": "allocator", "type": "const_void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkGetPhysicalDeviceSurfaceSupportKHR",
+      "symbol": "vkGetPhysicalDeviceSurfaceSupportKHR",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "physicalDevice", "type": "vk_physical_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "queueFamilyIndex", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "surface", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "supported", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkGetPhysicalDeviceSurfaceCapabilitiesKHR",
+      "symbol": "vkGetPhysicalDeviceSurfaceCapabilitiesKHR",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "physicalDevice", "type": "vk_physical_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "surface", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "capabilities", "type": "surface_capabilities_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkGetPhysicalDeviceSurfaceFormatsKHR",
+      "symbol": "vkGetPhysicalDeviceSurfaceFormatsKHR",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "physicalDevice", "type": "vk_physical_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "surface", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "surfaceFormatCount", "type": "u32_ptr", "direction": "in_out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "surfaceFormats", "type": "surface_format_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkGetPhysicalDeviceSurfacePresentModesKHR",
+      "symbol": "vkGetPhysicalDeviceSurfacePresentModesKHR",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "physicalDevice", "type": "vk_physical_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "surface", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "presentModeCount", "type": "u32_ptr", "direction": "in_out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "presentModes", "type": "u32_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkCreateSwapchainKHR",
+      "symbol": "vkCreateSwapchainKHR",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "createInfo", "type": "const_swapchain_create_info_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "allocator", "type": "const_void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "swapchain", "type": "u64_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkDestroySwapchainKHR",
+      "symbol": "vkDestroySwapchainKHR",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "swapchain", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "allocator", "type": "const_void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkGetSwapchainImagesKHR",
+      "symbol": "vkGetSwapchainImagesKHR",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "swapchain", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "swapchainImageCount", "type": "u32_ptr", "direction": "in_out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "swapchainImages", "type": "u64_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkCreateCommandPool",
+      "symbol": "vkCreateCommandPool",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "createInfo", "type": "const_command_pool_create_info_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "allocator", "type": "const_void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "commandPool", "type": "u64_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkDestroyCommandPool",
+      "symbol": "vkDestroyCommandPool",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "commandPool", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "allocator", "type": "const_void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkAllocateCommandBuffers",
+      "symbol": "vkAllocateCommandBuffers",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "allocateInfo", "type": "const_command_buffer_allocate_info_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "commandBuffers", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkBeginCommandBuffer",
+      "symbol": "vkBeginCommandBuffer",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "commandBuffer", "type": "vk_command_buffer", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "beginInfo", "type": "const_command_buffer_begin_info_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkEndCommandBuffer",
+      "symbol": "vkEndCommandBuffer",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "commandBuffer", "type": "vk_command_buffer", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkCmdPipelineBarrier",
+      "symbol": "vkCmdPipelineBarrier",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "commandBuffer", "type": "vk_command_buffer", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "srcStageMask", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "dstStageMask", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "dependencyFlags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "memoryBarrierCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "memoryBarriers", "type": "const_void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "bufferMemoryBarrierCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "bufferMemoryBarriers", "type": "const_void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "imageMemoryBarrierCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "imageMemoryBarriers", "type": "const_image_memory_barrier_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkCmdClearColorImage",
+      "symbol": "vkCmdClearColorImage",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "commandBuffer", "type": "vk_command_buffer", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "image", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "imageLayout", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "color", "type": "const_clear_color_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "rangeCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "ranges", "type": "const_image_subresource_range_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkCreateFence",
+      "symbol": "vkCreateFence",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "createInfo", "type": "const_fence_create_info_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "allocator", "type": "const_void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "fence", "type": "u64_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkDestroyFence",
+      "symbol": "vkDestroyFence",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "fence", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "allocator", "type": "const_void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkWaitForFences",
+      "symbol": "vkWaitForFences",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "fenceCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "fences", "type": "u64_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "waitAll", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "timeout", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkResetFences",
+      "symbol": "vkResetFences",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "fenceCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "fences", "type": "u64_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkAcquireNextImageKHR",
+      "symbol": "vkAcquireNextImageKHR",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "device", "type": "vk_device", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "swapchain", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "timeout", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "semaphore", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "fence", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "imageIndex", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkQueueSubmit",
+      "symbol": "vkQueueSubmit",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "queue", "type": "vk_queue", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "submitCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "submits", "type": "const_submit_info_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "fence", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkQueuePresentKHR",
+      "symbol": "vkQueuePresentKHR",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "queue", "type": "vk_queue", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "presentInfo", "type": "const_present_info_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": "1.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "vkQueueWaitIdle",
+      "symbol": "vkQueueWaitIdle",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "queue", "type": "vk_queue", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
       ],
       "callingConvention": "system",
       "variadicFrom": null,

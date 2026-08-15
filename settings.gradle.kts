@@ -30,6 +30,7 @@ include(
     ":modules:controls",
     ":modules:inspector",
     ":modules:packaging",
+    ":modules:desktop",
     ":modules:rhi-d3d12",
     ":modules:rhi-vulkan",
     ":modules:rhi-metal",

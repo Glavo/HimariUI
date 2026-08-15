@@ -1,5 +1,6 @@
 # One approved JDK or operating-system library basename per line.
 # Modules that declare native access must also provide a captured JDK unified `library` trace.
+AppKit
 CoreFoundation
 d3d12.dll
 dxgi.dll
@@ -26,6 +27,7 @@ management.dll
 management_ext.dll
 Metal
 net.dll
+QuartzCore
 nio.dll
 ole32.dll
 ucrtbase.dll
