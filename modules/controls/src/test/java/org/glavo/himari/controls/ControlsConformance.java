@@ -68,6 +68,16 @@ public final class ControlsConformance {
         if (!gallery.field().undo() || !gallery.field().text().isEmpty() || !gallery.field().redo()) {
             throw new IllegalStateException("Text-field undo/redo failed");
         }
+        gallery.field().setSelection(0, 1);
+        gallery.field().replaceRange(0, 1, "ab");
+        gallery.field().updateComposition("!");
+        if (!"ab".equals(gallery.field().text())
+                || !"!".equals(gallery.field().rejectComposition())
+                || gallery.field().composition() != null
+                || !"!".equals(gallery.field().lastRejected())
+                || gallery.field().caret() != 2) {
+            throw new IllegalStateException("Text-field selection or rejection failed");
+        }
         gallery.popup().show();
         if (!gallery.popup().isOpen() || gallery.theme().highContrast()) {
             throw new IllegalStateException("Popup or theme tokens were incorrect");
@@ -116,7 +126,7 @@ public final class ControlsConformance {
             throw new IllegalStateException("Control gallery outcomes were incorrect");
         }
         if (gallery.scroll().offset() != 16.0f || gallery.list().firstVisible() != 1
-                || !"a".equals(gallery.field().text())) {
+                || !"ab".equals(gallery.field().text())) {
             throw new IllegalStateException("Scroll, list, or text-field outcomes were incorrect");
         }
         gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.DOWN, 24.0f, 60.0f), 0L);
@@ -142,12 +152,28 @@ public final class ControlsConformance {
         if (!"hello\nworld".equals(gallery.area().text()) || !gallery.area().undo()) {
             throw new IllegalStateException("Text-area composition or undo failed");
         }
+        gallery.area().setSelection(0, 5);
+        gallery.area().replaceRange(0, 5, "hi");
+        gallery.area().updateComposition("!");
+        if (!"hi".equals(gallery.area().text())
+                || !"!".equals(gallery.area().rejectComposition())
+                || !"!".equals(gallery.area().lastRejected())) {
+            throw new IllegalStateException("Text-area selection or rejection failed");
+        }
         float ltrButtonX = first(tree, SemanticsRole.BUTTON).bounds().x();
         gallery.status().announce("Saved");
         rebuild(tree, gallery);
         SemanticsNode status = first(tree, SemanticsRole.STATUS);
         if (!"Saved".equals(status.label()) || status.liveRegion() != SemanticsLiveRegion.POLITE) {
             throw new IllegalStateException("Live-region status was not polite");
+        }
+        SemanticsNode field = first(tree, SemanticsRole.TEXT_FIELD);
+        if (field.textRange() == null
+                || field.textRange().start() != 2
+                || field.textRange().end() != 2
+                || field.textRange().caret() != 2
+                || first(tree, SemanticsRole.BUTTON).textRange() != null) {
+            throw new IllegalStateException("Editor text range was not published");
         }
         gallery.setTheme(ThemeTokens.standard().withTextDirection(TextDirection.RTL));
         rebuild(tree, gallery);
@@ -189,6 +215,10 @@ public final class ControlsConformance {
                           "gestureLongPress": true,
                           "listFirstVisible": %d,
                           "text": "%s",
+                          "selectionRejected": true,
+                          "textRangeStart": %d,
+                          "textRangeEnd": %d,
+                          "caret": %d,
                           "undoRedo": true,
                           "popupDismissed": %s,
                           "menuDismissed": true,
@@ -212,6 +242,9 @@ public final class ControlsConformance {
                         gallery.scroll().offset(),
                         gallery.list().firstVisible(),
                         gallery.field().text(),
+                        field.textRange().start(),
+                        field.textRange().end(),
+                        field.textRange().caret(),
                         !gallery.popup().isOpen(),
                         gallery.menu().items().getFirst().activations(),
                         gallery.area().text(),

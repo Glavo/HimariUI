@@ -16,6 +16,9 @@ import java.util.Objects;
 /// @param height the measured height
 /// @param focused whether the node owns focus
 /// @param liveRegion the live-region politeness name
+/// @param textStart the inclusive selection start, or `-1` when absent
+/// @param textEnd the exclusive selection end, or `-1` when absent
+/// @param caret the caret offset, or `-1` when absent
 @NotNullByDefault
 public record InspectorNode(
         long id,
@@ -27,7 +30,10 @@ public record InspectorNode(
         float width,
         float height,
         boolean focused,
-        String liveRegion
+        String liveRegion,
+        int textStart,
+        int textEnd,
+        int caret
 ) {
     /// Validates the node.
     public InspectorNode {

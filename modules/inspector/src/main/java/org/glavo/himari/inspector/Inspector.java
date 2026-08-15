@@ -4,6 +4,7 @@ import org.glavo.himari.layout.LayoutNode;
 import org.glavo.himari.layout.LayoutTree;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsSnapshot;
+import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.glavo.himari.runtime.trace.RuntimeTrace;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
@@ -51,6 +52,7 @@ public final class Inspector {
             ArrayList<InspectorNode> nodes
     ) {
         SemanticsNode semantic = semantics.get(node.id());
+        @Nullable SemanticsTextRange range = node.textRange();
         nodes.add(new InspectorNode(
                 node.id(),
                 node.name(),
@@ -61,7 +63,10 @@ public final class Inspector {
                 node.size().width(),
                 node.size().height(),
                 semantic != null && semantic.focused(),
-                node.liveRegion().name()
+                node.liveRegion().name(),
+                range == null ? -1 : range.start(),
+                range == null ? -1 : range.end(),
+                range == null ? -1 : range.caret()
         ));
         for (LayoutNode child : node.children()) {
             collect(child, semantics, nodes);

@@ -6,6 +6,7 @@ import org.glavo.himari.layout.LayoutNode;
 import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,6 +33,15 @@ public final class TextArea {
     /// Redo stack of undone text.
     private final ArrayList<String> redo = new ArrayList<>();
 
+    /// Inclusive selection start in displayed text.
+    private int selectionStart;
+
+    /// Exclusive selection end and caret in displayed text.
+    private int selectionEnd;
+
+    /// Last rejected composition, or `null`.
+    private @Nullable String rejected;
+
     /// Creates an empty area.
     public TextArea() {
         this.text = "";
@@ -51,11 +61,81 @@ public final class TextArea {
         return composition;
     }
 
+    /// Returns the displayed text, including live composition.
+    ///
+    /// @return the displayed text
+    public String displayedText() {
+        return composition == null ? text : text + composition;
+    }
+
+    /// Returns the caret offset in displayed text.
+    ///
+    /// @return the caret
+    public int caret() {
+        return selectionEnd;
+    }
+
+    /// Returns the inclusive selection start.
+    ///
+    /// @return the start
+    public int selectionStart() {
+        return Math.min(selectionStart, selectionEnd);
+    }
+
+    /// Returns the exclusive selection end.
+    ///
+    /// @return the end
+    public int selectionEnd() {
+        return Math.max(selectionStart, selectionEnd);
+    }
+
+    /// Returns the last rejected composition, or `null`.
+    ///
+    /// @return the rejected fragment
+    public @Nullable String lastRejected() {
+        return rejected;
+    }
+
+    /// Replaces the selection in displayed text.
+    ///
+    /// @param start the inclusive start
+    /// @param end the exclusive end
+    public void setSelection(int start, int end) {
+        String displayed = displayedText();
+        if (start < 0 || end < 0 || start > displayed.length() || end > displayed.length()) {
+            throw new IllegalArgumentException("Selection must lie within displayed text");
+        }
+        this.selectionStart = start;
+        this.selectionEnd = end;
+    }
+
+    /// Replaces a committed-text range while composition is idle.
+    ///
+    /// @param start the inclusive start
+    /// @param end the exclusive end
+    /// @param replacement the replacement
+    public void replaceRange(int start, int end, String replacement) {
+        Objects.requireNonNull(replacement, "replacement");
+        if (composition != null) {
+            throw new IllegalStateException("Cannot replace committed text during composition");
+        }
+        if (start < 0 || end < start || end > text.length()) {
+            throw new IllegalArgumentException("Range must lie within committed text");
+        }
+        undo.add(text);
+        redo.clear();
+        text = text.substring(0, start) + replacement + text.substring(end);
+        selectionStart = start + replacement.length();
+        selectionEnd = selectionStart;
+    }
+
     /// Begins or updates composition without committing.
     ///
     /// @param value the composition
     public void updateComposition(String value) {
         this.composition = Objects.requireNonNull(value, "value");
+        selectionStart = text.length();
+        selectionEnd = displayedText().length();
     }
 
     /// Commits the current composition onto the stored text.
@@ -70,6 +150,24 @@ public final class TextArea {
         redo.clear();
         text = text.isEmpty() ? pending : text + "\n" + pending;
         composition = null;
+        rejected = null;
+        selectionStart = text.length();
+        selectionEnd = text.length();
+        return pending;
+    }
+
+    /// Discards the live composition without changing committed text.
+    ///
+    /// @return the rejected fragment, or `null` if idle
+    public @Nullable String rejectComposition() {
+        @Nullable String pending = composition;
+        if (pending == null) {
+            return null;
+        }
+        composition = null;
+        rejected = pending;
+        selectionStart = text.length();
+        selectionEnd = text.length();
         return pending;
     }
 
@@ -83,6 +181,8 @@ public final class TextArea {
         redo.add(text);
         text = undo.removeLast();
         composition = null;
+        selectionStart = text.length();
+        selectionEnd = text.length();
         return true;
     }
 
@@ -96,12 +196,16 @@ public final class TextArea {
         undo.add(text);
         text = redo.removeLast();
         composition = null;
+        selectionStart = text.length();
+        selectionEnd = text.length();
         return true;
     }
 
     /// Cancels the live composition.
     public void cancelComposition() {
         composition = null;
+        selectionStart = text.length();
+        selectionEnd = text.length();
     }
 
     /// Builds the area leaf.
@@ -112,16 +216,22 @@ public final class TextArea {
     public LayoutNode create(LayoutFactory factory, String name) {
         Objects.requireNonNull(factory, "factory");
         Objects.requireNonNull(name, "name");
-        String label = composition == null ? text : text + composition;
-        return factory.leaf(
+        String displayed = displayedText();
+        String label = displayed.isEmpty() ? "Empty" : displayed;
+        LayoutNode node = factory.leaf(
                 name,
                 SIZE,
                 List.of(new LayoutModifier.Padding(2.0f)),
                 true,
                 SemanticsRole.TEXT_AREA,
-                label.isEmpty() ? "Empty" : label,
+                label,
                 Set.of(SemanticsAction.ACTIVATE),
                 () -> { }
         );
+        int start = composition == null ? selectionStart() : text.length();
+        int end = composition == null ? selectionEnd() : displayed.length();
+        int caret = composition == null ? selectionEnd : displayed.length();
+        node.setTextRange(new SemanticsTextRange(start, end, caret));
+        return node;
     }
 }

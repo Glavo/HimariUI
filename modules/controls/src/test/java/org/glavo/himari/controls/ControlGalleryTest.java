@@ -11,6 +11,7 @@ import org.glavo.himari.layout.input.gesture.GestureArena;
 import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.glavo.himari.layout.semantics.TextDirection;
 import org.glavo.himari.runtime.animation.AnimationMotionDisposition;
 import org.glavo.himari.runtime.animation.AnimationTransaction;
@@ -111,6 +112,15 @@ final class ControlGalleryTest {
         assertEquals("", field.text());
         assertTrue(field.redo());
         assertEquals("ni", field.text());
+        field.setSelection(0, 2);
+        field.replaceRange(0, 2, "hao");
+        assertEquals("hao", field.text());
+        assertEquals(3, field.caret());
+        field.updateComposition("!");
+        assertEquals("!", field.rejectComposition());
+        assertEquals("hao", field.text());
+        assertEquals("!", field.lastRejected());
+        assertEquals(null, field.composition());
     }
 
     /// Shows and dismisses the in-window popup and reads theme tokens.
@@ -139,6 +149,13 @@ final class ControlGalleryTest {
         assertEquals("hello\nworld", area.text());
         assertTrue(area.undo());
         assertEquals("hello", area.text());
+        area.setSelection(0, 5);
+        area.replaceRange(0, 5, "hi");
+        assertEquals("hi", area.text());
+        area.updateComposition("!");
+        assertEquals("!", area.rejectComposition());
+        assertEquals("hi", area.text());
+        assertEquals("!", area.lastRejected());
     }
 
     /// Publishes a polite live-region announcement through the gallery status.
@@ -152,6 +169,22 @@ final class ControlGalleryTest {
         assertEquals("Saved", status.label());
         assertEquals(SemanticsLiveRegion.POLITE, status.liveRegion());
         assertEquals(SemanticsLiveRegion.OFF, first(tree, SemanticsRole.BUTTON).liveRegion());
+    }
+
+    /// Publishes UTF-16 selection and caret ranges on editor semantics.
+    @Test
+    void publishesEditorTextRanges() {
+        LayoutTree tree = new LayoutTree();
+        ControlGallery gallery = new ControlGallery();
+        gallery.field().updateComposition("ni");
+        gallery.area().replaceRange(0, 0, "ab");
+        gallery.area().setSelection(1, 2);
+        rebuild(tree, gallery);
+        SemanticsNode field = first(tree, SemanticsRole.TEXT_FIELD);
+        SemanticsNode area = first(tree, SemanticsRole.TEXT_AREA);
+        assertEquals(new SemanticsTextRange(0, 2, 2), field.textRange());
+        assertEquals(new SemanticsTextRange(1, 2, 2), area.textRange());
+        assertEquals(null, first(tree, SemanticsRole.BUTTON).textRange());
     }
 
     /// Packs gallery children to the end when the theme is RTL.

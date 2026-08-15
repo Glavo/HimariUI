@@ -14,6 +14,9 @@ val schedulerConformanceDirectory = rootProject.layout.buildDirectory.dir(
 val animationConformanceDirectory = rootProject.layout.buildDirectory.dir(
     "conformance/m1-animation",
 )
+val transitionConformanceDirectory = rootProject.layout.buildDirectory.dir(
+    "conformance/m9-transition",
+)
 val structureConformanceDirectory = rootProject.layout.buildDirectory.dir(
     "conformance/m1-structure",
 )
@@ -67,6 +70,16 @@ tasks.register<JavaExec>("animationConformance") {
     mainClass.set("org.glavo.himari.runtime.animation.RuntimeAnimationConformance")
     args(animationConformanceDirectory.get().asFile.absolutePath)
     outputs.file(animationConformanceDirectory.map { it.file("results.json") })
+}
+
+tasks.register<JavaExec>("transitionConformance") {
+    group = "verification"
+    description = "Runs the M9 structural-transition and matched-geometry profile."
+    dependsOn("testClasses", "test", "pureJavaGuard")
+    classpath = sourceSets.named("test").get().runtimeClasspath
+    mainClass.set("org.glavo.himari.runtime.transition.TransitionConformance")
+    args(transitionConformanceDirectory.get().asFile.absolutePath)
+    outputs.file(transitionConformanceDirectory.map { it.file("results.json") })
 }
 
 tasks.register<JavaExec>("structureConformance") {
@@ -136,5 +149,5 @@ tasks.register<JavaExec>("sampleConformance") {
 }
 
 tasks.named("check") {
-    dependsOn("animationConformance")
+    dependsOn("animationConformance", "transitionConformance")
 }

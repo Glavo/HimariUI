@@ -14,6 +14,7 @@ import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.glavo.himari.platform.api.LogicalRect;
 import org.glavo.himari.platform.api.SurfaceRole;
 import org.glavo.himari.platform.api.WindowConfiguration;
@@ -268,6 +269,11 @@ final class WindowsPlatformTest {
         assertEquals("ni", ime.reconvert());
         ime.cancel();
         assertEquals(null, ime.composition());
+        ime.updateComposition("hao");
+        assertEquals("hao", ime.reject());
+        assertEquals("hao", ime.lastRejected());
+        assertEquals(null, ime.composition());
+        assertEquals("ni", ime.surroundingText());
         LayoutTree tree = new LayoutTree();
         tree.setRoot(BootstrapCounterPane.create(tree, new AtomicInteger()));
         tree.measure(Constraints.loose(200.0f, 200.0f));
@@ -281,7 +287,29 @@ final class WindowsPlatformTest {
                 .orElseThrow();
         assertEquals("Button", increment.controlType());
         assertTrue(increment.width() > 0.0f && increment.height() > 0.0f);
+        assertEquals(null, increment.textRange());
         assertEquals(tree.semantics().nodeWith(SemanticsAction.ACTIVATE).id(), increment.id());
+        LayoutTree editorTree = new LayoutTree();
+        LayoutFactory editorFactory = new LayoutFactory(editorTree);
+        LayoutNode field = editorFactory.leaf(
+                "field",
+                new Size(160.0f, 24.0f),
+                List.of(),
+                true,
+                SemanticsRole.TEXT_FIELD,
+                "hello",
+                java.util.Set.of(SemanticsAction.ACTIVATE),
+                () -> { }
+        );
+        field.setTextRange(new SemanticsTextRange(1, 4, 4));
+        editorTree.setRoot(editorFactory.column("root", Alignment.START, List.of(), field));
+        editorTree.measure(Constraints.loose(200.0f, 200.0f));
+        editorTree.place();
+        WindowsAutomationNode edit = WindowsAutomationBridge.inspect(editorTree.semantics()).stream()
+                .filter(node -> node.controlType().equals("Edit"))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(new SemanticsTextRange(1, 4, 4), edit.textRange());
     }
 
     /// Writes and reads Unicode clipboard text through generated User32/Kernel32 bindings.

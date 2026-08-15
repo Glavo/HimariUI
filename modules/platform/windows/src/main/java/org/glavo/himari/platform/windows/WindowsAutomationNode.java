@@ -1,5 +1,6 @@
 package org.glavo.himari.platform.windows;
 
+import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,6 +20,7 @@ import java.util.Objects;
 /// @param toggleState the UIA toggle state, or `null` when the pattern is absent
 /// @param rangeValue the UIA range value, or `null` when the pattern is absent
 /// @param liveSetting the UIA live-setting name
+/// @param textRange the UTF-16 selection and caret, or `null` when absent
 @NotNullByDefault
 public record WindowsAutomationNode(
         long id,
@@ -32,7 +34,8 @@ public record WindowsAutomationNode(
         float height,
         @Nullable String toggleState,
         @Nullable Double rangeValue,
-        String liveSetting
+        String liveSetting,
+        @Nullable SemanticsTextRange textRange
 ) {
     /// Validates the node.
     public WindowsAutomationNode {

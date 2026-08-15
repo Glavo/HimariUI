@@ -42,7 +42,8 @@ public final class WindowsAutomationBridge {
                     bounds.height(),
                     toggleState(node),
                     node.rangeValue(),
-                    liveSetting(node.liveRegion())
+                    liveSetting(node.liveRegion()),
+                    node.textRange()
             ));
         }
         return List.copyOf(nodes);

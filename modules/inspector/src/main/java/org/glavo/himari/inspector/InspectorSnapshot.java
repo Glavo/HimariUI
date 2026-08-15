@@ -50,6 +50,9 @@ public record InspectorSnapshot(
                     .append(",\"height\":").append(node.height())
                     .append(",\"focused\":").append(node.focused())
                     .append(",\"liveRegion\":").append(quote(node.liveRegion()))
+                    .append(",\"textStart\":").append(node.textStart())
+                    .append(",\"textEnd\":").append(node.textEnd())
+                    .append(",\"caret\":").append(node.caret())
                     .append('}');
         }
         json.append("],\"trace\":");

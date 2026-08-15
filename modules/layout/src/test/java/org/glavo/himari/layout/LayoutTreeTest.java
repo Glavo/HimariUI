@@ -10,6 +10,7 @@ import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
 
@@ -101,5 +102,33 @@ final class LayoutTreeTest {
                 .orElseThrow();
         assertEquals(SemanticsLiveRegion.ASSERTIVE, snapshot.liveRegion());
         assertEquals(SemanticsLiveRegion.OFF, tree.semantics().nodes().getFirst().liveRegion());
+    }
+
+    /// Publishes a UTF-16 text range through the semantics snapshot.
+    @Test
+    void publishesTextRangeOnSemanticsSnapshot() {
+        LayoutTree tree = new LayoutTree();
+        LayoutFactory factory = new LayoutFactory(tree);
+        LayoutNode field = factory.leaf(
+                "field",
+                new Size(80.0f, 16.0f),
+                java.util.List.of(),
+                true,
+                SemanticsRole.TEXT_FIELD,
+                "hello",
+                java.util.Set.of(),
+                null
+        );
+        field.setTextRange(new SemanticsTextRange(1, 4, 4));
+        tree.setRoot(factory.column("root", Alignment.START, java.util.List.of(), field));
+        tree.measure(Constraints.loose(100.0f, 100.0f));
+        tree.place();
+        SemanticsNode snapshot = tree.semantics().nodes().stream()
+                .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
+                .findFirst()
+                .orElseThrow();
+        assertEquals(new SemanticsTextRange(1, 4, 4), snapshot.textRange());
+        assertEquals(null, tree.semantics().nodes().getFirst().textRange());
+        assertThrows(IllegalArgumentException.class, () -> new SemanticsTextRange(2, 1, 2));
     }
 }

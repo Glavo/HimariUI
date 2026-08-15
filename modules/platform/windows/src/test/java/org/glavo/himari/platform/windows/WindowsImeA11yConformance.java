@@ -11,6 +11,7 @@ import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.jetbrains.annotations.NotNullByDefault;
 
 import java.nio.charset.StandardCharsets;
@@ -44,6 +45,11 @@ public final class WindowsImeA11yConformance {
         }
         if (!"ni".equals(ime.reconvert()) || ime.candidateWidth() != 16.0f) {
             throw new IllegalStateException("IME reconversion or candidate rectangle failed");
+        }
+        ime.updateComposition("hao");
+        if (!"hao".equals(ime.reject()) || ime.composition() != null || !"hao".equals(ime.lastRejected())
+                || !"ni".equals(ime.surroundingText())) {
+            throw new IllegalStateException("IME rejection changed surrounding text or lost the fragment");
         }
         LayoutTree tree = new LayoutTree();
         tree.setRoot(BootstrapCounterPane.create(tree, new AtomicInteger()));
@@ -99,7 +105,18 @@ public final class WindowsImeA11yConformance {
                 null
         );
         status.setLiveRegion(SemanticsLiveRegion.POLITE);
-        valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider, status));
+        LayoutNode field = factory.leaf(
+                "field",
+                new Size(160.0f, 24.0f),
+                List.of(),
+                true,
+                SemanticsRole.TEXT_FIELD,
+                "hello",
+                java.util.Set.of(SemanticsAction.ACTIVATE),
+                () -> { }
+        );
+        field.setTextRange(new SemanticsTextRange(1, 4, 4));
+        valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider, status, field));
         valueTree.measure(Constraints.loose(400.0f, 400.0f));
         valueTree.place();
         List<WindowsAutomationNode> valueNodes = WindowsAutomationBridge.inspect(valueTree.semantics());
@@ -108,8 +125,14 @@ public final class WindowsImeA11yConformance {
                 node.controlType().equals("Slider") && node.rangeValue() != null && node.rangeValue() == 3.0);
         boolean livePolite = valueNodes.stream().anyMatch(node ->
                 node.controlType().equals("StatusBar") && "Polite".equals(node.liveSetting()));
-        if (!toggleOff || !sliderRange || !livePolite) {
-            throw new IllegalStateException("UIA projection omitted toggle, range, or live-setting values");
+        boolean editRange = valueNodes.stream().anyMatch(node ->
+                node.controlType().equals("Edit")
+                        && node.textRange() != null
+                        && node.textRange().start() == 1
+                        && node.textRange().end() == 4
+                        && node.textRange().caret() == 4);
+        if (!toggleOff || !sliderRange || !livePolite || !editRange) {
+            throw new IllegalStateException("UIA projection omitted toggle, range, live-setting, or text-range values");
         }
         boolean uiaGetPropertyValue = false;
         boolean tsfAvailable = false;
@@ -225,6 +248,7 @@ public final class WindowsImeA11yConformance {
                           "status": "passed",
                           "imeCommitted": true,
                           "imeReconvert": true,
+                          "imeRejected": true,
                           "uiaInvoke": true,
                           "uiaBounds": true,
                           "uiaToggle": true,
@@ -234,6 +258,7 @@ public final class WindowsImeA11yConformance {
                           "uiaToggleCom": %s,
                           "uiaRangeCom": %s,
                           "uiaLiveSetting": %s,
+                          "uiaTextRange": true,
                           "tsfThreadMgr": %s,
                           "textStoreAcp": %s,
                           "textStoreGeometry": %s,

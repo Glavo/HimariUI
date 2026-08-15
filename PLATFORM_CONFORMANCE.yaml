@@ -1129,6 +1129,7 @@
         "Every control exposes semantics roles and actions without depending on a platform backend.",
         "Menu, dialog, and tooltip dismiss through Escape or an outside pointer, and a menu item activation closes the menu.",
         "TextArea commits composition, a STATUS live region is polite, RTL packing moves children toward the end, and reduced-motion tokens transform animation specifications.",
+        "TextField and TextArea publish UTF-16 selection and caret ranges, replace idle committed text, and reject live composition without changing the committed buffer.",
         "A gesture arena resolves tap, drag, and long-press competition; an accepted drag scrolls the viewport."
       ],
       "capabilityModes": ["unstyled-controls", "keyboard-activation"],
@@ -1174,6 +1175,48 @@
       "waivers": []
     },
     {
+      "id": "m9-transition",
+      "profileVersion": 1,
+      "workPackage": "TRANSITION-001",
+      "milestone": "M9",
+      "required": true,
+      "status": "passed",
+      "owner": "runtime-transition",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:runtime:transitionConformance"],
+      "fixtures": [
+        "transition-enter-exit-v1",
+        "transition-lifetime-v1",
+        "transition-matched-geometry-v1"
+      ],
+      "assertions": [
+        "Enter and exit tweens sample presentation progress from caller-supplied timestamps without sleeping.",
+        "Hide and detach retain the element owner; removal disposes it and retains only overlay presentation until gone.",
+        "A reversed mid-enter presentation exits from its current progress.",
+        "Stable hidden identities retarget the existing presentation; removed identities create a new owner.",
+        "Matched-geometry pairs interpolate after both layout captures; duplicate sources and identities are diagnosed."
+      ],
+      "capabilityModes": [
+        "enter-exit-state-machine",
+        "hidden-detached-removed",
+        "retained-exit-presentation",
+        "matched-geometry",
+        "duplicate-identity-diagnostics"
+      ],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m9-transition/results.json"],
+        "recordedArtifacts": ["build/conformance/m9-transition/results.json"]
+      },
+      "waivers": []
+    },
+    {
       "id": "m9-windows-ime-a11y",
       "profileVersion": 1,
       "workPackage": "A11Y-CORE-001",
@@ -1195,7 +1238,9 @@
         "IInvokeProvider, IToggleProvider, and IRangeValueProvider dispatch through generated COM vtables.",
         "ITextStoreACP grants document locks and exchanges UTF-16 text; ITfDocumentMgr pushes the store.",
         "ITextStoreACP maps GetACPFromPoint through the candidate rectangle and reports GetScreenExt; embedded and attribute slots return honest empty or not-supported results.",
-        "A STATUS node projects as StatusBar with LiveSetting Polite through GetPropertyValue."
+        "A STATUS node projects as StatusBar with LiveSetting Polite through GetPropertyValue.",
+        "An editor node projects its UTF-16 selection and caret as a UIA inspection text range.",
+        "The shipped IME session rejects injected composition without rewriting surrounding text."
       ],
       "capabilityModes": ["ime-composition", "uia-projection", "tsf-thread-mgr", "itext-store-acp"],
       "limits": {
@@ -1225,7 +1270,8 @@
       "assertions": [
         "The inspector captures placed layout nodes, semantics roles, and a canonical runtime trace.",
         "The captured document is pointer-free and the trace fragment round-trips through parse.",
-        "Inspector nodes record live-region politeness."
+        "Inspector nodes record live-region politeness.",
+        "Inspector nodes record UTF-16 textStart, textEnd, and caret offsets, using -1 when absent."
       ],
       "capabilityModes": ["tree-inspector", "trace-embed"],
       "limits": {

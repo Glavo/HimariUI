@@ -27,6 +27,9 @@ final class InspectorTest {
         assertTrue(snapshot.nodes().size() >= 6);
         assertTrue(snapshot.toCanonicalJson().contains("\"schema\":\"himari-inspector-v1\""));
         assertTrue(snapshot.toCanonicalJson().contains("\"liveRegion\":\"POLITE\""));
+        assertTrue(snapshot.toCanonicalJson().contains("\"textStart\":-1"));
+        assertTrue(snapshot.nodes().stream().anyMatch(node ->
+                node.role().equals("TEXT_FIELD") && node.textStart() == 0 && node.textEnd() == 0 && node.caret() == 0));
         assertTrue(snapshot.toCanonicalJson().contains("himari-runtime-trace-v1"));
         String capturedTrace = snapshot.traceJson();
         if (capturedTrace == null) {

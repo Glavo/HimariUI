@@ -41,6 +41,9 @@ public final class WindowsImeSession {
     /// Whether the last composition was committed.
     private boolean committed;
 
+    /// Last rejected composition, or `null`.
+    private @Nullable String lastRejected;
+
     /// Creates an idle session.
     public WindowsImeSession() {
     }
@@ -114,6 +117,7 @@ public final class WindowsImeSession {
         committed = text != null;
         lastCommitted = text;
         if (text != null) {
+            lastRejected = null;
             surroundingText = surroundingText.substring(0, compositionStart) + text
                     + surroundingText.substring(Math.min(compositionStart, surroundingText.length()));
             compositionStart += text.length();
@@ -143,6 +147,21 @@ public final class WindowsImeSession {
         compositionEnd = compositionStart;
     }
 
+    /// Discards the live composition without changing surrounding text.
+    ///
+    /// @return the rejected fragment, or `null` if idle
+    public @Nullable String reject() {
+        @Nullable String pending = composition;
+        if (pending == null) {
+            return null;
+        }
+        composition = null;
+        committed = false;
+        lastRejected = pending;
+        compositionEnd = compositionStart;
+        return pending;
+    }
+
     /// Returns the live composition, or `null`.
     ///
     /// @return the composition
@@ -162,6 +181,13 @@ public final class WindowsImeSession {
     /// @return the surrounding text
     public String surroundingText() {
         return surroundingText;
+    }
+
+    /// Returns the last rejected composition, or `null`.
+    ///
+    /// @return the rejected fragment
+    public @Nullable String lastRejected() {
+        return lastRejected;
     }
 
     /// Returns the composition start offset.

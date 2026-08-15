@@ -39,6 +39,14 @@ public final class InspectorConformance {
         if (!snapshot.toCanonicalJson().contains("\"liveRegion\":\"POLITE\"")) {
             throw new IllegalStateException("Inspector omitted the live-region field");
         }
+        if (!snapshot.toCanonicalJson().contains("\"textStart\":-1")
+                || snapshot.nodes().stream().noneMatch(node ->
+                        node.role().equals("TEXT_FIELD")
+                                && node.textStart() == 0
+                                && node.textEnd() == 0
+                                && node.caret() == 0)) {
+            throw new IllegalStateException("Inspector omitted editor text ranges");
+        }
         String json = snapshot.toCanonicalJson();
         String capturedTrace = snapshot.traceJson();
         if (capturedTrace == null) {
@@ -59,7 +67,8 @@ public final class InspectorConformance {
                           "workPackage": "INSPECT-001",
                           "status": "passed",
                           "nodeCount": %d,
-                          "tracePresent": true
+                          "tracePresent": true,
+                          "textRangePresent": true
                         }
                         """.formatted(snapshot.nodes().size()),
                 StandardCharsets.UTF_8

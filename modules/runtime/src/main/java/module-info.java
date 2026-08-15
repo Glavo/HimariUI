@@ -11,4 +11,5 @@ module org.glavo.himari.runtime {
     exports org.glavo.himari.runtime.sample;
     exports org.glavo.himari.runtime.structure;
     exports org.glavo.himari.runtime.trace;
+    exports org.glavo.himari.runtime.transition;
 }

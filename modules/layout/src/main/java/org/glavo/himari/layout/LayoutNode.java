@@ -3,6 +3,7 @@ package org.glavo.himari.layout;
 import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -63,6 +64,9 @@ public final class LayoutNode {
 
     /// Live-region politeness published to semantics.
     private SemanticsLiveRegion liveRegion = SemanticsLiveRegion.OFF;
+
+    /// Published text selection, or `null` when the node is not an editor.
+    private @Nullable SemanticsTextRange textRange;
 
     /// Scroll offset applied when this node uses [LayoutKind#SCROLL].
     private float scrollOffset;
@@ -232,6 +236,13 @@ public final class LayoutNode {
         return liveRegion;
     }
 
+    /// Returns the published text selection, or `null`.
+    ///
+    /// @return the range
+    public @Nullable SemanticsTextRange textRange() {
+        return textRange;
+    }
+
     /// Publishes a toggle state for the next semantics snapshot.
     ///
     /// @param selected the state
@@ -254,6 +265,13 @@ public final class LayoutNode {
     /// @param liveRegion the politeness
     public void setLiveRegion(SemanticsLiveRegion liveRegion) {
         this.liveRegion = Objects.requireNonNull(liveRegion, "liveRegion");
+    }
+
+    /// Publishes a text selection for the next semantics snapshot.
+    ///
+    /// @param textRange the range
+    public void setTextRange(SemanticsTextRange textRange) {
+        this.textRange = Objects.requireNonNull(textRange, "textRange");
     }
 
     /// Adds a child in document order.

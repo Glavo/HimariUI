@@ -19,6 +19,7 @@ import java.util.Set;
 /// @param selected the toggle state, or `null` when the node does not expose a boolean value
 /// @param rangeValue the numeric range value, or `null` when the node does not expose a range
 /// @param liveRegion the live-region politeness
+/// @param textRange the UTF-16 selection and caret, or `null` when the node is not an editor
 @NotNullByDefault
 public record SemanticsNode(
         long id,
@@ -29,7 +30,8 @@ public record SemanticsNode(
         boolean focused,
         @Nullable Boolean selected,
         @Nullable Double rangeValue,
-        SemanticsLiveRegion liveRegion
+        SemanticsLiveRegion liveRegion,
+        @Nullable SemanticsTextRange textRange
 ) {
     /// Validates one semantics node.
     public SemanticsNode {
