@@ -164,8 +164,9 @@ org.glavo.himari:himari-platform-windows
 org.glavo.himari:himari-platform-macos
 org.glavo.himari:himari-platform-linux-wayland
 org.glavo.himari:himari-platform-linux-x11
-org.glavo.himari:himari-platform-freebsd
-org.glavo.himari:himari-platform-openbsd
+org.glavo.himari:himari-platform-freebsd-wayland
+org.glavo.himari:himari-platform-freebsd-x11
+org.glavo.himari:himari-platform-openbsd-x11
 org.glavo.himari:himari-platform-openharmony
 org.glavo.himari:himari-platform-headless
 org.glavo.himari:himari-testing
@@ -175,7 +176,9 @@ org.glavo.himari:himari-testing
 
 Implementation artifacts such as `himari-ffi`, `himari-rhi-vulkan`, `himari-rhi-d3d12`, and `himari-rhi-metal` may be published for dependency composition but are not normal application entry points. `himari-ffi` contains shared FFM support and internal facilities required by generated bindings; it defines no provider SPI and is not a dependency applications should declare directly. Record every implementation coordinate and its BOM relationship in ADR-013. Do not publish a JNA production artifact or include one in the BOM.
 
-`himari-platform-linux-x11`, `himari-platform-freebsd`, `himari-platform-openbsd`, and `himari-platform-openharmony` are reserved optional coordinates. Do not include them transitively from `himari-desktop` or advertise a stable version until the corresponding later-extension profile passes. The Linux Wayland and Linux X11 modules are not FreeBSD, OpenBSD, or OpenHarmony backends.
+Unix-like windowing is a two-axis family: the display protocol (Wayland or X11) and the host OS (Linux, FreeBSD, OpenBSD). First stable ships only the Linux hosts: required `himari-platform-linux-wayland` and optional `himari-platform-linux-x11`. Later FreeBSD and OpenBSD profiles are additional hosts of those same protocol backends, not a third window system beside Wayland and X11. `himari-platform-freebsd-wayland`, `himari-platform-freebsd-x11`, and `himari-platform-openbsd-x11` are reserved optional coordinates. Protocol and schema work may be shared; event loops, shared memory, DRM/KMS, and Vulkan WSI remain host-specific. Do not treat a Linux module as a BSD backend, and do not include these coordinates transitively from `himari-desktop` or advertise them stable until the matching later-extension profile passes.
+
+OpenHarmony is not a Wayland or X11 host in this plan. `himari-platform-openharmony` is a reserved optional coordinate for a distinct window, input, and presentation backend.
 
 ---
 
@@ -225,9 +228,9 @@ The first stable release is blocked only by the required common, Windows, macOS,
 - **Remote scene rendering and Web client**: keep the authoritative Java 25 runtime, layout, text shaping, hit testing, focus, and application state on a JVM or Native Image host. Stream versioned scene/display-list envelopes, content-addressed resources, correlated semantics updates, and lifecycle/configuration changes to a browser client that presents through WebGPU or Canvas/software and returns normalized input and IME transactions. This path must not require the full Java runtime to execute in the browser and must not expose component trees, RHI commands, native GPU commands, or target handles on the wire. Pixel/video streaming may be an optional fallback, not the normative scene protocol.
 - **Advanced color and HDR presentation**: add production BT.2020/BT.2100 PQ and HLG, extended-linear/EDR, high-bit-depth and floating-point swapchains, per-display luminance/headroom updates, static and future negotiated dynamic metadata, versioned gamut/tone-mapping policies, HDR image/media ingestion, and calibrated output matrices. Keep content encoding independent of output capability so unsupported surfaces receive an explicit deterministic SDR mapping rather than reinterpretation or clipping.
 - **Linux X11 compatibility profile**: complete and release the XCB/XInput2/XIM/selection/XDnD/Vulkan-XCB/software-presentation backend independently of the required Wayland profile. It may be developed before 1.0, but an incomplete X11 profile does not delay the first stable release.
-- **FreeBSD desktop profile**: a separately versioned, feasibility-gated host backend for FreeBSD windowing, input, IME, accessibility, and presentation. Java 25 and FFM must work on the host before the profile can pass. The backend may share Wayland or X11 protocol work only after a dedicated FreeBSD profile proves the ABI, compositor, and library surface; do not treat `himari-platform-linux-wayland` or `himari-platform-linux-x11` as a FreeBSD implementation. Software rendering and Vulkan are the expected presentation paths. An incomplete FreeBSD profile does not delay the first stable release.
-- **OpenBSD desktop profile**: a separately versioned, feasibility-gated host backend for OpenBSD. Expect a more constrained graphics and packaging surface than FreeBSD. X11 is the more likely first host path; do not assume Wayland availability or reuse a Linux module. Software rendering is required; Vulkan is used only where the host stack is actually present and profile-tested. An incomplete OpenBSD profile does not delay the first stable release.
-- **OpenHarmony profile**: a separately versioned, feasibility-gated host backend for OpenHarmony window, input, IME, accessibility, and presentation APIs through generated bindings. Do not treat OpenHarmony as Android, Linux Wayland, or commercial HarmonyOS. The profile is gated on a Java 25-capable JVM or AOT toolchain and on documented public system APIs. An incomplete OpenHarmony profile does not delay the first stable release.
+- **FreeBSD Wayland and X11 host profiles**: separately versioned, feasibility-gated hosts of the Wayland and X11 backend families. They are not a window-system axis beside `linux-wayland` and `linux-x11`. Java 25 and FFM must work on FreeBSD before either profile can pass. Shared protocol/schema work is allowed; do not treat `himari-platform-linux-wayland` or `himari-platform-linux-x11` as a FreeBSD implementation. Software rendering and Vulkan are the expected presentation paths. Incomplete FreeBSD host profiles do not delay the first stable release.
+- **OpenBSD X11 host profile**: a separately versioned, feasibility-gated X11 host. Expect a more constrained graphics and packaging surface than FreeBSD or Linux. X11 is the first OpenBSD host path; do not reserve or assume an OpenBSD Wayland backend until a compositor and client stack exist and are profiled. Software rendering is required; Vulkan is used only where the host stack is actually present and profile-tested. An incomplete OpenBSD profile does not delay the first stable release.
+- **OpenHarmony profile**: a separately versioned, feasibility-gated host backend for OpenHarmony window, input, IME, accessibility, and presentation APIs through generated bindings. OpenHarmony is not a Wayland or X11 host in this plan, and it is not Android or commercial HarmonyOS. The profile is gated on a Java 25-capable JVM or AOT toolchain and on documented public system APIs. An incomplete OpenHarmony profile does not delay the first stable release.
 - **Media**: add a pure-Java `himari-media` API, WAV/PCM baseline implementations, and optional FFmpeg, GStreamer, or platform-codec providers.
 - **Tier-2 complex-script shaping profile**: complete SHAPE-INDIC, SHAPE-USE, Khmer, Myanmar, and Tibetan against the frozen HarfBuzz corpora as a separately versioned profile that upgrades text coverage without changing the shaping contract.
 - **Hinting fidelity profile**: complete the TrueType VM (`fpgm`, `prep`, glyph programs, CVT, storage, twilight zone), CFF hinting, and auto-hinting port units with FreeType differential evidence as a separately versioned profile; the unhinted default path remains supported.
@@ -526,8 +529,9 @@ Do not parallelize application component, binding, or structural-control callbac
 │  │  ├─ macos/
 │  │  ├─ linux-wayland/
 │  │  ├─ linux-x11/
-│  │  ├─ freebsd/
-│  │  ├─ openbsd/
+│  │  ├─ freebsd-wayland/
+│  │  ├─ freebsd-x11/
+│  │  ├─ openbsd-x11/
 │  │  └─ openharmony/
 │  ├─ ffi/
 │  ├─ controls/
