@@ -4,7 +4,8 @@ import org.glavo.himari.font.SfntFont;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,16 +24,25 @@ public final class DefaultShaper {
     public static @Unmodifiable List<ShapedGlyph> shape(SfntFont font, String text) {
         Objects.requireNonNull(font, "font");
         Objects.requireNonNull(text, "text");
-        ArrayList<ShapedGlyph> glyphs = new ArrayList<>();
-        text.codePoints().forEachOrdered(codePoint -> {
+        int utf16Length = text.length();
+        if (utf16Length == 0) {
+            return List.of();
+        }
+        int count = text.codePointCount(0, utf16Length);
+        ShapedGlyph[] glyphs = new ShapedGlyph[count];
+        int cluster = 0;
+        for (int index = 0; index < utf16Length; ) {
+            int codePoint = text.codePointAt(index);
             int glyphId = font.glyphId(codePoint);
-            glyphs.add(new ShapedGlyph(
+            glyphs[cluster] = new ShapedGlyph(
                     codePoint,
                     glyphId,
-                    glyphs.size(),
+                    cluster,
                     font.metrics(glyphId).advanceWidth()
-            ));
-        });
-        return List.copyOf(glyphs);
+            );
+            cluster++;
+            index += Character.charCount(codePoint);
+        }
+        return Collections.unmodifiableList(Arrays.asList(glyphs));
     }
 }
