@@ -1,13 +1,17 @@
 {
   "$schema": "schema/references-lock.schema.json",
   "schemaVersion": 1,
-  "reviewed": "2026-08-14",
+  "reviewed": "2026-08-15",
   "policy": "Each source is pinned to the recorded specification identity when present and to this reviewed retrieval date for mutable content.",
   "sources": [
     { "id": "java-jep-454", "category": "java", "title": "JEP 454: Foreign Function & Memory API", "url": "https://openjdk.org/jeps/454", "pinKind": "edition", "pin": "JEP 454 (final)", "retrieved": "2026-08-14" },
     { "id": "java-25-ffm-guide", "category": "java", "title": "Java 25 Foreign Function and Memory API Guide", "url": "https://docs.oracle.com/en/java/javase/25/core/foreign-function-and-memory-api.html", "pinKind": "release", "pin": "Java SE 25", "retrieved": "2026-08-14" },
     { "id": "java-25-native-access", "category": "java", "title": "Java 25 Restricted Methods and Native Access", "url": "https://docs.oracle.com/en/java/javase/25/core/restricted-methods.html", "pinKind": "release", "pin": "Java SE 25", "retrieved": "2026-08-14" },
+    { "id": "java-25-instrumentation", "category": "java", "title": "Java 25 Instrumentation API", "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.instrument/java/lang/instrument/package-summary.html", "pinKind": "release", "pin": "Java SE 25", "retrieved": "2026-08-15" },
+    { "id": "java-25-jvmti", "category": "java", "title": "Java 25 JVM Tool Interface and Class Redefinition", "url": "https://docs.oracle.com/en/java/javase/25/docs/specs/jvmti.html", "pinKind": "release", "pin": "JVM TI 25.0.0", "retrieved": "2026-08-15" },
     { "id": "java-jep-508", "category": "java", "title": "JEP 508: Vector API (Tenth Incubator)", "url": "https://openjdk.org/jeps/508", "pinKind": "edition", "pin": "JEP 508", "retrieved": "2026-08-14" },
+    { "id": "jetbrains-runtime", "category": "java", "title": "JetBrains Runtime and Enhanced Class Redefinition", "url": "https://github.com/JetBrains/JetBrainsRuntime", "pinKind": "retrieval-date", "pin": "2026-08-15", "retrieved": "2026-08-15" },
+    { "id": "compose-hot-reload-journey", "category": "java", "title": "The Journey to Compose Hot Reload 1.0.0", "url": "https://blog.jetbrains.com/kotlin/2026/01/the-journey-to-compose-hot-reload-1-0-0/", "pinKind": "edition", "pin": "2026-01 article", "retrieved": "2026-08-15" },
     { "id": "graalvm-reachability-metadata", "category": "java", "title": "GraalVM Native Image Reachability Metadata", "url": "https://www.graalvm.org/latest/reference-manual/native-image/metadata/", "pinKind": "retrieval-date", "pin": "2026-08-14", "retrieved": "2026-08-14" },
     { "id": "graalvm-c-api", "category": "java", "title": "GraalVM Native Image C API", "url": "https://www.graalvm.org/latest/reference-manual/native-image/native-code-interoperability/C-API/", "pinKind": "retrieval-date", "pin": "2026-08-14", "retrieved": "2026-08-14" },
     { "id": "graalvm-jdk25-ffm", "category": "java", "title": "GraalVM Native Image FFM Support", "url": "https://www.graalvm.org/jdk25/reference-manual/native-image/native-code-interoperability/ffm-api/", "pinKind": "release", "pin": "GraalVM for JDK 25", "retrieved": "2026-08-14" },

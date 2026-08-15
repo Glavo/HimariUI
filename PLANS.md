@@ -7,6 +7,7 @@
 > Future additional hosts: FreeBSD, OpenBSD, and OpenHarmony are post-stable, separately versioned platform profiles and do not block the first stable desktop release<br>
 > Future remote policy: the scene boundary is transport-ready, while networking and remote-session products remain post-stable extensions<br>
 > Future color policy: first-stable color values, scene encodings, render paths, and surface contracts preserve extended-range and HDR semantics, while production hardware HDR presentation is capability-gated and not a first-stable release requirement<br>
+> Development reload policy: reload-aware state and lifecycle semantics are core; first-stable tooling supports a baseline OpenJDK 25 profile and an enhanced JBR 25 profile without making either a production-runtime dependency<br>
 > Primary distribution constraint: published core and desktop artifacts must not ship project-built or third-party CPU-native libraries; future mobile bundles may contain only declared target-generated AOT code and host glue<br>
 > Last reviewed: 2026-08-15
 
@@ -48,7 +49,7 @@ Terms used throughout this plan:
 
 Deliver a modern declarative GUI framework whose runtime, layout engine, text stack, software renderer, GPU abstraction, platform backends, and generated native bindings are implemented in Java 25. Published Java artifacts and first-stable desktop distributions must contain no project-built or third-party CPU-native libraries. Desktop platforms must be reached through generated, strongly typed FFM bindings to system APIs.
 
-The first stable release must support deterministic Headless execution, software fallback, modern GPU backends, complete input and accessibility paths, a practical control set, color-managed SDR presentation with HDR-safe values/codecs/capability contracts, JVM execution, and GraalVM Native Image packaging.
+The first stable release must support deterministic Headless execution, software fallback, modern GPU backends, complete input and accessibility paths, a practical control set, color-managed SDR presentation with HDR-safe values/codecs/capability contracts, JVM execution, GraalVM Native Image packaging, and a reload-aware JVM development loop with explicit state-retention and restart semantics.
 
 ### 1.2 Execution order
 
@@ -80,6 +81,7 @@ The order states dependency, not strict serialization; the milestone plan organi
 14. **Make the scene boundary transport-ready without putting networking in the core.** `SceneSnapshot`, display-list, resource, semantics, and normalized-input encodings must be versioned, pointer-free, bounded, and replayable outside the producing process. The default renderer remains in-process. Authentication, encryption, discovery, congestion control, codecs, and remote-session policy belong to post-stable extensions.
 15. **Model animation as transaction-scoped presentation state.** A committed state or property value is the authoritative target; animation derives a time-varying presentation value without writing source state on every frame. Sample related animations atomically, preserve presentation-value and velocity continuity across compatible interruptions, and execute each property at its declared structure, layout, paint, semantics, hit-test, or composite impact. Compiler assistance must not be required for these semantics.
 16. **Keep gamut, transfer, luminance, and presentation capabilities orthogonal.** Represent primaries/white point, transfer function, scene- or display-referred interpretation, reference white/content luminance, numeric range, pixel format, and output-surface capabilities explicitly. Do not model HDR as a Boolean, equate P3 or BT.2020 with HDR, clamp finite color components to `[0, 1]` before an explicit gamut/tone-mapping or quantization step, or bake an SDR-only assumption into public values, display lists, scenes, images, RHI surfaces, or remote negotiation.
+17. **Make development reload semantics core without making an enhanced VM part of the runtime baseline.** The runtime must define reload generations, safe points, structural invalidation, compatible local-state retention, callback replacement, effect/resource cleanup, multi-window coordination, failure containment, and explicit reset/restart fallbacks. The first-stable development toolchain supports method-body reload on the pinned OpenJDK 25/HotSpot profile and enhanced class-schema reload on a pinned JBR 25/DCEVM profile. JBR, Java agents, build watchers, and reload controllers remain development-only; production JVM execution, Native Image, and application correctness must not depend on them.
 
 ### 1.4 Default technology choices
 
@@ -101,6 +103,7 @@ The order states dependency, not strict serialization; the milestone plan organi
 | CPU rendering | Tile-based pure-Java rasterizer | Scalar normative path plus optional Vector API acceleration |
 | GPU rendering | Vulkan, D3D12, and Metal | Use a backend-neutral explicit RHI |
 | Future remote Web client | Scene/display-list stream rendered through WebGPU or Canvas/software | Java 25 runtime remains authoritative on the server; never stream RHI or native GPU commands |
+| Development reload | Reload-aware runtime contract plus pure-Java development agent/launcher | OpenJDK 25 baseline profile; pinned JBR 25 with enhanced class redefinition for broader schema changes; explicit restart fallback |
 | Text | Pure-Java OpenType, shaping, and rasterization | Differentially validate against FreeType and HarfBuzz |
 | Testing | JUnit 5, jqwik/Jazzer, JMH, native Oracle runners | LWJGL/JNA/system libraries are test-only |
 | Build | Gradle multi-project plus JPMS | Publish a Maven BOM and modular JARs |
@@ -141,8 +144,9 @@ Create `build-logic/pure-java-guard` as a staged gate registry. Each gate declar
 12. `verifyWebHostIsolation`: activate with W0/W1; require an explicit browser-import allowlist, reject desktop/FFM dependencies from Web artifacts, validate generated linear-memory marshalling, and reject dynamic JavaScript evaluation or undeclared ambient browser access.
 13. `verifyMobileAotIsolation`: activate with A0; require mobile packaging inputs to be explicit, reject mobile launchers and generated host glue from core or desktop JARs, reject target runtime types from common public APIs, and verify that the representative Java 25 core is compiled without an ART compatibility fork or source rewrite.
 14. `verifySceneCodec`: activate with `SCENE-CODEC-001` in M3; round-trip canonical scene, display-list, resource-manifest, snapshot/resource-generation, semantics, and normalized-input fixtures; reject missing or mismatched bases, illegal generation transitions, native addresses, Java object identity, target handles, malformed lengths, unsupported required features, hash mismatches, and configured resource-limit violations; fuzz every decoder.
+15. `verifyReloadIsolation`: activate with `DEV-RELOAD-001` in M10; reject reload agents, agent manifests, reload controllers, JBR-only APIs, enhanced-redefinition flags, and development transport dependencies from production runtime graphs and packaged applications; require every reload-capable artifact to be explicitly development-scoped and pure Java.
 
-`GUARD-FRAMEWORK-001` in M0 implements the registry and activates gates 1–11 for every artifact and module that exists at that commit. `GUARD-SCENE-001`, `verifyWebHostIsolation`, and `verifyMobileAotIsolation` are owned by M3, W0/W1, and A0 respectively. Adding a later module must automatically place it under every already-active applicable gate.
+`GUARD-FRAMEWORK-001` in M0 implements the registry and activates gates 1–11 for every artifact and module that exists at that commit. `GUARD-SCENE-001`, `verifyReloadIsolation`, `verifyWebHostIsolation`, and `verifyMobileAotIsolation` are owned by M3, M10, W0/W1, and A0 respectively. Adding a later module must automatically place it under every already-active applicable gate.
 
 ### 2.3 Published artifacts and user entry points
 
@@ -171,7 +175,7 @@ org.glavo.himari:himari-testing
 
 `himari-render-gpu` contains the backend-neutral frame compiler and render graph. Keep Vulkan, D3D12, and Metal implementations in `himari-rhi-vulkan`, `himari-rhi-d3d12`, and `himari-rhi-metal`.
 
-Implementation artifacts such as `himari-ffi`, `himari-rhi-vulkan`, `himari-rhi-d3d12`, and `himari-rhi-metal` may be published for dependency composition but are not normal application entry points. `himari-ffi` contains shared FFM support and internal facilities required by generated bindings; it defines no provider SPI and is not a dependency applications should declare directly. Record every implementation coordinate and its BOM relationship in ADR-013. Do not publish a JNA production artifact or include one in the BOM.
+Implementation artifacts such as `himari-ffi`, `himari-rhi-vulkan`, `himari-rhi-d3d12`, and `himari-rhi-metal` may be published for dependency composition but are not normal application entry points. `himari-ffi` contains shared FFM support and internal facilities required by generated bindings; it defines no provider SPI and is not a dependency applications should declare directly. Development reload agents, launchers, build integrations, and controllers use separate development-scoped artifacts whose coordinates are frozen by `DEV-RELOAD-001`; they must never be transitive dependencies of `himari-desktop`, enter production runtime images, or expose JBR-specific types through application APIs. Record every implementation coordinate and its BOM relationship in ADR-013. Do not publish a JNA production artifact or include one in the BOM.
 
 Unix-like windowing has two layers that must not be flattened into one directory per OS×protocol pair.
 
@@ -203,9 +207,9 @@ Deliver all of the following:
 - Vulkan, D3D12, and Metal GPU backends plus CPU fallback.
 - Color-managed sRGB SDR presentation; tagged Display-P3 values and conversion with direct P3 presentation only on verified capable surfaces; tagged extended-range color and profile resources; an extended-linear software reference path; deterministic HDR/WCG-to-SDR fallback; and truthful per-surface color/HDR capability reporting.
 - JVM and GraalVM Native Image distribution paths.
-- Inspector, versioned transport-ready scene/frame traces, deterministic offline replay, and golden-test tooling.
+- Inspector, versioned transport-ready scene/frame traces, deterministic offline replay, golden-test tooling, and a reload-aware JVM development loop. The loop must live-reload theme/style/resource inputs, preserve compatible framework-owned UI state across supported code edits, replace callbacks and effects safely, and degrade explicitly through subtree reset, full UI reset, or process restart. The release includes a baseline OpenJDK 25/HotSpot reload profile and a stronger JBR 25 enhanced-redefinition profile; neither profile changes the production runtime baseline.
 
-The first stable release is blocked only by the required common, Windows, macOS, Linux Wayland, Headless, software-renderer, and declared GPU profiles recorded in `PLATFORM_CONFORMANCE.yaml`. Optional capabilities such as X11, native HDR, FreeBSD, OpenBSD, or OpenHarmony have independent profiles and release versions; omitting or disabling one must be reported truthfully but does not weaken a required profile.
+The first stable release is blocked only by the required common, Windows, macOS, Linux Wayland, Headless, software-renderer, declared GPU, and Section 18.11 development-reload profiles recorded through `PLATFORM_CONFORMANCE.yaml` and the owning conformance documents. Optional capabilities such as X11, native HDR, FreeBSD, OpenBSD, or OpenHarmony have independent profiles and release versions; omitting or disabling one must be reported truthfully but does not weaken a required profile.
 
 ### 3.2 Explicit non-goals for the first stable release
 
@@ -223,6 +227,7 @@ The first stable release is blocked only by the required common, Windows, macOS,
 - Production HDR/EDR output on every desktop, browser, or mobile backend. The first stable release must preserve tagged extended-range values and validate HDR reference math and capability fallback, but may advertise only SDR presentation on a platform whose HDR path has not passed its dedicated conformance gates.
 - Bundling MoltenVK, ANGLE, SwiftShader, Mesa, FreeType, HarfBuzz, or similar native components to fill platform gaps.
 - Requiring application developers to understand FFM, COM, the Objective-C runtime, or Wayland protocols.
+- In-process Java code reload in Native Image, production hot patching, or a promise that every Java class-schema, native binding, FFM callback, static-initializer, or superclass change can be migrated without restart.
 
 ### 3.3 Later extensions
 
@@ -268,7 +273,7 @@ For JVM and Native Image desktop targets, use generated, fixed-signature Java ca
 
 ### ADR-003: Keep compiler plugins optional
 
-Runtime correctness and the baseline application API must not depend on source rewriting, bytecode rewriting, or generated application code. Optional tooling may provide source maps, stability diagnostics, static dependency analysis, skip optimization, or development-time hot reload. Evaluate all runtime candidates through ordinary Java samples before applying optional tooling; annotation processing alone is not a substitute for method-body instrumentation.
+Runtime correctness and the baseline application API must not depend on source rewriting, bytecode rewriting, or generated application code. Optional tooling may provide source maps, stability diagnostics, static dependency analysis, skip optimization, or narrower development-time reload invalidation. First-stable reload tooling may replace already compiled classes through a development-only Java agent, but the core reload contract, whole-root fallback, state/lifecycle semantics, and application correctness must remain usable without a compiler plugin or application transformation. Evaluate all runtime candidates through ordinary Java samples before applying optional tooling; annotation processing alone is not a substitute for method-body instrumentation.
 
 ### ADR-004: Track reactive reads by execution phase
 
@@ -374,7 +379,7 @@ For first stable, reactive bindings, structural updates, layout, input, and sema
 
 ### ADR-023: Use explicit grouped recomposition for structural updates
 
-Use ordinary-Java, handwritten restartable groups for topology and local lifecycle. Structural reads invalidate their owning group, while typed property bindings and phase callbacks remain fine-grained ADR-015 consumers. Positional identity is valid only within an unchanged explicit group; reorderable siblings and reparenting require semantic keys. Each attempt observes one stable state epoch and publishes topology, ownership, dependencies, property targets, effects, and animation metadata through one failure-atomic `UiCommitTransaction`. The selected contract includes ADR-020 scoped current-measure groups and ADR-021 declared error boundaries. The first scheduler is non-preemptive, with optional cooperative cancellation checkpoints but no speculative composition or conflict retry. Candidate storage remains replaceable implementation evidence rather than public API.
+Use ordinary-Java, handwritten restartable groups for topology and local lifecycle. Structural reads invalidate their owning group, while typed property bindings and phase callbacks remain fine-grained ADR-015 consumers. Positional identity is valid only within an unchanged explicit group; reorderable siblings and reparenting require semantic keys. Each attempt observes one stable state epoch and publishes topology, ownership, dependencies, property targets, effects, and animation metadata through one failure-atomic `UiCommitTransaction`. The selected contract includes ADR-020 scoped current-measure groups and ADR-021 declared error boundaries. The first scheduler is non-preemptive, with optional cooperative cancellation checkpoints but no speculative composition or conflict retry. Candidate storage remains replaceable implementation evidence rather than public API. Development reload uses the same explicit group and semantic-key identity rules; source positions, lambda class names, and compiler-generated identities may improve diagnostics but never decide which state survives a reload.
 
 ---
 
@@ -447,6 +452,21 @@ host / OS events
   -> present + timing feedback
 ```
 
+Development reload enters the same runtime through a separate safe-point flow:
+
+```text
+source/resource change
+  -> incremental compile or resource validation
+  -> classify hot versus cold changes
+  -> verify one complete reload generation
+  -> replace supported hot classes or publish resource generations
+  -> enter a UI safe point and invalidate affected roots/scopes
+  -> reconcile compatible state by runtime identity
+  -> replace callbacks and restart owned effects
+  -> commit each UI attempt atomically
+  -> resume input and frame scheduling, or request the declared reset/restart fallback
+```
+
 ### 5.3 Execution and threading model
 
 - **Platform/UI execution context**: run window or host events, reactive bindings, structural updates, layout, input, and semantics updates on the main execution context required by the target. Desktop targets use the OS-required UI thread; a browser target uses the browser event loop.
@@ -455,6 +475,7 @@ host / OS events
 - **Host-driven event loop**: platform scheduling must accept callbacks from a host event loop and must not require a blocking message-pump API.
 - **Modal-loop continuity**: scheduled UI work, layout-affecting animation, and frame production continue from within OS modal loops through timer-driven reentry per ADR-022; the render executor keeps presenting compositor-eligible animation throughout.
 - **Multi-window scoping**: one reactive graph and state-epoch domain per application; one frame scheduler per window; cross-window invalidation is routed through ordinary scheduling and never through shared mutable traversal of another window's trees (ADR-022).
+- **Reload safe points**: apply one verified class/resource generation only between application callback attempts. A callback, transaction, structural attempt, or frame build observes one code generation; input arriving during replacement remains queued until every affected window has either committed the new generation or entered its declared error state.
 - **No user callbacks in render execution**: never run application callbacks, component code, or state writes from the render executor, whether it is a thread, worker, or same-thread render phase.
 - **Bounded compositor animation**: the render executor may sample an immutable framework-defined animation program for eligible retained-layer properties. It must not execute application interpolation code, effects, or state writes. The program uses a clock mapping shared with the UI runtime so authoritative hit testing, traces, and replacement generations can reproduce or supersede its presentation state.
 - **Frame handoff**: when UI and rendering execute separately, scene snapshots may use latest-wins replacement while resource creation, upload, destruction, configuration, and correlated semantics updates remain ordered and non-droppable. A same-context implementation preserves the same ordering without requiring a mailbox. The logical contract must not require a shared address space even though the default implementation passes immutable Java objects in-process.
@@ -546,6 +567,7 @@ Do not parallelize application component, binding, or structural-control callbac
 ├─ tools/
 │  ├─ abi-generator/
 │  ├─ shader-compiler/
+│  ├─ dev-reload/
 │  ├─ font-inspector/
 │  ├─ scene-replay/
 │  └─ golden-reviewer/
@@ -617,6 +639,8 @@ future remote/server
     -> runtime + scene/codec
 future remote/web-client
     -> scene/codec schema + host/web + browser presentation backend
+development reload tooling
+    -> runtime internal reload protocol + java.instrument
 ```
 
 Reject all of the following:
@@ -632,6 +656,7 @@ Reject all of the following:
 - Changes to common modules whose only purpose is ART class-library or bytecode compatibility without a separately accepted ART-target ADR.
 - Scene codecs that encode native addresses, Java object identity, `MemorySegment` identity, FFM/host handles, component trees, RHI resources, or native GPU commands.
 - Core modules that depend on sockets, HTTP/WebSocket implementations, TLS providers, authentication, discovery, congestion control, video codecs, or remote-session policy.
+- Runtime, platform, FFM, RHI, or production modules that depend on the development reload agent, controller, JBR APIs, or enhanced-redefinition flags. The dependency points from development tooling into a narrow runtime reload protocol, never back from runtime into tooling.
 
 ### 6.3 JPMS rules
 
@@ -728,6 +753,7 @@ Implement these model-independent structures before committing to a structural r
 - **UiCommitTransaction**: stage mounted-property targets, topology changes, and inherited animation metadata and commit atomically; failure must leave no nodes, animation instances, completions, or effects behind. If the selected model supports cancellation, cancellation has the same cleanup guarantee.
 - **AnimationRegistry**: own active presentation values, velocities, transition states, completion groups, replacement generations, and next-frame deadlines without making them application state.
 - **EffectRegistry**: define deterministic `mount`, `update`, and `dispose` ordering and aggregate failures for reporting.
+- **ReloadCoordinator**: accept verified reload generations at UI safe points, coordinate affected application/window roots, classify retained versus reset local state, replace callbacks, restart owned effects, and expose deterministic failure and restart diagnostics without depending on a particular VM class-redefinition mechanism.
 
 `STRUCTURE-001` may implement group records, positional memory, semantic-keyed reconciliation, retained branches, and a slot-table-like store. Candidate storage classes remain evidence rather than production API: an implementation may replace them if it preserves ADR-023 identity, ownership, atomicity, diagnostics, and phase-attribution semantics.
 
@@ -800,6 +826,25 @@ A signal write only marks consumers dirty and requests scheduled work. It must n
 - Coalesce effect scheduling per committed epoch and run effects only after derived values and affected staged UI work are consistent; an epoch with no UI mutation still crosses the same stabilization barrier.
 - Catch effect failures at the runtime error boundary; never let them escape through a native callback.
 - Register timers, subscriptions, and resources as effects. Do not rely on finalization.
+
+### 7.8 Development reload semantics
+
+Treat code replacement, UI reconstruction, and state retention as separate operations. A VM or agent may install new class definitions, but only `ReloadCoordinator` may advance the runtime's visible reload generation and schedule structural work. The baseline implementation may invalidate every application root after a class replacement; optional bytecode or source dependency analysis may narrow the invalidated scopes only when it produces the same observable result.
+
+Define the following invariants:
+
+- Split the reload classpath into **hot** application/development classes and **cold** framework, platform, FFM, generated binding, RHI, renderer, agent, and third-party dependency classes. A cold-class change requests a process restart before the changed code is executed.
+- Apply all class replacements for one generation as a verified unit. If compilation, class verification, or replacement fails, publish no new reload generation and leave the running UI unchanged.
+- Preserve runtime-owned local state only when its explicit group/key identity and declared value compatibility still match. Never use source line numbers, synthetic lambda names, allocation order, or DCEVM object migration alone as semantic proof that state is compatible.
+- Recreate callbacks for every invalidated scope. Dispose and restart its owned effects even when their positional identity is unchanged so no subscription, timer, listener, or captured lambda continues to execute obsolete application code.
+- Do not rerun arbitrary class initializers automatically. Mutable static state is retained unless an explicitly registered development hook resets it; a changed initializer that affects observable behavior must produce a diagnostic and may require a UI reset or process restart.
+- Coordinate all application windows under one reload generation. A window may retain its last committed scene while its new attempt is pending or failed, but no callback or commit attempt may mix code generations.
+- Reuse ADR-021 error containment. A post-replacement application failure keeps the last committed scene, disables only the affected window runtime, and remains retryable by the next successful reload or an explicit reset; it must not attempt an unsafe partial rollback of migrated VM objects.
+- Expose three explicit fallbacks: subtree reset discards local state/effects below a reload boundary; full UI reset disposes and recreates all application UI roots in the current process; process restart starts a fresh JVM and loses all non-persisted state. Tooling must report which fallback occurred and why.
+- Treat theme, style, image, font, and other reloadable resource changes as versioned resource generations. Validate them before publication, invalidate their actual consumers, retain the previous generation on failure, and release superseded native/GPU resources through normal ownership rules.
+- Keep Native Image outside in-process code replacement. Its development integration may watch, rebuild, and restart the process, while the JVM remains the normative state-preserving reload environment.
+
+The OpenJDK 25/HotSpot development profile uses standard class redefinition only for supported changes and falls back explicitly for class-schema changes. The enhanced JBR 25 profile enables DCEVM through the pinned, tested runtime configuration and may retain more live object state across verified schema changes. JBR migration capability never weakens the framework compatibility checks above and never permits hot replacement of cold FFM/native-resource code.
 
 ---
 
@@ -1698,15 +1743,33 @@ Keep hardware HDR enablement optional, but make the architecture and reference b
 
 For a backend that opts into HDR/EDR, additionally test supported format/color-space pair selection, actual precision, display migration/configuration changes, screenshot/capture semantics, system-versus-framework tone-mapping ownership, metadata behavior, SDR UI overlay appearance, and deterministic fallback after device/surface loss. Failure disables that advertised mode rather than blocking an SDR release.
 
-### 18.11 Future local browser/Wasm validation
+### 18.11 Development reload conformance
+
+Maintain three declared development profiles: a VM-independent Headless simulation of the reload contract, a pinned OpenJDK 25/HotSpot class-redefinition profile, and a pinned JBR 25 enhanced-class-redefinition profile. Query and report actual VM capabilities before enabling code replacement; an unsupported VM receives process restart rather than an inferred HotSpot-compatible mode.
+
+Cover all of the following:
+
+- method-body edits to structural callbacks, property bindings, event handlers, effects, derived computations, and animation specifications;
+- representative JBR-supported additions and removals of application fields and methods plus interface-shape changes, with the exact accepted/rejected edit matrix pinned to the tested JBR build instead of promising unrestricted schema evolution;
+- stable navigation, form, scroll, keyed-list, focus, and compatible local-state retention across reload, plus deterministic subtree reset and diagnostics when identity or value compatibility changes;
+- replacement of captured callbacks and child-before-parent disposal/restart of effects, timers, subscriptions, async work, and framework resource leases so repeated reloads retain no obsolete class generations or owners;
+- one reload generation across multiple windows, queued input during the safe point, failure-atomic UI attempts, and last-committed-scene behavior for a window whose new code throws;
+- compile failure, verification failure, unsupported schema change, changed static initialization, cold framework/FFM/RHI/native-callback code, and explicit subtree-reset, full-UI-reset, and process-restart fallbacks;
+- independently versioned theme, style, image, and font resource updates, including invalid input, dependent-consumer invalidation, cache/resource retirement, and retention of the last valid generation;
+- reload latency, incremental-compilation latency, class/state retention, heap/native/GPU memory, and obsolete-class unloading across long repeated-edit sessions;
+- production-artifact isolation and a Native Image rebuild/restart development loop that never claims in-process code replacement.
+
+Every conformance record includes the JDK/JBR vendor, version, build, VM flags, agent and build-tool versions, edit classification, selected fallback, retained/reset state inventory, invalidated scopes/phases, effect cleanup, window outcomes, and latency. A newer JBR build does not inherit the enhanced edit matrix until the profile is rerun.
+
+### 18.12 Future local browser/Wasm validation
 
 When the post-stable Web track begins, add browser integration tests for host-driven single-thread execution, optional Web Worker rendering, asynchronous startup and permissions, WebGPU and Canvas fallback, pointer/keyboard/IME normalization, DOM semantics mirroring, fetched fonts/assets, device loss, and deterministic replay. Include canvas color-space/tone-mapping negotiation, extended-range texture-versus-output capability separation, display-gamut/dynamic-range changes, and explicit SDR fallback. Run a defined browser/WebGPU matrix and compare portable subsystem fixtures with JVM Headless results.
 
-### 18.12 Future mobile AOT validation
+### 18.13 Future mobile AOT validation
 
 When the post-stable mobile track begins, first compile and execute a representative slice of the unchanged Java 25 core on each candidate AOT toolchain. Cover every stable Java 25 API family used by production modules, including `MemorySegment`, `Arena`, concurrency, exceptions, garbage collection, resources, and static initialization where applicable. Test target host calls and callbacks separately; do not infer mobile downcall/upcall support from successful core memory access. After feasibility passes, run lifecycle, input, IME, accessibility, software/GPU differential, device-loss, suspend/resume, memory-pressure, color/HDR capability and display-change behavior, explicit SDR fallback, signing, installation, and package-reproducibility matrices on Android and iOS devices and simulators/emulators.
 
-### 18.13 Future remote-rendering validation
+### 18.14 Future remote-rendering validation
 
 When the post-stable remote track begins, validate the canonical scene protocol first through offline files and a separate local process, then through the browser client and real transports. Require byte-for-byte canonical encoding, cross-implementation fixtures, full/delta recovery, resource deduplication and reclamation, unknown-feature rejection, malformed-input fuzzing, and identical software output for decoded scenes. Exercise latency, bandwidth limits, fragmentation, disconnect/reconnect, stale input, missing resources, dropped frames, bounded backpressure, stream-epoch changes, and recovery snapshots. Negotiate color encodings, output gamut/dynamic range, precision, reference white/headroom, mapping ownership, profile resources, and HDR metadata; test capability changes, authoritative mapped fallbacks, and rejection of unsupported required encodings without relabeling or clipping. For transmitted layer animations, additionally test clock mapping, timestamp sampling, interruption, replacement generations, unsupported-program fallback, long suspension, reconnection, and reconciliation against authoritative host snapshots; no callback or arbitrary executable payload may cross the boundary. Compare browser WebGPU and Canvas/software output with Headless, verify correlated DOM semantics and IME behavior, and measure input-to-present latency by production, transport, client queue, and presentation stages. Assert that no component, Java runtime, FFM, RHI, or native GPU object appears in the wire format.
 
@@ -1838,6 +1901,23 @@ Record normalized input events, state-transaction summaries, animation transacti
 
 Replay traces with Headless and the software renderer so platform or GPU failures can become deterministic repository fixtures. The `scene-replay` tool must render from the encoded trace and declared resources alone, without references to producer-process objects or ambient system fonts. This offline boundary is the first-stable proof of transport readiness; it is not a live network implementation.
 
+### 20.4 Development reload
+
+Ship one development workflow with four distinct outcomes and name the selected outcome in every status event:
+
+- **resource reload** validates and publishes a new theme/style/asset generation without replacing Java classes;
+- **state-preserving code reload** replaces a supported hot-class set, advances one reload generation, and reruns affected structural scopes while retaining compatible state;
+- **UI reset** disposes all application UI owners and reconstructs every root in the current JVM while leaving only explicitly declared non-UI application services alive;
+- **process restart** starts a fresh JVM and preserves only application state saved through normal persistence APIs.
+
+The development launcher watches or receives source/resource changes, invokes the ordinary build for incremental compilation, snapshots the hot output classpath by content hash, and sends one complete changed-class manifest to a pure-Java `-javaagent`. Prefer startup attachment through `premain`; dynamic attachment is optional and must not be required. The agent uses `java.lang.instrument.Instrumentation` rather than a project-built JVMTI library. On the enhanced profile it starts a pinned JBR 25 with `-XX:+AllowEnhancedClassRedefinition`; on the baseline profile it uses only capabilities reported by the pinned OpenJDK 25/HotSpot VM. Do not call private JBR APIs or make enhanced redefinition a public HimariUI contract.
+
+After successful VM replacement, the agent submits the generation manifest to `ReloadCoordinator`. The baseline correctness path invalidates all application roots. Optional class/method dependency analysis may invalidate fewer groups, but it must be development-only, versioned, observable in the inspector, and differentially checked against whole-root invalidation. Resource reload bypasses class replacement and enters through versioned resource stores.
+
+Expose reload status, generation, changed and rejected classes/resources, hot/cold classification, retained and reset state, invalidated roots/scopes/phases, restarted effects, per-window outcome, fallback reason, compile/redefine/recompose/render latency, and obsolete-class/class-loader retention through the same versioned developer-tools protocol as the inspector. Provide commands for retry, subtree reset where a boundary is declared, full UI reset, and process restart. Compile and verification failures leave the old generation running; post-replacement UI failures use ADR-021 containment and an in-application error overlay without hiding the underlying diagnostic.
+
+The tool may provision a development JBR distribution only from a pinned version, checksum, platform/architecture manifest, and recorded license/provenance entry. It must also accept an explicitly configured compatible JBR. Production launchers, jlink images, Native Image bundles, and Maven runtime dependency graphs contain neither the agent nor a provisioned JBR.
+
 ---
 
 ## 21. Security, Robustness, and Resource Limits
@@ -1896,6 +1976,16 @@ Treat fonts, images, color profiles/LUTs, HDR/content-light metadata, clipboard 
 - Prevent remote input from naming arbitrary runtime objects or semantics nodes. Resolve actions only through capability-scoped, generation-checked IDs valid for the current authoritative snapshot and session.
 - Redact password fields, private semantics, clipboard content, logs, traces, and diagnostic labels according to explicit session policy. Remote diagnostics must not silently widen the data exposed to a client.
 - Bound producer, transport, decoder, resource, and presentation queues independently; disconnect or request recovery on protocol abuse instead of allowing unbounded memory growth.
+
+### 21.7 Development reload boundary
+
+- Enable the reload controller and agent only in an explicit development launch profile. Production packages must omit their entry points, agent manifest, credentials, and transport configuration.
+- Prefer inherited handles, named local endpoints with owner-only permissions, or loopback communication authenticated by a per-launch capability token. Never expose an unauthenticated class-definition endpoint or enable non-loopback listening by default.
+- Bound manifest size, class count, class bytes, resource bytes, compile output, diagnostics, retained generation history, retries, and reload frequency. Verify hashes and hot/cold ownership before submitting class definitions to the VM.
+- Accept changed classes only from the configured project outputs. Reject attempts to redefine JDK, HimariUI cold runtime, platform, FFM, generated binding, RHI, renderer, agent, or unlisted dependency classes.
+- Treat changed class files and reloadable resources as untrusted build inputs for bounds and parsing even though the development process is trusted. A rejected update leaves the last accepted generation active.
+- Stop and request a process restart when a reload would invalidate native callbacks, FFM layouts or handles, `Arena`/`MemorySegment` ownership, GPU/native resource wrappers, agent state, or another cold boundary.
+- Redact secrets, password-field contents, private semantics, environment values, and unrelated source paths from reload diagnostics and inspector output.
 
 ---
 
@@ -1972,6 +2062,7 @@ Work in one track proceeds while an unrelated criterion in another track remains
 - **STRUCTURE-001**: Implement the selected branch, keyed-collection, identity, local-state, and failure-recovery semantics.
 - **MOUNT-001**: Mounted elements, typed property bindings, phase impacts, and incremental apply.
 - **EFFECT-001**: Effect lifecycle.
+- **RELOAD-CONTRACT-001**: VM-independent reload generations, safe points, compatible state retention, callback/effect replacement, resource generations, multi-window coordination, failure containment, and explicit reset/restart fallbacks exercised through Headless simulation without replacing bytecode.
 - **SCHED-001**: UI scheduling and frame-request coalescing.
 - **ANIM-CORE-001**: Animation-transaction propagation, model/presentation separation, manual-clock sampling, presentation epochs, allocation-free scalar adapters, and reference tween/spring retargeting.
 - **RUNTIME-MBT-001**: Model-based differential harness running randomized operation sequences against a naive recompute-everything reference evaluator.
@@ -1986,6 +2077,7 @@ Work in one track proceeds while an unrelated criterion in another track remains
 - Failed staged UI work leaks no nodes, graph edges, or effects; every candidate that claims cancellation or preemption passes the same cleanup gate for cancelled attempts.
 - Local value changes invalidate only their dependent bindings or phase consumers; topology changes rerun only the selected structural scope.
 - Ambient-value propagation and override fixtures pass with measured invalidation scope; viewport-driven materialization passes under the selected ADR-020 contract; per-phase application exceptions stay within their declared ADR-021 containment scope with deterministic fallback and diagnostics.
+- Headless reload simulation preserves compatible keyed and positional local state, replaces callbacks, disposes and restarts owned effects, coordinates multiple roots under one generation, retains the previous resource generation on validation failure, and selects deterministic subtree-reset, full-UI-reset, or process-restart outcomes for incompatible changes.
 - The model-based differential harness completes randomized operation sequences against the recompute-everything reference evaluator without divergence.
 - Headless animation tests prove atomic presentation epochs, no per-frame application-state writes, deterministic timestamp sampling, value-continuous replacement, and velocity-continuous compatible spring retargeting.
 - A Headless sample runs deterministically.
@@ -2226,9 +2318,9 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - Compositor-only animation triggers no structure, measure, placement, or paint callbacks, and authoritative hit testing follows its visible presentation geometry.
 - Control accessibility tests are required merge gates.
 
-### M10 — Performance, tools, and Native Image productization
+### M10 — Performance, developer tools, reload, and Native Image productization
 
-**Starts after:** M3 `PERF-BASE-001`, `SCENE-CODEC-001`, and `COLOR-SDR-REF-001` plus M5 `RHI-001` and `GPU-DIFF-001`; independent tooling, advanced color, and Native Image work may begin before M9 closes.
+**Starts after:** M1 `RELOAD-CONTRACT-001`, M3 `PERF-BASE-001`, `SCENE-CODEC-001`, and `COLOR-SDR-REF-001` plus M5 `RHI-001` and `GPU-DIFF-001`; independent tooling, reload integration, advanced color, and Native Image work may begin before M9 closes.
 
 **Completes after:** M5 through M9.
 
@@ -2240,6 +2332,7 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **VECTOR-001**: Optional `himari-render-vector` renderer.
 - **INSPECT-001**: Tree, frame, and render inspector.
 - **REPLAY-001**: Canonical scene/resource/color-profile/presentation/semantics/event trace and offline replay in a fresh process.
+- **DEV-RELOAD-001**: Pure-Java development agent, launcher/controller, incremental-build and resource-watch integration, baseline OpenJDK 25/HotSpot class-redefinition profile, pinned JBR 25 enhanced-redefinition profile, inspector/status protocol, UI reset and process-restart fallbacks, Native Image rebuild/restart integration, and activation of `verifyReloadIsolation`.
 - **NI-001**: Reachability generator and static platform/renderer backend registries.
 - **PACK-001**: jlink and Native Image packaging plugin.
 - **DIAG-001**: Capability and fallback report, including requested/effective surface color configuration, precision, luminance/headroom, mapping ownership, and disabled HDR reasons.
@@ -2253,6 +2346,10 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - JVM and Native Image sample matrices pass.
 - The inspector can localize reactive propagation, structural-update, layout, and render faults.
 - `scene-replay` reproduces reference frames from encoded traces and declared resources alone, with no ambient font or producer-object access.
+- The Section 18.11 Headless, OpenJDK 25/HotSpot, and JBR 25 reload profiles pass their pinned edit matrices. Supported edits retain compatible UI state while installing new callbacks and effects; unsupported, cold, or semantically incompatible edits select and report the specified reset/restart fallback without mixed-generation execution.
+- Theme, style, image, and font updates publish atomically, invalidate only their actual consumers in the optimized path, retain the last valid generation on failure, and release superseded framework/native/GPU resources without leaks.
+- Compile, verification, replacement, and post-replacement application failures remain diagnosable and recoverable; long repeated-edit sessions retain no obsolete owners, effects, class generations, or unbounded diagnostics.
+- Native Image development uses reproducible rebuild/restart and never advertises in-process code reload. `verifyReloadIsolation` proves that production artifacts and runtime graphs contain no agent, controller, JBR-only API, or reload transport.
 - Every pure-Java release-artifact gate passes.
 
 ### M11 — Beta and stabilization
@@ -2268,13 +2365,14 @@ Use Linux Wayland plus Vulkan by default because both expose explicit C ABIs. Ch
 - **SECURITY-001**: Parser, canonical scene-codec, and FFI threat review.
 - **SOAK-001**: Long-running, multi-window, device-lost, sleep, and wake tests.
 - **RELEASE-001**: BOM, SBOM, NOTICE, signing, and reproducible release build.
-- **COMPAT-001**: OS, JDK, and GPU compatibility matrix.
+- **COMPAT-001**: OS, production JDK, development OpenJDK/JBR reload, Native Image, and GPU compatibility matrix.
 
 **Exit criteria:**
 
 - All P0 and P1 defects are closed.
 - The API compatibility checker passes.
 - Documentation covers every core user path.
+- Documentation distinguishes resource reload, state-preserving code reload, UI reset, and process restart; lists the pinned OpenJDK/JBR edit matrices; and states that Native Image and production packages do not support in-process hot patching.
 - License and provenance audits pass.
 - Core artifacts contain no native payload or dependency.
 - Public limitations and accepted differences are complete.
@@ -2386,6 +2484,7 @@ These issues are the initial project-board view of canonical work packages, not 
 - **RUNTIME-SPIKE-HYBRID-001**: Fine-grained binding prototype with small rerunnable structural scopes.
 - **RUNTIME-ADR-001**: Accept ADR-023 explicit grouped recomposition, ADR-020 scoped current-measure materialization, and ADR-021 declared error-boundary containment from reviewed evidence.
 - **STRUCTURE-001**: Implement the selected branch, keyed-collection, identity, local-state, and failure-recovery semantics.
+- **RELOAD-CONTRACT-001**: Implement VM-independent reload generations, safe points, compatible state retention, callback/effect replacement, resource generations, multi-root coordination, and reset/restart outcomes with deterministic Headless fixtures.
 - **ANIM-CORE-001**: Animation-transaction propagation, model/presentation separation, manual-clock sampling, presentation epochs, allocation-free scalar adapters, and reference tween/spring retargeting.
 - **RUNTIME-MBT-001**: Model-based differential harness running randomized operation sequences against a naive recompute-everything reference evaluator.
 - **TRACE-001**: Initial deterministic trace format.
@@ -2506,7 +2605,20 @@ Meet the general DoD and all of the following:
 - A backend advertises only modes whose actual format/encoding/precision, display-change, mapping, capture, and fallback conformance profiles pass. Unverified HDR remains disabled without weakening SDR support.
 - Hardware-unavailable tests use programmable Headless surfaces and exercise the same selection and fallback contract.
 
-### 24.8 Future local browser/Wasm feature
+### 24.8 Development reload feature
+
+- The supported edit matrix and fallback for every tested VM build are explicit; runtime capability discovery precedes code replacement.
+- Hot/cold class ownership is deterministic, and cold FFM, native-callback, RHI, renderer, framework, agent, or dependency changes force process restart.
+- One verified reload generation applies at a UI safe point; callbacks and commit attempts never mix generations.
+- Compatible runtime-owned state retention and every subtree/full-UI reset are observable and tested by identity, value type, and owner.
+- Changed callbacks execute new code, and invalidated effects/resources are disposed and recreated in documented order without obsolete owner or class-generation leaks.
+- Compilation, resource validation, class verification/redefinition, and post-replacement UI failures retain the last valid generation or committed scene as specified and expose actionable diagnostics.
+- Multi-window scheduling, queued input, source/resource generation, inspector status, and reset/restart commands pass deterministic integration tests.
+- Resource reload publishes atomically, invalidates the correct consumers, and retires superseded native/GPU/cache state through ordinary ownership rules.
+- Repeated-edit latency, heap/native/GPU retention, obsolete-class unloading, and diagnostic-buffer budgets pass the pinned development profiles.
+- The agent/controller is pure Java and development-only; `verifyReloadIsolation` passes, and Native Image uses rebuild/restart without claiming in-process code replacement.
+
+### 24.9 Future local browser/Wasm feature
 
 - Single-thread, host-driven execution passes before worker acceleration is considered complete.
 - Asynchronous initialization, permissions, clipboard, resource loading, and GPU acquisition cover success, denial, cancellation, and unavailability.
@@ -2518,7 +2630,7 @@ Meet the general DoD and all of the following:
 - Browser lifecycle, device/context loss, detached surfaces, and aborted fetches have defined recovery or shutdown behavior.
 - Packaging is reproducible and passes the supported browser/security-policy matrix.
 
-### 24.9 Future Android/iOS AOT feature
+### 24.10 Future Android/iOS AOT feature
 
 - The selected toolchain compiles the normal Java 25 source sets; no ART-compatible common fork, source rewrite, or compatibility substitution is required.
 - Every stable Java 25 API family used by the included modules has a representative compile-and-run test on each supported mobile target.
@@ -2528,7 +2640,7 @@ Meet the general DoD and all of the following:
 - Lifecycle, input, IME, accessibility, permissions, software presentation, GPU differential behavior, color/dynamic-range capability changes and SDR fallback, suspend/resume, surface/device loss, and memory pressure pass on the supported matrix.
 - Packaging is reproducible before signing; installation, signing, and store-oriented validation procedures are documented and repeatable.
 
-### 24.10 Future remote-rendering feature
+### 24.11 Future remote-rendering feature
 
 - The canonical scene protocol is versioned, pointer-free, deterministic, bounded, and independent of Java object layout, implementation language, FFM, RHI, and native GPU APIs.
 - Full snapshots, deltas, resource manifests, content hashes, acknowledgements, reclamation, required-feature negotiation, stream epochs, recovery, and backpressure pass cross-process and cross-implementation tests.
@@ -2564,6 +2676,7 @@ Meet the general DoD and all of the following:
 | Font, image, or color-profile/LUT parsers permit denial of service | Security failure | Extreme memory or CPU use | Enforce dimensional/stage/work limits, checked arithmetic, fuzzing, and timeouts |
 | Required system libraries are absent | Linux startup failure | Vulkan or Wayland libraries cannot be resolved | Report capabilities and fall back to software, Headless, or X11 where documented |
 | The compiler-free structural runtime has unacceptable ceremony | Public API lock-in and poor usability | Grouped samples require pervasive keys or boundaries, or signal samples require pervasive deferred getters and control-flow wrappers | Complete all M1 runtime prototypes with ordinary Java, publish ceremony and execution metrics, and select the production model before building widgets; treat optional tooling only as a later enhancement |
+| Development reload depends on a particular JBR build or preserves semantically incompatible state | Broken development sessions, obsolete callbacks/effects, native-resource corruption, or accidental production-runtime lock-in | Core modules import JBR APIs, a reload touches FFM/RHI/native-callback classes, windows observe different generations, static initializers silently diverge, or repeated edits retain old owners/classes | Keep the reload contract VM-independent, use only standard Instrumentation from a development agent, pin and conformance-test each OpenJDK/JBR profile, enforce hot/cold ownership and safe points, validate state identity/type compatibility, restart effects, diagnose static changes, force explicit reset/restart at cold or unsafe boundaries, and enforce `verifyReloadIsolation` |
 | Fine-grained dependencies introduce glitches, cycles, or owner leaks | Inconsistent UI or unbounded memory growth | Diamond, dynamic-branch, equality, or disposal tests observe intermediate values or retained consumers | Use two-phase push/pull propagation, semantic versions, cycle diagnostics, explicit ownership, and adversarial graph/liveness tests |
 | Animation is implemented as curves without transaction, presentation, or lifecycle semantics | Visible jumps, incorrect input geometry, leaked exit nodes, inaccessible motion, and public API lock-in | Retargeting restarts from stale values, gestures lose velocity, animation writes `State` every frame, or opacity triggers layout/paint | Enforce ADR-018 in M1, keep model and presentation values separate, test atomic timestamp sampling and replacement outcomes, require phase metadata, and complete structural/reduced-motion conformance before control stabilization |
 | Published modules are too granular | Dependency confusion | Users must understand internal module boundaries | Use ADR-013, the BOM, and `himari-desktop`; keep fine-grained artifacts out of the default user surface |
@@ -2584,7 +2697,7 @@ Meet the general DoD and all of the following:
 
 ## 26. Decision Register and Working Defaults
 
-ADR-001 through ADR-023 are accepted and materialized under `adr/`. ADR-015 defines the fine-grained value and phase graph; ADR-023 resolves its structural subdecision in favor of explicit grouped recomposition. ADR-020 fixes scoped current-measure materialization, and ADR-021 fixes declared error-boundary containment. Their checked M1 evidence and reproducible selection profile are canonical inputs to `STRUCTURE-001`.
+ADR-001 through ADR-023 are accepted and materialized under `adr/`. ADR-015 defines the fine-grained value and phase graph; ADR-023 resolves its structural subdecision in favor of explicit grouped recomposition. ADR-020 fixes scoped current-measure materialization, and ADR-021 fixes declared error-boundary containment. Their checked M1 evidence and reproducible selection profile are canonical inputs to `STRUCTURE-001`. The accepted development-reload contract in Sections 1.3 and 7.8 reuses those identity, ownership, transaction, and containment semantics; `DEV-RELOAD-001` pins tool and VM build details rather than turning them into application API requirements.
 
 The remaining entries below must not block M0 unless marked accepted. Use a working default only until the decision milestone recorded by `ADR-BOOTSTRAP-001`; no default may remain undated.
 
@@ -2622,6 +2735,9 @@ The remaining entries below must not block M0 unless marked accepted. Use a work
 | First-stable HDR output | Optional and disabled per backend until its dedicated conformance profile passes; tagged HDR reference math, codecs, Headless capability simulation, and truthful SDR fallback are mandatory |
 | Reference working color | Extended-linear floating point, initially extended-linear sRGB unless corpus evidence selects another ADR-019-compatible default |
 | Compiler plugin | Optional; never a correctness or baseline-usability dependency |
+| Development code reload | First-stable core contract and tooling: whole-root correctness fallback, pinned OpenJDK 25/HotSpot method-body profile, pinned JBR 25 enhanced-schema profile, and explicit subtree/UI/process restart outcomes |
+| Reload implementation boundary | Pure-Java development agent using standard Instrumentation plus a VM-independent runtime coordinator; no JBR API, agent, controller, or enhanced-redefinition flag in production graphs |
+| Native Image development reload | Rebuild and process restart only; no in-process code replacement claim |
 | Arbitrary user shaders | Defer until after the stable release |
 | Linux keyboard | Pure-Java XKB target; system xkbcommon is transitional or an Oracle only |
 | X11 | Optional separately versioned compatibility profile; Wayland is the required Linux profile for first stable |
@@ -2649,6 +2765,7 @@ V0 is complete after the required M1–M4 work packages pass when:
 5. The display list and one full `SceneEnvelope` round-trip canonically through offline replay.
 6. A counter change exercises animation-transaction and model/presentation separation, and the Headless manual clock reproduces declared intermediate timestamps.
 7. Runtime-core execution and the sample load no native library, and the active M0/M3 guard set passes.
+8. A simulated reload generation preserves compatible counter state, installs a changed callback, restarts owned effects, and exercises deterministic reset and failed-resource-generation outcomes without bytecode replacement.
 
 ### V1 — First desktop vertical slice
 
@@ -2670,6 +2787,7 @@ V2 is complete only after the relevant M6, M7, and M10 work packages pass:
 3. The inspector displays reactive owners, structural scopes, mounted elements, layout, layers, semantics, animation, and effective presentation-color state.
 4. The counter scene, declared color/profile and other resources, presentation configuration, correlated semantics, normalized input, and sampled presentation epochs replay in a fresh process without ambient fonts or producer objects.
 5. JVM and Native Image packaging matrices pass for the profiles owned by M10.
+6. The same application passes the pinned OpenJDK 25/HotSpot and JBR 25 reload edit matrices, including compatible state retention, new callback/effect execution, resource reload, multi-window generation coordination, explicit cold-change restart, and production-artifact isolation; Native Image demonstrates only rebuild/restart.
 
 M11 and the remaining M9 release profiles are still required for the first stable desktop release; V2 is an architecture proof, not the stable-release definition. Android/iOS AOT, browser/Wasm, and live remote rendering are intentionally absent from V0–V2 and remain in the post-stable A0–A4, W0–W4, and R0–R4 tracks.
 
@@ -2684,7 +2802,11 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 - [JEP 454: Foreign Function & Memory API](https://openjdk.org/jeps/454)
 - [Java 25 Foreign Function and Memory API Guide](https://docs.oracle.com/en/java/javase/25/core/foreign-function-and-memory-api.html)
 - [Java 25 Restricted Methods and Native Access](https://docs.oracle.com/en/java/javase/25/core/restricted-methods.html)
+- [Java 25 Instrumentation API](https://docs.oracle.com/en/java/javase/25/docs/api/java.instrument/java/lang/instrument/package-summary.html)
+- [Java 25 JVM Tool Interface and Class Redefinition](https://docs.oracle.com/en/java/javase/25/docs/specs/jvmti.html)
 - [JEP 508: Vector API (Tenth Incubator)](https://openjdk.org/jeps/508)
+- [JetBrains Runtime and Enhanced Class Redefinition](https://github.com/JetBrains/JetBrainsRuntime)
+- [The Journey to Compose Hot Reload 1.0.0](https://blog.jetbrains.com/kotlin/2026/01/the-journey-to-compose-hot-reload-1-0-0/)
 - [GraalVM Native Image Reachability Metadata](https://www.graalvm.org/latest/reference-manual/native-image/metadata/)
 - [GraalVM Native Image C API](https://www.graalvm.org/latest/reference-manual/native-image/native-code-interoperability/C-API/)
 - [GraalVM Native Image FFM Support](https://www.graalvm.org/jdk25/reference-manual/native-image/native-code-interoperability/ffm-api/)
@@ -2799,7 +2921,7 @@ Use these sources to confirm API status, derive behavioral specifications, and b
 
 At the first stable desktop release, automated evidence must support this public statement:
 
-> HimariUI's core, text engine, software renderer, GPU abstraction, required Windows, macOS, and Linux Wayland platform profiles, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. Animation keeps committed model targets separate from atomically sampled presentation values, preserves value and compatible spring velocity across interruption, respects declared phase impacts and reduced-motion policy, and replays deterministically without per-frame application-state writes. Color values, image/display-list/scene encodings, the extended-linear reference renderer, and RHI surfaces keep gamut, transfer function, luminance, precision, and presentation capability explicit; finite extended-range values and HDR metadata survive canonical replay, and every backend provides a deterministic SDR fallback without claiming unverified hardware HDR support. A versioned, bounded, pointer-free scene/display-list codec plus offline replay proves that scenes, declared color/profile and other resources, presentation configuration, correlated semantics, and normalized input survive a process boundary without placing networking or remote-session policy in the core. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
+> HimariUI's core, text engine, software renderer, GPU abstraction, required Windows, macOS, and Linux Wayland platform profiles, and sole desktop FFM binding path are implemented in Java. Standard artifacts contain no project-built or third-party CPU-native libraries. The desktop framework calls operating system and system graphics APIs through generated, strongly typed FFM bindings and defines no FFI provider SPI. The JVM development loop distinguishes resource reload, state-preserving code reload, UI reset, and process restart; compatible edits preserve runtime-owned state while replacing callbacks and effects under one failure-contained reload generation. A pinned OpenJDK 25/HotSpot profile provides baseline class redefinition, a pinned JBR 25 profile provides conformance-gated enhanced schema redefinition, Native Image uses rebuild/restart, and no reload agent, controller, JBR-only API, or development transport enters a production runtime graph. Animation keeps committed model targets separate from atomically sampled presentation values, preserves value and compatible spring velocity across interruption, respects declared phase impacts and reduced-motion policy, and replays deterministically without per-frame application-state writes. Color values, image/display-list/scene encodings, the extended-linear reference renderer, and RHI surfaces keep gamut, transfer function, luminance, precision, and presentation capability explicit; finite extended-range values and HDR metadata survive canonical replay, and every backend provides a deterministic SDR fallback without claiming unverified hardware HDR support. A versioned, bounded, pointer-free scene/display-list codec plus offline replay proves that scenes, declared color/profile and other resources, presentation configuration, correlated semantics, and normalized input survive a process boundary without placing networking or remote-session policy in the core. FreeType, HarfBuzz, SDL, Impeller, JNA, and LWJGL are used only as design references, test Oracles, or development tools and do not enter the core runtime graph. Every critical port pins its upstream version, records provenance and symbol mapping, retains a pure-Java reference implementation, and has reproducible differential-corpus evidence.
 
 ### 29.2 Future local browser/Wasm release
 
