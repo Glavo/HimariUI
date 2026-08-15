@@ -4,10 +4,11 @@
 > Runtime baseline: Java 25<br>
 > Initial platforms: Windows, macOS, Linux, and Headless<br>
 > Future mobile policy: Android and iOS are post-stable Java 25 AOT targets and do not define the core compatibility baseline<br>
+> Future additional hosts: FreeBSD, OpenBSD, and OpenHarmony are post-stable, separately versioned platform profiles and do not block the first stable desktop release<br>
 > Future remote policy: the scene boundary is transport-ready, while networking and remote-session products remain post-stable extensions<br>
 > Future color policy: first-stable color values, scene encodings, render paths, and surface contracts preserve extended-range and HDR semantics, while production hardware HDR presentation is capability-gated and not a first-stable release requirement<br>
 > Primary distribution constraint: published core and desktop artifacts must not ship project-built or third-party CPU-native libraries; future mobile bundles may contain only declared target-generated AOT code and host glue<br>
-> Last reviewed: 2026-08-14
+> Last reviewed: 2026-08-15
 
 ---
 
@@ -163,6 +164,9 @@ org.glavo.himari:himari-platform-windows
 org.glavo.himari:himari-platform-macos
 org.glavo.himari:himari-platform-linux-wayland
 org.glavo.himari:himari-platform-linux-x11
+org.glavo.himari:himari-platform-freebsd
+org.glavo.himari:himari-platform-openbsd
+org.glavo.himari:himari-platform-openharmony
 org.glavo.himari:himari-platform-headless
 org.glavo.himari:himari-testing
 ```
@@ -171,7 +175,7 @@ org.glavo.himari:himari-testing
 
 Implementation artifacts such as `himari-ffi`, `himari-rhi-vulkan`, `himari-rhi-d3d12`, and `himari-rhi-metal` may be published for dependency composition but are not normal application entry points. `himari-ffi` contains shared FFM support and internal facilities required by generated bindings; it defines no provider SPI and is not a dependency applications should declare directly. Record every implementation coordinate and its BOM relationship in ADR-013. Do not publish a JNA production artifact or include one in the BOM.
 
-`himari-platform-linux-x11` is a reserved optional coordinate. Do not include it transitively from `himari-desktop` or advertise a stable version until the separate X11 compatibility profile passes.
+`himari-platform-linux-x11`, `himari-platform-freebsd`, `himari-platform-openbsd`, and `himari-platform-openharmony` are reserved optional coordinates. Do not include them transitively from `himari-desktop` or advertise a stable version until the corresponding later-extension profile passes. The Linux Wayland and Linux X11 modules are not FreeBSD, OpenBSD, or OpenHarmony backends.
 
 ---
 
@@ -193,11 +197,12 @@ Deliver all of the following:
 - JVM and GraalVM Native Image distribution paths.
 - Inspector, versioned transport-ready scene/frame traces, deterministic offline replay, and golden-test tooling.
 
-The first stable release is blocked only by the required common, Windows, macOS, Linux Wayland, Headless, software-renderer, and declared GPU profiles recorded in `PLATFORM_CONFORMANCE.yaml`. Optional capabilities such as X11 or native HDR have independent profiles and release versions; omitting or disabling one must be reported truthfully but does not weaken a required profile.
+The first stable release is blocked only by the required common, Windows, macOS, Linux Wayland, Headless, software-renderer, and declared GPU profiles recorded in `PLATFORM_CONFORMANCE.yaml`. Optional capabilities such as X11, native HDR, FreeBSD, OpenBSD, or OpenHarmony have independent profiles and release versions; omitting or disabling one must be reported truthfully but does not weaken a required profile.
 
 ### 3.2 Explicit non-goals for the first stable release
 
 - Android or iOS product support; both belong to the post-stable AOT extension track.
+- FreeBSD, OpenBSD, or OpenHarmony product support; each belongs to a separately versioned later platform profile.
 - Completion of the optional Linux X11 compatibility profile.
 - Completion of the Tier-2 complex-script shaping profile (Indic, USE, Khmer, Myanmar, Tibetan).
 - TrueType and CFF hinting interpretation. First stable renders unhinted outlines with gamma-correct grayscale antialiasing, optional vertical-only grid fitting, and embedded bitmap strikes where fonts provide them; the TrueType and CFF hinting virtual machines form a separately versioned hinting fidelity profile.
@@ -220,6 +225,9 @@ The first stable release is blocked only by the required common, Windows, macOS,
 - **Remote scene rendering and Web client**: keep the authoritative Java 25 runtime, layout, text shaping, hit testing, focus, and application state on a JVM or Native Image host. Stream versioned scene/display-list envelopes, content-addressed resources, correlated semantics updates, and lifecycle/configuration changes to a browser client that presents through WebGPU or Canvas/software and returns normalized input and IME transactions. This path must not require the full Java runtime to execute in the browser and must not expose component trees, RHI commands, native GPU commands, or target handles on the wire. Pixel/video streaming may be an optional fallback, not the normative scene protocol.
 - **Advanced color and HDR presentation**: add production BT.2020/BT.2100 PQ and HLG, extended-linear/EDR, high-bit-depth and floating-point swapchains, per-display luminance/headroom updates, static and future negotiated dynamic metadata, versioned gamut/tone-mapping policies, HDR image/media ingestion, and calibrated output matrices. Keep content encoding independent of output capability so unsupported surfaces receive an explicit deterministic SDR mapping rather than reinterpretation or clipping.
 - **Linux X11 compatibility profile**: complete and release the XCB/XInput2/XIM/selection/XDnD/Vulkan-XCB/software-presentation backend independently of the required Wayland profile. It may be developed before 1.0, but an incomplete X11 profile does not delay the first stable release.
+- **FreeBSD desktop profile**: a separately versioned, feasibility-gated host backend for FreeBSD windowing, input, IME, accessibility, and presentation. Java 25 and FFM must work on the host before the profile can pass. The backend may share Wayland or X11 protocol work only after a dedicated FreeBSD profile proves the ABI, compositor, and library surface; do not treat `himari-platform-linux-wayland` or `himari-platform-linux-x11` as a FreeBSD implementation. Software rendering and Vulkan are the expected presentation paths. An incomplete FreeBSD profile does not delay the first stable release.
+- **OpenBSD desktop profile**: a separately versioned, feasibility-gated host backend for OpenBSD. Expect a more constrained graphics and packaging surface than FreeBSD. X11 is the more likely first host path; do not assume Wayland availability or reuse a Linux module. Software rendering is required; Vulkan is used only where the host stack is actually present and profile-tested. An incomplete OpenBSD profile does not delay the first stable release.
+- **OpenHarmony profile**: a separately versioned, feasibility-gated host backend for OpenHarmony window, input, IME, accessibility, and presentation APIs through generated bindings. Do not treat OpenHarmony as Android, Linux Wayland, or commercial HarmonyOS. The profile is gated on a Java 25-capable JVM or AOT toolchain and on documented public system APIs. An incomplete OpenHarmony profile does not delay the first stable release.
 - **Media**: add a pure-Java `himari-media` API, WAV/PCM baseline implementations, and optional FFmpeg, GStreamer, or platform-codec providers.
 - **Tier-2 complex-script shaping profile**: complete SHAPE-INDIC, SHAPE-USE, Khmer, Myanmar, and Tibetan against the frozen HarfBuzz corpora as a separately versioned profile that upgrades text coverage without changing the shaping contract.
 - **Hinting fidelity profile**: complete the TrueType VM (`fpgm`, `prep`, glyph programs, CVT, storage, twilight zone), CFF hinting, and auto-hinting port units with FreeType differential evidence as a separately versioned profile; the unhinted default path remains supported.
@@ -517,7 +525,10 @@ Do not parallelize application component, binding, or structural-control callbac
 │  │  ├─ windows/
 │  │  ├─ macos/
 │  │  ├─ linux-wayland/
-│  │  └─ linux-x11/
+│  │  ├─ linux-x11/
+│  │  ├─ freebsd/
+│  │  ├─ openbsd/
+│  │  └─ openharmony/
 │  ├─ ffi/
 │  ├─ controls/
 │  │  └─ core/
