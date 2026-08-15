@@ -170,6 +170,50 @@ public final class D3d12Device implements AutoCloseable {
         return D3d12GpuCopy.copyThroughDefaultHeap(this, payload);
     }
 
+    /// Uploads row-major RGBA into a default-heap texture and copies it back to the CPU.
+    ///
+    /// @param rgba unassociated 8-bit sRGB pixels in row-major RGBA order
+    /// @param width the pixel width
+    /// @param height the pixel height
+    /// @return the read-back observation
+    public D3d12TextureRoundTrip roundTripSdrRgba(byte[] rgba, int width, int height) {
+        requireOpen();
+        return D3d12GpuTexture.roundTripSdrRgba(this, rgba, width, height);
+    }
+
+    /// Clears an offscreen R8G8B8A8 render target and copies the result back to the CPU.
+    ///
+    /// @param red the red channel in `[0, 1]`
+    /// @param green the green channel in `[0, 1]`
+    /// @param blue the blue channel in `[0, 1]`
+    /// @param alpha the alpha channel in `[0, 1]`
+    /// @param width the pixel width
+    /// @param height the pixel height
+    /// @return the read-back observation
+    public D3d12TextureRoundTrip clearSdrAndReadback(
+            float red,
+            float green,
+            float blue,
+            float alpha,
+            int width,
+            int height
+    ) {
+        requireOpen();
+        return D3d12GpuTexture.clearSdrAndReadback(this, red, green, blue, alpha, width, height);
+    }
+
+    /// Uploads row-major RGBA and presents it through a flip-model SDR swapchain.
+    ///
+    /// @param hwnd the native window handle
+    /// @param rgba unassociated 8-bit sRGB pixels in row-major RGBA order
+    /// @param width the pixel width
+    /// @param height the pixel height
+    /// @return the present observation
+    public D3d12Presentation presentSdrRgba(MemorySegment hwnd, byte[] rgba, int width, int height) {
+        requireOpen();
+        return D3d12GpuTexture.presentSdrRgba(this, hwnd, rgba, width, height);
+    }
+
     /// Creates a flip-model SDR swapchain for `hwnd`, presents once, and releases the present objects.
     ///
     /// The HWND must remain valid for the duration of this call. Hardware HDR metadata is never applied.

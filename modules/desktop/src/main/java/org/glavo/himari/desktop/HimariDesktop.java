@@ -37,6 +37,8 @@ public final class HimariDesktop {
                 "HimariDesktop host=" + result.host()
                         + " windowCreated=" + result.windowCreated()
                         + " activations=" + result.activations()
+                        + " presented=" + result.presentedScanlines()
+                        + " d3d12=" + result.d3d12Presented()
                         + " png=" + result.pngBytes()
         );
     }

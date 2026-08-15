@@ -25,9 +25,13 @@ import org.glavo.himari.platform.api.WindowRequest;
 import org.glavo.himari.platform.api.WindowState;
 import org.glavo.himari.platform.macos.MacOSProbe;
 import org.glavo.himari.platform.wayland.WaylandProbe;
+import org.glavo.himari.platform.api.SurfaceRole;
 import org.glavo.himari.platform.windows.WindowsBackend;
 import org.glavo.himari.platform.windows.WindowsPlatform;
+import org.glavo.himari.platform.windows.WindowsPopupHost;
 import org.glavo.himari.platform.windows.WindowsWindow;
+import org.glavo.himari.rhi.d3d12.D3d12Device;
+import org.glavo.himari.rhi.d3d12.D3d12Presentation;
 import org.glavo.himari.render.software.SoftwareSurface;
 import org.glavo.himari.rhi.metal.MetalProbe;
 import org.glavo.himari.runtime.animation.AnimationPhaseImpact;
@@ -64,8 +68,8 @@ public final class DesktopLaunch {
 
     /// Runs the desktop CounterApp and optionally writes artifacts.
     ///
-    /// On Windows a real HWND is created, pumped, and closed when `smoke` is true. Other hosts
-    /// still execute the Headless CounterApp tree and record environment-blocked backend probes.
+    /// On Windows a real HWND is created, pumped, presented, and closed when `smoke` is true. Other
+    /// hosts still execute the Headless CounterApp tree and record environment-blocked backend probes.
     ///
     /// @param smoke whether to close host windows before returning
     /// @param output the optional artifact directory
@@ -82,6 +86,9 @@ public final class DesktopLaunch {
         AtomicInteger clicks = new AtomicInteger();
         boolean windowCreated = false;
         int windowCount = 0;
+        int presentedScanlines = 0;
+        boolean d3d12Presented = false;
+        boolean popupHosted = false;
         String inspectorJson;
         String label;
         byte[] png;
@@ -126,25 +133,53 @@ public final class DesktopLaunch {
                             event -> { }
                     ).toCompletableFuture().get();
                     platform.pump();
+                    primary.takePointerEvents();
+                    secondary.takePointerEvents();
                     windowCreated = !primary.isClosed() && !secondary.isClosed();
                     windowCount = platform.openWindowCount();
+                    WindowsWindow hostedPopup = WindowsPopupHost.show(
+                            platform,
+                            primary,
+                            "HimariUI-Menu",
+                            new LogicalRect(80.0, 80.0, 160.0, 80.0),
+                            () -> { }
+                    );
+                    platform.pump();
+                    popupHosted = !hostedPopup.isClosed()
+                            && hostedPopup.snapshot().role() == SurfaceRole.POPUP;
+                    hostedPopup.closeAsync().toCompletableFuture().get();
+                    platform.pump();
                     int x = Math.round(bounds.x() + 2.0f);
                     int y = Math.round(bounds.y() + 2.0f);
-                    primary.postPointer(PointerEventType.DOWN, x, y);
-                    platform.pump();
-                    primary.postPointer(PointerEventType.UP, x, y);
-                    platform.pump();
-                    for (PointerEvent event : primary.takePointerEvents()) {
-                        layout.dispatch(event);
+                    activateThroughWndProc(platform, primary, layout, clicks, count, runtime, x, y);
+                    activateThroughWndProc(platform, primary, layout, clicks, count, runtime, x, y);
+                    label = String.valueOf(runtime.mounts().snapshot().elements().getFirst().property("text").value());
+                    InspectorSnapshot inspector = Inspector.capture(layout, runtime.trace());
+                    inspectorNodes = inspector.nodes().size();
+                    inspectorJson = inspector.toCanonicalJson();
+                    SfntFont font = BitmapSfntFont.create();
+                    DisplayList displayList = record(label, font);
+                    SoftwareSurface surface = new SoftwareSurface(WIDTH, HEIGHT);
+                    surface.clear(Color.srgb(0.95f, 0.95f, 0.97f, 1.0f));
+                    surface.replay(displayList);
+                    png = surface.toSdrPng();
+                    extendedLinear = floats(surface.extendedLinearPremultiplied());
+                    byte[] rgba = surface.toSdrRgba();
+                    presentedScanlines += primary.presentSdrRgba(rgba, WIDTH, HEIGHT);
+                    presentedScanlines += secondary.presentSdrRgba(rgba, WIDTH, HEIGHT);
+                    try (D3d12Device d3d12 = D3d12Device.open()) {
+                        D3d12Presentation gpu = d3d12.presentSdrRgba(primary.nativeHandle(), rgba, WIDTH, HEIGHT);
+                        d3d12Presented = gpu.presented() && !gpu.hdrMetadataApplied();
                     }
-                    count.set(clicks.get());
-                    runtime.update();
-                    runtime.applyMountedProperties();
-                    layout.dispatch(new PointerEvent(PointerEventType.DOWN, bounds.x() + 2.0f, bounds.y() + 2.0f));
-                    layout.dispatch(new PointerEvent(PointerEventType.UP, bounds.x() + 2.0f, bounds.y() + 2.0f));
-                    count.set(clicks.get());
-                    runtime.update();
-                    runtime.applyMountedProperties();
+                    platform.pump();
+                    if (!new SceneEnvelope(SceneEnvelope.CURRENT_SCHEMA, WIDTH, HEIGHT, displayList)
+                            .toCanonicalJson()
+                            .equals(SceneEnvelope.parse(
+                                    new SceneEnvelope(SceneEnvelope.CURRENT_SCHEMA, WIDTH, HEIGHT, displayList)
+                                            .toCanonicalJson()
+                            ).toCanonicalJson())) {
+                        throw new IllegalStateException("Desktop scene envelope did not round-trip");
+                    }
                     if (smoke) {
                         primary.closeAsync().toCompletableFuture().get();
                         secondary.closeAsync().toCompletableFuture().get();
@@ -163,25 +198,25 @@ public final class DesktopLaunch {
                 count.set(clicks.get());
                 runtime.update();
                 runtime.applyMountedProperties();
-            }
-            label = String.valueOf(runtime.mounts().snapshot().elements().getFirst().property("text").value());
-            InspectorSnapshot inspector = Inspector.capture(layout, runtime.trace());
-            inspectorNodes = inspector.nodes().size();
-            inspectorJson = inspector.toCanonicalJson();
-            SfntFont font = BitmapSfntFont.create();
-            DisplayList displayList = record(label, font);
-            SoftwareSurface surface = new SoftwareSurface(WIDTH, HEIGHT);
-            surface.clear(Color.srgb(0.95f, 0.95f, 0.97f, 1.0f));
-            surface.replay(displayList);
-            png = surface.toSdrPng();
-            extendedLinear = floats(surface.extendedLinearPremultiplied());
-            if (!new SceneEnvelope(SceneEnvelope.CURRENT_SCHEMA, WIDTH, HEIGHT, displayList)
-                    .toCanonicalJson()
-                    .equals(SceneEnvelope.parse(
-                            new SceneEnvelope(SceneEnvelope.CURRENT_SCHEMA, WIDTH, HEIGHT, displayList)
-                                    .toCanonicalJson()
-                    ).toCanonicalJson())) {
-                throw new IllegalStateException("Desktop scene envelope did not round-trip");
+                label = String.valueOf(runtime.mounts().snapshot().elements().getFirst().property("text").value());
+                InspectorSnapshot inspector = Inspector.capture(layout, runtime.trace());
+                inspectorNodes = inspector.nodes().size();
+                inspectorJson = inspector.toCanonicalJson();
+                SfntFont font = BitmapSfntFont.create();
+                DisplayList displayList = record(label, font);
+                SoftwareSurface surface = new SoftwareSurface(WIDTH, HEIGHT);
+                surface.clear(Color.srgb(0.95f, 0.95f, 0.97f, 1.0f));
+                surface.replay(displayList);
+                png = surface.toSdrPng();
+                extendedLinear = floats(surface.extendedLinearPremultiplied());
+                if (!new SceneEnvelope(SceneEnvelope.CURRENT_SCHEMA, WIDTH, HEIGHT, displayList)
+                        .toCanonicalJson()
+                        .equals(SceneEnvelope.parse(
+                                new SceneEnvelope(SceneEnvelope.CURRENT_SCHEMA, WIDTH, HEIGHT, displayList)
+                                        .toCanonicalJson()
+                        ).toCanonicalJson())) {
+                    throw new IllegalStateException("Desktop scene envelope did not round-trip");
+                }
             }
         }
         DesktopLaunchResult result = new DesktopLaunchResult(
@@ -194,6 +229,9 @@ public final class DesktopLaunch {
                 inspectorNodes,
                 png.length,
                 extendedLinear.length,
+                presentedScanlines,
+                d3d12Presented,
+                popupHosted,
                 wayland.status(),
                 macos.status(),
                 metal.status(),
@@ -207,6 +245,38 @@ public final class DesktopLaunch {
             Files.writeString(output.resolve("results.json"), result.toJson(), StandardCharsets.UTF_8);
         }
         return result;
+    }
+
+    /// Posts one left-button click through WndProc and dispatches the drained events.
+    ///
+    /// @param platform the session
+    /// @param window the HWND that receives the posted messages
+    /// @param layout the tree that consumes normalized pointer events
+    /// @param clicks the bootstrap activation counter
+    /// @param count the mounted label state
+    /// @param runtime the structural runtime
+    /// @param x the client x
+    /// @param y the client y
+    private static void activateThroughWndProc(
+            WindowsPlatform platform,
+            WindowsWindow window,
+            LayoutTree layout,
+            AtomicInteger clicks,
+            IntState count,
+            StructuralRuntime runtime,
+            int x,
+            int y
+    ) {
+        window.postPointer(PointerEventType.DOWN, x, y);
+        platform.pump();
+        window.postPointer(PointerEventType.UP, x, y);
+        platform.pump();
+        for (PointerEvent event : window.takePointerEvents()) {
+            layout.dispatch(event);
+        }
+        count.set(clicks.get());
+        runtime.update();
+        runtime.applyMountedProperties();
     }
 
     /// Records the label as filled chrome and grayscale glyphs.

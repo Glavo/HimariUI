@@ -18,3 +18,7 @@ tasks.register<JavaExec>("conformance") {
     args(output.get().asFile.absolutePath)
     outputs.dir(output)
 }
+
+tasks.named("check") {
+    dependsOn("conformance")
+}

@@ -14,6 +14,9 @@ public final class ScrollViewport {
     /// Pixel step applied by increment or decrement.
     private final float step;
 
+    /// Logical scroll offset retained across tree rebuilds.
+    private float offset;
+
     /// The viewport node after [#create], or unused before then.
     private LayoutNode viewport;
 
@@ -31,7 +34,7 @@ public final class ScrollViewport {
     ///
     /// @return the offset
     public float offset() {
-        return viewport == null ? 0.0f : viewport.scrollOffset();
+        return offset;
     }
 
     /// Builds the viewport around one content node.
@@ -45,19 +48,34 @@ public final class ScrollViewport {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(content, "content");
         viewport = factory.scroll(name, List.of(new LayoutModifier.ExactSize(200.0f, 80.0f)), content);
+        viewport.setScrollOffset(offset);
         return viewport;
     }
 
     /// Advances the viewport by one step.
     public void scrollForward() {
-        requireCreated();
-        viewport.setScrollOffset(viewport.scrollOffset() + step);
+        scrollBy(step);
+    }
+
+    /// Applies a signed logical-pixel delta and clamps the offset at zero.
+    ///
+    /// @param delta the signed delta
+    public void scrollBy(float delta) {
+        if (!Float.isFinite(delta)) {
+            throw new IllegalArgumentException("Scroll delta must be finite");
+        }
+        float current = viewport == null ? offset : viewport.scrollOffset();
+        offset = Math.max(0.0f, current + delta);
+        if (viewport != null) {
+            viewport.setScrollOffset(offset);
+        }
     }
 
     /// Rewinds the viewport by one step, stopping at zero.
     public void scrollBackward() {
         requireCreated();
-        viewport.setScrollOffset(Math.max(0.0f, viewport.scrollOffset() - step));
+        offset = Math.max(0.0f, viewport.scrollOffset() - step);
+        viewport.setScrollOffset(offset);
     }
 
     /// Requires [#create] to have run.

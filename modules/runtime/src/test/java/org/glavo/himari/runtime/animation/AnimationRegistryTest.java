@@ -618,6 +618,126 @@ final class AnimationRegistryTest {
         }
     }
 
+    /// Snaps nonessential motion when reduced-motion policy is active.
+    @Test
+    void snapsNonessentialMotionUnderReducedMotionPolicy() {
+        try (HeadlessEventLoop eventLoop = new HeadlessEventLoop();
+             AnimationRegistry registry = new AnimationRegistry(eventLoop)) {
+            AnimatedScalar value = registry.createScalar(
+                    "opacity",
+                    0.0,
+                    ScalarAnimationAdapter.UNIT_INTERVAL,
+                    AnimationPhaseImpact.COMPOSITE
+            );
+            TweenSpec requested = TweenSpec.linear(1_000_000_000L);
+            AnimationTransaction transaction = MotionPolicy.resolve(
+                    true,
+                    MotionImportance.NONESSENTIAL,
+                    1L,
+                    11L,
+                    1L,
+                    requested,
+                    AnimationReplacementPolicy.PRESERVE_VELOCITY
+            );
+            AnimationCommitResult result = registry.commit(
+                    transaction,
+                    commit -> commit.setTarget(value, 1.0)
+            );
+            assertSame(requested, transaction.requestedMotion());
+            assertSame(SnapMotionSpec.INSTANCE, transaction.effectiveMotion());
+            assertSame(AnimationMotionDisposition.DISABLED, transaction.motionDisposition());
+            assertSame(AnimationCompletionOutcome.SKIPPED, result.immediateOutcome());
+            assertEquals(1.0, value.presentationValue());
+            assertFalse(value.isActive());
+        }
+    }
+
+    /// Shortens essential tweens and still samples them under reduced-motion policy.
+    @Test
+    void shortensEssentialTweenUnderReducedMotionPolicy() {
+        try (HeadlessEventLoop eventLoop = new HeadlessEventLoop();
+             AnimationRegistry registry = new AnimationRegistry(eventLoop)) {
+            AnimatedScalar value = registry.createScalar(
+                    "focus-ring",
+                    0.0,
+                    ScalarAnimationAdapter.UNBOUNDED,
+                    AnimationPhaseImpact.PAINT
+            );
+            TweenSpec requested = TweenSpec.linear(1_000_000_000L);
+            AnimationTransaction transaction = MotionPolicy.resolve(
+                    true,
+                    MotionImportance.ESSENTIAL,
+                    1L,
+                    12L,
+                    1L,
+                    requested,
+                    AnimationReplacementPolicy.PRESERVE_VELOCITY
+            );
+            assertSame(AnimationMotionDisposition.REDUCED, transaction.motionDisposition());
+            assertTrue(transaction.effectiveMotion() instanceof TweenSpec);
+            TweenSpec effective = (TweenSpec) transaction.effectiveMotion();
+            assertEquals(MotionPolicy.REDUCED_TWEEN_MAX_NANOS, effective.durationNanos());
+            assertEquals(0L, effective.delayNanos());
+            registry.commit(transaction, commit -> commit.setTarget(value, 100.0));
+            eventLoop.clock().advanceTo(MotionPolicy.REDUCED_TWEEN_MAX_NANOS / 2L);
+            assertTrue(registry.sample());
+            assertEquals(50.0, value.presentationValue());
+            assertTrue(value.isActive());
+        }
+    }
+
+    /// Removes bounce from essential springs under reduced-motion policy.
+    @Test
+    void removesEssentialSpringBounceUnderReducedMotionPolicy() {
+        SpringSpec requested = new SpringSpec(1.0, 170.0, 4.0, 1.0e-4, 1.0e-4, 10_000_000_000L);
+        AnimationTransaction transaction = MotionPolicy.resolve(
+                true,
+                MotionImportance.ESSENTIAL,
+                1L,
+                13L,
+                1L,
+                requested,
+                AnimationReplacementPolicy.PRESERVE_VELOCITY
+        );
+        assertTrue(transaction.effectiveMotion() instanceof SpringSpec);
+        SpringSpec effective = (SpringSpec) transaction.effectiveMotion();
+        double critical = 2.0 * StrictMath.sqrt(requested.stiffness() * requested.mass());
+        assertEquals(critical, effective.damping());
+        assertTrue(effective.damping() > requested.damping());
+        try (HeadlessEventLoop eventLoop = new HeadlessEventLoop();
+             AnimationRegistry registry = new AnimationRegistry(eventLoop)) {
+            AnimatedScalar value = registry.createScalar(
+                    "offset",
+                    0.0,
+                    ScalarAnimationAdapter.UNBOUNDED,
+                    AnimationPhaseImpact.PLACE
+            );
+            registry.commit(transaction, commit -> commit.setTarget(value, 10.0));
+            for (long timestamp = 5_000_000L; timestamp <= 400_000_000L; timestamp += 5_000_000L) {
+                eventLoop.clock().advanceTo(timestamp);
+                registry.sample();
+                assertTrue(value.presentationValue() <= 10.0);
+            }
+        }
+    }
+
+    /// Leaves requested motion unchanged when reduced-motion policy is off.
+    @Test
+    void preservesRequestedMotionWhenReducedMotionIsOff() {
+        TweenSpec requested = TweenSpec.easeInOut(250_000_000L);
+        AnimationTransaction transaction = MotionPolicy.resolve(
+                false,
+                MotionImportance.NONESSENTIAL,
+                1L,
+                14L,
+                1L,
+                requested,
+                AnimationReplacementPolicy.PRESERVE_VELOCITY
+        );
+        assertSame(requested, transaction.effectiveMotion());
+        assertSame(AnimationMotionDisposition.STANDARD, transaction.motionDisposition());
+    }
+
     /// Verifies that a compositor-only property never reports an earlier pipeline phase.
     @Test
     void preservesExactCompositorOnlyPhaseImpact() {

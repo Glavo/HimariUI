@@ -26,6 +26,7 @@ final class InspectorTest {
         InspectorSnapshot snapshot = Inspector.capture(tree, trace);
         assertTrue(snapshot.nodes().size() >= 6);
         assertTrue(snapshot.toCanonicalJson().contains("\"schema\":\"himari-inspector-v1\""));
+        assertTrue(snapshot.toCanonicalJson().contains("\"liveRegion\":\"POLITE\""));
         assertTrue(snapshot.toCanonicalJson().contains("himari-runtime-trace-v1"));
         String capturedTrace = snapshot.traceJson();
         if (capturedTrace == null) {

@@ -1,7 +1,10 @@
 package org.glavo.himari.platform.wayland;
 
+import org.glavo.himari.platform.wayland.linux.WaylandLinuxHost;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
+
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -16,9 +19,16 @@ final class WaylandProbeTest {
         WaylandProbe probe = WaylandProbe.run();
         assertFalse(probe.hdrAssumed());
         assertTrue(probe.status().equals("connected") || probe.status().equals("environment-blocked"));
-        if (!WaylandLibraries.supportedHost()) {
+        if (!WaylandLinuxHost.supported()) {
             assertEquals("environment-blocked", probe.status());
             assertEquals(-1, probe.fileDescriptor());
         }
+    }
+
+    /// The Linux host package does not claim support on a non-Linux client.
+    @Test
+    void linuxHostIsGatedOnOsName() {
+        boolean linux = System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("linux");
+        assertEquals(linux, WaylandLinuxHost.supported());
     }
 }

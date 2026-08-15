@@ -18,6 +18,7 @@ import java.util.Objects;
 /// @param height the bounding-rectangle height
 /// @param toggleState the UIA toggle state, or `null` when the pattern is absent
 /// @param rangeValue the UIA range value, or `null` when the pattern is absent
+/// @param liveSetting the UIA live-setting name
 @NotNullByDefault
 public record WindowsAutomationNode(
         long id,
@@ -30,7 +31,8 @@ public record WindowsAutomationNode(
         float width,
         float height,
         @Nullable String toggleState,
-        @Nullable Double rangeValue
+        @Nullable Double rangeValue,
+        String liveSetting
 ) {
     /// Validates the node.
     public WindowsAutomationNode {
@@ -39,6 +41,7 @@ public record WindowsAutomationNode(
         }
         Objects.requireNonNull(controlType, "controlType");
         Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(liveSetting, "liveSetting");
         if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(width) || !Float.isFinite(height)
                 || width < 0.0f || height < 0.0f) {
             throw new IllegalArgumentException("Bounding rectangle must be finite with nonnegative extents");

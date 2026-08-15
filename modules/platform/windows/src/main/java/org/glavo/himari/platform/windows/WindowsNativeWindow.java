@@ -78,6 +78,12 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// Exit move/resize modal loop.
     private static final int WM_EXITSIZEMOVE = 0x0232;
 
+    /// Paint request.
+    private static final int WM_PAINT = 0x000F;
+
+    /// Background erase request.
+    private static final int WM_ERASEBKGND = 0x0014;
+
     /// Timer.
     private static final int WM_TIMER = 0x0113;
 
@@ -110,6 +116,9 @@ public final class WindowsNativeWindow implements AutoCloseable {
 
     /// Reusable RECT for geometry queries.
     private final MemorySegment rectRecord;
+
+    /// Reusable `PAINTSTRUCT` for `WM_PAINT`.
+    private final MemorySegment paintRecord;
 
     /// Close and destroy listener.
     private final Lifecycle lifecycle;
@@ -147,6 +156,15 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// Number of modal-loop timer ticks delivered through WndProc.
     private int modalTimerTicks;
 
+    /// Last presented unassociated 8-bit sRGB RGBA pixels, or `null` before the first present.
+    private byte @Nullable [] lastRgba;
+
+    /// Width of [#lastRgba].
+    private int lastWidth;
+
+    /// Height of [#lastRgba].
+    private int lastHeight;
+
     /// Whether closed.
     private boolean closed;
 
@@ -182,6 +200,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 StandardCharsets.UTF_16LE
         );
         this.rectRecord = arena.allocate(Win32Layouts.RECT);
+        this.paintRecord = arena.allocate(Win32Layouts.PAINTSTRUCT);
     }
 
     /// Creates a hidden native window.
@@ -321,6 +340,36 @@ public final class WindowsNativeWindow implements AutoCloseable {
         return bindings.sendMessageW(window, message, wParam, lParam);
     }
 
+    /// Blits unassociated 8-bit sRGB RGBA pixels into this HWND and retains them for `WM_PAINT`.
+    ///
+    /// @param rgba unassociated 8-bit sRGB pixels in row-major RGBA order
+    /// @param width the pixel width
+    /// @param height the pixel height
+    /// @return the scanline count reported by `SetDIBitsToDevice`
+    public int presentSdrRgba(byte[] rgba, int width, int height) {
+        requireOpen();
+        MemorySegment deviceContext = bindings.getDc(window);
+        if (deviceContext.address() == 0L) {
+            throw new IllegalStateException("GetDC returned NULL");
+        }
+        int scanlines;
+        try {
+            scanlines = WindowsSoftwarePresent.presentSdrRgba(bindings, deviceContext, rgba, width, height);
+        } finally {
+            if (bindings.releaseDc(window, deviceContext) == 0) {
+                throw new IllegalStateException("ReleaseDC failed");
+            }
+        }
+        lastRgba = rgba.clone();
+        lastWidth = width;
+        lastHeight = height;
+        Win32FfmBindings.InvalidateRectResult invalidated = bindings.invalidateRect(window, MemorySegment.NULL, 0);
+        if (invalidated.value() == 0) {
+            throw new IllegalStateException("InvalidateRect failed: " + invalidated.errorCode());
+        }
+        return scanlines;
+    }
+
     /// Posts one message to this HWND so the production WndProc delivers it.
     ///
     /// @param message the Win32 message identifier
@@ -444,6 +493,10 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 lifecycle.destroyed();
                 yield 0L;
             }
+            case WM_PAINT -> paint(callbackWindow);
+            case WM_ERASEBKGND -> lastRgba == null
+                    ? bindings.defWindowProcW(callbackWindow, message, wParam, lParam)
+                    : 1L;
             case WM_SIZE -> {
                 clientWidth = lowWord(lParam);
                 clientHeight = highWord(lParam);
@@ -508,6 +561,29 @@ public final class WindowsNativeWindow implements AutoCloseable {
             }
             default -> bindings.defWindowProcW(callbackWindow, message, wParam, lParam);
         };
+    }
+
+    /// Replays the last presented RGBA frame through `BeginPaint` and `SetDIBitsToDevice`.
+    ///
+    /// @param callbackWindow the HWND receiving `WM_PAINT`
+    /// @return zero after handling
+    private long paint(MemorySegment callbackWindow) {
+        if (lastRgba == null) {
+            return bindings.defWindowProcW(callbackWindow, WM_PAINT, 0L, 0L);
+        }
+        paintRecord.fill((byte) 0);
+        MemorySegment deviceContext = bindings.beginPaint(callbackWindow, paintRecord);
+        if (deviceContext.address() == 0L) {
+            throw new IllegalStateException("BeginPaint returned NULL");
+        }
+        try {
+            WindowsSoftwarePresent.presentSdrRgba(bindings, deviceContext, lastRgba, lastWidth, lastHeight);
+        } finally {
+            if (bindings.endPaint(callbackWindow, paintRecord) == 0) {
+                throw new IllegalStateException("EndPaint failed");
+            }
+        }
+        return 0L;
     }
 
     /// Starts the move/resize modal timer.
@@ -579,6 +655,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
     private static @Nullable LogicalKey logicalKey(int virtualKey) {
         return switch (virtualKey) {
             case 0x09 -> LogicalKey.TAB;
+            case 0x1B -> LogicalKey.ESCAPE;
             case 0x0D -> LogicalKey.ENTER;
             case 0x20 -> LogicalKey.SPACE;
             case 0x25 -> LogicalKey.ARROW_LEFT;

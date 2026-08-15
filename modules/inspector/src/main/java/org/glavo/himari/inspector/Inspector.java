@@ -60,7 +60,8 @@ public final class Inspector {
                 node.origin().y(),
                 node.size().width(),
                 node.size().height(),
-                semantic != null && semantic.focused()
+                semantic != null && semantic.focused(),
+                node.liveRegion().name()
         ));
         for (LayoutNode child : node.children()) {
             collect(child, semantics, nodes);

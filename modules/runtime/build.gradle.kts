@@ -134,3 +134,7 @@ tasks.register<JavaExec>("sampleConformance") {
     args(sampleConformanceDirectory.get().asFile.absolutePath)
     outputs.file(sampleConformanceDirectory.map { it.file("counter.json") })
 }
+
+tasks.named("check") {
+    dependsOn("animationConformance")
+}

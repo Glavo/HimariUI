@@ -15,6 +15,7 @@ import java.util.Objects;
 /// @param width the measured width
 /// @param height the measured height
 /// @param focused whether the node owns focus
+/// @param liveRegion the live-region politeness name
 @NotNullByDefault
 public record InspectorNode(
         long id,
@@ -25,7 +26,8 @@ public record InspectorNode(
         float y,
         float width,
         float height,
-        boolean focused
+        boolean focused,
+        String liveRegion
 ) {
     /// Validates the node.
     public InspectorNode {
@@ -35,5 +37,6 @@ public record InspectorNode(
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(role, "role");
         Objects.requireNonNull(label, "label");
+        Objects.requireNonNull(liveRegion, "liveRegion");
     }
 }

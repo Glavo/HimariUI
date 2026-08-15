@@ -38,8 +38,23 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `UIA_ControlTypePropertyId`.
     static final int UIA_CONTROL_TYPE_PROPERTY_ID = 30003;
 
+    /// `UIA_LiveSettingPropertyId`.
+    static final int UIA_LIVE_SETTING_PROPERTY_ID = 30135;
+
     /// `UIA_ButtonControlTypeId`.
     static final int UIA_BUTTON_CONTROL_TYPE_ID = 50000;
+
+    /// `UIA_StatusBarControlTypeId`.
+    static final int UIA_STATUS_BAR_CONTROL_TYPE_ID = 50017;
+
+    /// `LiveSetting_Off`.
+    static final int LIVE_SETTING_OFF = 0;
+
+    /// `LiveSetting_Polite`.
+    static final int LIVE_SETTING_POLITE = 1;
+
+    /// `LiveSetting_Assertive`.
+    static final int LIVE_SETTING_ASSERTIVE = 2;
 
     /// `UIA_InvokePatternId`.
     static final int UIA_INVOKE_PATTERN_ID = 10000;
@@ -389,6 +404,9 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         if (propertyId == UIA_CONTROL_TYPE_PROPERTY_ID) {
             variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
             variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, controlTypeId(node));
+        } else if (propertyId == UIA_LIVE_SETTING_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, liveSettingId(node));
         }
         return S_OK;
     }
@@ -470,10 +488,28 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             case BUTTON -> UIA_BUTTON_CONTROL_TYPE_ID;
             case TOGGLE -> 50002;
             case SLIDER -> 50015;
-            case TEXT_FIELD -> 50004;
+            case TEXT_FIELD, TEXT_AREA -> 50004;
             case LIST -> 50008;
             case TEXT -> 50020;
+            case STATUS -> UIA_STATUS_BAR_CONTROL_TYPE_ID;
             case NONE -> 50033;
+            case POPUP -> 50033;
+            case MENU -> 50009;
+            case MENU_ITEM -> 50011;
+            case DIALOG -> 50032;
+            case TOOLTIP -> 50022;
+        };
+    }
+
+    /// Maps live-region politeness onto a UIA LiveSetting identifier.
+    ///
+    /// @param node the semantics node
+    /// @return the live-setting identifier
+    private static int liveSettingId(SemanticsNode node) {
+        return switch (node.liveRegion()) {
+            case OFF -> LIVE_SETTING_OFF;
+            case POLITE -> LIVE_SETTING_POLITE;
+            case ASSERTIVE -> LIVE_SETTING_ASSERTIVE;
         };
     }
 

@@ -49,6 +49,7 @@ public record InspectorSnapshot(
                     .append(",\"width\":").append(node.width())
                     .append(",\"height\":").append(node.height())
                     .append(",\"focused\":").append(node.focused())
+                    .append(",\"liveRegion\":").append(quote(node.liveRegion()))
                     .append('}');
         }
         json.append("],\"trace\":");

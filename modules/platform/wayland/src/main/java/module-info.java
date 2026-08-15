@@ -6,4 +6,5 @@ module org.glavo.himari.platform.wayland {
     requires static transitive org.jetbrains.annotations;
 
     exports org.glavo.himari.platform.wayland;
+    exports org.glavo.himari.platform.wayland.linux;
 }

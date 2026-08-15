@@ -77,6 +77,24 @@ public record SpringSpec(
         }
     }
 
+    /// Returns a critically damped copy that cannot overshoot its target.
+    ///
+    /// @return this specification when already at least critically damped, otherwise a copy
+    public SpringSpec withoutBounce() {
+        double criticalDamping = 2.0 * StrictMath.sqrt(stiffness * mass);
+        if (damping >= criticalDamping) {
+            return this;
+        }
+        return new SpringSpec(
+                mass,
+                stiffness,
+                criticalDamping,
+                displacementThreshold,
+                velocityThreshold,
+                maximumDurationNanos
+        );
+    }
+
     /// Returns that a spring has an active physical timeline.
     ///
     /// @return `false`

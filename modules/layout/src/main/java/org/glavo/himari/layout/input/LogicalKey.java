@@ -11,6 +11,9 @@ public enum LogicalKey {
     /// Enter activation.
     ENTER,
 
+    /// Dismisses a modal popup, menu, dialog, or tooltip.
+    ESCAPE,
+
     /// Space activation.
     SPACE,
 

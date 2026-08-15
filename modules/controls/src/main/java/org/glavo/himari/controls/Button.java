@@ -74,6 +74,11 @@ public final class Button {
         );
     }
 
+    /// Activates the button as if it were invoked by input.
+    public void press() {
+        activate();
+    }
+
     /// Records one activation and runs the caller callback.
     private void activate() {
         activations.incrementAndGet();

@@ -33,6 +33,9 @@ public final class D3d12Conformance {
         int descriptorIncrement = 0;
         int resourceReferences = 0;
         boolean gpuCopy = false;
+        boolean textureRoundTrip = false;
+        int gpuDiffMaxDelta = Integer.MAX_VALUE;
+        boolean texturePresented = false;
         WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
         try (D3d12Device device = D3d12Device.open()) {
             capabilities = device.capabilities();
@@ -68,6 +71,28 @@ public final class D3d12Conformance {
             gpuCopy = copied.length == 4 && copied[0] == 1 && copied[3] == 4;
             if (!gpuCopy) {
                 throw new IllegalStateException("D3D12 default-heap copy did not round-trip");
+            }
+            byte[] expected = new byte[16 * 8 * 4];
+            for (int pixel = 0; pixel < expected.length; pixel += 4) {
+                expected[pixel] = 51;
+                expected[pixel + 1] = 102;
+                expected[pixel + 2] = (byte) 204;
+                expected[pixel + 3] = (byte) 255;
+            }
+            D3d12TextureRoundTrip trip = device.roundTripSdrRgba(expected, 16, 8);
+            textureRoundTrip = trip.copied() && trip.maxChannelDelta(expected) == 0;
+            if (!textureRoundTrip) {
+                throw new IllegalStateException("D3D12 texture upload did not round-trip RGBA");
+            }
+            D3d12TextureRoundTrip cleared = device.clearSdrAndReadback(0.2f, 0.4f, 0.8f, 1.0f, 16, 8);
+            gpuDiffMaxDelta = cleared.maxChannelDelta(expected);
+            if (gpuDiffMaxDelta > 1) {
+                throw new IllegalStateException("D3D12 GPU clear exceeded software delta " + gpuDiffMaxDelta);
+            }
+            D3d12Presentation uploaded = device.presentSdrRgba(window.nativeHandle(), expected, 16, 8);
+            texturePresented = uploaded.presented() && !uploaded.hdrMetadataApplied();
+            if (!texturePresented) {
+                throw new IllegalStateException("D3D12 texture present did not succeed");
             }
             window.closeAsync().toCompletableFuture().get();
             platform.pump();
@@ -118,6 +143,19 @@ public final class D3d12Conformance {
                 StandardCharsets.UTF_8
         );
         Files.writeString(
+                output.resolve("gpu-diff.json"),
+                """
+                        {
+                          "expectedR": 51,
+                          "expectedG": 102,
+                          "expectedB": 204,
+                          "maxChannelDelta": %d,
+                          "tolerance": 1
+                        }
+                        """.formatted(gpuDiffMaxDelta),
+                StandardCharsets.UTF_8
+        );
+        Files.writeString(
                 output.resolve("results.json"),
                 """
                         {
@@ -131,9 +169,19 @@ public final class D3d12Conformance {
                           "descriptorIncrement": %d,
                           "resourceReferences": %d,
                           "gpuCopy": %s,
+                          "textureRoundTrip": %s,
+                          "gpuDiffMaxDelta": %d,
+                          "texturePresented": %s,
                           "hdrClaimed": false
                         }
-                        """.formatted(descriptorIncrement, resourceReferences, gpuCopy),
+                        """.formatted(
+                        descriptorIncrement,
+                        resourceReferences,
+                        gpuCopy,
+                        textureRoundTrip,
+                        gpuDiffMaxDelta,
+                        texturePresented
+                ),
                 StandardCharsets.UTF_8
         );
     }

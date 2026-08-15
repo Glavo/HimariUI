@@ -12,7 +12,9 @@ val ffiSchemaGenerator = configurations.create("ffiSchemaGenerator") {
 
 dependencies {
     implementation(project(":modules:ffi"))
+    testImplementation(project(":modules:graphics"))
     testImplementation(project(":modules:platform-windows"))
+    testImplementation(project(":modules:render-software"))
     add(ffiSchemaGenerator.name, project(":tools:ffi-schema"))
 }
 
@@ -123,6 +125,7 @@ val conformance = tasks.register<JavaExec>("conformance") {
         conformanceDirectory.map { it.file("results.json") },
         conformanceDirectory.map { it.file("capabilities.json") },
         conformanceDirectory.map { it.file("presentation.json") },
+        conformanceDirectory.map { it.file("gpu-diff.json") },
     )
 }
 

@@ -28,17 +28,43 @@ public final class ObjcBlockSpike {
         Files.createDirectories(output);
         Files.writeString(
                 output.resolve("lifetime.json"),
-                "{\"copied\":false,\"layoutByteSize\":" + probe.layoutByteSize() + "}\n",
+                """
+                        {
+                          "copied": false,
+                          "layoutByteSize": %d,
+                          "policy": "%s"
+                        }
+                        """.formatted(probe.layoutByteSize(), probe.policy().name()),
                 StandardCharsets.UTF_8
         );
         Files.writeString(output.resolve("native-load.log"), "no-framework-native-load\n", StandardCharsets.UTF_8);
         Files.writeString(
                 output.resolve("results.json"),
-                "{\"profile\":\"m0-objc-block\",\"status\":\"" + probe.status() + "\",\"detail\":\""
-                        + probe.detail().replace("\"", "'")
-                        + "\",\"policy\":\"prefer-block-free-apis\"}\n",
+                """
+                        {
+                          "profile": "m0-objc-block",
+                          "workPackage": "SPIKE-OBJC-BLOCK-001",
+                          "status": "%s",
+                          "policy": "%s",
+                          "layoutByteSize": %d,
+                          "detail": "%s"
+                        }
+                        """.formatted(
+                        probe.status(),
+                        probe.policy().name(),
+                        probe.layoutByteSize(),
+                        escape(probe.detail())
+                ),
                 StandardCharsets.UTF_8
         );
         System.out.println("SPIKE-OBJC-BLOCK-001 " + probe.status() + ": " + probe.detail());
+    }
+
+    /// Escapes one JSON string fragment.
+    ///
+    /// @param value the raw text
+    /// @return the escaped text
+    private static String escape(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "'");
     }
 }

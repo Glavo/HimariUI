@@ -12,6 +12,7 @@ module org.glavo.himari.desktop {
     requires org.glavo.himari.platform.wayland;
     requires org.glavo.himari.platform.windows;
     requires org.glavo.himari.render.software;
+    requires org.glavo.himari.rhi.d3d12;
     requires org.glavo.himari.rhi.metal;
     requires org.glavo.himari.runtime;
     requires org.glavo.himari.state;

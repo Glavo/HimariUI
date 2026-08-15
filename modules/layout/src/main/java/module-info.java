@@ -7,5 +7,6 @@ module org.glavo.himari.layout {
     exports org.glavo.himari.layout.focus;
     exports org.glavo.himari.layout.hit;
     exports org.glavo.himari.layout.input;
+    exports org.glavo.himari.layout.input.gesture;
     exports org.glavo.himari.layout.semantics;
 }

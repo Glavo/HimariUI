@@ -27,6 +27,7 @@
     { "kind": "pointer", "name": "msg_ptr", "pointee": "msg", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "const_msg_ptr", "pointee": "msg", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "paintstruct_ptr", "pointee": "paintstruct", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_bitmapinfo_ptr", "pointee": "bitmapinfoheader", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "const_rect_ptr", "pointee": "rect", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "rect_ptr", "pointee": "rect", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
     { "kind": "pointer", "name": "const_guid_ptr", "pointee": "guid", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
@@ -249,6 +250,23 @@
         { "name": "restore", "type": "i32", "byteOffset": 28, "bitOffset": null, "bitWidth": null },
         { "name": "incremental_update", "type": "i32", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
         { "name": "reserved", "type": "byte_array_32", "byteOffset": 36, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "bitmapinfoheader", "aggregateKind": "struct", "byteSize": 40, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "bi_size", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "bi_width", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "bi_height", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "bi_planes", "type": "u16", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "bi_bit_count", "type": "u16", "byteOffset": 14, "bitOffset": null, "bitWidth": null },
+        { "name": "bi_compression", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "bi_size_image", "type": "u32", "byteOffset": 20, "bitOffset": null, "bitWidth": null },
+        { "name": "bi_x_pels_per_meter", "type": "i32", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "bi_y_pels_per_meter", "type": "i32", "byteOffset": 28, "bitOffset": null, "bitWidth": null },
+        { "name": "bi_clr_used", "type": "u32", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
+        { "name": "bi_clr_important", "type": "u32", "byteOffset": 36, "bitOffset": null, "bitWidth": null }
       ],
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }
     },
@@ -1320,6 +1338,45 @@
       "parameters": [
         { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
         { "name": "rectangle", "type": "rect_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getDc", "symbol": "GetDC",
+      "result": { "type": "hdc", "nullability": "non_null", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "releaseDc", "symbol": "ReleaseDC",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "deviceContext", "type": "hdc", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "setDiBitsToDevice", "symbol": "SetDIBitsToDevice",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "deviceContext", "type": "hdc", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "destinationX", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "destinationY", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "width", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "height", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "sourceX", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "sourceY", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "startScan", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "scanLines", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "bits", "type": "void_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "info", "type": "const_bitmapinfo_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "colorUse", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
       ],
       "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }

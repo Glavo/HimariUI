@@ -26,19 +26,52 @@ public final class MacOSSpike {
         MacOSProbe probe = MacOSProbe.run();
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);
+        String detail = escape(probe.detail());
         Files.writeString(output.resolve("native-load.log"), "no-framework-native-load\n", StandardCharsets.UTF_8);
         Files.writeString(
                 output.resolve("events.json"),
-                "{\"status\":\"" + probe.status() + "\"}\n",
+                """
+                        {
+                          "status": "%s",
+                          "nsWindowCreated": %s,
+                          "metalLayerAttached": %s
+                        }
+                        """.formatted(probe.status(), probe.nsWindowCreated(), probe.metalLayerAttached()),
                 StandardCharsets.UTF_8
         );
-        Files.writeString(output.resolve("capabilities.json"), "{\"hdrAssumed\":false}\n", StandardCharsets.UTF_8);
+        Files.writeString(
+                output.resolve("capabilities.json"),
+                "{\"hdrAssumed\":false,\"presentationMode\":\"color-managed-sdr\"}\n",
+                StandardCharsets.UTF_8
+        );
         Files.writeString(
                 output.resolve("results.json"),
-                "{\"profile\":\"m0-macos-window\",\"status\":\"" + probe.status() + "\",\"detail\":\""
-                        + probe.detail().replace("\"", "'") + "\"}\n",
+                """
+                        {
+                          "profile": "m0-macos-window",
+                          "workPackage": "SPIKE-MAC-001",
+                          "status": "%s",
+                          "nsWindowCreated": %s,
+                          "metalLayerAttached": %s,
+                          "hdrAssumed": false,
+                          "detail": "%s"
+                        }
+                        """.formatted(
+                        probe.status(),
+                        probe.nsWindowCreated(),
+                        probe.metalLayerAttached(),
+                        detail
+                ),
                 StandardCharsets.UTF_8
         );
         System.out.println("SPIKE-MAC-001 " + probe.status() + ": " + probe.detail());
+    }
+
+    /// Escapes one JSON string fragment.
+    ///
+    /// @param value the raw text
+    /// @return the escaped text
+    private static String escape(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "'");
     }
 }

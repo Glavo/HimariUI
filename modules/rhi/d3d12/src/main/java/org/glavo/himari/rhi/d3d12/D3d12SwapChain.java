@@ -48,6 +48,9 @@ public final class D3d12SwapChain implements AutoCloseable {
     /// `D3D12_RESOURCE_STATE_RENDER_TARGET`.
     private static final int D3D12_RESOURCE_STATE_RENDER_TARGET = 0x4;
 
+    /// `D3D12_RESOURCE_STATE_COPY_DEST`.
+    private static final int D3D12_RESOURCE_STATE_COPY_DEST = 0x400;
+
     /// `D3D12_RESOURCE_BARRIER_TYPE_TRANSITION`.
     private static final int D3D12_RESOURCE_BARRIER_TYPE_TRANSITION = 0;
 
@@ -350,6 +353,125 @@ public final class D3d12SwapChain implements AutoCloseable {
                 0,
                 bufferIndex,
                 true
+        );
+    }
+
+    /// Copies a `COPY_SOURCE` texture onto the current back buffer and presents it.
+    ///
+    /// @param sourceTexture the default-heap texture in `D3D12_RESOURCE_STATE_COPY_SOURCE`
+    /// @return the present observation
+    public D3d12Presentation copyAndPresent(MemorySegment sourceTexture) {
+        requireOpen();
+        Objects.requireNonNull(sourceTexture, "sourceTexture");
+        if (sourceTexture.address() == 0L) {
+            throw new IllegalArgumentException("Source texture must not be NULL");
+        }
+        int bufferIndex = D3d12FfmBindings.invokeIdxgiSwapChain3GetCurrentBackBufferIndexPointer(
+                D3d12Native.functionAt(
+                        swapChain,
+                        D3d12Layouts.IDXGI_SWAP_CHAIN3_VTABLE_GET_CURRENT_BACK_BUFFER_INDEX_OFFSET
+                ),
+                swapChain
+        );
+        if (bufferIndex < 0 || bufferIndex >= BUFFER_COUNT) {
+            throw new IllegalStateException("Invalid back-buffer index " + bufferIndex);
+        }
+        MemorySegment backBuffer = bufferIndex == 0 ? backBuffer0 : backBuffer1;
+        D3d12Native.requireSuccess(
+                "ID3D12CommandAllocator::Reset(copy)",
+                D3d12FfmBindings.invokeId3d12CommandAllocatorResetPointer(
+                        D3d12Native.functionAt(
+                                commandAllocator,
+                                D3d12Layouts.ID3D12_COMMAND_ALLOCATOR_VTABLE_RESET_OFFSET
+                        ),
+                        commandAllocator
+                )
+        );
+        D3d12Native.requireSuccess(
+                "ID3D12GraphicsCommandList::Reset(copy)",
+                D3d12FfmBindings.invokeId3d12GraphicsCommandListResetPointer(
+                        D3d12Native.functionAt(
+                                commandList,
+                                D3d12Layouts.ID3D12_GRAPHICS_COMMAND_LIST_VTABLE_RESET_OFFSET
+                        ),
+                        commandList,
+                        commandAllocator,
+                        MemorySegment.NULL
+                )
+        );
+        transition(backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST);
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment destination = D3d12GpuTexture.textureLocation(arena, backBuffer);
+            MemorySegment source = D3d12GpuTexture.textureLocation(arena, sourceTexture);
+            D3d12FfmBindings.invokeId3d12GraphicsCommandListCopyTextureRegionPointer(
+                    D3d12Native.functionAt(
+                            commandList,
+                            D3d12Layouts.ID3D12_GRAPHICS_COMMAND_LIST_VTABLE_COPY_TEXTURE_REGION_OFFSET
+                    ),
+                    commandList,
+                    destination,
+                    0,
+                    0,
+                    0,
+                    source,
+                    MemorySegment.NULL
+            );
+        }
+        transition(backBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+        D3d12Native.requireSuccess(
+                "ID3D12GraphicsCommandList::Close(copy)",
+                D3d12FfmBindings.invokeId3d12GraphicsCommandListClosePointer(
+                        D3d12Native.functionAt(
+                                commandList,
+                                D3d12Layouts.ID3D12_GRAPHICS_COMMAND_LIST_VTABLE_CLOSE_OFFSET
+                        ),
+                        commandList
+                )
+        );
+        D3d12FfmBindings.invokeId3d12CommandQueueExecuteCommandListsPointer(
+                D3d12Native.functionAt(
+                        commandQueue,
+                        D3d12Layouts.ID3D12_COMMAND_QUEUE_VTABLE_EXECUTE_COMMAND_LISTS_OFFSET
+                ),
+                commandQueue,
+                1,
+                commandListArray
+        );
+        D3d12Native.requireSuccess(
+                "IDXGISwapChain::Present(copy)",
+                D3d12FfmBindings.invokeIdxgiSwapChainPresentPointer(
+                        D3d12Native.functionAt(
+                                swapChain,
+                                D3d12Layouts.IDXGI_SWAP_CHAIN3_VTABLE_PRESENT_OFFSET
+                        ),
+                        swapChain,
+                        0,
+                        0
+                )
+        );
+        fenceValue = Math.incrementExact(fenceValue);
+        D3d12Native.requireSuccess(
+                "ID3D12CommandQueue::Signal(copy)",
+                D3d12FfmBindings.invokeId3d12CommandQueueSignalPointer(
+                        D3d12Native.functionAt(
+                                commandQueue,
+                                D3d12Layouts.ID3D12_COMMAND_QUEUE_VTABLE_SIGNAL_OFFSET
+                        ),
+                        commandQueue,
+                        fence,
+                        fenceValue
+                )
+        );
+        awaitFence(fenceValue);
+        return new D3d12Presentation(
+                true,
+                "DXGI_FORMAT_R8G8B8A8_UNORM",
+                "DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709",
+                false,
+                references.ownedCount(),
+                0,
+                bufferIndex,
+                false
         );
     }
 

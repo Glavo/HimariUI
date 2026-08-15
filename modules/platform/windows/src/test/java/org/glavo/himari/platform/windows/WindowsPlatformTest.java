@@ -11,6 +11,7 @@ import org.glavo.himari.layout.input.LogicalKey;
 import org.glavo.himari.layout.input.PointerEvent;
 import org.glavo.himari.layout.input.PointerEventType;
 import org.glavo.himari.layout.semantics.SemanticsAction;
+import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.glavo.himari.platform.api.LogicalRect;
@@ -139,6 +140,30 @@ final class WindowsPlatformTest {
         }
     }
 
+    /// Blits a software RGBA frame into a live HWND through generated GDI bindings.
+    @Test
+    void presentsSoftwareRgbaThroughGdi() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "Present", 40.0, 40.0);
+            platform.pump();
+            int width = 16;
+            int height = 8;
+            byte[] rgba = new byte[width * height * 4];
+            for (int pixel = 0; pixel < rgba.length; pixel += 4) {
+                rgba[pixel] = (byte) 0x20;
+                rgba[pixel + 1] = (byte) 0x40;
+                rgba[pixel + 2] = (byte) 0x80;
+                rgba[pixel + 3] = (byte) 0xFF;
+            }
+            int scanlines = window.presentSdrRgba(rgba, width, height);
+            platform.pump();
+            assertEquals(height, scanlines);
+        } finally {
+            platform.close();
+        }
+    }
+
     /// Delivers pointer, key, and character input through the production WndProc.
     @Test
     void deliversPostedInputThroughWndProc() throws Exception {
@@ -149,6 +174,7 @@ final class WindowsPlatformTest {
             window.postPointer(PointerEventType.DOWN, 12, 18);
             window.postPointer(PointerEventType.UP, 12, 18);
             window.postVirtualKey(true, 0x0D);
+            window.postVirtualKey(true, 0x1B);
             window.postChar('n');
             window.postChar('i');
             platform.pump();
@@ -158,9 +184,40 @@ final class WindowsPlatformTest {
             assertEquals(12.0f, pointers.getFirst().x());
             assertEquals(18.0f, pointers.getFirst().y());
             assertEquals(PointerEventType.UP, pointers.get(1).type());
-            assertEquals(LogicalKey.ENTER, window.takeKeyEvents().getFirst().key());
+            List<org.glavo.himari.layout.input.KeyEvent> keys = window.takeKeyEvents();
+            assertEquals(2, keys.size());
+            assertEquals(LogicalKey.ENTER, keys.get(0).key());
+            assertEquals(LogicalKey.ESCAPE, keys.get(1).key());
             assertEquals("ni", window.ime().surroundingText());
             assertTrue(window.ime().committed());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Hosts an owner-relative popup HWND and treats `WM_CLOSE` as a dismiss.
+    @Test
+    void popupHostReportsCloseAsDismiss() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow owner = openToplevel(platform, "PopupOwner", 24.0, 24.0);
+            platform.pump();
+            AtomicBoolean dismissed = new AtomicBoolean();
+            WindowsWindow popup = WindowsPopupHost.show(
+                    platform,
+                    owner,
+                    "MenuHost",
+                    new LogicalRect(40.0, 40.0, 120.0, 80.0),
+                    () -> dismissed.set(true)
+            );
+            platform.pump();
+            assertEquals(SurfaceRole.POPUP, popup.snapshot().role());
+            popup.nativeWindow().postMessage(0x0010, 0L, 0L);
+            platform.pump();
+            assertTrue(dismissed.get());
+            assertFalse(popup.isClosed());
+            popup.closeAsync().toCompletableFuture().get();
+            platform.pump();
         } finally {
             platform.close();
         }
@@ -376,7 +433,18 @@ final class WindowsPlatformTest {
                     null
             );
             slider.setRangeValue(3.0);
-            valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider));
+            LayoutNode status = factory.leaf(
+                    "status",
+                    new Size(120.0f, 20.0f),
+                    List.of(),
+                    false,
+                    SemanticsRole.STATUS,
+                    "Saved",
+                    java.util.Set.of(),
+                    null
+            );
+            status.setLiveRegion(SemanticsLiveRegion.POLITE);
+            valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider, status));
             valueTree.measure(Constraints.loose(400.0f, 400.0f));
             valueTree.place();
             SemanticsNode toggleNode = valueTree.semantics().nodes().stream()
@@ -385,6 +453,10 @@ final class WindowsPlatformTest {
                     .orElseThrow();
             SemanticsNode sliderNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.SLIDER)
+                    .findFirst()
+                    .orElseThrow();
+            SemanticsNode statusNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.STATUS)
                     .findFirst()
                     .orElseThrow();
             try (WindowsAutomationProvider toggleProvider = window.automationProvider(toggleNode)) {
@@ -397,6 +469,16 @@ final class WindowsPlatformTest {
                 assertEquals(3.0, rangeProvider.rangeValue());
                 assertEquals(7.5, rangeProvider.setRangeValue(7.5));
                 assertEquals(7.5, rangeProvider.rangeValue());
+            }
+            try (WindowsAutomationProvider statusProvider = window.automationProvider(statusNode)) {
+                assertEquals(
+                        WindowsAutomationProvider.UIA_STATUS_BAR_CONTROL_TYPE_ID,
+                        statusProvider.invokePropertyValue(WindowsAutomationProvider.UIA_CONTROL_TYPE_PROPERTY_ID)
+                );
+                assertEquals(
+                        WindowsAutomationProvider.LIVE_SETTING_POLITE,
+                        statusProvider.invokePropertyValue(WindowsAutomationProvider.UIA_LIVE_SETTING_PROPERTY_ID)
+                );
             }
         } finally {
             platform.close();

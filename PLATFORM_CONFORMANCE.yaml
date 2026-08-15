@@ -109,11 +109,11 @@
     },
     {
       "id": "m0-wayland-window",
-      "profileVersion": 1,
+      "profileVersion": 2,
       "workPackage": "SPIKE-WAYLAND-001",
       "milestone": "M0",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "platform-linux-wayland",
       "environments": [
         { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
@@ -124,7 +124,8 @@
       "assertions": [
         "A generated FFM path connects, opens and closes a window, receives resize and normalized input events, and survives callback reentrancy.",
         "Output scale and available color-management information are reported without inventing unsupported HDR capability.",
-        "A software surface presents a deterministic SDR clear and records an explicit effective presentation configuration."
+        "A software surface presents a deterministic SDR clear and records an explicit effective presentation configuration.",
+        "A non-Linux host records an environment block instead of claiming a compositor session or HDR capability."
       ],
       "capabilityModes": ["window-events", "output-capability-snapshot", "software-sdr-presentation"],
       "limits": {
@@ -133,8 +134,8 @@
         "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 536870912, "maxHandles": 256, "maxThreads": 16 }
       },
       "evidence": {
-        "requiredArtifacts": ["build/conformance/m0-wayland-window/events.json", "build/conformance/m0-wayland-window/capabilities.json", "build/conformance/m0-wayland-window/presentation.json", "build/conformance/m0-wayland-window/native-load.log"],
-        "recordedArtifacts": []
+        "requiredArtifacts": ["build/conformance/m0-wayland-window/events.json", "build/conformance/m0-wayland-window/capabilities.json", "build/conformance/m0-wayland-window/presentation.json", "build/conformance/m0-wayland-window/native-load.log", "build/conformance/m0-wayland-window/results.json"],
+        "recordedArtifacts": ["build/conformance/m0-wayland-window/events.json", "build/conformance/m0-wayland-window/capabilities.json", "build/conformance/m0-wayland-window/presentation.json", "build/conformance/m0-wayland-window/native-load.log", "build/conformance/m0-wayland-window/results.json"]
       },
       "waivers": []
     },
@@ -233,11 +234,11 @@
     },
     {
       "id": "m0-macos-window",
-      "profileVersion": 1,
+      "profileVersion": 2,
       "workPackage": "SPIKE-MAC-001",
       "milestone": "M0",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "platform-macos",
       "environments": [
         { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
@@ -247,7 +248,8 @@
       "fixtures": ["macos-window-lifecycle-v1", "macos-input-v1", "macos-display-color-v1", "macos-cametal-layer-v1"],
       "assertions": [
         "Generated Objective-C runtime bindings open and close an NSWindow, receive lifecycle/input events, and attach a CAMetalLayer on the platform main thread.",
-        "Display color space and EDR headroom are reported as dynamic capabilities with an explicit SDR fallback."
+        "Display color space and EDR headroom are reported as dynamic capabilities with an explicit SDR fallback.",
+        "A non-macOS host records an environment block instead of claiming an NSWindow session or HDR capability."
       ],
       "capabilityModes": ["nswindow-events", "cametal-layer", "display-color-edr-snapshot"],
       "limits": {
@@ -256,18 +258,18 @@
         "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 536870912, "maxHandles": 256, "maxThreads": 16 }
       },
       "evidence": {
-        "requiredArtifacts": ["build/conformance/m0-macos-window/events.json", "build/conformance/m0-macos-window/capabilities.json", "build/conformance/m0-macos-window/native-load.log"],
-        "recordedArtifacts": []
+        "requiredArtifacts": ["build/conformance/m0-macos-window/events.json", "build/conformance/m0-macos-window/capabilities.json", "build/conformance/m0-macos-window/native-load.log", "build/conformance/m0-macos-window/results.json"],
+        "recordedArtifacts": ["build/conformance/m0-macos-window/events.json", "build/conformance/m0-macos-window/capabilities.json", "build/conformance/m0-macos-window/native-load.log", "build/conformance/m0-macos-window/results.json"]
       },
       "waivers": []
     },
     {
       "id": "m0-metal-surface",
-      "profileVersion": 1,
+      "profileVersion": 2,
       "workPackage": "SPIKE-METAL-001",
       "milestone": "M0",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "rhi-metal",
       "environments": [
         { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
@@ -277,7 +279,8 @@
       "fixtures": ["metal-device-v1", "metal-layer-formats-v1", "metal-sdr-clear-v1"],
       "assertions": [
         "Generated bindings create and release a Metal device, command queue, layer configuration, and presentation resources without validation errors.",
-        "A deterministic SDR clear is presented through the effective layer color/pixel configuration with explicit fallback ownership."
+        "A deterministic SDR clear is presented through the effective layer color/pixel configuration with explicit fallback ownership.",
+        "A non-macOS host records an environment block instead of claiming a Metal device or EDR output."
       ],
       "capabilityModes": ["metal-device", "layer-format-enumeration", "layer-sdr-presentation"],
       "limits": {
@@ -286,18 +289,18 @@
         "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 2147483648, "maxHandles": 1024, "maxThreads": 32 }
       },
       "evidence": {
-        "requiredArtifacts": ["build/conformance/m0-metal-surface/capabilities.json", "build/conformance/m0-metal-surface/validation.log", "build/conformance/m0-metal-surface/presentation.json"],
-        "recordedArtifacts": []
+        "requiredArtifacts": ["build/conformance/m0-metal-surface/capabilities.json", "build/conformance/m0-metal-surface/validation.log", "build/conformance/m0-metal-surface/presentation.json", "build/conformance/m0-metal-surface/results.json"],
+        "recordedArtifacts": ["build/conformance/m0-metal-surface/capabilities.json", "build/conformance/m0-metal-surface/validation.log", "build/conformance/m0-metal-surface/presentation.json", "build/conformance/m0-metal-surface/results.json"]
       },
       "waivers": []
     },
     {
       "id": "m0-objc-block",
-      "profileVersion": 1,
+      "profileVersion": 2,
       "workPackage": "SPIKE-OBJC-BLOCK-001",
       "milestone": "M0",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "platform-macos-abi",
       "environments": [
         { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
@@ -308,7 +311,8 @@
       "assertions": [
         "Representative Objective-C blocks are created, copied, invoked, released, and reentered with verified ABI layout and lifetime.",
         "Java exceptions are contained before crossing the native boundary and cleanup remains deterministic after failure.",
-        "The evidence produces an ADR that either forbids production blocks or defines their verified use policy."
+        "The evidence produces an ADR that either forbids production blocks or defines their verified use policy.",
+        "A non-macOS host records an environment block for symbol resolution while the 64-bit layout remains verifiable."
       ],
       "capabilityModes": ["block-abi", "block-lifetime", "callback-containment"],
       "limits": {
@@ -318,7 +322,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m0-objc-block/results.json", "build/conformance/m0-objc-block/lifetime.json", "build/conformance/m0-objc-block/native-load.log"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m0-objc-block/results.json", "build/conformance/m0-objc-block/lifetime.json", "build/conformance/m0-objc-block/native-load.log"]
       },
       "waivers": []
     },
@@ -740,7 +744,8 @@
         "Animation transactions commit coordinated model targets atomically while presentation values remain independently sampled and application State epochs remain unchanged.",
         "One Headless FrameClock timestamp publishes every due scalar in one presentation epoch; tween and analytic spring values are deterministic across skipped and intermediate frames.",
         "Compatible spring retargeting preserves presentation value and velocity bit-exactly, while completion groups emit exactly one completed, replaced, cancelled, failed, or skipped terminal outcome.",
-        "Every presentation property reports its exact phase impact, and compositor-only motion reports no structure, measure, place, or paint invalidation."
+        "Every presentation property reports its exact phase impact, and compositor-only motion reports no structure, measure, place, or paint invalidation.",
+        "Reduced-motion policy snaps nonessential targets and shortens essential tweens to a recorded effective specification."
       ],
       "capabilityModes": [
         "transaction-scoped-motion",
@@ -1089,7 +1094,10 @@
         "Generated bindings create a D3D12 device and query R8G8B8A8 render-target support.",
         "A flip-model SDR swapchain presents once to a production HWND without claiming HDR output.",
         "CreateCommittedResource maps an upload buffer and a shader-visible CBV/SRV/UAV heap exists.",
-        "CopyBufferRegion copies an upload buffer through a default-heap resource and a readback buffer."
+        "CopyBufferRegion copies an upload buffer through a default-heap resource and a readback buffer.",
+        "CopyTextureRegion uploads tightly packed RGBA through a 2D texture and reads the same bytes back.",
+        "An offscreen R8G8B8A8 clear stays within one 8-bit channel of the matching software sRGB value.",
+        "A software RGBA frame is copied onto a flip-model SDR swapchain without claiming HDR output."
       ],
       "capabilityModes": ["d3d12-device", "swapchain-sdr-presentation"],
       "limits": {
@@ -1098,8 +1106,8 @@
         "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 1073741824, "maxHandles": 256, "maxThreads": 16 }
       },
       "evidence": {
-        "requiredArtifacts": ["build/conformance/m6-d3d12/results.json", "build/conformance/m6-d3d12/capabilities.json", "build/conformance/m6-d3d12/presentation.json"],
-        "recordedArtifacts": ["build/conformance/m6-d3d12/results.json", "build/conformance/m6-d3d12/capabilities.json", "build/conformance/m6-d3d12/presentation.json"]
+        "requiredArtifacts": ["build/conformance/m6-d3d12/results.json", "build/conformance/m6-d3d12/capabilities.json", "build/conformance/m6-d3d12/presentation.json", "build/conformance/m6-d3d12/gpu-diff.json"],
+        "recordedArtifacts": ["build/conformance/m6-d3d12/results.json", "build/conformance/m6-d3d12/capabilities.json", "build/conformance/m6-d3d12/presentation.json", "build/conformance/m6-d3d12/gpu-diff.json"]
       },
       "waivers": []
     },
@@ -1118,7 +1126,10 @@
       "fixtures": ["controls-gallery-v1"],
       "assertions": [
         "Button, toggle, slider, scroll viewport, lazy-list, and text-field produce the declared keyboard and pointer outcomes, including ENTER on a focused button.",
-        "Every control exposes semantics roles and actions without depending on a platform backend."
+        "Every control exposes semantics roles and actions without depending on a platform backend.",
+        "Menu, dialog, and tooltip dismiss through Escape or an outside pointer, and a menu item activation closes the menu.",
+        "TextArea commits composition, a STATUS live region is polite, RTL packing moves children toward the end, and reduced-motion tokens transform animation specifications.",
+        "A gesture arena resolves tap, drag, and long-press competition; an accepted drag scrolls the viewport."
       ],
       "capabilityModes": ["unstyled-controls", "keyboard-activation"],
       "limits": {
@@ -1129,6 +1140,36 @@
       "evidence": {
         "requiredArtifacts": ["build/conformance/m9-controls/results.json"],
         "recordedArtifacts": ["build/conformance/m9-controls/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m9-gestures",
+      "profileVersion": 1,
+      "workPackage": "GESTURE-001",
+      "milestone": "M9",
+      "required": true,
+      "status": "passed",
+      "owner": "layout",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:layout:gestureConformance"],
+      "fixtures": ["gesture-arena-competition-v1"],
+      "assertions": [
+        "Tap, drag, and long-press recognizers compete from injected timestamps without sleeping.",
+        "A drag that exceeds slop rejects tap, records translation, and estimates velocity.",
+        "A stationary hold accepts long press at the declared timeout."
+      ],
+      "capabilityModes": ["tap", "drag", "long-press", "velocity-tracking"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m9-gestures/results.json"],
+        "recordedArtifacts": ["build/conformance/m9-gestures/results.json"]
       },
       "waivers": []
     },
@@ -1153,7 +1194,8 @@
         "IRawElementProviderSimple::GetPropertyValue reports the Button control type through a COM VARIANT.",
         "IInvokeProvider, IToggleProvider, and IRangeValueProvider dispatch through generated COM vtables.",
         "ITextStoreACP grants document locks and exchanges UTF-16 text; ITfDocumentMgr pushes the store.",
-        "ITextStoreACP maps GetACPFromPoint through the candidate rectangle and reports GetScreenExt; embedded and attribute slots return honest empty or not-supported results."
+        "ITextStoreACP maps GetACPFromPoint through the candidate rectangle and reports GetScreenExt; embedded and attribute slots return honest empty or not-supported results.",
+        "A STATUS node projects as StatusBar with LiveSetting Polite through GetPropertyValue."
       ],
       "capabilityModes": ["ime-composition", "uia-projection", "tsf-thread-mgr", "itext-store-acp"],
       "limits": {
@@ -1182,7 +1224,8 @@
       "fixtures": ["inspector-gallery-trace-v1"],
       "assertions": [
         "The inspector captures placed layout nodes, semantics roles, and a canonical runtime trace.",
-        "The captured document is pointer-free and the trace fragment round-trips through parse."
+        "The captured document is pointer-free and the trace fragment round-trips through parse.",
+        "Inspector nodes record live-region politeness."
       ],
       "capabilityModes": ["tree-inspector", "trace-embed"],
       "limits": {
@@ -1291,7 +1334,7 @@
       "workPackage": "WAYLAND-001",
       "milestone": "M5",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "platform-linux-wayland",
       "environments": [
         { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
@@ -1353,7 +1396,7 @@
       "workPackage": "COCOA-001",
       "milestone": "M7",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "platform-macos",
       "environments": [
         { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
@@ -1383,7 +1426,7 @@
       "workPackage": "METAL-001",
       "milestone": "M7",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "rhi-metal",
       "environments": [
         { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
@@ -1413,7 +1456,7 @@
       "workPackage": "OBJC-001",
       "milestone": "M7",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "platform-macos-abi",
       "environments": [
         { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },

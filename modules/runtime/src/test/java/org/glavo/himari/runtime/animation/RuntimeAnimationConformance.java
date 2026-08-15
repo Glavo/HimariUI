@@ -120,7 +120,7 @@ public final class RuntimeAnimationConformance {
                 "Compositor-only motion invalidated an earlier pipeline phase");
 
         @Unmodifiable List<AnimationCompletionEvent> completionEvents = registry.completionEvents();
-        require(completionEvents.size() == 4, "Expected four exactly-once completion outcomes");
+        require(completionEvents.size() == 4, "Expected four exactly-once completion outcomes before policy commits");
         require(completionEvents.get(0).outcome() == AnimationCompletionOutcome.COMPLETED,
                 "Tween group did not complete normally");
         require(completionEvents.get(1).outcome() == AnimationCompletionOutcome.REPLACED,
@@ -131,6 +131,39 @@ public final class RuntimeAnimationConformance {
                 "Disabled motion did not emit a skipped outcome");
         require(applicationState.get() == 41 && stateDomain.epoch() == 0L,
                 "Animation sampling wrote application state");
+        TweenSpec longTween = TweenSpec.linear(1_000_000_000L);
+        AnimationTransaction reducedSnap = MotionPolicy.resolve(
+                true,
+                MotionImportance.NONESSENTIAL,
+                5L,
+                50L,
+                1L,
+                longTween,
+                AnimationReplacementPolicy.PRESERVE_VELOCITY
+        );
+        require(reducedSnap.effectiveMotion() == SnapMotionSpec.INSTANCE
+                        && reducedSnap.motionDisposition() == AnimationMotionDisposition.DISABLED,
+                "Reduced-motion policy did not snap nonessential motion");
+        AnimationTransaction reducedEssential = MotionPolicy.resolve(
+                true,
+                MotionImportance.ESSENTIAL,
+                6L,
+                60L,
+                1L,
+                longTween,
+                AnimationReplacementPolicy.PRESERVE_VELOCITY
+        );
+        require(reducedEssential.effectiveMotion() instanceof TweenSpec essentialTween
+                        && essentialTween.durationNanos() == MotionPolicy.REDUCED_TWEEN_MAX_NANOS
+                        && reducedEssential.motionDisposition() == AnimationMotionDisposition.REDUCED,
+                "Reduced-motion policy did not shorten essential motion");
+        AnimationCommitResult reducedCommit = registry.commit(
+                reducedSnap,
+                commit -> commit.setTarget(layer, 1.0)
+        );
+        require(reducedCommit.immediateOutcome() == AnimationCompletionOutcome.SKIPPED
+                        && layer.presentationValue() == 1.0,
+                "Resolved reduced-motion transaction did not drive the registry");
         verifyFrequencyIndependentSampling();
 
         AnimationRegistrySnapshot activeSnapshot = registry.snapshot();
@@ -222,7 +255,7 @@ public final class RuntimeAnimationConformance {
                   "profile": "m1-animation",
                   "workPackage": "ANIM-CORE-001",
                   "status": "passed",
-                  "unitTestCases": 15,
+                  "unitTestCases": 19,
                   "coordinatedTargetCount": 2,
                   "skippedFrameTimestampNanos": 1250000000,
                   "skippedFrameLayoutValue": %s,
@@ -235,6 +268,8 @@ public final class RuntimeAnimationConformance {
                   "applicationStateEpochs": 0,
                   "completionEvents": 4,
                   "completionOutcomes": ["completed", "replaced", "cancelled", "skipped"],
+                  "reducedMotionSnap": true,
+                  "reducedMotionEssentialNanos": 80000000,
                   "activeAnimations": %d,
                   "presentationEpochs": %d,
                   "compositorOnlyEarlierPhaseInvalidations": 0,

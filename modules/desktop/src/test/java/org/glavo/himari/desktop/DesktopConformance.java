@@ -24,6 +24,15 @@ public final class DesktopConformance {
         if (result.host() == DesktopHost.WINDOWS && !result.windowCreated()) {
             throw new IllegalStateException("Windows desktop launch did not create a host window");
         }
+        if (result.host() == DesktopHost.WINDOWS && result.presentedScanlines() <= 0) {
+            throw new IllegalStateException("Windows desktop launch did not present software frames");
+        }
+        if (result.host() == DesktopHost.WINDOWS && !result.d3d12Presented()) {
+            throw new IllegalStateException("Windows desktop launch did not present through D3D12");
+        }
+        if (result.host() == DesktopHost.WINDOWS && !result.popupHosted()) {
+            throw new IllegalStateException("Windows desktop launch did not host a popup HWND");
+        }
         if (result.activations() != 2 || !"Count: 2".equals(result.label())) {
             throw new IllegalStateException("Desktop CounterApp did not reach count 2");
         }

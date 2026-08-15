@@ -31,6 +31,7 @@ public final class WindowsPlatformConformance {
         double scale;
         int displayWidth;
         int pointerCount;
+        int presentedScanlines = 0;
         boolean clipboardRoundTrip = false;
         boolean modalTick = false;
         boolean oleDrop = false;
@@ -79,6 +80,18 @@ public final class WindowsPlatformConformance {
             pointerCount = first.takePointerEvents().size();
             if (pointerCount < 2) {
                 throw new IllegalStateException("WndProc did not deliver posted pointer events");
+            }
+            byte[] rgba = new byte[16 * 8 * 4];
+            for (int pixel = 0; pixel < rgba.length; pixel += 4) {
+                rgba[pixel] = (byte) 0x20;
+                rgba[pixel + 1] = (byte) 0x40;
+                rgba[pixel + 2] = (byte) 0x80;
+                rgba[pixel + 3] = (byte) 0xFF;
+            }
+            presentedScanlines = first.presentSdrRgba(rgba, 16, 8);
+            platform.pump();
+            if (presentedScanlines != 8) {
+                throw new IllegalStateException("SetDIBitsToDevice did not present 8 scanlines");
             }
             String marker = "HimariUI-conformance-clipboard";
             first.writeClipboard(marker);
@@ -143,6 +156,7 @@ public final class WindowsPlatformConformance {
                           "scaleFactor": %s,
                           "displayWidth": %d,
                           "pointerEvents": %d,
+                          "presentedScanlines": %d,
                           "clipboard": %s,
                           "modalLoop": %s,
                           "oleDrop": %s,
@@ -155,6 +169,7 @@ public final class WindowsPlatformConformance {
                         Double.toString(scale),
                         displayWidth,
                         pointerCount,
+                        presentedScanlines,
                         clipboardRoundTrip,
                         modalTick,
                         oleDrop,

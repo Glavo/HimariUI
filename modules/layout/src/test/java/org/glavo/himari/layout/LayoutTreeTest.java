@@ -7,6 +7,7 @@ import org.glavo.himari.layout.input.LogicalKey;
 import org.glavo.himari.layout.input.PointerEvent;
 import org.glavo.himari.layout.input.PointerEventType;
 import org.glavo.himari.layout.semantics.SemanticsAction;
+import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.jetbrains.annotations.NotNullByDefault;
@@ -73,5 +74,32 @@ final class LayoutTreeTest {
         assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ENTER)));
         assertEquals(2, count.get());
         assertEquals(button.bounds(), tree.semantics().nodeWith(SemanticsAction.ACTIVATE).bounds());
+    }
+
+    /// Publishes live-region politeness through the semantics snapshot.
+    @Test
+    void publishesLiveRegionOnSemanticsSnapshot() {
+        LayoutTree tree = new LayoutTree();
+        LayoutFactory factory = new LayoutFactory(tree);
+        LayoutNode status = factory.leaf(
+                "status",
+                new Size(80.0f, 16.0f),
+                java.util.List.of(),
+                false,
+                SemanticsRole.STATUS,
+                "Ready",
+                java.util.Set.of(),
+                null
+        );
+        status.setLiveRegion(SemanticsLiveRegion.ASSERTIVE);
+        tree.setRoot(factory.column("root", Alignment.START, java.util.List.of(), status));
+        tree.measure(Constraints.loose(100.0f, 100.0f));
+        tree.place();
+        SemanticsNode snapshot = tree.semantics().nodes().stream()
+                .filter(node -> node.role() == SemanticsRole.STATUS)
+                .findFirst()
+                .orElseThrow();
+        assertEquals(SemanticsLiveRegion.ASSERTIVE, snapshot.liveRegion());
+        assertEquals(SemanticsLiveRegion.OFF, tree.semantics().nodes().getFirst().liveRegion());
     }
 }

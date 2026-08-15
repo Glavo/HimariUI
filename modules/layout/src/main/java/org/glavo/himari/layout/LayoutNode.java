@@ -1,6 +1,7 @@
 package org.glavo.himari.layout;
 
 import org.glavo.himari.layout.semantics.SemanticsAction;
+import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
@@ -59,6 +60,9 @@ public final class LayoutNode {
 
     /// Range value published to semantics, or `null`.
     private @Nullable Double rangeValue;
+
+    /// Live-region politeness published to semantics.
+    private SemanticsLiveRegion liveRegion = SemanticsLiveRegion.OFF;
 
     /// Scroll offset applied when this node uses [LayoutKind#SCROLL].
     private float scrollOffset;
@@ -221,6 +225,13 @@ public final class LayoutNode {
         return rangeValue;
     }
 
+    /// Returns the published live-region politeness.
+    ///
+    /// @return the politeness, never `null`
+    public SemanticsLiveRegion liveRegion() {
+        return liveRegion;
+    }
+
     /// Publishes a toggle state for the next semantics snapshot.
     ///
     /// @param selected the state
@@ -236,6 +247,13 @@ public final class LayoutNode {
             throw new IllegalArgumentException("Range value must be finite");
         }
         this.rangeValue = value;
+    }
+
+    /// Publishes live-region politeness for the next semantics snapshot.
+    ///
+    /// @param liveRegion the politeness
+    public void setLiveRegion(SemanticsLiveRegion liveRegion) {
+        this.liveRegion = Objects.requireNonNull(liveRegion, "liveRegion");
     }
 
     /// Adds a child in document order.

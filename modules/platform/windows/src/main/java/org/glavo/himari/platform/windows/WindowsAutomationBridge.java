@@ -2,6 +2,7 @@ package org.glavo.himari.platform.windows;
 
 import org.glavo.himari.layout.LayoutRect;
 import org.glavo.himari.layout.semantics.SemanticsAction;
+import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.glavo.himari.layout.semantics.SemanticsSnapshot;
@@ -40,7 +41,8 @@ public final class WindowsAutomationBridge {
                     bounds.width(),
                     bounds.height(),
                     toggleState(node),
-                    node.rangeValue()
+                    node.rangeValue(),
+                    liveSetting(node.liveRegion())
             ));
         }
         return List.copyOf(nodes);
@@ -55,10 +57,28 @@ public final class WindowsAutomationBridge {
             case BUTTON -> "Button";
             case TOGGLE -> "CheckBox";
             case SLIDER -> "Slider";
-            case TEXT_FIELD -> "Edit";
+            case TEXT_FIELD, TEXT_AREA -> "Edit";
             case LIST -> "List";
             case TEXT -> "Text";
+            case STATUS -> "StatusBar";
             case NONE -> "Pane";
+            case POPUP -> "Pane";
+            case MENU -> "Menu";
+            case MENU_ITEM -> "MenuItem";
+            case DIALOG -> "Window";
+            case TOOLTIP -> "ToolTip";
+        };
+    }
+
+    /// Maps live-region politeness onto a UIA LiveSetting name.
+    ///
+    /// @param liveRegion the politeness
+    /// @return the live-setting name
+    static String liveSetting(SemanticsLiveRegion liveRegion) {
+        return switch (liveRegion) {
+            case OFF -> "Off";
+            case POLITE -> "Polite";
+            case ASSERTIVE -> "Assertive";
         };
     }
 

@@ -18,7 +18,7 @@ import java.lang.foreign.ValueLayout;
 import java.nio.ByteOrder;
 import java.util.Locale;
 
-/// Owns the Kernel32, User32, DXGI, and OLE lookups for one Windows session.
+/// Owns the Kernel32, User32, GDI32, DXGI, OLE, and IMM32 lookups for one Windows session.
 @SuppressWarnings("restricted")
 @NotNullByDefault
 public final class WindowsLibraries implements AutoCloseable {
@@ -66,6 +66,7 @@ public final class WindowsLibraries implements AutoCloseable {
         try {
             SymbolLookup symbols = open("kernel32.dll", arena)
                     .or(open("user32.dll", arena))
+                    .or(open("gdi32.dll", arena))
                     .or(open("dxgi.dll", arena))
                     .or(open("ole32.dll", arena))
                     .or(open("imm32.dll", arena));

@@ -7,8 +7,17 @@ import org.glavo.himari.layout.input.KeyEventType;
 import org.glavo.himari.layout.input.LogicalKey;
 import org.glavo.himari.layout.input.PointerEvent;
 import org.glavo.himari.layout.input.PointerEventType;
+import org.glavo.himari.layout.input.gesture.GestureArena;
+import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.TextDirection;
+import org.glavo.himari.runtime.animation.AnimationMotionDisposition;
+import org.glavo.himari.runtime.animation.AnimationTransaction;
+import org.glavo.himari.runtime.animation.MotionImportance;
+import org.glavo.himari.runtime.animation.MotionPolicy;
+import org.glavo.himari.runtime.animation.SnapMotionSpec;
+import org.glavo.himari.runtime.animation.TweenSpec;
 import org.jetbrains.annotations.NotNullByDefault;
 
 import java.nio.charset.StandardCharsets;
@@ -33,7 +42,7 @@ public final class ControlsConformance {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 400.0f));
+        tree.measure(Constraints.loose(400.0f, 800.0f));
         tree.place();
         SemanticsNode button = first(tree, SemanticsRole.BUTTON);
         tree.dispatch(new PointerEvent(PointerEventType.DOWN, button.bounds().x() + 1.0f, button.bounds().y() + 1.0f));
@@ -64,12 +73,103 @@ public final class ControlsConformance {
             throw new IllegalStateException("Popup or theme tokens were incorrect");
         }
         gallery.popup().dismiss();
+        gallery.menu().show();
+        rebuild(tree, gallery);
+        if (!gallery.dispatchKey(tree, new KeyEvent(KeyEventType.DOWN, LogicalKey.ESCAPE))
+                || gallery.menu().isOpen()) {
+            throw new IllegalStateException("Escape did not dismiss the menu");
+        }
+        gallery.dialog().show();
+        rebuild(tree, gallery);
+        SemanticsNode dialog = first(tree, SemanticsRole.DIALOG);
+        if (!gallery.dispatchPointer(tree, new PointerEvent(
+                PointerEventType.DOWN,
+                dialog.bounds().x() - 4.0f,
+                dialog.bounds().y() - 4.0f
+        )) || gallery.dialog().isOpen()) {
+            throw new IllegalStateException("Outside pointer did not dismiss the dialog");
+        }
+        gallery.menu().show();
+        rebuild(tree, gallery);
+        SemanticsNode item = first(tree, SemanticsRole.MENU_ITEM);
+        gallery.dispatchPointer(tree, new PointerEvent(
+                PointerEventType.DOWN,
+                item.bounds().x() + 1.0f,
+                item.bounds().y() + 1.0f
+        ));
+        gallery.dispatchPointer(tree, new PointerEvent(
+                PointerEventType.UP,
+                item.bounds().x() + 1.0f,
+                item.bounds().y() + 1.0f
+        ));
+        if (gallery.menu().isOpen() || gallery.menu().items().getFirst().activations() != 1) {
+            throw new IllegalStateException("Menu item did not activate and dismiss");
+        }
+        gallery.tooltip().show();
+        rebuild(tree, gallery);
+        if (first(tree, SemanticsRole.TOOLTIP).bounds().height() <= 0.0f
+                || !gallery.dispatchKey(tree, new KeyEvent(KeyEventType.DOWN, LogicalKey.ESCAPE))
+                || gallery.tooltip().isOpen()) {
+            throw new IllegalStateException("Tooltip did not show or dismiss");
+        }
         if (gallery.button().activations() != 2 || !gallery.toggle().isOn() || gallery.slider().value() != 5.0f) {
             throw new IllegalStateException("Control gallery outcomes were incorrect");
         }
         if (gallery.scroll().offset() != 16.0f || gallery.list().firstVisible() != 1
                 || !"a".equals(gallery.field().text())) {
             throw new IllegalStateException("Scroll, list, or text-field outcomes were incorrect");
+        }
+        gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.DOWN, 24.0f, 60.0f), 0L);
+        gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.MOVE, 24.0f, 40.0f), 16_000_000L);
+        if (!gallery.gestures().dragAccepted() || gallery.scroll().offset() != 36.0f) {
+            throw new IllegalStateException("Drag gesture did not scroll the viewport");
+        }
+        gallery.gestures().reset();
+        gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.DOWN, 12.0f, 12.0f), 100L);
+        gallery.gestures().tick(100L + GestureArena.LONG_PRESS_NANOS);
+        gallery.dispatchPointer(
+                tree,
+                new PointerEvent(PointerEventType.UP, 12.0f, 12.0f),
+                100L + GestureArena.LONG_PRESS_NANOS
+        );
+        if (!gallery.gestures().longPressAccepted() || !"Long press".equals(gallery.status().message())) {
+            throw new IllegalStateException("Long press did not announce through the live region");
+        }
+        gallery.area().updateComposition("hello");
+        gallery.area().commitComposition();
+        gallery.area().updateComposition("world");
+        gallery.area().commitComposition();
+        if (!"hello\nworld".equals(gallery.area().text()) || !gallery.area().undo()) {
+            throw new IllegalStateException("Text-area composition or undo failed");
+        }
+        float ltrButtonX = first(tree, SemanticsRole.BUTTON).bounds().x();
+        gallery.status().announce("Saved");
+        rebuild(tree, gallery);
+        SemanticsNode status = first(tree, SemanticsRole.STATUS);
+        if (!"Saved".equals(status.label()) || status.liveRegion() != SemanticsLiveRegion.POLITE) {
+            throw new IllegalStateException("Live-region status was not polite");
+        }
+        gallery.setTheme(ThemeTokens.standard().withTextDirection(TextDirection.RTL));
+        rebuild(tree, gallery);
+        if (gallery.theme().textDirection() != TextDirection.RTL
+                || first(tree, SemanticsRole.BUTTON).bounds().x() <= ltrButtonX) {
+            throw new IllegalStateException("RTL theme did not pack children to the end");
+        }
+        gallery.setTheme(gallery.theme().withReducedMotion(true));
+        if (!gallery.theme().reducedMotion()) {
+            throw new IllegalStateException("Reduced-motion theme was not applied");
+        }
+        TweenSpec requestedMotion = TweenSpec.linear(1_000_000_000L);
+        AnimationTransaction snapped = gallery.resolveMotion(1L, requestedMotion, MotionImportance.NONESSENTIAL);
+        if (snapped.effectiveMotion() != SnapMotionSpec.INSTANCE
+                || snapped.motionDisposition() != AnimationMotionDisposition.DISABLED) {
+            throw new IllegalStateException("Reduced-motion policy did not snap nonessential motion");
+        }
+        AnimationTransaction essential = gallery.resolveMotion(2L, requestedMotion, MotionImportance.ESSENTIAL);
+        if (!(essential.effectiveMotion() instanceof TweenSpec shortened)
+                || shortened.durationNanos() != MotionPolicy.REDUCED_TWEEN_MAX_NANOS
+                || essential.motionDisposition() != AnimationMotionDisposition.REDUCED) {
+            throw new IllegalStateException("Reduced-motion policy did not shorten essential motion");
         }
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);
@@ -85,10 +185,24 @@ public final class ControlsConformance {
                           "toggleOn": %s,
                           "sliderValue": %s,
                           "scrollOffset": %s,
+                          "gestureDrag": true,
+                          "gestureLongPress": true,
                           "listFirstVisible": %d,
                           "text": "%s",
                           "undoRedo": true,
                           "popupDismissed": %s,
+                          "menuDismissed": true,
+                          "dialogDismissed": true,
+                          "menuItemActivations": %d,
+                          "tooltipDismissed": true,
+                          "textArea": "%s",
+                          "liveRegion": "%s",
+                          "status": "%s",
+                          "textDirection": "%s",
+                          "rtlPacked": true,
+                          "reducedMotion": %s,
+                          "reducedMotionSnap": true,
+                          "reducedMotionEssentialNanos": %d,
                           "theme": "%s"
                         }
                         """.formatted(
@@ -99,6 +213,13 @@ public final class ControlsConformance {
                         gallery.list().firstVisible(),
                         gallery.field().text(),
                         !gallery.popup().isOpen(),
+                        gallery.menu().items().getFirst().activations(),
+                        gallery.area().text(),
+                        first(tree, SemanticsRole.STATUS).liveRegion().name(),
+                        gallery.status().message(),
+                        gallery.theme().textDirection().name(),
+                        gallery.theme().reducedMotion(),
+                        ((TweenSpec) essential.effectiveMotion()).durationNanos(),
                         gallery.theme().name()
                 ),
                 StandardCharsets.UTF_8
@@ -117,5 +238,15 @@ public final class ControlsConformance {
             }
         }
         throw new IllegalStateException("Missing " + role);
+    }
+
+    /// Rebuilds and places the gallery tree.
+    ///
+    /// @param tree the tree
+    /// @param gallery the gallery
+    private static void rebuild(LayoutTree tree, ControlGallery gallery) {
+        tree.setRoot(gallery.create(tree));
+        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.place();
     }
 }

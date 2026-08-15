@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":modules:platform-wayland"))
     implementation(project(":modules:platform-windows"))
     implementation(project(":modules:render-software"))
+    implementation(project(":modules:rhi-d3d12"))
     implementation(project(":modules:rhi-metal"))
     implementation(project(":modules:runtime"))
     implementation(project(":modules:state"))

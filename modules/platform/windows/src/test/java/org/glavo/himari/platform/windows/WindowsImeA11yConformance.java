@@ -8,6 +8,7 @@ import org.glavo.himari.layout.LayoutTree;
 import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.bootstrap.BootstrapCounterPane;
 import org.glavo.himari.layout.semantics.SemanticsAction;
+import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.jetbrains.annotations.NotNullByDefault;
@@ -87,15 +88,28 @@ public final class WindowsImeA11yConformance {
                 null
         );
         slider.setRangeValue(3.0);
-        valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider));
+        LayoutNode status = factory.leaf(
+                "status",
+                new Size(120.0f, 20.0f),
+                List.of(),
+                false,
+                SemanticsRole.STATUS,
+                "Saved",
+                java.util.Set.of(),
+                null
+        );
+        status.setLiveRegion(SemanticsLiveRegion.POLITE);
+        valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider, status));
         valueTree.measure(Constraints.loose(400.0f, 400.0f));
         valueTree.place();
         List<WindowsAutomationNode> valueNodes = WindowsAutomationBridge.inspect(valueTree.semantics());
         boolean toggleOff = valueNodes.stream().anyMatch(node -> "Off".equals(node.toggleState()));
         boolean sliderRange = valueNodes.stream().anyMatch(node ->
                 node.controlType().equals("Slider") && node.rangeValue() != null && node.rangeValue() == 3.0);
-        if (!toggleOff || !sliderRange) {
-            throw new IllegalStateException("UIA projection omitted toggle or range values");
+        boolean livePolite = valueNodes.stream().anyMatch(node ->
+                node.controlType().equals("StatusBar") && "Polite".equals(node.liveSetting()));
+        if (!toggleOff || !sliderRange || !livePolite) {
+            throw new IllegalStateException("UIA projection omitted toggle, range, or live-setting values");
         }
         boolean uiaGetPropertyValue = false;
         boolean tsfAvailable = false;
@@ -106,6 +120,7 @@ public final class WindowsImeA11yConformance {
         boolean uiaInvoke = false;
         boolean uiaToggleCom = false;
         boolean uiaRangeCom = false;
+        boolean uiaLiveSetting = false;
         WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
         try {
             WindowsWindow window = platform.createWindow(
@@ -162,6 +177,10 @@ public final class WindowsImeA11yConformance {
                     .filter(node -> node.role() == SemanticsRole.SLIDER)
                     .findFirst()
                     .orElseThrow();
+            SemanticsNode statusNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.STATUS)
+                    .findFirst()
+                    .orElseThrow();
             try (WindowsAutomationProvider toggleProvider = window.automationProvider(toggleNode)) {
                 uiaToggleCom = toggleProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TOGGLE_PATTERN_ID)
                         && toggleProvider.toggle() == WindowsAutomationProvider.TOGGLE_STATE_ON;
@@ -170,11 +189,19 @@ public final class WindowsImeA11yConformance {
                 uiaRangeCom = rangeProvider.invokePatternProvider(WindowsAutomationProvider.UIA_RANGE_VALUE_PATTERN_ID)
                         && rangeProvider.setRangeValue(8.0) == 8.0;
             }
+            try (WindowsAutomationProvider statusProvider = window.automationProvider(statusNode)) {
+                uiaLiveSetting = statusProvider.invokePropertyValue(
+                        WindowsAutomationProvider.UIA_CONTROL_TYPE_PROPERTY_ID
+                ) == WindowsAutomationProvider.UIA_STATUS_BAR_CONTROL_TYPE_ID
+                        && statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_LIVE_SETTING_PROPERTY_ID
+                        ) == WindowsAutomationProvider.LIVE_SETTING_POLITE;
+            }
             if (!textStoreLock || !textStoreGeometry || !documentAttached) {
                 throw new IllegalStateException("ITextStoreACP lock, geometry, or TSF document attach failed");
             }
-            if (!uiaInvoke || !uiaToggleCom || !uiaRangeCom) {
-                throw new IllegalStateException("UIA Invoke/Toggle/Range COM patterns failed");
+            if (!uiaInvoke || !uiaToggleCom || !uiaRangeCom || !uiaLiveSetting) {
+                throw new IllegalStateException("UIA Invoke/Toggle/Range/LiveSetting COM properties failed");
             }
             window.closeAsync().toCompletableFuture().get();
             platform.pump();
@@ -206,6 +233,7 @@ public final class WindowsImeA11yConformance {
                           "uiaInvokeCom": %s,
                           "uiaToggleCom": %s,
                           "uiaRangeCom": %s,
+                          "uiaLiveSetting": %s,
                           "tsfThreadMgr": %s,
                           "textStoreAcp": %s,
                           "textStoreGeometry": %s,
@@ -218,6 +246,7 @@ public final class WindowsImeA11yConformance {
                         uiaInvoke,
                         uiaToggleCom,
                         uiaRangeCom,
+                        uiaLiveSetting,
                         tsfAvailable,
                         textStoreLock,
                         textStoreGeometry,

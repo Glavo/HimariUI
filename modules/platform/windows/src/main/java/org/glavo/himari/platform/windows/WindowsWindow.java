@@ -198,6 +198,16 @@ public final class WindowsWindow implements PlatformWindow {
         return nativeWindow.modalTimerTicks();
     }
 
+    /// Blits unassociated 8-bit sRGB RGBA pixels into this HWND and retains them for `WM_PAINT`.
+    ///
+    /// @param rgba unassociated 8-bit sRGB pixels in row-major RGBA order
+    /// @param width the pixel width
+    /// @param height the pixel height
+    /// @return the scanline count reported by `SetDIBitsToDevice`
+    public int presentSdrRgba(byte[] rgba, int width, int height) {
+        return nativeWindow.presentSdrRgba(rgba, width, height);
+    }
+
     /// Posts a left-button pointer sequence through the production WndProc.
     ///
     /// @param type the pointer kind

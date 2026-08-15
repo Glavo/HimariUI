@@ -38,6 +38,22 @@ public record TweenSpec(long durationNanos, long delayNanos, CubicBezierCurve cu
         return new TweenSpec(durationNanos, 0L, CubicBezierCurve.LINEAR);
     }
 
+    /// Returns a zero-delay tween whose duration is at most `maxDurationNanos`.
+    ///
+    /// @param maxDurationNanos the positive maximum active duration
+    /// @return this specification when already within the bound and undelayed, otherwise a copy
+    /// @throws IllegalArgumentException if `maxDurationNanos` is not positive
+    public TweenSpec shortened(long maxDurationNanos) {
+        if (maxDurationNanos <= 0L) {
+            throw new IllegalArgumentException("maxDurationNanos must be positive");
+        }
+        long nextDuration = Math.min(durationNanos, maxDurationNanos);
+        if (nextDuration == durationNanos && delayNanos == 0L) {
+            return this;
+        }
+        return new TweenSpec(nextDuration, 0L, curve);
+    }
+
     /// Creates a zero-delay symmetric ease-in-out tween.
     ///
     /// @param durationNanos the positive duration

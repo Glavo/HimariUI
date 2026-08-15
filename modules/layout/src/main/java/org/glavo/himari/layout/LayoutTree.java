@@ -201,7 +201,8 @@ public final class LayoutTree {
                 node.bounds(),
                 focus.focusedId() != null && focus.focusedId() == node.id(),
                 node.selected(),
-                node.rangeValue()
+                node.rangeValue(),
+                node.liveRegion()
         ));
         for (LayoutNode child : node.children()) {
             collectSemantics(child, nodes);

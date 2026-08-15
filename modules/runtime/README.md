@@ -124,8 +124,10 @@ motion preserves value and resets velocity; explicit policies may restart or sna
 gesture may supply initial velocity only to a compatible physical motion.
 
 Requested motion remains recorded when accessibility policy substitutes a reduced or disabled
-effective specification. Disabled motion snaps to the final model target and completes with a
-`SKIPPED` outcome.
+effective specification. `MotionPolicy` applies that substitution from a per-target reduced-motion
+flag and [MotionImportance]: nonessential motion snaps and completes as `SKIPPED`; essential tweens
+keep at most 80 ms without delay; essential springs become at least critically damped. Disabled
+motion snaps to the final model target and completes with a `SKIPPED` outcome.
 
 ## Phase impact and completion
 

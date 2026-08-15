@@ -31,6 +31,9 @@ final class DesktopLaunchTest {
         assertTrue(result.inspectorNodes() >= 2);
         assertTrue(result.pngBytes() > 8);
         assertTrue(result.extendedLinearBytes() > 0);
+        assertTrue(result.presentedScanlines() >= 120);
+        assertTrue(result.d3d12Presented());
+        assertTrue(result.popupHosted());
         assertEquals("environment-blocked", result.waylandStatus());
         assertTrue(result.macosStatus().equals("environment-blocked") || result.macosStatus().equals("resolved"));
         assertEquals("environment-blocked", result.metalStatus());

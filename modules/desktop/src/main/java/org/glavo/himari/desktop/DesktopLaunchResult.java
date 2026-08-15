@@ -15,6 +15,9 @@ import java.util.Objects;
 /// @param inspectorNodes the inspector node count
 /// @param pngBytes the SDR PNG size
 /// @param extendedLinearBytes the extended-linear capture size
+/// @param presentedScanlines the GDI scanlines written into host windows
+/// @param d3d12Presented whether a software RGBA frame was copied through D3D12
+/// @param popupHosted whether an owner-relative popup HWND was created
 /// @param waylandStatus the Wayland probe status
 /// @param macosStatus the macOS probe status
 /// @param metalStatus the Metal probe status
@@ -30,6 +33,9 @@ public record DesktopLaunchResult(
         int inspectorNodes,
         int pngBytes,
         int extendedLinearBytes,
+        int presentedScanlines,
+        boolean d3d12Presented,
+        boolean popupHosted,
         String waylandStatus,
         String macosStatus,
         String metalStatus,
@@ -43,7 +49,12 @@ public record DesktopLaunchResult(
         Objects.requireNonNull(macosStatus, "macosStatus");
         Objects.requireNonNull(metalStatus, "metalStatus");
         Objects.requireNonNull(objcStatus, "objcStatus");
-        if (windowCount < 0 || activations < 0 || inspectorNodes < 0 || pngBytes < 0 || extendedLinearBytes < 0) {
+        if (windowCount < 0
+                || activations < 0
+                || inspectorNodes < 0
+                || pngBytes < 0
+                || extendedLinearBytes < 0
+                || presentedScanlines < 0) {
             throw new IllegalArgumentException("Desktop launch counters must be nonnegative");
         }
     }
@@ -66,6 +77,9 @@ public record DesktopLaunchResult(
                   "inspectorNodes": %d,
                   "pngBytes": %d,
                   "extendedLinearBytes": %d,
+                  "presentedScanlines": %d,
+                  "d3d12Presented": %s,
+                  "popupHosted": %s,
                   "waylandStatus": "%s",
                   "macosStatus": "%s",
                   "metalStatus": "%s",
@@ -81,6 +95,9 @@ public record DesktopLaunchResult(
                 inspectorNodes,
                 pngBytes,
                 extendedLinearBytes,
+                presentedScanlines,
+                d3d12Presented,
+                popupHosted,
                 waylandStatus,
                 macosStatus,
                 metalStatus,

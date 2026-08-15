@@ -3,6 +3,7 @@ import org.gradle.api.tasks.SourceSetContainer
 
 dependencies {
     api(project(":modules:layout"))
+    api(project(":modules:runtime"))
 }
 
 val sourceSets = extensions.getByType<SourceSetContainer>()

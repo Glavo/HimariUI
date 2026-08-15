@@ -36,6 +36,9 @@ public final class InspectorConformance {
         if (snapshot.nodes().isEmpty()) {
             throw new IllegalStateException("Inspector captured no nodes");
         }
+        if (!snapshot.toCanonicalJson().contains("\"liveRegion\":\"POLITE\"")) {
+            throw new IllegalStateException("Inspector omitted the live-region field");
+        }
         String json = snapshot.toCanonicalJson();
         String capturedTrace = snapshot.traceJson();
         if (capturedTrace == null) {

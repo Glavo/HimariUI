@@ -26,15 +26,49 @@ public final class MetalSpike {
         MetalProbe probe = MetalProbe.run();
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);
-        Files.writeString(output.resolve("capabilities.json"), "{\"hdrAssumed\":false}\n", StandardCharsets.UTF_8);
+        boolean queue = probe.capabilities() != null && probe.capabilities().commandQueueCreated();
+        boolean committed = probe.capabilities() != null && probe.capabilities().commandBufferCommitted();
+        Files.writeString(
+                output.resolve("capabilities.json"),
+                """
+                        {
+                          "hdrAssumed": false,
+                          "commandQueueCreated": %s,
+                          "commandBufferCommitted": %s,
+                          "presentationMode": "color-managed-sdr"
+                        }
+                        """.formatted(queue, committed),
+                StandardCharsets.UTF_8
+        );
         Files.writeString(output.resolve("validation.log"), "not-run\n", StandardCharsets.UTF_8);
-        Files.writeString(output.resolve("presentation.json"), "{\"mode\":\"uninitialized\"}\n", StandardCharsets.UTF_8);
+        Files.writeString(
+                output.resolve("presentation.json"),
+                "{\"mode\":\"command-queue\",\"hdrMetadataApplied\":false}\n",
+                StandardCharsets.UTF_8
+        );
         Files.writeString(
                 output.resolve("results.json"),
-                "{\"profile\":\"m0-metal-surface\",\"status\":\"" + probe.status() + "\",\"detail\":\""
-                        + probe.detail().replace("\"", "'") + "\"}\n",
+                """
+                        {
+                          "profile": "m0-metal-surface",
+                          "workPackage": "SPIKE-METAL-001",
+                          "status": "%s",
+                          "commandQueueCreated": %s,
+                          "commandBufferCommitted": %s,
+                          "hdrAssumed": false,
+                          "detail": "%s"
+                        }
+                        """.formatted(probe.status(), queue, committed, escape(probe.detail())),
                 StandardCharsets.UTF_8
         );
         System.out.println("SPIKE-METAL-001 " + probe.status() + ": " + probe.detail());
+    }
+
+    /// Escapes one JSON string fragment.
+    ///
+    /// @param value the raw text
+    /// @return the escaped text
+    private static String escape(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "'");
     }
 }

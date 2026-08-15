@@ -1,5 +1,6 @@
 package org.glavo.himari.platform.wayland;
 
+import org.glavo.himari.platform.wayland.linux.WaylandLinuxHost;
 import org.jetbrains.annotations.NotNullByDefault;
 
 import java.util.Objects;
@@ -40,7 +41,7 @@ public record WaylandProbe(
     ///
     /// @return the observation
     public static WaylandProbe run() {
-        if (!WaylandLibraries.supportedHost()) {
+        if (!WaylandLinuxHost.supported()) {
             return new WaylandProbe(
                     "environment-blocked",
                     "Wayland requires a Linux compositor; host is " + System.getProperty("os.name", ""),

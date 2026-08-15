@@ -15,3 +15,19 @@ tasks.register<JavaExec>("conformance") {
     args(layoutConformanceDirectory.get().asFile.absolutePath)
     outputs.file(layoutConformanceDirectory.map { it.file("results.json") })
 }
+
+val gestureConformanceDirectory = rootProject.layout.buildDirectory.dir("conformance/m9-gestures")
+
+val gestureConformance = tasks.register<JavaExec>("gestureConformance") {
+    group = "verification"
+    description = "Runs the M9 gesture-arena competition profile."
+    dependsOn("testClasses", "test", "pureJavaGuard")
+    classpath = sourceSets.named("test").get().runtimeClasspath
+    mainClass.set("org.glavo.himari.layout.input.gesture.GestureConformance")
+    args(gestureConformanceDirectory.get().asFile.absolutePath)
+    outputs.file(gestureConformanceDirectory.map { it.file("results.json") })
+}
+
+tasks.named("check") {
+    dependsOn(gestureConformance)
+}

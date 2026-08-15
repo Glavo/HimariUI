@@ -30,7 +30,7 @@ public final class LayoutFactory {
     /// @param children the children
     /// @return the box
     public LayoutNode box(String name, List<LayoutModifier> modifiers, LayoutNode... children) {
-        return container(name, LayoutKind.BOX, Alignment.START, modifiers, children);
+        return container(name, LayoutKind.BOX, Alignment.START, modifiers, SemanticsRole.NONE, name, children);
     }
 
     /// Creates a horizontal row.
@@ -46,7 +46,7 @@ public final class LayoutFactory {
             List<LayoutModifier> modifiers,
             LayoutNode... children
     ) {
-        return container(name, LayoutKind.ROW, alignment, modifiers, children);
+        return container(name, LayoutKind.ROW, alignment, modifiers, SemanticsRole.NONE, name, children);
     }
 
     /// Creates a vertical column.
@@ -62,7 +62,27 @@ public final class LayoutFactory {
             List<LayoutModifier> modifiers,
             LayoutNode... children
     ) {
-        return container(name, LayoutKind.COLUMN, alignment, modifiers, children);
+        return container(name, LayoutKind.COLUMN, alignment, modifiers, SemanticsRole.NONE, name, children);
+    }
+
+    /// Creates a vertical column with an explicit semantics role.
+    ///
+    /// @param name the diagnostic name
+    /// @param alignment the cross-axis alignment
+    /// @param modifiers the modifiers
+    /// @param role the semantics role
+    /// @param label the semantics label
+    /// @param children the children
+    /// @return the column
+    public LayoutNode column(
+            String name,
+            Alignment alignment,
+            List<LayoutModifier> modifiers,
+            SemanticsRole role,
+            String label,
+            LayoutNode... children
+    ) {
+        return container(name, LayoutKind.COLUMN, alignment, modifiers, role, label, children);
     }
 
     /// Creates a vertical scroll viewport.
@@ -72,7 +92,7 @@ public final class LayoutFactory {
     /// @param children the content
     /// @return the viewport
     public LayoutNode scroll(String name, List<LayoutModifier> modifiers, LayoutNode... children) {
-        return container(name, LayoutKind.SCROLL, Alignment.START, modifiers, children);
+        return container(name, LayoutKind.SCROLL, Alignment.START, modifiers, SemanticsRole.NONE, name, children);
     }
 
     /// Creates a leaf with an intrinsic size.
@@ -144,6 +164,8 @@ public final class LayoutFactory {
     /// @param kind the policy
     /// @param alignment the cross-axis alignment
     /// @param modifiers the modifiers
+    /// @param role the semantics role
+    /// @param label the semantics label
     /// @param children the children
     /// @return the container
     private LayoutNode container(
@@ -151,6 +173,8 @@ public final class LayoutFactory {
             LayoutKind kind,
             Alignment alignment,
             List<LayoutModifier> modifiers,
+            SemanticsRole role,
+            String label,
             LayoutNode... children
     ) {
         LayoutNode node = new LayoutNode(
@@ -161,8 +185,8 @@ public final class LayoutFactory {
                 modifiers,
                 null,
                 false,
-                SemanticsRole.NONE,
-                name,
+                role,
+                label,
                 Set.of(),
                 null,
                 null

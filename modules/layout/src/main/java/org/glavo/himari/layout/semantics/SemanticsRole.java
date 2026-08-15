@@ -24,5 +24,26 @@ public enum SemanticsRole {
     LIST,
 
     /// An editable text field.
-    TEXT_FIELD
+    TEXT_FIELD,
+
+    /// A multiline editable text area.
+    TEXT_AREA,
+
+    /// A status or live-region announcement.
+    STATUS,
+
+    /// A generic in-window overlay popup.
+    POPUP,
+
+    /// A menu surface that hosts activatable items.
+    MENU,
+
+    /// One activatable item inside a menu.
+    MENU_ITEM,
+
+    /// A modal dialog surface.
+    DIALOG,
+
+    /// A non-activating tooltip surface.
+    TOOLTIP
 }

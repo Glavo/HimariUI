@@ -4,6 +4,7 @@ AppKit
 CoreFoundation
 d3d12.dll
 dxgi.dll
+gdi32.dll
 imm32.dll
 jimage.dll
 kernel32.dll
