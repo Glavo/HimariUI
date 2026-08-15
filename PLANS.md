@@ -64,7 +64,7 @@ The order states dependency, not strict serialization; the milestone plan organi
 ### 1.3 Fixed top-level decisions
 
 1. **Use Java 25 as the minimum runtime.** Core and internal implementations may use stable Java 25 language and library features. For JVM and Native Image desktop targets, FFM is the only native-access mechanism. Future Android and iOS targets must use a Java 25-capable AOT toolchain instead of imposing Android Runtime class-library compatibility on common modules. A future browser/Wasm target uses generated host bindings rather than FFM and does not reintroduce an FFI provider SPI. The Vector API remains incubating and may appear only in optional optimization modules.
-2. **Do not require a compiler plugin.** Runtime correctness and the baseline application API must be usable from ordinary Java source. M1 selects the structural-reactivity model from evidence comparing explicit grouped recomposition, one-shot signal ownership, and a hybrid of fine-grained bindings with small structural scopes. Annotation processors or `javac` plugins may add diagnostics and optimizations, but correctness and acceptable baseline ergonomics must not depend on them.
+2. **Do not require a compiler plugin.** Runtime correctness and the baseline application API must be usable from ordinary Java source. M1 compared explicit grouped recomposition, one-shot signal ownership, and a hybrid of fine-grained bindings with small structural scopes; ADR-023 selects explicit grouped recomposition for topology while retaining fine-grained value and phase consumers. Annotation processors or `javac` plugins may add diagnostics and optimizations, but correctness and acceptable baseline ergonomics must not depend on them.
 3. **Use several purpose-specific trees.** Keep the reactive-owner/mounted-element, layout, layer/display-list, and semantics structures separate.
 4. **Make the software renderer normative.** Add every path, blend, filter, and glyph-raster operation to the pure-Java scalar path before accepting Vulkan, D3D12, or Metal implementations.
 5. **Use an explicit, backend-neutral RHI.** Model resources, pipelines, passes, command buffers, resource usages, pass dependencies, submission order, and ownership directly. Let Vulkan and D3D12 materialize native barriers from that model instead of exposing their raw barrier APIs as the cross-backend contract.
@@ -232,7 +232,7 @@ Publish independently useful subsystems as explicitly unstable `0.x` artifacts b
 - `himari-font` and `himari-text` once their M4 gates pass: pure-Java OpenType parsing and shaping are independently valuable to the wider Java ecosystem and attract the real-world font and text corpus that differential testing needs most.
 - `himari-render-software` plus the graphics value types once the M3 gates pass.
 - The ABI generator tooling once M0 proves the generation path.
-- `himari-state` and `himari-runtime` once the M1 gates and `RUNTIME-ADR-001` pass: the declarative runtime is the API surface that most needs external feedback, carries no native dependency, and must be exercised by real users before M9 stabilizes the public controls API. The Section 7 API-charter samples ship with it as executable documentation.
+- `himari-state` and `himari-runtime` once the remaining M1 gates pass under accepted ADR-023: the declarative runtime is the API surface that most needs external feedback, carries no native dependency, and must be exercised by real users before M9 stabilizes the public controls API. The Section 7 API-charter samples ship with it as executable documentation.
 
 Pre-stable artifacts use `0.x` versions, carry an explicit instability notice, and pass the same pure-Java distribution gates as stable artifacts. They create no API-stability obligation and must never delay or veto a first-stable API change; their purpose is early corpus exposure, external users, and contributor acquisition for a multi-year project that would otherwise receive no external feedback before its first stable release.
 
@@ -240,7 +240,7 @@ Pre-stable artifacts use `0.x` versions, carry an explicit instability notice, a
 
 ## 4. Architectural Decisions
 
-Create or maintain an ADR for each decision below. An `ADR-NNN` heading in this draft is an identifier, not proof that the decision is accepted; the status in Section 26 and the canonical file under `adr/` are authoritative. Until `ADR-BOOTSTRAP-001` materializes the accepted files, the accepted summaries in this document remain the temporary source of truth. Every unresolved entry receives an evidence requirement and decision milestone rather than remaining an undated working default.
+Create or maintain an ADR for each decision below. An `ADR-NNN` heading in this draft is an identifier, not proof that the decision is accepted; the status in Section 26 and the canonical file under `adr/` are authoritative. `ADR-BOOTSTRAP-001` materialized ADR-001 through ADR-022, and `RUNTIME-ADR-001` subsequently added ADR-023 and accepted ADR-020 and ADR-021 from checked evidence. Every future unresolved entry receives an evidence requirement and decision milestone rather than remaining an undated working default.
 
 ### ADR-001: Keep the core independent of `java.desktop`
 
@@ -314,7 +314,7 @@ Platform-neutral contracts must support host-driven event loops, asynchronous ca
 
 Use a fine-grained producer/consumer graph for `State`, `DerivedState`, phase dependencies, and owned effects. Source writes push invalidation through the graph; derived values recompute lazily when pulled and publish semantic version changes only when their equality policy observes a new value. Treat conditional branches, keyed collections, mounted-node identity, and lifecycle as a separate structural-update problem.
 
-Do not accept universal slot-table recomposition or one-shot component execution as the structural contract before M1 evidence exists. Compare explicit grouped recomposition, one-shot signal ownership with explicit reactive control flow, and a hybrid that uses fine-grained property bindings plus small structural scopes. A slot table may remain an internal implementation selected by that evidence, but it is not a fixed public-runtime requirement.
+ADR-023 resolves the structural contract from the M1 comparison in favor of explicit grouped recomposition. Handwritten restartable groups own topology and local lifecycle, while typed value and phase consumers retain fine-grained invalidation under this ADR. The one-shot signal and hybrid scope prototypes remain reference evidence. A slot table may be an internal grouped-runtime store, but it is not a fixed public API or a requirement to copy Compose's compiler-dependent representation.
 
 ### ADR-016: Do not lower the Java baseline for speculative targets
 
@@ -346,15 +346,19 @@ First stable requires tagged color values, extended-range scene round trips, ref
 
 ### ADR-020: Make measure-time structural materialization an explicit contract
 
-Viewport-driven containers such as `LazyList` decide which children exist only when constraints and available size are known, which requires structural work initiated during measure or a defined one-frame-lagged alternative. The frame flow in Section 5 is otherwise strictly phase-ordered, so this capability must be an explicitly scoped contract rather than an emergent behavior. `RUNTIME-ADR-001` must select and specify the mechanism — scoped measure-time materialization with defined state, phase-tracking, and commit semantics, or a previous-viewport scheme with documented one-frame lag — and the M1 comparison fixtures must exercise it. Retrofitting subcomposition into a phase-ordered runtime after the structural model is fixed is not acceptable.
+Viewport-driven containers such as `LazyList` decide which children exist only when constraints and available size are known. ADR-020 and ADR-023 select explicitly scoped current-measure materialization: only a layout container's declared materialization group may reconcile its own semantic-keyed descendants from the current constraints and viewport, and it stages topology, ownership, dependency, and property changes in the current `UiCommitTransaction` before placement. Failure or cooperative cancellation preserves the previously committed viewport, effects mount only after commit, and the general frame order remains unchanged outside this bounded subphase. The comparison retains the previous-viewport one-frame-lag scheme as a rejected baseline, not an implicit overload fallback.
 
 ### ADR-021: Contain application callback failures at declared error boundaries
 
-Define the developer-facing failure contract for every rerunnable application callback across structure, measure, placement, paint, and effect execution. A failure must be caught at a declared boundary, must not corrupt committed trees or leak staged work, and must produce a deterministic developer-visible outcome: a diagnosed containment subtree with a defined fallback presentation in debug builds and a documented release-build policy. Containment scope, recovery, retry, and diagnostics are specified from M1 fixture evidence. Failures must never escape through a native callback boundary, and containment must compose with the `UiCommitTransaction` cleanup guarantees.
+Every rerunnable application callback across structure, measure, placement, paint, effects, input, cleanup, and measure-time materialization executes under ADR-021's explicit boundary chain. The nearest active boundary aborts the complete attempt, cleans staged work child-before-parent, and schedules declared fallback content as a fresh attempt; fallback failure escalates once to the parent, and retry requires an explicit reset or declared recovery action. An uncontained root failure retains the last committed scene and disables only the affected window runtime. Debug and release builds share atomicity, ownership, boundary, cleanup, and retry semantics while differing only in diagnostic detail and framework-owned presentation. Every native callback entry catches `Throwable`; no failure may unwind through an upcall.
 
 ### ADR-022: Run UI work on the platform main thread with explicit continuity and scoping rules
 
 For first stable, reactive bindings, structural updates, layout, input, and semantics run on the platform-required main execution context as described in Section 5.3. A dedicated UI thread separate from the platform thread was considered and rejected for its IME, accessibility, and host-reentrancy marshaling cost. This choice carries two explicit obligations. First, modal-loop continuity: scheduled UI work, layout-affecting animation, and frame production must continue from within OS modal loops — Windows move/resize and menu loops, macOS live resize — through timer-driven reentry, and the render executor must keep presenting compositor-eligible animation throughout. Second, explicit scoping: one reactive graph and state-epoch domain per application, one frame scheduler per window, and cross-window invalidation routed through ordinary scheduling rather than shared mutable traversal of another window's trees. Re-evaluate this ADR only with profiling evidence from the M5–M7 conformance runs.
+
+### ADR-023: Use explicit grouped recomposition for structural updates
+
+Use ordinary-Java, handwritten restartable groups for topology and local lifecycle. Structural reads invalidate their owning group, while typed property bindings and phase callbacks remain fine-grained ADR-015 consumers. Positional identity is valid only within an unchanged explicit group; reorderable siblings and reparenting require semantic keys. Each attempt observes one stable state epoch and publishes topology, ownership, dependencies, property targets, effects, and animation metadata through one failure-atomic `UiCommitTransaction`. The selected contract includes ADR-020 scoped current-measure groups and ADR-021 declared error boundaries. The first scheduler is non-preemptive, with optional cooperative cancellation checkpoints but no speculative composition or conflict retry. Candidate storage remains replaceable implementation evidence rather than public API.
 
 ---
 
@@ -440,7 +444,7 @@ host / OS events
 - **Frame handoff**: when UI and rendering execute separately, scene snapshots may use latest-wins replacement while resource creation, upload, destruction, configuration, and correlated semantics updates remain ordered and non-droppable. A same-context implementation preserves the same ordering without requiring a mailbox. The logical contract must not require a shared address space even though the default implementation passes immutable Java objects in-process.
 - **Explicit frame ownership**: hand off only immutable values or objects with documented ownership transfer.
 
-Do not parallelize application component, binding, or structural-control callbacks in the first version. Require every callback that the selected runtime may rerun to be fast, reentrant, and free of implicit side effects so a later scheduler may safely add cancellation or different execution strategies. M1 requires atomic commit and deterministic failure cleanup, but it does not require speculative execution, preemption, or conflict retries unless `RUNTIME-ADR-001` selects them. One-shot initializers must register external work through owned lifecycle APIs rather than performing unmanaged side effects.
+Do not parallelize application component, binding, or structural-control callbacks in the first version. ADR-023 selects a non-preemptive grouped structural scheduler with atomic commit and deterministic failure cleanup. It may expose cooperative cancellation checkpoints for bounded staged work because the selected prototype proves their cleanup, but it does not claim speculative execution, preemption, or conflict retry. Require every rerunnable callback to be fast, reentrant, and free of implicit side effects; external work must be registered through owned lifecycle APIs rather than performed as an unmanaged side effect.
 
 ---
 
@@ -664,15 +668,15 @@ Ambient inherited values are part of the public execution model, not a controls-
 
 ### 7.2 M1 structural-reactivity decision
 
-Implement three bounded prototypes over the same state graph, mounted-node abstraction, and Headless host:
+`RUNTIME-ADR-001` compared three bounded prototypes over the same state graph, mounted-node abstraction, and Headless host:
 
 1. **Explicit grouped recomposition**: rerunnable structural callbacks, explicit ordinary-Java group boundaries, positional memory, and keyed reconciliation. The prototype receives no compiler-generated groups, source keys, change masks, restart lambdas, or lambda memoization.
 2. **One-shot signal ownership**: initialize each component owner once, bind deferred reactive expressions to typed node properties, and express changing branches and collections through explicit control-flow primitives equivalent to `Show` and `ForEach`. Changing component inputs must remain reactive rather than becoming frozen constructor values.
 3. **Hybrid structural scopes**: use fine-grained bindings for values and phase callbacks, but rerun the smallest explicit structural scope for conditional branches, keyed collections, or other topology changes.
 
-Freeze the shared behavioral fixtures and instrumentation before prototype work begins. The three spikes may then proceed in parallel, but they must not share a structural abstraction that prejudges the result. Each candidate implements behaviorally identical applications through its own ordinary-Java API variant.
+The shared behavioral fixtures and instrumentation were frozen before candidate implementation. The spikes do not share a structural abstraction that prejudges the result, and each implements behaviorally identical applications through its own ordinary-Java API variant.
 
-Run all three prototypes through one checked-in comparison suite:
+The checked-in comparison suite runs all three prototypes through:
 
 - a counter with a derived label and event handler;
 - a diamond dependency graph that would expose an intermediate-value glitch;
@@ -687,11 +691,11 @@ Run all three prototypes through one checked-in comparison suite:
 - an application callback that throws during structure, measure, placement, and paint, verifying the ADR-021 containment scope, fallback presentation, diagnostics, and cleanup;
 - failed staged work with deterministic cleanup and retry, plus cancelled work only for a candidate that claims preemption or cancellation as part of its model.
 
-Before implementing any candidate, freeze a checked-in decision rubric containing correctness disqualifiers, required diagnostics, measured ergonomics dimensions, performance and memory dimensions, and the method used to resolve tradeoffs. Then record source lines of code, explicit keys, deferred getters, structural-control primitives, generic type noise, callbacks executed, nodes visited, dependency edges, steady-state allocations, retained memory, and phase invalidations. Include debug trace quality, Native Image compatibility, and whether the candidate can preserve structural identity across development-time code reload for the optional ADR-003 tooling. Performance alone cannot select a model whose ordinary-Java samples require pervasive accidental ceremony. The frozen rubric must also define early-disqualification checkpoints: a candidate that exhibits a correctness disqualifier or pervasive ceremony in the micro-fixtures is stopped and its result recorded before the realistic-application port begins, so the three-way comparison stays timeboxed.
+The checked-in rubric was frozen before candidate implementation. It defines correctness disqualifiers, required diagnostics, measured ergonomics, performance and memory dimensions, the exact normalized score, a three-point tie range, and fixed tie-breakers. The reports record source lines, explicit keys, deferred getters, structural-control primitives, generic type noise, callbacks, nodes, dependency edges, steady-state allocations, retained memory, phase invalidations, trace quality, Native Image compatibility, and development-time reload claims. Performance cannot select a model whose ordinary-Java samples require pervasive accidental ceremony. The rubric also fixes early-disqualification checkpoints so a correctness or ceremony failure is recorded before a realistic-application port consumes more time.
 
-Micro-fixtures cannot expose ceremony at application scale. Before the decision review, port one realistic application of roughly five hundred lines — for example a settings form plus a chat-style keyed list — to each candidate API and include it in the recorded metrics. Keep these samples in the repository as the API charter: they are the concrete statement of acceptable ergonomics, and later public-API changes must keep them compiling and comparably concise.
+Because micro-fixtures cannot expose ceremony at application scale, each candidate also includes the same settings form plus chat-style keyed-list application in the recorded metrics. These realistic samples remain in the repository as an API charter: later public-API changes must keep them compiling and comparably concise.
 
-Accept the production structural-runtime ADR only after the comparison is reviewed. The decision may select one prototype or specify a measured hybrid, but it must define component input semantics, local state ownership, branch and list identity, failure recovery, the boundary between value propagation and structural work, ambient value propagation and its invalidation scope, the ADR-020 measure-time structural contract, and the ADR-021 application error-containment contract.
+The reviewed comparison is complete. All candidates pass the correctness and Native Image gates and none fails the blinded ceremony review. ADR-023 selects explicit grouped recomposition through the frozen score and first tie-breaker while retaining ADR-015 fine-grained value and phase consumers. It defines component input reads, group and local-state ownership, positional and semantic-keyed identity, failure-atomic drafts, the value/structure boundary, ambient invalidation, ADR-020 current-measure materialization, and ADR-021 error containment. The selected candidate's materially higher callback and allocation counts remain explicit optimization targets rather than hidden selection evidence.
 
 ### 7.3 Runtime structures
 
@@ -708,7 +712,7 @@ Implement these model-independent structures before committing to a structural r
 - **AnimationRegistry**: own active presentation values, velocities, transition states, completion groups, replacement generations, and next-frame deadlines without making them application state.
 - **EffectRegistry**: define deterministic `mount`, `update`, and `dispose` ordering and aggregate failures for reporting.
 
-The grouped-recomposition prototype may contain a `SlotTable`; the one-shot prototype may instead use owners, anchors, and explicit collection records. Do not promote either storage layout to a production deliverable before the M1 ADR is accepted.
+`STRUCTURE-001` may implement group records, positional memory, semantic-keyed reconciliation, retained branches, and a slot-table-like store. Candidate storage classes remain evidence rather than production API: an implementation may replace them if it preserves ADR-023 identity, ownership, atomicity, diagnostics, and phase-attribution semantics.
 
 ### 7.4 State and propagation requirements
 
@@ -736,7 +740,7 @@ Enforce these write rules:
 2. Give nested state transactions explicit flattening, rollback, and failure semantics.
 3. Publish changes initiated outside the UI execution context through the commit queue; never execute application UI callbacks directly on the originating thread, worker, or host callback.
 4. Keep every reactive version read by staged UI work stable for that attempt.
-5. Prevent state-epoch interleaving during a non-preemptive UI attempt. If `RUNTIME-ADR-001` selects speculative or preemptible work, detect conflicts, cancel, and retry without committing a partial tree or mixed state epoch.
+5. Prevent state-epoch interleaving during the selected non-preemptive UI attempt. Cooperative cancellation may stop only at declared checkpoints and must discard the complete draft without committing a partial tree or mixed state epoch; speculative execution, preemption, and conflict retry are outside the first production scheduler.
 6. Schedule each affected effect at most once per committed epoch and run it only after affected UI work has committed or established that the epoch requires no UI mutation.
 7. Reject reentrant writes and illegal side effects from derived computations or rerunnable structural callbacks in debug mode.
 
@@ -746,8 +750,8 @@ Validate the reactive graph and structural runtime with model-based differential
 
 - Require application keys for semantic identity in reorderable collections or explicit reparenting, not merely to compensate for missing compiler-generated source positions.
 - Make branch identity and the retain-versus-dispose policy for inactive local state explicit in the selected structural model.
-- Give one-shot and hybrid control-flow scopes stable anchors, deterministic child ownership, and child-before-parent disposal.
-- If grouped recomposition is selected, derive safe positional identity only inside explicit runtime scopes and require keys wherever execution order may change.
+- Keep the one-shot and hybrid control-flow implementations as reference evidence with stable anchors, deterministic child ownership, and child-before-parent disposal; they are not a second production structural model.
+- Under ADR-023 grouped recomposition, derive positional identity only inside explicit runtime groups and require semantic keys wherever sibling execution order may change.
 - Record source locations in debug builds when available, but never depend on generated source tokens for correctness.
 - Never use stack inspection, line numbers, synthetic lambda class names, or allocation order as correctness-critical identity; they are diagnostic inputs only.
 - Diagnose duplicate keys, unkeyed reorder, stale bindings, owner leaks, and local-state type changes with actionable errors.
@@ -811,7 +815,7 @@ Use immutable, typed modifier chains and flatten them when mounted. Each modifie
 
 ### 8.4 Virtualization requirements
 
-`LazyList` and related primitives must provide stable item keys, viewport-based materialization, overscan/prefetch, variable-height estimation and correction, anchor-preserving updates, internal-node reuse without state-identity leakage, logical accessibility information for unmounted items, and deterministic Headless scrolling tests. Viewport-based materialization consumes the ADR-020 measure-time structural contract selected by `RUNTIME-ADR-001`. Anchor-preserving updates and cumulative scroll offsets follow the ADR-009 precision rule for unbounded running sums.
+`LazyList` and related primitives must provide stable item keys, viewport-based materialization, overscan/prefetch, variable-height estimation and correction, anchor-preserving updates, internal-node reuse without state-identity leakage, logical accessibility information for unmounted items, and deterministic Headless scrolling tests. Viewport-based materialization uses ADR-020's explicitly scoped current-measure group and commits current-viewport keyed descendants before placement. Anchor-preserving updates and cumulative scroll offsets follow the ADR-009 precision rule for unbounded running sums.
 
 ### 8.5 Hit testing
 
@@ -1947,7 +1951,7 @@ Work in one track proceeds while an unrelated criterion in another track remains
 - **RUNTIME-SPIKE-GROUPED-001**: Explicit grouped-recomposition prototype with positional memory and no compiler assistance.
 - **RUNTIME-SPIKE-ONESHOT-001**: One-shot owner prototype with fine-grained bindings and explicit structural control flow.
 - **RUNTIME-SPIKE-HYBRID-001**: Fine-grained binding prototype with small rerunnable structural scopes.
-- **RUNTIME-ADR-001**: Select and specify the production structural-reactivity model from reviewed evidence.
+- **RUNTIME-ADR-001**: Accept ADR-023 explicit grouped recomposition, ADR-020 scoped current-measure materialization, and ADR-021 declared error-boundary containment from reviewed evidence.
 - **STRUCTURE-001**: Implement the selected branch, keyed-collection, identity, local-state, and failure-recovery semantics.
 - **MOUNT-001**: Mounted elements, typed property bindings, phase impacts, and incremental apply.
 - **EFFECT-001**: Effect lifecycle.
@@ -1959,7 +1963,7 @@ Work in one track proceeds while an unrelated criterion in another track remains
 **Exit criteria:**
 
 - The three prototypes compile and run without application code generation or transformation and publish the same source-ceremony, execution, allocation, memory, and phase-invalidation metrics.
-- `RUNTIME-ADR-001` is accepted before `STRUCTURE-001` begins; the evidence remains checked in and reproducible.
+- ADR-023, ADR-020, and ADR-021 are accepted before `STRUCTURE-001` begins; their checked evidence remains reproducible through the `m1-runtime-decision` conformance profile.
 - Dynamic-dependency, lazy-derived, equality-suppression, diamond-glitch, batching, nested-transaction, effect-coalescing, cycle, and owner-disposal tests pass.
 - Conditional, loop, keyed-reordering, changing-input, and local-state-retention tests pass under the selected model.
 - Failed staged UI work leaks no nodes, graph edges, or effects; every candidate that claims cancellation or preemption passes the same cleanup gate for cancelled attempts.
@@ -2363,7 +2367,7 @@ These issues are the initial project-board view of canonical work packages, not 
 - **RUNTIME-SPIKE-GROUPED-001**: Explicit grouped-recomposition prototype with positional memory and no compiler assistance.
 - **RUNTIME-SPIKE-ONESHOT-001**: One-shot owner prototype with fine-grained bindings and explicit structural control flow.
 - **RUNTIME-SPIKE-HYBRID-001**: Fine-grained binding prototype with small rerunnable structural scopes.
-- **RUNTIME-ADR-001**: Select and specify the production structural-reactivity model from reviewed evidence.
+- **RUNTIME-ADR-001**: Accept ADR-023 explicit grouped recomposition, ADR-020 scoped current-measure materialization, and ADR-021 declared error-boundary containment from reviewed evidence.
 - **STRUCTURE-001**: Implement the selected branch, keyed-collection, identity, local-state, and failure-recovery semantics.
 - **ANIM-CORE-001**: Animation-transaction propagation, model/presentation separation, manual-clock sampling, presentation epochs, allocation-free scalar adapters, and reference tween/spring retargeting.
 - **RUNTIME-MBT-001**: Model-based differential harness running randomized operation sequences against a naive recompute-everything reference evaluator.
@@ -2563,7 +2567,7 @@ Meet the general DoD and all of the following:
 
 ## 26. Decision Register and Working Defaults
 
-ADR-001 through ADR-019 and ADR-022 are accepted at the execution-summary level in this draft. ADR-015 accepts fine-grained value reactivity and the separation of structural updates, but deliberately leaves the grouped/one-shot/hybrid structural subdecision to `RUNTIME-ADR-001`. ADR-020 and ADR-021 are unresolved requirement statements: ADR-020 is decided together with `RUNTIME-ADR-001`, and ADR-021 is fixed from M1 fixture evidence. `ADR-BOOTSTRAP-001` must materialize these decisions with their evidence and dates before downstream implementation treats the files as canonical.
+ADR-001 through ADR-023 are accepted and materialized under `adr/`. ADR-015 defines the fine-grained value and phase graph; ADR-023 resolves its structural subdecision in favor of explicit grouped recomposition. ADR-020 fixes scoped current-measure materialization, and ADR-021 fixes declared error-boundary containment. Their checked M1 evidence and reproducible selection profile are canonical inputs to `STRUCTURE-001`.
 
 The remaining entries below must not block M0 unless marked accepted. Use a working default only until the decision milestone recorded by `ADR-BOOTSTRAP-001`; no default may remain undated.
 
@@ -2595,7 +2599,7 @@ The remaining entries below must not block M0 unless marked accepted. Use a work
 | Public coordinate precision | `float` logical pixels |
 | Text indices | UTF-16 offsets plus grapheme/cluster APIs |
 | Value reactivity | **Accepted:** ADR-015 fine-grained producer/consumer graph with push invalidation and lazy pull recomputation |
-| Structural reactivity | No working default before M1 evidence; `RUNTIME-ADR-001` selects grouped, one-shot, or hybrid semantics |
+| Structural reactivity | **Accepted:** ADR-023 explicit grouped recomposition for topology, retaining ADR-015 fine-grained value and phase consumers |
 | Animation semantics | **Accepted:** ADR-018 transaction-scoped model/presentation separation, atomic presentation epochs, velocity-preserving compatible retargeting, phase-aware execution, and explicit structural transitions |
 | Color and HDR semantics | **Accepted:** ADR-019 structured extensible encodings, finite extended-range values, explicit luminance/presentation capability, linear-light reference composition, and deterministic mapped fallback |
 | First-stable HDR output | Optional and disabled per backend until its dedicated conformance profile passes; tagged HDR reference math, codecs, Headless capability simulation, and truthful SDR fallback are mandatory |
@@ -2606,8 +2610,8 @@ The remaining entries below must not block M0 unless marked accepted. Use a work
 | X11 | Optional separately versioned compatibility profile; Wayland is the required Linux profile for first stable |
 | First-stable script coverage | Tier-1 blocking set (default/Latin/Greek/Cyrillic, Arabic, Hebrew, Hangul, Thai/Lao); Tier-2 (Indic, USE, Khmer, Myanmar, Tibetan) is a separately versioned shaping profile |
 | Hinting | Unhinted default with embedded-bitmap and vertical-snap mitigations; TrueType/CFF hinting VMs form an optional separately versioned fidelity profile |
-| Measure-time structural materialization | No working default before M1 evidence; ADR-020 is decided with `RUNTIME-ADR-001` |
-| Application error containment | ADR-021 contract fixed at M1 from per-phase failure fixtures |
+| Measure-time structural materialization | **Accepted:** ADR-020 explicitly scoped current-measure reconciliation of semantic-keyed descendants |
+| Application error containment | **Accepted:** ADR-021 nearest declared boundary, fresh fallback attempt, explicit retry, aggregated cleanup, and per-window root isolation |
 | UI execution context | **Accepted:** ADR-022 platform main thread plus modal-loop continuity and per-application graph / per-window scheduler scoping |
 | AWT/Swing embedding | Optional post-stable `himari-interop-awt` with its own allowlist; never a core or BOM-default dependency |
 

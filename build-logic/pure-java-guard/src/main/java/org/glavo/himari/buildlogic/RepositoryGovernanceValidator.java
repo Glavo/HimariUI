@@ -41,10 +41,10 @@ import static org.glavo.himari.buildlogic.JsonParser.JsonValue;
 @NotNullByDefault
 final class RepositoryGovernanceValidator {
     /// The accepted ADR identifiers established by the current plan.
-    private static final @Unmodifiable Set<String> ACCEPTED_ADRS = range("001", "019", "022");
+    private static final @Unmodifiable Set<String> ACCEPTED_ADRS = range("001", "023");
 
     /// The unresolved ADR identifiers that require M1 evidence.
-    private static final @Unmodifiable Set<String> PROPOSED_ADRS = Set.of("020", "021");
+    private static final @Unmodifiable Set<String> PROPOSED_ADRS = Set.of();
 
     /// The complete canonical ADR identifier set.
     private static final @Unmodifiable Set<String> ALL_ADRS = union(ACCEPTED_ADRS, PROPOSED_ADRS);
@@ -945,18 +945,16 @@ final class RepositoryGovernanceValidator {
         require(!value.isBlank(), context + " must not be blank");
     }
 
-    /// Builds the accepted ADR identifier range plus one additional identifier.
+    /// Builds an inclusive ADR identifier range.
     ///
     /// @param first the inclusive three-digit lower bound
     /// @param last the inclusive three-digit upper bound
-    /// @param additional an additional three-digit identifier
     /// @return the immutable identifier set
-    private static @Unmodifiable Set<String> range(String first, String last, String additional) {
+    private static @Unmodifiable Set<String> range(String first, String last) {
         Set<String> result = new LinkedHashSet<>();
         for (int value = Integer.parseInt(first); value <= Integer.parseInt(last); value++) {
             result.add(String.format(Locale.ROOT, "%03d", value));
         }
-        result.add(additional);
         return Set.copyOf(result);
     }
 

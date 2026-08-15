@@ -11,6 +11,6 @@ ADR statuses are:
 
 Every ADR records its date, decision milestone, evidence, and replacement relationship. Materially changing an accepted decision requires a new ADR; update `Superseded by` in the old record and `Supersedes` in the new record.
 
-ADR-001 through ADR-019 and ADR-022 were accepted by ADR-BOOTSTRAP-001 on 2026-08-14 from the reviewed execution summaries in `PLANS.md`. ADR-020 and ADR-021 remain proposed until their M1 evidence requirements pass.
+ADR-001 through ADR-019 and ADR-022 were accepted by ADR-BOOTSTRAP-001 on 2026-08-14 from the reviewed execution summaries in `PLANS.md`. On 2026-08-15, the reviewed M1 evidence accepted ADR-020, ADR-021, and ADR-023; ADR-023 is the canonical result of `RUNTIME-ADR-001`.
 
 Use `TEMPLATE.md` for new records. The repository governance check validates the catalog, required metadata and sections, accepted/proposed status boundary, and relative Markdown links.

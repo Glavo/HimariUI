@@ -1,0 +1,346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://himari-ui.dev/schema/runtime-comparison-report-v1.json",
+  "title": "HimariUI M1 structural-runtime comparison report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "suiteVersion",
+    "rubricVersion",
+    "status",
+    "candidate",
+    "evidence",
+    "environment",
+    "sourceMetrics",
+    "fixtures",
+    "summary",
+    "disqualifications"
+  ],
+  "properties": {
+    "$schema": { "const": "schema/runtime-comparison-report.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "suiteVersion": { "$ref": "#/$defs/identifier" },
+    "rubricVersion": { "$ref": "#/$defs/identifier" },
+    "status": { "enum": ["passed", "disqualified", "incomplete", "self-test-passed"] },
+    "candidate": { "$ref": "#/$defs/candidate" },
+    "evidence": { "$ref": "#/$defs/evidence" },
+    "environment": { "$ref": "#/$defs/environment" },
+    "sourceMetrics": { "$ref": "#/$defs/sourceMetrics" },
+    "fixtures": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/fixtureResult" }
+    },
+    "summary": { "$ref": "#/$defs/summary" },
+    "disqualifications": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/disqualification" }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "nonnegativeInteger": { "type": "integer", "minimum": 0 },
+    "stringMap": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "metricMap": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/nonnegativeInteger" }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "displayName",
+        "structuralModel",
+        "capabilities",
+        "applicationCodeTransformed",
+        "comparisonEligible"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "displayName": { "type": "string", "minLength": 1 },
+        "structuralModel": { "type": "string", "minLength": 1 },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["measure-materialization", "cancellation", "reload-identity"],
+          "properties": {
+            "measure-materialization": { "enum": ["scoped-measure-time", "previous-viewport"] },
+            "cancellation": { "enum": ["none", "cooperative", "preemptive"] },
+            "reload-identity": { "enum": ["claimed", "not-claimed"] }
+          }
+        },
+        "applicationCodeTransformed": { "type": "boolean" },
+        "comparisonEligible": { "type": "boolean" }
+      }
+    },
+    "evidenceStatus": { "enum": ["not-run", "passed", "failed", "not-applicable"] },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nativeImage", "reloadIdentity", "ceremonyReview", "artifacts"],
+      "properties": {
+        "nativeImage": { "$ref": "#/$defs/evidenceStatus" },
+        "reloadIdentity": { "$ref": "#/$defs/evidenceStatus" },
+        "ceremonyReview": { "$ref": "#/$defs/evidenceStatus" },
+        "artifacts": { "$ref": "#/$defs/stringMap" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["javaRuntimeVersion", "vmName", "osName", "osArchitecture", "availableProcessors"],
+      "properties": {
+        "javaRuntimeVersion": { "type": "string", "minLength": 1 },
+        "vmName": { "type": "string", "minLength": 1 },
+        "osName": { "type": "string", "minLength": 1 },
+        "osArchitecture": { "type": "string", "minLength": 1 },
+        "availableProcessors": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "sourceMarker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relativePath", "line", "kind", "rationale"],
+      "properties": {
+        "relativePath": { "type": "string", "pattern": "^[^/\\].*\\.java$" },
+        "line": { "type": "integer", "minimum": 1 },
+        "kind": {
+          "enum": [
+            "explicit-key",
+            "deferred-getter",
+            "structural-control",
+            "group-boundary",
+            "generic-type-noise",
+            "callback-wrapper"
+          ]
+        },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sourceMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceLines", "files", "ceremonyCounts", "markers"],
+      "properties": {
+        "sourceLines": { "$ref": "#/$defs/nonnegativeInteger" },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["relativePath", "stage", "sourceLines"],
+            "properties": {
+              "relativePath": { "type": "string", "pattern": "^[^/\\].*\\.java$" },
+              "stage": { "enum": ["micro", "integration", "realistic"] },
+              "sourceLines": { "$ref": "#/$defs/nonnegativeInteger" }
+            }
+          }
+        },
+        "ceremonyCounts": { "$ref": "#/$defs/metricMap" },
+        "markers": { "type": "array", "items": { "$ref": "#/$defs/sourceMarker" } }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["values", "mountedNodes", "events", "diagnostics"],
+      "properties": {
+        "values": { "$ref": "#/$defs/stringMap" },
+        "mountedNodes": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "events": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "qualityScore"],
+      "properties": {
+        "code": { "$ref": "#/$defs/identifier" },
+        "message": { "type": "string", "minLength": 1 },
+        "qualityScore": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "sourceLocation": { "type": "string", "minLength": 1 },
+        "ownerPath": { "type": "string", "minLength": 1 },
+        "dependencyPath": { "type": "string", "minLength": 1 },
+        "recoveryAction": { "type": "string", "minLength": 1 }
+      }
+    },
+    "allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["available", "bytes"],
+      "properties": {
+        "available": { "type": "boolean" },
+        "bytes": { "$ref": "#/$defs/nonnegativeInteger" }
+      }
+    },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "callbacksExecuted",
+        "nodesVisited",
+        "dependencyEdgesAttached",
+        "dependencyEdgesDetached",
+        "activeDependencyEdges",
+        "peakDependencyEdges",
+        "retainedBytes",
+        "peakRetainedBytes",
+        "phaseInvalidations",
+        "maximumTraceQuality",
+        "traces"
+      ],
+      "properties": {
+        "callbacksExecuted": { "$ref": "#/$defs/metricMap" },
+        "nodesVisited": { "$ref": "#/$defs/nonnegativeInteger" },
+        "dependencyEdgesAttached": { "$ref": "#/$defs/nonnegativeInteger" },
+        "dependencyEdgesDetached": { "$ref": "#/$defs/nonnegativeInteger" },
+        "activeDependencyEdges": { "$ref": "#/$defs/nonnegativeInteger" },
+        "peakDependencyEdges": { "$ref": "#/$defs/nonnegativeInteger" },
+        "retainedBytes": { "$ref": "#/$defs/nonnegativeInteger" },
+        "peakRetainedBytes": { "$ref": "#/$defs/nonnegativeInteger" },
+        "phaseInvalidations": { "$ref": "#/$defs/metricMap" },
+        "maximumTraceQuality": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "traces": { "type": "array", "items": { "$ref": "#/$defs/trace" } }
+      }
+    },
+    "stepMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "callbacksExecuted",
+        "nodesVisited",
+        "dependencyEdgesAttached",
+        "dependencyEdgesDetached",
+        "activeDependencyEdges",
+        "retainedBytes",
+        "phaseInvalidations",
+        "allocation",
+        "traces"
+      ],
+      "properties": {
+        "callbacksExecuted": { "$ref": "#/$defs/metricMap" },
+        "nodesVisited": { "$ref": "#/$defs/nonnegativeInteger" },
+        "dependencyEdgesAttached": { "$ref": "#/$defs/nonnegativeInteger" },
+        "dependencyEdgesDetached": { "$ref": "#/$defs/nonnegativeInteger" },
+        "activeDependencyEdges": { "$ref": "#/$defs/nonnegativeInteger" },
+        "retainedBytes": { "$ref": "#/$defs/nonnegativeInteger" },
+        "phaseInvalidations": { "$ref": "#/$defs/metricMap" },
+        "allocation": { "$ref": "#/$defs/allocation" },
+        "traces": { "type": "array", "items": { "$ref": "#/$defs/trace" } }
+      }
+    },
+    "stepResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "passed", "metrics"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "passed": { "type": "boolean" },
+        "actual": { "$ref": "#/$defs/observation" },
+        "metrics": { "$ref": "#/$defs/stepMetrics" },
+        "failure": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "passed": { "const": true } } },
+          "then": { "required": ["actual"] },
+          "else": { "required": ["failure"] }
+        }
+      ]
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["liveNodes", "liveOwners", "liveEffects", "stagedMutations", "pendingCallbacks", "clean"],
+      "properties": {
+        "liveNodes": { "$ref": "#/$defs/nonnegativeInteger" },
+        "liveOwners": { "$ref": "#/$defs/nonnegativeInteger" },
+        "liveEffects": { "$ref": "#/$defs/nonnegativeInteger" },
+        "stagedMutations": { "$ref": "#/$defs/nonnegativeInteger" },
+        "pendingCallbacks": { "$ref": "#/$defs/nonnegativeInteger" },
+        "clean": { "type": "boolean" }
+      }
+    },
+    "benchmark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "warmupIterations",
+        "measuredIterations",
+        "commandsPerCycle",
+        "elapsedNanos",
+        "allocation",
+        "probe"
+      ],
+      "properties": {
+        "warmupIterations": { "$ref": "#/$defs/nonnegativeInteger" },
+        "measuredIterations": { "type": "integer", "minimum": 1 },
+        "commandsPerCycle": { "type": "integer", "minimum": 1 },
+        "elapsedNanos": { "$ref": "#/$defs/nonnegativeInteger" },
+        "allocation": { "$ref": "#/$defs/allocation" },
+        "probe": { "$ref": "#/$defs/probe" }
+      }
+    },
+    "fixtureResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "stage", "status", "steps", "scenarioProbe", "postCloseHealth", "failures"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "stage": { "enum": ["micro", "integration", "realistic"] },
+        "status": { "enum": ["passed", "failed", "skipped"] },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/stepResult" } },
+        "scenarioProbe": { "$ref": "#/$defs/probe" },
+        "benchmark": { "$ref": "#/$defs/benchmark" },
+        "postCloseHealth": { "$ref": "#/$defs/health" },
+        "failures": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixtureCounts",
+        "benchmarkFixtures",
+        "measuredCycles",
+        "measuredCommands",
+        "steadyStateElapsedNanos",
+        "steadyStateAllocation",
+        "scenarioTotals",
+        "benchmarkProbeTotals",
+        "maximumTraceQuality"
+      ],
+      "properties": {
+        "fixtureCounts": { "$ref": "#/$defs/metricMap" },
+        "benchmarkFixtures": { "$ref": "#/$defs/nonnegativeInteger" },
+        "measuredCycles": { "$ref": "#/$defs/nonnegativeInteger" },
+        "measuredCommands": { "$ref": "#/$defs/nonnegativeInteger" },
+        "steadyStateElapsedNanos": { "$ref": "#/$defs/nonnegativeInteger" },
+        "steadyStateAllocation": { "$ref": "#/$defs/allocation" },
+        "scenarioTotals": { "$ref": "#/$defs/probe" },
+        "benchmarkProbeTotals": { "$ref": "#/$defs/probe" },
+        "maximumTraceQuality": { "type": "integer", "minimum": 0, "maximum": 4 }
+      }
+    },
+    "disqualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "detail"],
+      "properties": {
+        "code": { "$ref": "#/$defs/identifier" },
+        "fixtureId": { "$ref": "#/$defs/identifier" },
+        "detail": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

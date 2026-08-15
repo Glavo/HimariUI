@@ -1,0 +1,148 @@
+{
+  "$schema": "schema/ffi-schema.schema.json",
+  "schemaVersion": 1,
+  "namespace": "org.glavo.himari.spikes.abi.generated",
+  "library": "abi_probe",
+  "target": {
+    "operatingSystem": "portable-desktop",
+    "architecture": "generic64",
+    "byteOrder": "little_endian",
+    "addressSize": 8,
+    "addressAlignment": 8
+  },
+  "types": [
+    {
+      "kind": "primitive",
+      "name": "void",
+      "primitiveKind": "void",
+      "byteSize": 0,
+      "alignment": 1,
+      "signedness": "none",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "primitive",
+      "name": "u8",
+      "primitiveKind": "integer",
+      "byteSize": 1,
+      "alignment": 1,
+      "signedness": "unsigned",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "primitive",
+      "name": "i32",
+      "primitiveKind": "integer",
+      "byteSize": 4,
+      "alignment": 4,
+      "signedness": "signed",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "primitive",
+      "name": "u32",
+      "primitiveKind": "integer",
+      "byteSize": 4,
+      "alignment": 4,
+      "signedness": "unsigned",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "primitive",
+      "name": "f64",
+      "primitiveKind": "floating",
+      "byteSize": 8,
+      "alignment": 8,
+      "signedness": "none",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "pointer",
+      "name": "const_u8_ptr",
+      "pointee": "u8",
+      "constant": true,
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "pointer",
+      "name": "void_ptr",
+      "pointee": "void",
+      "constant": false,
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "handle",
+      "name": "fixture_handle",
+      "representation": "void_ptr",
+      "invalidValues": [0, -1],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "integer-set",
+      "name": "fixture_flags",
+      "integerSetKind": "flags",
+      "representation": "u32",
+      "values": [
+        { "name": "READ", "value": 1 },
+        { "name": "WRITE", "value": 2 },
+        { "name": "EXECUTE", "value": 4 }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "fixture_pair",
+      "aggregateKind": "struct",
+      "byteSize": 8,
+      "alignment": 4,
+      "packing": 0,
+      "fields": [
+        { "name": "left", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "right", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "fixture_bits",
+      "aggregateKind": "struct",
+      "byteSize": 4,
+      "alignment": 4,
+      "packing": 0,
+      "fields": [
+        { "name": "mode", "type": "u32", "byteOffset": 0, "bitOffset": 0, "bitWidth": 3 },
+        { "name": "ready", "type": "u32", "byteOffset": 0, "bitOffset": 3, "bitWidth": 1 }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "fixture_value",
+      "aggregateKind": "union",
+      "byteSize": 8,
+      "alignment": 8,
+      "packing": 0,
+      "fields": [
+        { "name": "integer", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "floating", "type": "f64", "byteOffset": 0, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    }
+  ],
+  "callbacks": [
+    {
+      "name": "fixture_visit_callback",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "value", "type": "fixture_pair", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "context", "type": "void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "threadRestriction": "caller",
+      "lifetime": "scoped",
+      "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    }
+  ],
+  "functions": []
+}

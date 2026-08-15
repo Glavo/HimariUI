@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://himari-ui.dev/schema/ffi-schema-v1.json",
+  "title": "HimariUI canonical ABI schema version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "namespace", "library", "target", "types", "callbacks", "functions"],
+  "properties": {
+    "$schema": { "const": "schema/ffi-schema.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "namespace": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)*$" },
+    "library": { "$ref": "#/$defs/identifier" },
+    "target": { "$ref": "#/$defs/target" },
+    "types": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/primitive" },
+          { "$ref": "#/$defs/pointer" },
+          { "$ref": "#/$defs/handle" },
+          { "$ref": "#/$defs/aggregate" },
+          { "$ref": "#/$defs/integerSet" }
+        ]
+      }
+    },
+    "callbacks": { "type": "array", "items": { "$ref": "#/$defs/callback" } },
+    "functions": { "type": "array", "items": { "$ref": "#/$defs/function" } }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+    "typeRef": { "$ref": "#/$defs/identifier" },
+    "nullableVersion": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+)*$" }
+      ]
+    },
+    "availability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["introduced", "deprecated", "unavailable"],
+      "properties": {
+        "introduced": { "$ref": "#/$defs/nullableVersion" },
+        "deprecated": { "$ref": "#/$defs/nullableVersion" },
+        "unavailable": { "type": "boolean" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operatingSystem", "architecture", "byteOrder", "addressSize", "addressAlignment"],
+      "properties": {
+        "operatingSystem": { "type": "string", "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$" },
+        "architecture": { "type": "string", "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$" },
+        "byteOrder": { "enum": ["little_endian", "big_endian"] },
+        "addressSize": { "enum": [4, 8] },
+        "addressAlignment": { "enum": [1, 2, 4, 8] }
+      }
+    },
+    "primitive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "primitiveKind", "byteSize", "alignment", "signedness", "availability"],
+      "properties": {
+        "kind": { "const": "primitive" },
+        "name": { "$ref": "#/$defs/identifier" },
+        "primitiveKind": { "enum": ["void", "integer", "floating"] },
+        "byteSize": { "type": "integer", "minimum": 0, "maximum": 8 },
+        "alignment": { "enum": [1, 2, 4, 8] },
+        "signedness": { "enum": ["none", "signed", "unsigned"] },
+        "availability": { "$ref": "#/$defs/availability" }
+      }
+    },
+    "pointer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "pointee", "constant", "availability"],
+      "properties": {
+        "kind": { "const": "pointer" },
+        "name": { "$ref": "#/$defs/identifier" },
+        "pointee": { "$ref": "#/$defs/typeRef" },
+        "constant": { "type": "boolean" },
+        "availability": { "$ref": "#/$defs/availability" }
+      }
+    },
+    "handle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "representation", "invalidValues", "availability"],
+      "properties": {
+        "kind": { "const": "handle" },
+        "name": { "$ref": "#/$defs/identifier" },
+        "representation": { "$ref": "#/$defs/typeRef" },
+        "invalidValues": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": -9223372036854775808, "maximum": 9223372036854775807 }
+        },
+        "availability": { "$ref": "#/$defs/availability" }
+      }
+    },
+    "aggregateField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "byteOffset", "bitOffset", "bitWidth"],
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "type": { "$ref": "#/$defs/typeRef" },
+        "byteOffset": { "type": "integer", "minimum": 0, "maximum": 9223372036854775807 },
+        "bitOffset": { "type": ["integer", "null"], "minimum": 0, "maximum": 2147483647 },
+        "bitWidth": { "type": ["integer", "null"], "minimum": 1, "maximum": 2147483647 }
+      }
+    },
+    "aggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "aggregateKind", "byteSize", "alignment", "packing", "fields", "availability"],
+      "properties": {
+        "kind": { "const": "aggregate" },
+        "name": { "$ref": "#/$defs/identifier" },
+        "aggregateKind": { "enum": ["struct", "union"] },
+        "byteSize": { "type": "integer", "minimum": 1, "maximum": 9223372036854775807 },
+        "alignment": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "packing": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+        "fields": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/aggregateField" } },
+        "availability": { "$ref": "#/$defs/availability" }
+      }
+    },
+    "integerValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "value": { "type": "integer", "minimum": -9223372036854775808, "maximum": 9223372036854775807 }
+      }
+    },
+    "integerSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "integerSetKind", "representation", "values", "availability"],
+      "properties": {
+        "kind": { "const": "integer-set" },
+        "name": { "$ref": "#/$defs/identifier" },
+        "integerSetKind": { "enum": ["enum", "flags"] },
+        "representation": { "$ref": "#/$defs/typeRef" },
+        "values": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/integerValue" } },
+        "availability": { "$ref": "#/$defs/availability" }
+      }
+    },
+    "returnValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "nullability", "ownership"],
+      "properties": {
+        "type": { "$ref": "#/$defs/typeRef" },
+        "nullability": { "enum": ["unspecified", "non_null", "nullable"] },
+        "ownership": { "enum": ["none", "borrowed", "owned", "transferred", "retained"] }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "direction", "nullability", "ownership"],
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "type": { "$ref": "#/$defs/typeRef" },
+        "direction": { "enum": ["in", "out", "in_out"] },
+        "nullability": { "enum": ["unspecified", "non_null", "nullable"] },
+        "ownership": { "enum": ["none", "borrowed", "owned", "transferred", "retained"] }
+      }
+    },
+    "callback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "result", "parameters", "callingConvention", "threadRestriction", "lifetime", "exceptionPolicy", "availability"],
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "result": { "$ref": "#/$defs/returnValue" },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/parameter" } },
+        "callingConvention": { "enum": ["system", "cdecl"] },
+        "threadRestriction": { "enum": ["any", "caller", "ui", "render"] },
+        "lifetime": { "enum": ["scoped", "retained", "manual"] },
+        "exceptionPolicy": { "const": "contain" },
+        "availability": { "$ref": "#/$defs/availability" }
+      }
+    },
+    "function": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "symbol", "result", "parameters", "callingConvention", "variadicFrom", "errorPolicy", "threadRestriction", "availability"],
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "symbol": { "type": "string", "minLength": 1 },
+        "result": { "$ref": "#/$defs/returnValue" },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/parameter" } },
+        "callingConvention": { "enum": ["system", "cdecl", "stdcall", "thiscall"] },
+        "variadicFrom": { "type": ["integer", "null"], "minimum": 1, "maximum": 2147483647 },
+        "errorPolicy": { "enum": ["none", "errno", "get_last_error"] },
+        "threadRestriction": { "enum": ["any", "caller", "ui", "render"] },
+        "availability": { "$ref": "#/$defs/availability" }
+      }
+    }
+  }
+}

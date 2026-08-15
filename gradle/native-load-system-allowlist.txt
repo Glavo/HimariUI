@@ -1,3 +1,22 @@
-# One system library basename per line.
-# Modules that declare native access must also provide a captured load trace.
-
+# One approved JDK or operating-system library basename per line.
+# Modules that declare native access must also provide a captured JDK unified `library` trace.
+d3d12.dll
+dxgi.dll
+jimage.dll
+kernel32.dll
+libjimage.dylib
+libjimage.so
+libnet.dylib
+libnet.so
+libnio.dylib
+libnio.so
+libSystem.B.dylib
+libzip.dylib
+libzip.so
+management.dll
+management_ext.dll
+net.dll
+nio.dll
+ucrtbase.dll
+user32.dll
+zip.dll

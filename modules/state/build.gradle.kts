@@ -1,2 +1,1 @@
-// State implementation begins after the M0 foundation gates pass.
-
+// The state module has no runtime dependencies outside the Java platform.

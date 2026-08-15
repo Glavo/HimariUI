@@ -17,6 +17,94 @@
       "version": "unversioned snapshot retrieved 2026-08-14",
       "license": "Apache-2.0",
       "sha256": "c5aa8611f0011340697412b9ff37bbe23d48a653e91610d376dddbb2b16a6412"
+    },
+    {
+      "path": "tools/ffi-schema/src/test/resources/ffi-minimum-schema-v1.json",
+      "kind": "conformance-fixture",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "FFI-SCHEMA-001 fixture v1",
+      "license": "Apache-2.0",
+      "sha256": "4637f983a65b219cd93ca4248ecaf326c934f40615c430c0d1557810d91aaf12"
+    },
+    {
+      "path": "spikes/ffi-ffm/src/main/abi/c-runtime-schema-v1.json",
+      "kind": "conformance-fixture",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "FFI-FFM-001 C runtime fixture v1",
+      "license": "Apache-2.0",
+      "sha256": "079573e70ba98d889852597b4da4650fc4066affa0fc9e4c6300301359653af9"
+    },
+    {
+      "path": "schema/abi-probe.schema.json",
+      "kind": "conformance-protocol",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "ABI-PROBE-001 protocol v1",
+      "license": "Apache-2.0",
+      "sha256": "e602e1834a68c3984c20aa0bc81b252aa3bfd06668fecb5a91d3a1613ec55dc0"
+    },
+    {
+      "path": "schema/runtime-comparison-report.schema.json",
+      "kind": "conformance-protocol",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "RUNTIME-SAMPLE-001 report protocol v1",
+      "license": "Apache-2.0",
+      "sha256": "95626416c08c216ef152bfb4113e2c3dbc1f926b657678be9d58e93230b3ac0e"
+    },
+    {
+      "path": "spikes/abi-probe/src/main/abi/abi-probe-schema-v1.json",
+      "kind": "conformance-fixture",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "ABI-PROBE-001 canonical ABI fixture v1",
+      "license": "Apache-2.0",
+      "sha256": "4cde2c2ea9710cc036429f230ba2354290d96ce61d0eb2627f5432b3bc4e9a11"
+    },
+    {
+      "path": "spikes/abi-probe/src/main/probe/abi_probe.c",
+      "kind": "conformance-probe-source",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "ABI-PROBE-001 native probe v1",
+      "license": "Apache-2.0",
+      "sha256": "94a987b985e087d431a866f67f0cc5c19e3a0b57f9cbd8a812cb2cf3027b0e40"
+    },
+    {
+      "path": "tools/ffi-schema/src/test/resources/abi-probe-v1.json",
+      "kind": "conformance-fixture",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "ABI-PROBE-001 protocol fixture v1",
+      "license": "Apache-2.0",
+      "sha256": "91b1adb27db4a52ab796680f1e3b838155345c24c5eb030a34a4ef4ce151f6d4"
+    },
+    {
+      "path": "spikes/win32/src/main/abi/win32-schema-v1.json",
+      "kind": "conformance-fixture",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "SPIKE-WIN-001 Windows x64 ABI fixture v1",
+      "license": "Apache-2.0",
+      "sha256": "68955b3739398ea7b529b337153fc997180627f82c54d3184f01477ebb63b9c0"
+    },
+    {
+      "path": "spikes/d3d12/src/main/abi/d3d12-schema-v1.json",
+      "kind": "conformance-fixture",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "SPIKE-D3D12-001 Windows x64 ABI fixture v1",
+      "license": "Apache-2.0",
+      "sha256": "12a0afc0c10acb4388725157a4a4e56506bcbc2ade09d2c0fb15b5688b23b4f3"
+    },
+    {
+      "path": "evidence/m1-runtime-decision/ceremony-review.properties",
+      "kind": "conformance-review",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "RUNTIME-ADR-001 blinded ceremony review v1",
+      "license": "Apache-2.0",
+      "sha256": "94ad6406789f2dfec4dfdcd1fb024623524283813ff71534f096495877034143"
+    },
+    {
+      "path": "evidence/m1-runtime-decision/reviewed-decision.properties",
+      "kind": "conformance-decision",
+      "source": "https://github.com/Glavo/HimariUI",
+      "version": "RUNTIME-ADR-001 reviewed selection v1",
+      "license": "Apache-2.0",
+      "sha256": "a65d7b59498c5ab1a940d2f1b69e4fdb11b75a343475512acdc63c36c41ca160"
     }
   ]
 }

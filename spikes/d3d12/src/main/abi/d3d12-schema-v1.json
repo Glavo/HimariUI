@@ -1,0 +1,365 @@
+{
+  "$schema": "schema/ffi-schema.schema.json",
+  "schemaVersion": 1,
+  "namespace": "org.glavo.himari.spikes.d3d12.generated",
+  "library": "d3d12",
+  "target": {
+    "operatingSystem": "windows",
+    "architecture": "x86_64",
+    "byteOrder": "little_endian",
+    "addressSize": 8,
+    "addressAlignment": 8
+  },
+  "types": [
+    { "kind": "primitive", "name": "void", "primitiveKind": "void", "byteSize": 0, "alignment": 1, "signedness": "none", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "u8", "primitiveKind": "integer", "byteSize": 1, "alignment": 1, "signedness": "unsigned", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "u16", "primitiveKind": "integer", "byteSize": 2, "alignment": 2, "signedness": "unsigned", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "i32", "primitiveKind": "integer", "byteSize": 4, "alignment": 4, "signedness": "signed", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "u32", "primitiveKind": "integer", "byteSize": 4, "alignment": 4, "signedness": "unsigned", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "u64", "primitiveKind": "integer", "byteSize": 8, "alignment": 8, "signedness": "unsigned", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "f32", "primitiveKind": "floating", "byteSize": 4, "alignment": 4, "signedness": "none", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+
+    { "kind": "pointer", "name": "void_ptr", "pointee": "void", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_guid_ptr", "pointee": "guid", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "void_ptr_ptr", "pointee": "void_ptr", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "u32_ptr", "pointee": "u32", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "u64_ptr", "pointee": "u64", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "process_memory_counters_ptr", "pointee": "process_memory_counters_ex", "constant": false, "availability": { "introduced": "5.1", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_command_queue_desc_ptr", "pointee": "d3d12_command_queue_desc", "constant": true, "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_swap_chain_desc1_ptr", "pointee": "dxgi_swap_chain_desc1", "constant": true, "availability": { "introduced": "8.1", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_descriptor_heap_desc_ptr", "pointee": "d3d12_descriptor_heap_desc", "constant": true, "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "format_support_ptr", "pointee": "d3d12_feature_data_format_support", "constant": false, "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_resource_barrier_ptr", "pointee": "d3d12_resource_barrier", "constant": true, "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_float_ptr", "pointee": "f32", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_rect_ptr", "pointee": "rect", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_heap_properties_ptr", "pointee": "d3d12_heap_properties", "constant": true, "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_resource_desc_ptr", "pointee": "d3d12_resource_desc", "constant": true, "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_texture_copy_location_ptr", "pointee": "d3d12_texture_copy_location", "constant": true, "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_range_ptr", "pointee": "d3d12_range", "constant": true, "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "d3d12_message_ptr", "pointee": "d3d12_message", "constant": false, "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "d3d12_cpu_descriptor_handle_ptr", "pointee": "d3d12_cpu_descriptor_handle", "constant": false, "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+
+    { "kind": "handle", "name": "process_handle", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "handle", "name": "com_interface", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "com_interface_ptr", "pointee": "com_interface", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+
+    {
+      "kind": "aggregate", "name": "guid", "aggregateKind": "struct", "byteSize": 16, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "data1", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "data2", "type": "u16", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "data3", "type": "u16", "byteOffset": 6, "bitOffset": null, "bitWidth": null },
+        { "name": "data4_0", "type": "u8", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "data4_1", "type": "u8", "byteOffset": 9, "bitOffset": null, "bitWidth": null },
+        { "name": "data4_2", "type": "u8", "byteOffset": 10, "bitOffset": null, "bitWidth": null },
+        { "name": "data4_3", "type": "u8", "byteOffset": 11, "bitOffset": null, "bitWidth": null },
+        { "name": "data4_4", "type": "u8", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "data4_5", "type": "u8", "byteOffset": 13, "bitOffset": null, "bitWidth": null },
+        { "name": "data4_6", "type": "u8", "byteOffset": 14, "bitOffset": null, "bitWidth": null },
+        { "name": "data4_7", "type": "u8", "byteOffset": 15, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "process_memory_counters_ex", "aggregateKind": "struct", "byteSize": 80, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "cb", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "peak_working_set_size", "type": "u64", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "working_set_size", "type": "u64", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "peak_pagefile_usage", "type": "u64", "byteOffset": 64, "bitOffset": null, "bitWidth": null },
+        { "name": "private_usage", "type": "u64", "byteOffset": 72, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "5.1", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "com_interface_object", "aggregateKind": "struct", "byteSize": 8, "alignment": 8, "packing": 0,
+      "fields": [{ "name": "vtable", "type": "void_ptr", "byteOffset": 0, "bitOffset": null, "bitWidth": null }],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_command_queue_desc", "aggregateKind": "struct", "byteSize": 16, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "priority", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "node_mask", "type": "u32", "byteOffset": 12, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "dxgi_sample_desc", "aggregateKind": "struct", "byteSize": 8, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "count", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "quality", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "dxgi_swap_chain_desc1", "aggregateKind": "struct", "byteSize": 48, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "width", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "height", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "format", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "stereo", "type": "i32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "sample_desc", "type": "dxgi_sample_desc", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "buffer_usage", "type": "u32", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "buffer_count", "type": "u32", "byteOffset": 28, "bitOffset": null, "bitWidth": null },
+        { "name": "scaling", "type": "i32", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
+        { "name": "swap_effect", "type": "i32", "byteOffset": 36, "bitOffset": null, "bitWidth": null },
+        { "name": "alpha_mode", "type": "i32", "byteOffset": 40, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "u32", "byteOffset": 44, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "8.1", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_descriptor_heap_desc", "aggregateKind": "struct", "byteSize": 16, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "num_descriptors", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "node_mask", "type": "u32", "byteOffset": 12, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_cpu_descriptor_handle", "aggregateKind": "struct", "byteSize": 8, "alignment": 8, "packing": 0,
+      "fields": [{ "name": "pointer", "type": "u64", "byteOffset": 0, "bitOffset": null, "bitWidth": null }],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_resource_transition_barrier", "aggregateKind": "struct", "byteSize": 24, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "resource", "type": "com_interface", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "subresource", "type": "u32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "state_before", "type": "i32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "state_after", "type": "i32", "byteOffset": 16, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_resource_barrier", "aggregateKind": "struct", "byteSize": 32, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "transition", "type": "d3d12_resource_transition_barrier", "byteOffset": 8, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_feature_data_format_support", "aggregateKind": "struct", "byteSize": 12, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "format", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "support1", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "support2", "type": "u32", "byteOffset": 8, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_heap_properties", "aggregateKind": "struct", "byteSize": 20, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "type", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "cpu_page_property", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "memory_pool_preference", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "creation_node_mask", "type": "u32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "visible_node_mask", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_resource_desc", "aggregateKind": "struct", "byteSize": 56, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "dimension", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "alignment", "type": "u64", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "width", "type": "u64", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "height", "type": "u32", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "depth_or_array_size", "type": "u16", "byteOffset": 28, "bitOffset": null, "bitWidth": null },
+        { "name": "mip_levels", "type": "u16", "byteOffset": 30, "bitOffset": null, "bitWidth": null },
+        { "name": "format", "type": "i32", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
+        { "name": "sample_desc", "type": "dxgi_sample_desc", "byteOffset": 36, "bitOffset": null, "bitWidth": null },
+        { "name": "layout", "type": "i32", "byteOffset": 44, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "i32", "byteOffset": 48, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_range", "aggregateKind": "struct", "byteSize": 16, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "begin", "type": "u64", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "end", "type": "u64", "byteOffset": 8, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_subresource_footprint", "aggregateKind": "struct", "byteSize": 20, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "format", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "width", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "height", "type": "u32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "depth", "type": "u32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "row_pitch", "type": "u32", "byteOffset": 16, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_placed_subresource_footprint", "aggregateKind": "struct", "byteSize": 32, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "offset", "type": "u64", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "footprint", "type": "d3d12_subresource_footprint", "byteOffset": 8, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_texture_copy_payload", "aggregateKind": "union", "byteSize": 32, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "placed_footprint", "type": "d3d12_placed_subresource_footprint", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "subresource_index", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_texture_copy_location", "aggregateKind": "struct", "byteSize": 48, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "resource", "type": "com_interface", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "type", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "payload", "type": "d3d12_texture_copy_payload", "byteOffset": 16, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "rect", "aggregateKind": "struct", "byteSize": 16, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "left", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "top", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "right", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "bottom", "type": "i32", "byteOffset": 12, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate", "name": "d3d12_message", "aggregateKind": "struct", "byteSize": 32, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "category", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "severity", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "id", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "description", "type": "void_ptr", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "description_byte_length", "type": "u64", "byteOffset": 24, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
+    },
+
+    { "kind": "aggregate", "name": "id3d12_debug_vtable", "aggregateKind": "struct", "byteSize": 32, "alignment": 8, "packing": 0, "fields": [{ "name": "enable_debug_layer", "type": "id3d12_debug_enable_debug_layer", "byteOffset": 24, "bitOffset": null, "bitWidth": null }], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "aggregate", "name": "id3d12_device_vtable", "aggregateKind": "struct", "byteSize": 304, "alignment": 8, "packing": 0, "fields": [
+      { "name": "create_command_queue", "type": "id3d12_device_create_command_queue", "byteOffset": 64, "bitOffset": null, "bitWidth": null },
+      { "name": "create_command_allocator", "type": "id3d12_device_create_command_allocator", "byteOffset": 72, "bitOffset": null, "bitWidth": null },
+      { "name": "create_command_list", "type": "id3d12_device_create_command_list", "byteOffset": 96, "bitOffset": null, "bitWidth": null },
+      { "name": "check_feature_support", "type": "id3d12_device_check_feature_support", "byteOffset": 104, "bitOffset": null, "bitWidth": null },
+      { "name": "create_descriptor_heap", "type": "id3d12_device_create_descriptor_heap", "byteOffset": 112, "bitOffset": null, "bitWidth": null },
+      { "name": "get_descriptor_handle_increment_size", "type": "id3d12_device_get_descriptor_handle_increment_size", "byteOffset": 120, "bitOffset": null, "bitWidth": null },
+      { "name": "create_render_target_view", "type": "id3d12_device_create_render_target_view", "byteOffset": 160, "bitOffset": null, "bitWidth": null },
+      { "name": "create_committed_resource", "type": "id3d12_device_create_committed_resource", "byteOffset": 216, "bitOffset": null, "bitWidth": null },
+      { "name": "create_fence", "type": "id3d12_device_create_fence", "byteOffset": 288, "bitOffset": null, "bitWidth": null },
+      { "name": "get_device_removed_reason", "type": "id3d12_device_get_device_removed_reason", "byteOffset": 296, "bitOffset": null, "bitWidth": null }
+    ], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "aggregate", "name": "id3d12_descriptor_heap_vtable", "aggregateKind": "struct", "byteSize": 80, "alignment": 8, "packing": 0, "fields": [{ "name": "get_cpu_descriptor_handle_for_heap_start", "type": "id3d12_descriptor_heap_get_cpu_descriptor_handle_for_heap_start", "byteOffset": 72, "bitOffset": null, "bitWidth": null }], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "aggregate", "name": "id3d12_command_allocator_vtable", "aggregateKind": "struct", "byteSize": 72, "alignment": 8, "packing": 0, "fields": [{ "name": "reset", "type": "id3d12_command_allocator_reset", "byteOffset": 64, "bitOffset": null, "bitWidth": null }], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "aggregate", "name": "id3d12_graphics_command_list_vtable", "aggregateKind": "struct", "byteSize": 392, "alignment": 8, "packing": 0, "fields": [
+      { "name": "close", "type": "id3d12_graphics_command_list_close", "byteOffset": 72, "bitOffset": null, "bitWidth": null },
+      { "name": "reset", "type": "id3d12_graphics_command_list_reset", "byteOffset": 80, "bitOffset": null, "bitWidth": null },
+      { "name": "copy_texture_region", "type": "id3d12_graphics_command_list_copy_texture_region", "byteOffset": 128, "bitOffset": null, "bitWidth": null },
+      { "name": "resource_barrier", "type": "id3d12_graphics_command_list_resource_barrier", "byteOffset": 208, "bitOffset": null, "bitWidth": null },
+      { "name": "clear_render_target_view", "type": "id3d12_graphics_command_list_clear_render_target_view", "byteOffset": 384, "bitOffset": null, "bitWidth": null }
+    ], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "aggregate", "name": "id3d12_command_queue_vtable", "aggregateKind": "struct", "byteSize": 120, "alignment": 8, "packing": 0, "fields": [
+      { "name": "execute_command_lists", "type": "id3d12_command_queue_execute_command_lists", "byteOffset": 80, "bitOffset": null, "bitWidth": null },
+      { "name": "signal", "type": "id3d12_command_queue_signal", "byteOffset": 112, "bitOffset": null, "bitWidth": null }
+    ], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "aggregate", "name": "id3d12_fence_vtable", "aggregateKind": "struct", "byteSize": 72, "alignment": 8, "packing": 0, "fields": [{ "name": "get_completed_value", "type": "id3d12_fence_get_completed_value", "byteOffset": 64, "bitOffset": null, "bitWidth": null }], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "aggregate", "name": "id3d12_resource_vtable", "aggregateKind": "struct", "byteSize": 80, "alignment": 8, "packing": 0, "fields": [
+      { "name": "map", "type": "id3d12_resource_map", "byteOffset": 64, "bitOffset": null, "bitWidth": null },
+      { "name": "unmap", "type": "id3d12_resource_unmap", "byteOffset": 72, "bitOffset": null, "bitWidth": null }
+    ], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "aggregate", "name": "id3d12_info_queue_vtable", "aggregateKind": "struct", "byteSize": 80, "alignment": 8, "packing": 0, "fields": [
+      { "name": "clear_stored_messages", "type": "id3d12_info_queue_clear_stored_messages", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
+      { "name": "get_message", "type": "id3d12_info_queue_get_message", "byteOffset": 40, "bitOffset": null, "bitWidth": null },
+      { "name": "get_num_stored_messages_allowed_by_retrieval_filter", "type": "id3d12_info_queue_get_num_stored_messages_allowed_by_retrieval_filter", "byteOffset": 72, "bitOffset": null, "bitWidth": null }
+    ], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "aggregate", "name": "idxgi_factory4_vtable", "aggregateKind": "struct", "byteSize": 128, "alignment": 8, "packing": 0, "fields": [
+      { "name": "make_window_association", "type": "idxgi_factory_make_window_association", "byteOffset": 64, "bitOffset": null, "bitWidth": null },
+      { "name": "create_swap_chain_for_hwnd", "type": "idxgi_factory2_create_swap_chain_for_hwnd", "byteOffset": 120, "bitOffset": null, "bitWidth": null }
+    ], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "kind": "aggregate", "name": "idxgi_swap_chain3_vtable", "aggregateKind": "struct", "byteSize": 312, "alignment": 8, "packing": 0, "fields": [
+      { "name": "present", "type": "idxgi_swap_chain_present", "byteOffset": 64, "bitOffset": null, "bitWidth": null },
+      { "name": "get_buffer", "type": "idxgi_swap_chain_get_buffer", "byteOffset": 72, "bitOffset": null, "bitWidth": null },
+      { "name": "get_current_back_buffer_index", "type": "idxgi_swap_chain3_get_current_back_buffer_index", "byteOffset": 288, "bitOffset": null, "bitWidth": null },
+      { "name": "check_color_space_support", "type": "idxgi_swap_chain3_check_color_space_support", "byteOffset": 296, "bitOffset": null, "bitWidth": null },
+      { "name": "set_color_space1", "type": "idxgi_swap_chain3_set_color_space1", "byteOffset": 304, "bitOffset": null, "bitWidth": null }
+    ], "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } }
+  ],
+  "callbacks": [
+    { "name": "iunknown_query_interface", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [
+      { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+      { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+      { "name": "result", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+    ], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "name": "iunknown_release", "result": { "type": "u32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_debug_enable_debug_layer", "result": { "type": "void", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_device_create_command_queue", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [
+      { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "description", "type": "const_command_queue_desc_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "result", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+    ], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_device_create_command_allocator", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [
+      { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "type", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "result", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+    ], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_device_create_command_list", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [
+      { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "nodeMask", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "type", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "allocator", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "initialState", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }, { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "result", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+    ], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_device_check_feature_support", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [
+      { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "feature", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "featureData", "type": "format_support_ptr", "direction": "in_out", "nullability": "non_null", "ownership": "borrowed" }, { "name": "featureDataSize", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+    ], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_device_create_descriptor_heap", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [
+      { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "description", "type": "const_descriptor_heap_desc_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "result", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+    ], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_device_get_descriptor_handle_increment_size", "result": { "type": "u32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "descriptorHeapType", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_device_create_render_target_view", "result": { "type": "void", "nullability": "unspecified", "ownership": "none" }, "parameters": [
+      { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "resource", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "description", "type": "void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }, { "name": "destination", "type": "d3d12_cpu_descriptor_handle", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+    ], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_device_create_committed_resource", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [
+      { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "heapProperties", "type": "const_heap_properties_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "heapFlags", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "description", "type": "const_resource_desc_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "initialState", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "optimizedClearValue", "type": "void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }, { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "result", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+    ], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_device_create_fence", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [
+      { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "initialValue", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "flags", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "result", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+    ], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_device_get_device_removed_reason", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_descriptor_heap_get_cpu_descriptor_handle_for_heap_start", "result": { "type": "d3d12_cpu_descriptor_handle_ptr", "nullability": "non_null", "ownership": "borrowed" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "returnedHandle", "type": "d3d12_cpu_descriptor_handle_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_command_allocator_reset", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_graphics_command_list_close", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_graphics_command_list_reset", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "allocator", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "initialState", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_graphics_command_list_copy_texture_region", "result": { "type": "void", "nullability": "unspecified", "ownership": "none" }, "parameters": [
+      { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "destination", "type": "const_texture_copy_location_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "destinationX", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "destinationY", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "destinationZ", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "source", "type": "const_texture_copy_location_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "sourceBox", "type": "void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+    ], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_graphics_command_list_resource_barrier", "result": { "type": "void", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "barrierCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "barriers", "type": "const_resource_barrier_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_graphics_command_list_clear_render_target_view", "result": { "type": "void", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "destination", "type": "d3d12_cpu_descriptor_handle", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "color", "type": "const_float_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "rectangleCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "rectangles", "type": "const_rect_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_command_queue_execute_command_lists", "result": { "type": "void", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "commandListCount", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "commandLists", "type": "com_interface_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_command_queue_signal", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "fence", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "value", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_fence_get_completed_value", "result": { "type": "u64", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_resource_map", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "subresource", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "readRange", "type": "const_range_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }, { "name": "data", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_resource_unmap", "result": { "type": "void", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "subresource", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "writtenRange", "type": "const_range_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_info_queue_clear_stored_messages", "result": { "type": "void", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_info_queue_get_message", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "messageIndex", "type": "u64", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "message", "type": "d3d12_message_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" }, { "name": "messageByteLength", "type": "u64_ptr", "direction": "in_out", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "id3d12_info_queue_get_num_stored_messages_allowed_by_retrieval_filter", "result": { "type": "u64", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "idxgi_factory_make_window_association", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "window", "type": "void_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "6.0", "deprecated": null, "unavailable": false } },
+    { "name": "idxgi_factory2_create_swap_chain_for_hwnd", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "device", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "window", "type": "void_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "description", "type": "const_swap_chain_desc1_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "fullscreenDescription", "type": "void_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }, { "name": "restrictToOutput", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }, { "name": "result", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "8.1", "deprecated": null, "unavailable": false } },
+    { "name": "idxgi_swap_chain_present", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "syncInterval", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "6.0", "deprecated": null, "unavailable": false } },
+    { "name": "idxgi_swap_chain_get_buffer", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "bufferIndex", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "result", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "6.0", "deprecated": null, "unavailable": false } },
+    { "name": "idxgi_swap_chain3_get_current_back_buffer_index", "result": { "type": "u32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "idxgi_swap_chain3_check_color_space_support", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "colorSpace", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "support", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "idxgi_swap_chain3_set_color_space1", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "colorSpace", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }], "callingConvention": "system", "threadRestriction": "caller", "lifetime": "retained", "exceptionPolicy": "contain", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } }
+  ],
+  "functions": [
+    { "name": "d3d12GetDebugInterface", "symbol": "D3D12GetDebugInterface", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "result", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "d3d12CreateDevice", "symbol": "D3D12CreateDevice", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "adapter", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }, { "name": "minimumFeatureLevel", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "device", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any", "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false } },
+    { "name": "createDxgiFactory2", "symbol": "CreateDXGIFactory2", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }, { "name": "interfaceId", "type": "const_guid_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "factory", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any", "availability": { "introduced": "8.1", "deprecated": null, "unavailable": false } },
+    { "name": "getCurrentProcess", "symbol": "GetCurrentProcess", "result": { "type": "process_handle", "nullability": "non_null", "ownership": "borrowed" }, "parameters": [], "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "name": "getProcessHandleCount", "symbol": "GetProcessHandleCount", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "process", "type": "process_handle", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "handleCount", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }], "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "any", "availability": { "introduced": "5.1", "deprecated": null, "unavailable": false } },
+    { "name": "getProcessMemoryInfo", "symbol": "K32GetProcessMemoryInfo", "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" }, "parameters": [{ "name": "process", "type": "process_handle", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }, { "name": "counters", "type": "process_memory_counters_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }, { "name": "byteSize", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }], "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "any", "availability": { "introduced": "6.1", "deprecated": null, "unavailable": false } }
+  ]
+}

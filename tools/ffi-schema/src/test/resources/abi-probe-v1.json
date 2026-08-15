@@ -1,0 +1,70 @@
+{
+  "protocolVersion": 1,
+  "fixtures": ["abi-minimum-layouts-v1", "abi-callback-conventions-v1"],
+  "target": {
+    "operatingSystem": "windows",
+    "architecture": "x86_64",
+    "byteOrder": "little_endian",
+    "addressSize": 8,
+    "addressAlignment": 8
+  },
+  "compiler": {
+    "family": "clang",
+    "major": 21,
+    "minor": 1,
+    "patch": 0
+  },
+  "types": [
+    {"name": "u8", "byteSize": 1, "alignment": 1},
+    {"name": "i32", "byteSize": 4, "alignment": 4},
+    {"name": "u32", "byteSize": 4, "alignment": 4},
+    {"name": "f64", "byteSize": 8, "alignment": 8},
+    {"name": "const_u8_ptr", "byteSize": 8, "alignment": 8},
+    {"name": "void_ptr", "byteSize": 8, "alignment": 8},
+    {"name": "fixture_handle", "byteSize": 8, "alignment": 8},
+    {"name": "fixture_flags", "byteSize": 4, "alignment": 4}
+  ],
+  "aggregates": [
+    {
+      "name": "fixture_pair",
+      "byteSize": 8,
+      "alignment": 4,
+      "fields": [
+        {"name": "left", "byteOffset": 0, "bitOffset": null, "bitWidth": null},
+        {"name": "right", "byteOffset": 4, "bitOffset": null, "bitWidth": null}
+      ]
+    },
+    {
+      "name": "fixture_bits",
+      "byteSize": 4,
+      "alignment": 4,
+      "fields": [
+        {"name": "mode", "byteOffset": 0, "bitOffset": 0, "bitWidth": 3},
+        {"name": "ready", "byteOffset": 0, "bitOffset": 3, "bitWidth": 1}
+      ]
+    },
+    {
+      "name": "fixture_value",
+      "byteSize": 8,
+      "alignment": 8,
+      "fields": [
+        {"name": "integer", "byteOffset": 0, "bitOffset": null, "bitWidth": null},
+        {"name": "floating", "byteOffset": 0, "bitOffset": null, "bitWidth": null}
+      ]
+    }
+  ],
+  "callbacks": [
+    {
+      "name": "fixture_visit_callback",
+      "callingConvention": "system",
+      "pointerSize": 8,
+      "pointerAlignment": 8,
+      "invocationResult": 142
+    }
+  ],
+  "checks": {
+    "structureReturnLeft": -7,
+    "structureReturnRight": 42,
+    "variadicSum": 6
+  }
+}

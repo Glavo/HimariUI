@@ -2,7 +2,7 @@
   "$schema": "schema/platform-conformance.schema.json",
   "schemaVersion": 1,
   "policyVersion": "1.0",
-  "reviewed": "2026-08-14",
+  "reviewed": "2026-08-15",
   "defaults": {
     "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
     "durations": { "timeoutSeconds": 600, "soakSeconds": 60, "repetitions": 10 },
@@ -15,7 +15,7 @@
       "workPackage": "FFI-SCHEMA-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "active",
       "owner": "ffi-schema",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
@@ -44,7 +44,7 @@
       "workPackage": "FFI-FFM-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "active",
       "owner": "ffi-runtime",
       "environments": [
         { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
@@ -79,7 +79,7 @@
       "workPackage": "ABI-PROBE-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "active",
       "owner": "ffi-abi",
       "environments": [
         { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
@@ -113,7 +113,7 @@
       "workPackage": "SPIKE-WAYLAND-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "active",
       "owner": "platform-linux-wayland",
       "environments": [
         { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
@@ -175,7 +175,7 @@
       "workPackage": "SPIKE-WIN-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "active",
       "owner": "platform-windows",
       "environments": [
         { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" },
@@ -184,8 +184,9 @@
       "commands": ["./gradlew -g .gradle-user-home :spikes:win32:conformance"],
       "fixtures": ["win32-window-lifecycle-v1", "win32-wndproc-reentrant-v1", "win32-input-v1", "win32-advanced-color-v1"],
       "assertions": [
-        "Generated FFM bindings open and close a window, receive resize/input events through WndProc, and contain callback exceptions and reentrancy.",
-        "The current DXGI output and Advanced Color state are reported as a dynamic capability snapshot without inferring support from format alone."
+        "Generated FFM bindings open, paint, resize, and close a Unicode window; deliver normalized pointer and keyboard input through WndProc; and contain callback exceptions and synchronous reentrancy.",
+        "The matching current IDXGIOutput6 description and DisplayConfig Advanced Color state are reported as a dynamic capability snapshot without inferring support from format alone.",
+        "Immediate GetLastError capture, bounded native ownership, teardown, soak duration, and the system-library native-load allowlist are verified by executable evidence."
       ],
       "capabilityModes": ["window-events", "wndproc-callback", "advanced-color-snapshot"],
       "limits": {
@@ -205,7 +206,7 @@
       "workPackage": "SPIKE-D3D12-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "active",
       "owner": "rhi-d3d12",
       "environments": [
         { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" },
@@ -326,7 +327,7 @@
       "workPackage": "NI-FFM-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "active",
       "owner": "native-image",
       "environments": [
         { "id": "linux-x86_64-native-image", "os": "linux", "architecture": "x86_64", "runtime": "native-image" },
@@ -351,6 +352,393 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m0-native-image-ffm/build.json", "build/conformance/m0-native-image-ffm/results.json", "build/conformance/m0-native-image-ffm/native-load.log"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-runtime-sample",
+      "profileVersion": 1,
+      "workPackage": "RUNTIME-SAMPLE-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "active",
+      "owner": "runtime",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:runtime-sample:conformance"],
+      "fixtures": [
+        "counter-derived-handler",
+        "diamond-glitch",
+        "conditional-lifecycle",
+        "changing-component-input",
+        "keyed-list-identity",
+        "phase-impact-burst",
+        "cross-scope-geometry",
+        "controlled-text-editing",
+        "ambient-inheritance",
+        "viewport-materialization",
+        "phase-failure-containment",
+        "staged-work-cleanup",
+        "settings-chat-application"
+      ],
+      "assertions": [
+        "The grouped, one-shot, and hybrid prototypes consume one versioned command and observation suite without sharing a structural representation.",
+        "The frozen rubric applies correctness and ceremony gates before fixed-weight performance, allocation, memory, portability, and tooling tradeoffs.",
+        "Instrumentation records source ceremony, callbacks, nodes, dependency edges, retained bytes, current-thread allocations, phase invalidations, structured diagnostics, and post-close cleanup.",
+        "Canonical suite, rubric, and self-test report artifacts are reproducible encodings, and candidate reports conform to the versioned report schema."
+      ],
+      "capabilityModes": ["ordinary-java", "measure-time-or-previous-viewport", "claimed-cancellation", "canonical-report"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": [
+          "build/conformance/m1-runtime-sample/suite.json",
+          "build/conformance/m1-runtime-sample/rubric.json",
+          "build/conformance/m1-runtime-sample/self-test-report.json"
+        ],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-runtime-grouped",
+      "profileVersion": 1,
+      "workPackage": "RUNTIME-SPIKE-GROUPED-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "active",
+      "owner": "runtime-grouped",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:runtime-grouped:conformance"],
+      "fixtures": [
+        "counter-derived-handler",
+        "diamond-glitch",
+        "conditional-lifecycle",
+        "changing-component-input",
+        "keyed-list-identity",
+        "phase-impact-burst",
+        "cross-scope-geometry",
+        "controlled-text-editing",
+        "ambient-inheritance",
+        "viewport-materialization",
+        "phase-failure-containment",
+        "staged-work-cleanup",
+        "settings-chat-application"
+      ],
+      "assertions": [
+        "Ordinary Java explicitly declares every rerunnable group, conditional policy, semantic key, binding, and effect without generated or transformed application code.",
+        "Positional memory, semantic keyed reconciliation, retained and disposed branches, changing inputs, and effect lifetimes match every frozen observation.",
+        "A failed structural or scoped measure-time draft preserves the prior committed tree and releases its staged resources before deterministic retry.",
+        "Every correctness fixture and benchmark path passes, post-close resource counts are zero, and the report remains incomplete until independent Native Image and ceremony evidence is recorded."
+      ],
+      "capabilityModes": ["explicit-groups", "positional-memory", "semantic-keyed-reconciliation", "scoped-measure-time", "cooperative-cancellation"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 240, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-runtime-grouped/report.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-runtime-oneshot",
+      "profileVersion": 1,
+      "workPackage": "RUNTIME-SPIKE-ONESHOT-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "active",
+      "owner": "runtime-oneshot",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:runtime-oneshot:conformance"],
+      "fixtures": [
+        "counter-derived-handler",
+        "diamond-glitch",
+        "conditional-lifecycle",
+        "changing-component-input",
+        "keyed-list-identity",
+        "phase-impact-burst",
+        "cross-scope-geometry",
+        "controlled-text-editing",
+        "ambient-inheritance",
+        "viewport-materialization",
+        "phase-failure-containment",
+        "staged-work-cleanup",
+        "settings-chat-application"
+      ],
+      "assertions": [
+        "Ordinary Java initializes each owner once and updates stable node properties through fine-grained bindings without generated or transformed application code.",
+        "Explicit Show and ForEach anchors preserve declared branch, keyed-item, local-state, changing-input, and effect lifetimes without positional slots or component reruns.",
+        "A rejected branch or keyed-item initializer aborts every new staged owner and preserves the prior committed tree, while previous-viewport materialization converges on the next frame.",
+        "Every correctness fixture and benchmark path passes, post-close resource counts are zero, and the report remains incomplete until independent Native Image and ceremony evidence is recorded."
+      ],
+      "capabilityModes": ["initialize-once-owners", "fine-grained-bindings", "explicit-show", "semantic-foreach", "previous-viewport", "no-cancellation-claim"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 240, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-runtime-oneshot/report.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-runtime-hybrid",
+      "profileVersion": 1,
+      "workPackage": "RUNTIME-SPIKE-HYBRID-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "active",
+      "owner": "runtime-hybrid",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:runtime-hybrid:conformance"],
+      "fixtures": [
+        "counter-derived-handler",
+        "diamond-glitch",
+        "conditional-lifecycle",
+        "changing-component-input",
+        "keyed-list-identity",
+        "phase-impact-burst",
+        "cross-scope-geometry",
+        "controlled-text-editing",
+        "ambient-inheritance",
+        "viewport-materialization",
+        "phase-failure-containment",
+        "staged-work-cleanup",
+        "settings-chat-application"
+      ],
+      "assertions": [
+        "Ordinary Java initializes stable owners once, updates properties through fine-grained bindings, and reruns only explicitly bounded structural scopes without generated or transformed application code.",
+        "Ordinary if and for control flow declares semantic-keyed fragments with explicit retention while preserving branch, collection, local-state, changing-input, and effect lifetimes.",
+        "A rejected scope draft aborts every new fragment and preserves the prior committed topology, while bounded current-measure materialization invalidates measure and structure in one attempt.",
+        "Every correctness fixture and benchmark path passes, post-close resource counts are zero, and the report remains incomplete until independent Native Image and ceremony evidence is recorded."
+      ],
+      "capabilityModes": ["initialize-once-owners", "fine-grained-bindings", "small-structural-scopes", "semantic-fragments", "scoped-measure-time", "no-cancellation-claim"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 240, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-runtime-hybrid/report.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-runtime-decision",
+      "profileVersion": 1,
+      "workPackage": "RUNTIME-ADR-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "active",
+      "owner": "runtime",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" },
+        { "id": "graalvm25-native-image", "os": "any", "architecture": "any", "runtime": "native-image" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :spikes:runtime-decision:conformance"],
+      "fixtures": [
+        "runtime-decision-rubric-v1",
+        "runtime-ceremony-packet-v1",
+        "runtime-ceremony-review-v1",
+        "runtime-isolated-jvm-report-triad-v1",
+        "runtime-native-image-report-triad-v1",
+        "runtime-reviewed-selection-v1"
+      ],
+      "assertions": [
+        "Fresh mechanically blinded complete-source packets match the checked review hashes, marker counts, reviewer threshold, and non-pervasive ceremony classifications.",
+        "All three candidates pass the same thirteen fixtures on isolated JVM runs and in one no-fallback Native Image executable with zero correctness disqualifications, complete required diagnostics and recovery observations, and balanced post-close resources.",
+        "The frozen score and tie-break sequence reproduce the reviewed noise, material-outlier, semantic-capability, and Pareto records and select explicit grouped recomposition by accidental ceremony.",
+        "The emitted decision agrees with ADR-023 structural ownership and identity, ADR-020 scoped current-measure materialization, and ADR-021 declared error-boundary containment."
+      ],
+      "capabilityModes": ["blinded-ceremony-review", "isolated-jvm-measurement", "shared-native-image-executable", "frozen-scoring", "reviewed-tie-break"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 900, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 1073741824, "maxNativeBytes": 1073741824, "maxHandles": 64, "maxThreads": 32 }
+      },
+      "evidence": {
+        "requiredArtifacts": [
+          "build/conformance/m1-runtime-decision/decision.json",
+          "build/conformance/m1-runtime-decision/decision.md",
+          "build/conformance/m1-runtime-decision/selection.properties",
+          "build/conformance/m1-runtime-decision/ceremony/manifest.properties",
+          "build/conformance/m1-runtime-decision/jvm-grouped/report.json",
+          "build/conformance/m1-runtime-decision/jvm-oneshot/report.json",
+          "build/conformance/m1-runtime-decision/jvm-hybrid/report.json",
+          "build/conformance/m1-runtime-decision/native-image/build.properties",
+          "build/conformance/m1-runtime-decision/native-image/results.properties",
+          "build/conformance/m1-runtime-decision/native-image/grouped-report.json",
+          "build/conformance/m1-runtime-decision/native-image/oneshot-report.json",
+          "build/conformance/m1-runtime-decision/native-image/hybrid-report.json"
+        ],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-structure",
+      "profileVersion": 1,
+      "workPackage": "STRUCTURE-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "active",
+      "owner": "runtime-structure",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:runtime:structureConformance"],
+      "fixtures": [
+        "structure-minimal-restart-v1",
+        "structure-keyed-branch-identity-v1",
+        "structure-atomic-failure-boundary-v1",
+        "structure-current-measure-v1",
+        "structure-ambient-shadowing-v1"
+      ],
+      "assertions": [
+        "Ordinary Java source identities create independent restartable groups; source and local changes select only their minimal active structural roots.",
+        "Semantic-key reorder preserves group and positional-memory identities, while duplicate keys reject the complete draft; retained hidden branches keep memory but detach observers and effects.",
+        "State writes, callback failures, and effect-mount failures cannot publish partial topology, dependencies, resources, effects, or state; the nearest declared boundary composes fallback in a fresh attempt and failed fallback escalates once.",
+        "Current-measure materialization reconciles only bounded direct semantic-keyed children from current input, preserves survivor identity, and retains the previous viewport after cancellation or failure.",
+        "Ambient reads select the nearest identity-keyed override, nested overrides shadow outer provider versions, and all structural cleanup continues child-before-parent with aggregated diagnostics."
+      ],
+      "capabilityModes": [
+        "explicit-grouped-recomposition",
+        "semantic-keyed-reconciliation",
+        "retained-branch-deactivation",
+        "failure-atomic-drafts",
+        "declared-error-boundaries",
+        "current-measure-materialization",
+        "ambient-shadowing"
+      ],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-structure/results.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-headless",
+      "profileVersion": 1,
+      "workPackage": "HEADLESS-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "active",
+      "owner": "platform-headless",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:platform-headless:conformance"],
+      "fixtures": ["headless-clock-order-v1", "headless-window-lifecycle-v1", "headless-display-color-capabilities-v1", "headless-scheduler-model-v1"],
+      "assertions": [
+        "Manual time advances without sleeping, callbacks run only on the owner context, and deadline/FIFO/cancellation behavior matches the deterministic scheduler model.",
+        "Virtual display replacement updates topology, scale, primaries, luminance, reference white, headroom, presentation modes, capability generations, and every affected window in one owner-context transition before event delivery.",
+        "Top-level and owner-relative popup windows preserve ordered lifecycle, redraw coalescing, host close-request injection, child-first closure, and committed state after callback failure.",
+        "The Headless production graph declares no native access, loads no framework native library, and has no java.desktop dependency."
+      ],
+      "capabilityModes": ["manual-clock", "host-driven-event-loop", "virtual-displays", "virtual-windows", "programmable-display-color"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-headless/results.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-scheduler",
+      "profileVersion": 1,
+      "workPackage": "SCHED-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "active",
+      "owner": "runtime-scheduler",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:runtime:conformance"],
+      "fixtures": ["scheduler-external-state-batch-v1", "scheduler-window-frame-coalescing-v1", "scheduler-cross-window-routing-v1", "scheduler-failure-close-v1"],
+      "assertions": [
+        "Bounded cross-thread state ingress executes FIFO on the shared owner context; each detached batch publishes at most one epoch, isolates callback savepoints, and defers work submitted during a drain.",
+        "Each window owns an independent frame scheduler that coalesces exact explicit-request counts, samples one monotonic timestamp per frame, and converts requests made during a frame into exactly one follow-up redraw.",
+        "Window-event routing never broadcasts across windows; callback and deferred-redraw failures are contained in a bounded diagnostic stream without stopping later frames.",
+        "Closure settles accepted state ingress, drops unadmitted frames, unregisters every window scope, and leaves borrowed platform event-loop and state-domain ownership unchanged."
+      ],
+      "capabilityModes": ["owner-context-state-batches", "per-window-frame-coalescing", "cross-window-routing", "bounded-failure-containment"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-scheduler/results.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-animation",
+      "profileVersion": 1,
+      "workPackage": "ANIM-CORE-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "active",
+      "owner": "runtime-animation",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:runtime:animationConformance"],
+      "fixtures": [
+        "animation-atomic-tween-v1",
+        "animation-spring-retarget-v1",
+        "animation-completion-outcomes-v1",
+        "animation-phase-isolation-v1"
+      ],
+      "assertions": [
+        "Animation transactions commit coordinated model targets atomically while presentation values remain independently sampled and application State epochs remain unchanged.",
+        "One Headless FrameClock timestamp publishes every due scalar in one presentation epoch; tween and analytic spring values are deterministic across skipped and intermediate frames.",
+        "Compatible spring retargeting preserves presentation value and velocity bit-exactly, while completion groups emit exactly one completed, replaced, cancelled, failed, or skipped terminal outcome.",
+        "Every presentation property reports its exact phase impact, and compositor-only motion reports no structure, measure, place, or paint invalidation."
+      ],
+      "capabilityModes": [
+        "transaction-scoped-motion",
+        "atomic-presentation-epochs",
+        "manual-clock-tween-spring",
+        "velocity-preserving-retarget",
+        "exactly-once-completion",
+        "phase-exact-sampling"
+      ],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.00000000000001, "numericRelative": 0.00000000000001, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-animation/results.json"],
         "recordedArtifacts": []
       },
       "waivers": []

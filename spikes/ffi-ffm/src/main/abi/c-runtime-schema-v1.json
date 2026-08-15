@@ -1,0 +1,151 @@
+{
+  "$schema": "schema/ffi-schema.schema.json",
+  "schemaVersion": 1,
+  "namespace": "org.glavo.himari.spikes.ffi.generated",
+  "library": "c_runtime",
+  "target": {
+    "operatingSystem": "portable-desktop",
+    "architecture": "generic64",
+    "byteOrder": "little_endian",
+    "addressSize": 8,
+    "addressAlignment": 8
+  },
+  "types": [
+    {
+      "kind": "primitive",
+      "name": "void",
+      "primitiveKind": "void",
+      "byteSize": 0,
+      "alignment": 1,
+      "signedness": "none",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "primitive",
+      "name": "u8",
+      "primitiveKind": "integer",
+      "byteSize": 1,
+      "alignment": 1,
+      "signedness": "unsigned",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "primitive",
+      "name": "i32",
+      "primitiveKind": "integer",
+      "byteSize": 4,
+      "alignment": 4,
+      "signedness": "signed",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "primitive",
+      "name": "usize",
+      "primitiveKind": "integer",
+      "byteSize": 8,
+      "alignment": 8,
+      "signedness": "unsigned",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "pointer",
+      "name": "const_u8_ptr",
+      "pointee": "u8",
+      "constant": true,
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "pointer",
+      "name": "i32_ptr",
+      "pointee": "i32",
+      "constant": false,
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "kind": "aggregate",
+      "name": "div_result",
+      "aggregateKind": "struct",
+      "byteSize": 8,
+      "alignment": 4,
+      "packing": 0,
+      "fields": [
+        { "name": "quotient", "type": "i32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "remainder", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    }
+  ],
+  "callbacks": [
+    {
+      "name": "compare_i32",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "left", "type": "i32_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "right", "type": "i32_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "threadRestriction": "caller",
+      "lifetime": "scoped",
+      "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    }
+  ],
+  "functions": [
+    {
+      "name": "abs",
+      "symbol": "abs",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "value", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "div",
+      "symbol": "div",
+      "result": { "type": "div_result", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "numerator", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "denominator", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "qsort",
+      "symbol": "qsort",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "data", "type": "i32_ptr", "direction": "in_out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "count", "type": "usize", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "elementSize", "type": "usize", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "compare", "type": "compare_i32", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "caller",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "strlen",
+      "symbol": "strlen",
+      "result": { "type": "usize", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "text", "type": "const_u8_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    }
+  ]
+}

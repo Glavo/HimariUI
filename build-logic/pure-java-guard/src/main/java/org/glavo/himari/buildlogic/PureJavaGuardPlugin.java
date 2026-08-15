@@ -291,10 +291,8 @@ public final class PureJavaGuardPlugin implements Plugin<Project> {
                     Set<String> allowlist = readAllowlist(
                             project.getRootProject().file("gradle/native-load-system-allowlist.txt")
                     );
-                    List<String> violations = readUtf8Lines(trace).stream()
-                            .map(String::trim)
-                            .filter(Predicate.not(String::isEmpty))
-                            .filter(line -> allowlist.stream().noneMatch(line::contains))
+                    List<String> violations = loadedLibraryBasenames(readUtf8Lines(trace)).stream()
+                            .filter(Predicate.not(allowlist::contains))
                             .toList();
                     failIfNotEmpty("unapproved native-library trace records", violations);
                 }
@@ -544,6 +542,35 @@ public final class PureJavaGuardPlugin implements Plugin<Project> {
                 .filter(Predicate.not(String::isEmpty))
                 .filter(line -> !line.startsWith("#"))
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /// Extracts loaded-library basenames from JDK unified `library` log records.
+    ///
+    /// Symbol lookup, failed lookup, and unload records are deliberately excluded; only lines containing a successful
+    /// `Loaded library` event contribute to the distribution allowlist check.
+    ///
+    /// @param lines the complete unified-log lines
+    /// @return the loaded basenames in log order
+    private static List<String> loadedLibraryBasenames(List<String> lines) {
+        String marker = "Loaded library ";
+        String handleMarker = ", handle ";
+        List<String> libraries = new ArrayList<>();
+        for (String line : lines) {
+            int start = line.indexOf(marker);
+            if (start < 0) {
+                continue;
+            }
+            start += marker.length();
+            int end = line.indexOf(handleMarker, start);
+            if (end < 0) {
+                end = line.length();
+            }
+            String path = line.substring(start, end).trim();
+            if (!path.isEmpty()) {
+                libraries.add(new File(path).getName());
+            }
+        }
+        return List.copyOf(libraries);
     }
 
     /// Finds source-code occurrences after comments and literals are masked.
