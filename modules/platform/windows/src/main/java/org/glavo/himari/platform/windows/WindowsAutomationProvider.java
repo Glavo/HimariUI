@@ -15,7 +15,7 @@ import java.lang.foreign.ValueLayout;
 import java.util.Objects;
 import java.util.UUID;
 
-/// Implements `IRawElementProviderSimple` plus Invoke, Toggle, and RangeValue COM patterns.
+/// Implements `IRawElementProviderSimple` plus Invoke, Toggle, RangeValue, and Text COM patterns.
 @SuppressWarnings("restricted")
 @NotNullByDefault
 public final class WindowsAutomationProvider implements AutoCloseable {
@@ -34,6 +34,12 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// `IRangeValueProvider`.
     private static final UUID IRANGE_VALUE_PROVIDER = UUID.fromString("36dc7aef-33e6-4691-afe1-2be7274b3d33");
+
+    /// `ITextProvider`.
+    private static final UUID ITEXT_PROVIDER = UUID.fromString("3589c92c-63f3-4367-99bb-ada653b77cf2");
+
+    /// `ITextRangeProvider`.
+    private static final UUID ITEXT_RANGE_PROVIDER = UUID.fromString("534729dc-411e-4aaa-9d3a-eb1d1d2c9d87");
 
     /// `UIA_ControlTypePropertyId`.
     static final int UIA_CONTROL_TYPE_PROPERTY_ID = 30003;
@@ -62,8 +68,14 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `UIA_RangeValuePatternId`.
     static final int UIA_RANGE_VALUE_PATTERN_ID = 10003;
 
+    /// `UIA_TextPatternId`.
+    static final int UIA_TEXT_PATTERN_ID = 10014;
+
     /// `UIA_TogglePatternId`.
     static final int UIA_TOGGLE_PATTERN_ID = 10015;
+
+    /// `SupportedTextSelection_Single`.
+    static final int SUPPORTED_TEXT_SELECTION_SINGLE = 1;
 
     /// `ToggleState_Off`.
     static final int TOGGLE_STATE_OFF = 0;
@@ -85,6 +97,9 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// `E_POINTER`.
     private static final int E_POINTER = 0x8000_4003;
+
+    /// `E_NOTIMPL`.
+    private static final int E_NOTIMPL = 0x8000_4001;
 
     /// Arena owning the COM objects.
     private final Arena arena;
@@ -109,6 +124,12 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// Range provider COM object.
     private final MemorySegment rangeObject;
+
+    /// Text provider COM object.
+    private final MemorySegment textObject;
+
+    /// Document text-range COM object.
+    private final MemorySegment textRangeObject;
 
     /// Outstanding references for the simple provider.
     private int references = 1;
@@ -173,6 +194,58 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         rangeVtable.setAtIndex(ValueLayout.ADDRESS, 5L, bindings.createIrangeValueProviderGetIsReadOnlyStub(this::getRangeReadOnly, failures, arena));
         rangeVtable.setAtIndex(ValueLayout.ADDRESS, 6L, bindings.createIrangeValueProviderGetMaximumStub(this::getRangeMaximum, failures, arena));
         rangeVtable.setAtIndex(ValueLayout.ADDRESS, 7L, bindings.createIrangeValueProviderGetMinimumStub(this::getRangeMinimum, failures, arena));
+        this.textObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment textVtable = arena.allocate(ValueLayout.ADDRESS, 9);
+        textObject.set(ValueLayout.ADDRESS, 0L, textVtable);
+        textVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryText, failures, arena));
+        textVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        textVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        textVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createItextProviderRangeFromPointStub(this::rangeFromPoint, failures, arena)
+        );
+        MemorySegment emptyRange = bindings.createItextProviderGetRangeStub(this::emptyRange, failures, arena);
+        textVtable.setAtIndex(ValueLayout.ADDRESS, 4L, emptyRange);
+        textVtable.setAtIndex(ValueLayout.ADDRESS, 5L, emptyRange);
+        textVtable.setAtIndex(ValueLayout.ADDRESS, 6L, emptyRange);
+        textVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                7L,
+                bindings.createItextProviderGetRangeStub(this::documentRange, failures, arena)
+        );
+        textVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                8L,
+                bindings.createItextProviderGetSupportedTextSelectionStub(this::supportedTextSelection, failures, arena)
+        );
+        this.textRangeObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment textRangeVtable = arena.allocate(ValueLayout.ADDRESS, 13);
+        textRangeObject.set(ValueLayout.ADDRESS, 0L, textRangeVtable);
+        textRangeVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryTextRange, failures, arena));
+        textRangeVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        textRangeVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        MemorySegment notImplemented = bindings.createItextRangeNotimplStub(this::notImplemented, failures, arena);
+        MemorySegment cloneSlot = bindings.createItextProviderGetRangeStub(this::cloneRange, failures, arena);
+        textRangeVtable.setAtIndex(ValueLayout.ADDRESS, 3L, cloneSlot);
+        textRangeVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createItextRangeProviderCompareStub(this::compareRange, failures, arena)
+        );
+        for (int slot = 5; slot < 11; slot++) {
+            textRangeVtable.setAtIndex(ValueLayout.ADDRESS, slot, notImplemented);
+        }
+        textRangeVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                11L,
+                bindings.createItextProviderGetRangeStub(this::enclosingElement, failures, arena)
+        );
+        textRangeVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                12L,
+                bindings.createItextRangeProviderGetTextStub(this::getText, failures, arena)
+        );
     }
 
     /// Creates a provider for one semantics node.
@@ -309,6 +382,135 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return value.get(ValueLayout.JAVA_DOUBLE, 0L);
     }
 
+    /// Invokes `ITextProvider::get_DocumentRange` through the generated COM vtable.
+    ///
+    /// @return whether a document range was returned
+    public boolean invokeDocumentRange() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextProvider::get_DocumentRange",
+                Win32FfmBindings.invokeItextProviderGetRangePointer(
+                        functionAt(textObject, 7),
+                        textObject,
+                        result
+                )
+        );
+        return result.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Reads `ITextProvider::get_SupportedTextSelection` through the generated COM vtable.
+    ///
+    /// @return the supported-selection identifier
+    public int invokeSupportedTextSelection() {
+        requireOpen();
+        MemorySegment value = arena.allocate(ValueLayout.JAVA_INT);
+        value.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ITextProvider::get_SupportedTextSelection",
+                Win32FfmBindings.invokeItextProviderGetSupportedTextSelectionPointer(
+                        functionAt(textObject, 8),
+                        textObject,
+                        value
+                )
+        );
+        return value.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Invokes `ITextRangeProvider::Clone` through the generated COM vtable.
+    ///
+    /// @return whether a range object was returned
+    public boolean invokeClone() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextRangeProvider::Clone",
+                Win32FfmBindings.invokeItextProviderGetRangePointer(
+                        functionAt(textRangeObject, 3),
+                        textRangeObject,
+                        result
+                )
+        );
+        return result.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `ITextRangeProvider::Compare` through the generated COM vtable.
+    ///
+    /// @return whether the range compared equal to itself
+    public boolean invokeCompareSelf() {
+        requireOpen();
+        MemorySegment equal = arena.allocate(ValueLayout.JAVA_INT);
+        equal.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ITextRangeProvider::Compare",
+                Win32FfmBindings.invokeItextRangeProviderComparePointer(
+                        functionAt(textRangeObject, 4),
+                        textRangeObject,
+                        textRangeObject,
+                        equal
+                )
+        );
+        return equal.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Invokes `ITextRangeProvider::GetEnclosingElement` through the generated COM vtable.
+    ///
+    /// @return whether the raw element provider was returned
+    public boolean invokeEnclosingElement() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextRangeProvider::GetEnclosingElement",
+                Win32FfmBindings.invokeItextProviderGetRangePointer(
+                        functionAt(textRangeObject, 11),
+                        textRangeObject,
+                        result
+                )
+        );
+        return result.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Reads `ITextRangeProvider::GetText` through the generated COM vtable.
+    ///
+    /// @param maxLength the maximum UTF-16 length, or `-1` for the full document
+    /// @return the document text
+    public String invokeGetText(int maxLength) {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextRangeProvider::GetText",
+                Win32FfmBindings.invokeItextRangeProviderGetTextPointer(
+                        functionAt(textRangeObject, 12),
+                        textRangeObject,
+                        maxLength,
+                        result
+                )
+        );
+        MemorySegment chars = result.get(ValueLayout.ADDRESS, 0L);
+        if (chars.address() == 0L) {
+            return "";
+        }
+        long available = chars.byteSize();
+        if (available == 0L) {
+            chars = chars.reinterpret(4096);
+            available = 4096;
+        }
+        int limit = Math.toIntExact(Math.min(2048L, available / 2L));
+        StringBuilder text = new StringBuilder();
+        for (int index = 0; index < limit; index++) {
+            char unit = chars.getAtIndex(ValueLayout.JAVA_CHAR, index);
+            if (unit == 0) {
+                break;
+            }
+            text.append(unit);
+        }
+        return text.toString();
+    }
+
     /// Returns the number of successful invoke calls.
     ///
     /// @return the count
@@ -345,6 +547,16 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// Implements RangeValue QI.
     private int queryRange(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
         return query(interfaceId, result, IRANGE_VALUE_PROVIDER, rangeObject);
+    }
+
+    /// Implements Text QI.
+    private int queryText(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ITEXT_PROVIDER, textObject);
+    }
+
+    /// Implements TextRange QI.
+    private int queryTextRange(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ITEXT_RANGE_PROVIDER, textRangeObject);
     }
 
     /// Shared QI implementation for one identity.
@@ -386,6 +598,8 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             selected = toggleObject;
         } else if (patternId == UIA_RANGE_VALUE_PATTERN_ID && node.role() == SemanticsRole.SLIDER) {
             selected = rangeObject;
+        } else if (patternId == UIA_TEXT_PATTERN_ID && node.textRange() != null) {
+            selected = textObject;
         }
         out.set(ValueLayout.ADDRESS, 0L, selected);
         if (selected.address() != 0L) {
@@ -463,6 +677,89 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// Implements `IRangeValueProvider::get_Minimum`.
     private int getRangeMinimum(MemorySegment self, MemorySegment value) {
         return writeDouble(value, 0.0);
+    }
+
+    /// Implements `ITextProvider::RangeFromPoint` with an honest empty result.
+    private int rangeFromPoint(MemorySegment self, double x, double y, MemorySegment range) {
+        return emptyRange(self, range);
+    }
+
+    /// Writes a null range out-parameter.
+    private int emptyRange(MemorySegment self, MemorySegment range) {
+        if (range.address() == 0L) {
+            return E_POINTER;
+        }
+        range.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        return S_OK;
+    }
+
+    /// Implements `ITextProvider::get_DocumentRange`.
+    private int documentRange(MemorySegment self, MemorySegment range) {
+        if (range.address() == 0L) {
+            return E_POINTER;
+        }
+        range.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, textRangeObject);
+        addRef(textRangeObject);
+        return S_OK;
+    }
+
+    /// Implements `ITextProvider::get_SupportedTextSelection`.
+    private int supportedTextSelection(MemorySegment self, MemorySegment value) {
+        if (value.address() == 0L) {
+            return E_POINTER;
+        }
+        value.reinterpret(ValueLayout.JAVA_INT.byteSize()).set(ValueLayout.JAVA_INT, 0L, SUPPORTED_TEXT_SELECTION_SINGLE);
+        return S_OK;
+    }
+
+    /// Implements unused `ITextRangeProvider` slots.
+    private int notImplemented(MemorySegment self) {
+        return E_NOTIMPL;
+    }
+
+    /// Implements `ITextRangeProvider::Clone`.
+    private int cloneRange(MemorySegment self, MemorySegment range) {
+        return documentRange(self, range);
+    }
+
+    /// Implements `ITextRangeProvider::Compare`.
+    private int compareRange(MemorySegment self, MemorySegment other, MemorySegment equal) {
+        if (equal.address() == 0L) {
+            return E_POINTER;
+        }
+        int same = other.address() != 0L && other.address() == textRangeObject.address() ? 1 : 0;
+        equal.reinterpret(ValueLayout.JAVA_INT.byteSize()).set(ValueLayout.JAVA_INT, 0L, same);
+        return S_OK;
+    }
+
+    /// Implements `ITextRangeProvider::GetEnclosingElement`.
+    private int enclosingElement(MemorySegment self, MemorySegment element) {
+        if (element.address() == 0L) {
+            return E_POINTER;
+        }
+        element.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, simpleObject);
+        addRef(simpleObject);
+        return S_OK;
+    }
+
+    /// Implements `ITextRangeProvider::GetText`.
+    private int getText(MemorySegment self, int maxLength, MemorySegment text) {
+        if (text.address() == 0L) {
+            return E_POINTER;
+        }
+        String document = node.label();
+        int units = document.length();
+        if (maxLength >= 0 && maxLength < units) {
+            units = maxLength;
+        }
+        MemorySegment block = arena.allocate(4L + ((long) units + 1L) * 2L);
+        block.set(ValueLayout.JAVA_INT, 0L, units * 2);
+        for (int index = 0; index < units; index++) {
+            block.set(ValueLayout.JAVA_CHAR, 4L + (long) index * 2L, document.charAt(index));
+        }
+        block.set(ValueLayout.JAVA_CHAR, 4L + (long) units * 2L, (char) 0);
+        text.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, block.asSlice(4L));
+        return S_OK;
     }
 
     /// Writes one double out-parameter.

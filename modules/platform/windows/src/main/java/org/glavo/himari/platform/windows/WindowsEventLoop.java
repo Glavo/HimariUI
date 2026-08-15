@@ -10,7 +10,7 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.PriorityQueue;
 
-/// Host-driven Windows event loop combining posted Java work with `PeekMessage` dispatch.
+/// Host-driven Windows event loop combining posted Java work with `PeekMessage` and `WaitMessage`.
 @NotNullByDefault
 public final class WindowsEventLoop implements PlatformEventLoop, AutoCloseable {
     /// Orders tasks by deadline then sequence.

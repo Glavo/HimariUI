@@ -33,6 +33,9 @@ public final class DesktopConformance {
         if (result.host() == DesktopHost.WINDOWS && !result.popupHosted()) {
             throw new IllegalStateException("Windows desktop launch did not host a popup HWND");
         }
+        if (result.messageLoopRan()) {
+            throw new IllegalStateException("Smoke desktop launch must not enter the stay-open message loop");
+        }
         if (result.activations() != 2 || !"Count: 2".equals(result.label())) {
             throw new IllegalStateException("Desktop CounterApp did not reach count 2");
         }

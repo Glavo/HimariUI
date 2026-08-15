@@ -4,6 +4,7 @@ import org.glavo.himari.layout.input.PointerEventType;
 import org.glavo.himari.platform.api.LogicalRect;
 import org.glavo.himari.platform.api.PresentationMode;
 import org.glavo.himari.platform.api.WindowConfiguration;
+import org.glavo.himari.platform.api.WindowEventType;
 import org.glavo.himari.platform.api.WindowRequest;
 import org.glavo.himari.platform.api.WindowState;
 import org.jetbrains.annotations.NotNullByDefault;
@@ -33,10 +34,12 @@ public final class WindowsPlatformConformance {
         int pointerCount;
         int presentedScanlines = 0;
         boolean clipboardRoundTrip = false;
+        boolean clipboardAccessDenied = false;
         boolean modalTick = false;
         boolean oleDrop = false;
         boolean dataObjectGetData = false;
         boolean tsfThreadMgr = false;
+        boolean messageLoop = false;
         WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
         try {
             WindowsWindow first = platform.createWindow(
@@ -94,9 +97,16 @@ public final class WindowsPlatformConformance {
                 throw new IllegalStateException("SetDIBitsToDevice did not present 8 scanlines");
             }
             String marker = "HimariUI-conformance-clipboard";
-            first.writeClipboard(marker);
-            clipboardRoundTrip = marker.equals(first.readClipboard());
-            if (!clipboardRoundTrip) {
+            try {
+                first.writeClipboard(marker);
+                clipboardRoundTrip = marker.equals(first.readClipboard());
+            } catch (WindowsClipboard.ClipboardUnavailableException unavailable) {
+                if (!unavailable.accessDenied()) {
+                    throw unavailable;
+                }
+                clipboardAccessDenied = true;
+            }
+            if (!clipboardRoundTrip && !clipboardAccessDenied) {
                 throw new IllegalStateException("Clipboard Unicode round-trip failed");
             }
             first.nativeWindow().postMessage(0x0231, 0L, 0L);
@@ -138,6 +148,41 @@ public final class WindowsPlatformConformance {
             }
             second.closeAsync().toCompletableFuture().get();
             platform.pump();
+            WindowsWindow[] hosted = new WindowsWindow[2];
+            hosted[0] = platform.createWindow(
+                    WindowRequest.toplevel(new WindowConfiguration(
+                            "HimariUI Loop 1",
+                            new LogicalRect(24.0, 24.0, 200.0, 120.0),
+                            true,
+                            WindowState.NORMAL
+                    )),
+                    event -> {
+                        if (event.type() == WindowEventType.CLOSE_REQUESTED && hosted[0] != null) {
+                            hosted[0].closeAsync();
+                        }
+                    }
+            ).toCompletableFuture().get();
+            hosted[1] = platform.createWindow(
+                    WindowRequest.toplevel(new WindowConfiguration(
+                            "HimariUI Loop 2",
+                            new LogicalRect(88.0, 88.0, 200.0, 120.0),
+                            true,
+                            WindowState.NORMAL
+                    )),
+                    event -> {
+                        if (event.type() == WindowEventType.CLOSE_REQUESTED && hosted[1] != null) {
+                            hosted[1].closeAsync();
+                        }
+                    }
+            ).toCompletableFuture().get();
+            platform.pump();
+            hosted[0].nativeWindow().postMessage(0x0010, 0L, 0L);
+            hosted[1].nativeWindow().postMessage(0x0010, 0L, 0L);
+            platform.pumpUntilClosed();
+            messageLoop = platform.openWindowCount() == 0 && hosted[0].isClosed() && hosted[1].isClosed();
+            if (!messageLoop) {
+                throw new IllegalStateException("Stay-open pump did not return after the last HWND closed");
+            }
         } finally {
             platform.close();
         }
@@ -158,10 +203,12 @@ public final class WindowsPlatformConformance {
                           "pointerEvents": %d,
                           "presentedScanlines": %d,
                           "clipboard": %s,
+                          "clipboardAccessDenied": %s,
                           "modalLoop": %s,
                           "oleDrop": %s,
                           "dataObjectGetData": %s,
                           "tsfThreadMgr": %s,
+                          "messageLoop": %s,
                           "sdrFallback": true
                         }
                         """.formatted(
@@ -171,10 +218,12 @@ public final class WindowsPlatformConformance {
                         pointerCount,
                         presentedScanlines,
                         clipboardRoundTrip,
+                        clipboardAccessDenied,
                         modalTick,
                         oleDrop,
                         dataObjectGetData,
-                        tsfThreadMgr
+                        tsfThreadMgr,
+                        messageLoop
                 ),
                 StandardCharsets.UTF_8
         );

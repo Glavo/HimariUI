@@ -18,6 +18,7 @@ import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.glavo.himari.platform.api.LogicalRect;
 import org.glavo.himari.platform.api.SurfaceRole;
 import org.glavo.himari.platform.api.WindowConfiguration;
+import org.glavo.himari.platform.api.WindowEvent;
 import org.glavo.himari.platform.api.WindowEventType;
 import org.glavo.himari.platform.api.WindowLifecycle;
 import org.glavo.himari.platform.api.WindowRequest;
@@ -27,6 +28,7 @@ import org.glavo.himari.rhi.vulkan.VulkanDevice;
 import org.glavo.himari.rhi.vulkan.VulkanPresentation;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
@@ -252,6 +254,43 @@ final class WindowsPlatformTest {
         }
     }
 
+    /// Returns from the stay-open pump after queued close requests destroy the last HWND.
+    @Test
+    void pumpUntilClosedReturnsAfterLastCloseRequest() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow[] hosted = new WindowsWindow[2];
+            hosted[0] = platform.createWindow(
+                    WindowRequest.toplevel(new WindowConfiguration(
+                            "Loop-1",
+                            new LogicalRect(16.0, 16.0, 200.0, 120.0),
+                            true,
+                            WindowState.NORMAL
+                    )),
+                    event -> closeOnRequest(hosted, event)
+            ).toCompletableFuture().get();
+            hosted[1] = platform.createWindow(
+                    WindowRequest.toplevel(new WindowConfiguration(
+                            "Loop-2",
+                            new LogicalRect(80.0, 80.0, 200.0, 120.0),
+                            true,
+                            WindowState.NORMAL
+                    )),
+                    event -> closeOnRequest(hosted, event)
+            ).toCompletableFuture().get();
+            platform.pump();
+            assertEquals(2, platform.openWindowCount());
+            hosted[0].nativeWindow().postMessage(0x0010, 0L, 0L);
+            hosted[1].nativeWindow().postMessage(0x0010, 0L, 0L);
+            platform.pumpUntilClosed();
+            assertEquals(0, platform.openWindowCount());
+            assertTrue(hosted[0].isClosed());
+            assertTrue(hosted[1].isClosed());
+        } finally {
+            platform.close();
+        }
+    }
+
     /// Drives the shipped IME session and UIA projection.
     @Test
     void imeAndAutomationUseShippedContracts() {
@@ -320,7 +359,15 @@ final class WindowsPlatformTest {
             WindowsWindow window = openToplevel(platform, "Clipboard", 48.0, 48.0);
             platform.pump();
             String marker = "HimariUI-clipboard-" + Long.toUnsignedString(System.nanoTime());
-            window.writeClipboard(marker);
+            try {
+                window.writeClipboard(marker);
+            } catch (WindowsClipboard.ClipboardUnavailableException unavailable) {
+                Assumptions.assumeFalse(
+                        unavailable.accessDenied(),
+                        "host denied OpenClipboard: " + unavailable.getMessage()
+                );
+                throw unavailable;
+            }
             assertEquals(marker, window.readClipboard());
         } finally {
             platform.close();
@@ -472,7 +519,18 @@ final class WindowsPlatformTest {
                     null
             );
             status.setLiveRegion(SemanticsLiveRegion.POLITE);
-            valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider, status));
+            LayoutNode field = factory.leaf(
+                    "field",
+                    new Size(160.0f, 24.0f),
+                    List.of(),
+                    true,
+                    SemanticsRole.TEXT_FIELD,
+                    "hello",
+                    java.util.Set.of(SemanticsAction.ACTIVATE),
+                    () -> { }
+            );
+            field.setTextRange(new SemanticsTextRange(1, 4, 4));
+            valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider, status, field));
             valueTree.measure(Constraints.loose(400.0f, 400.0f));
             valueTree.place();
             SemanticsNode toggleNode = valueTree.semantics().nodes().stream()
@@ -508,6 +566,23 @@ final class WindowsPlatformTest {
                         statusProvider.invokePropertyValue(WindowsAutomationProvider.UIA_LIVE_SETTING_PROPERTY_ID)
                 );
             }
+            SemanticsNode fieldNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
+                    .findFirst()
+                    .orElseThrow();
+            try (WindowsAutomationProvider textProvider = window.automationProvider(fieldNode)) {
+                assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_PATTERN_ID));
+                assertTrue(textProvider.invokeDocumentRange());
+                assertEquals(
+                        WindowsAutomationProvider.SUPPORTED_TEXT_SELECTION_SINGLE,
+                        textProvider.invokeSupportedTextSelection()
+                );
+                assertEquals("hello", textProvider.invokeGetText(-1));
+                assertEquals("he", textProvider.invokeGetText(2));
+                assertTrue(textProvider.invokeClone());
+                assertTrue(textProvider.invokeCompareSelf());
+                assertTrue(textProvider.invokeEnclosingElement());
+            }
         } finally {
             platform.close();
         }
@@ -537,6 +612,23 @@ final class WindowsPlatformTest {
             }
         } finally {
             platform.close();
+        }
+    }
+
+    /// Closes the matching hosted HWND when the host asks the application to decide.
+    ///
+    /// @param hosted the windows that may honor the request
+    /// @param event the host event
+    private static void closeOnRequest(WindowsWindow[] hosted, WindowEvent event) {
+        if (event.type() != WindowEventType.CLOSE_REQUESTED) {
+            return;
+        }
+        for (WindowsWindow candidate : hosted) {
+            if (candidate != null
+                    && !candidate.isClosed()
+                    && candidate.id().equals(event.snapshot().id())) {
+                candidate.closeAsync();
+            }
         }
     }
 

@@ -71,6 +71,7 @@ public final class D3d12Device implements AutoCloseable {
     /// Creates a default-adapter device at feature level 11.0 or newer.
     ///
     /// @return the device owner
+    /// @throws RuntimeException if DXGI or D3D12 cannot be created
     public static D3d12Device open() {
         D3d12Libraries libraries = D3d12Libraries.open();
         Arena arena = Arena.ofConfined();
@@ -117,6 +118,17 @@ public final class D3d12Device implements AutoCloseable {
             arena.close();
             libraries.close();
             throw failure;
+        }
+    }
+
+    /// Opens a device when D3D12 is available.
+    ///
+    /// @return the device, or `null` when the adapter or runtime is missing
+    public static @Nullable D3d12Device tryOpen() {
+        try {
+            return open();
+        } catch (RuntimeException ignored) {
+            return null;
         }
     }
 

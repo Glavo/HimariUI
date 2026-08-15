@@ -20,6 +20,9 @@ public final class WindowsClipboard {
     /// `GMEM_MOVEABLE`.
     private static final int GMEM_MOVEABLE = 0x0002;
 
+    /// `ERROR_ACCESS_DENIED`.
+    public static final int ERROR_ACCESS_DENIED = 5;
+
     /// Prevents instantiation.
     private WindowsClipboard() {
     }
@@ -35,7 +38,7 @@ public final class WindowsClipboard {
         Objects.requireNonNull(text, "text");
         Win32FfmBindings bindings = libraries.bindings();
         byte[] utf16 = (text + '\0').getBytes(StandardCharsets.UTF_16LE);
-        openClipboard(bindings, hwnd);
+        openClipboard(libraries, hwnd);
         MemorySegment allocated = MemorySegment.NULL;
         try {
             Win32FfmBindings.EmptyClipboardResult emptied = bindings.emptyClipboard();
@@ -79,7 +82,7 @@ public final class WindowsClipboard {
         Objects.requireNonNull(libraries, "libraries");
         Objects.requireNonNull(hwnd, "hwnd");
         Win32FfmBindings bindings = libraries.bindings();
-        openClipboard(bindings, hwnd);
+        openClipboard(libraries, hwnd);
         try {
             Win32FfmBindings.GetClipboardDataResult handle = bindings.getClipboardData(CF_UNICODETEXT);
             if (handle.value().address() == 0L) {
@@ -105,19 +108,65 @@ public final class WindowsClipboard {
 
     /// Opens the clipboard, retrying while another owner briefly holds it.
     ///
-    /// @param bindings the bindings
-    /// @param hwnd the owner window
-    private static void openClipboard(Win32FfmBindings bindings, MemorySegment hwnd) {
+    /// `WS_EX_NOACTIVATE` tool windows cannot own the clipboard on this host and return
+    /// `ERROR_ACCESS_DENIED`. Those failures fall back to `OpenClipboard(NULL)` immediately.
+    /// Between retries this method drains the thread queue so a clipboard viewer or delayed-render
+    /// owner can release the lock.
+    ///
+    /// @param libraries the session libraries
+    /// @param hwnd the preferred owner window
+    private static void openClipboard(WindowsLibraries libraries, MemorySegment hwnd) {
+        Win32FfmBindings bindings = libraries.bindings();
         int lastError = 0;
-        for (int attempt = 0; attempt < 25; attempt++) {
-            Win32FfmBindings.OpenClipboardResult opened = bindings.openClipboard(hwnd);
-            if (opened.value() != 0) {
+        for (int attempt = 0; attempt < 50; attempt++) {
+            Win32FfmBindings.OpenClipboardResult owned = bindings.openClipboard(hwnd);
+            if (owned.value() != 0) {
                 return;
             }
-            lastError = opened.errorCode();
-            LockSupport.parkNanos(8_000_000L);
+            lastError = owned.errorCode();
+            if (hwnd.address() != 0L) {
+                Win32FfmBindings.OpenClipboardResult unowned = bindings.openClipboard(MemorySegment.NULL);
+                if (unowned.value() != 0) {
+                    return;
+                }
+                lastError = unowned.errorCode();
+            }
+            libraries.pumpThreadMessages();
+            LockSupport.parkNanos(20_000_000L);
         }
-        throw new IllegalStateException("OpenClipboard failed: " + lastError);
+        throw new ClipboardUnavailableException(lastError);
+    }
+
+    /// Signals that `OpenClipboard` failed after hwnd and `NULL` attempts.
+    @NotNullByDefault
+    public static final class ClipboardUnavailableException extends IllegalStateException {
+        /// Serialization identifier.
+        private static final long serialVersionUID = 1L;
+
+        /// Captured `GetLastError` from the last attempt.
+        private final int errorCode;
+
+        /// Creates one failure.
+        ///
+        /// @param errorCode the last `GetLastError` value
+        ClipboardUnavailableException(int errorCode) {
+            super("OpenClipboard failed: " + errorCode);
+            this.errorCode = errorCode;
+        }
+
+        /// Returns the last captured error.
+        ///
+        /// @return the Win32 error
+        public int errorCode() {
+            return errorCode;
+        }
+
+        /// Returns whether the host denied clipboard access.
+        ///
+        /// @return whether the error is `ERROR_ACCESS_DENIED`
+        public boolean accessDenied() {
+            return errorCode == ERROR_ACCESS_DENIED;
+        }
     }
 
     /// Decodes a NUL-terminated UTF-16LE buffer.

@@ -1013,6 +1013,38 @@
       "waivers": []
     },
     {
+      "id": "m8-shape",
+      "profileVersion": 1,
+      "workPackage": "SHAPE-ARABIC-001",
+      "milestone": "M8",
+      "required": true,
+      "status": "passed",
+      "owner": "text",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:text:conformance"],
+      "fixtures": ["arabic-init-medi-fina-v1", "hebrew-presentation-v1"],
+      "assertions": [
+        "Arabic dual-joining letters select isol, init, medi, and fina Presentation Forms-B when the font maps those forms.",
+        "Transparent marks stay in the preceding letter cluster and do not break joining.",
+        "Unmarked Hebrew stays one-to-one; letter-plus-dagesh composes onto Presentation Forms-A when the font maps the form.",
+        "Hangul choseong/jungseong and choseong/jungseong/jongseong sequences compose onto syllables when the font maps them.",
+        "Thai and Lao SARA AM decompose to Nikhahit plus SARA AA; Nikhahit moves left over above-base marks; left vowels stay in visual order."
+      ],
+      "capabilityModes": ["arabic-joining", "hebrew-composition"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m8-shape/results.json"],
+        "recordedArtifacts": ["build/conformance/m8-shape/results.json"]
+      },
+      "waivers": []
+    },
+    {
       "id": "v0-counter",
       "profileVersion": 1,
       "workPackage": "SAMPLE-001",
@@ -1059,11 +1091,13 @@
         "GetDpiForWindow and GetSystemMetrics publish a truthful scale factor and primary display size.",
         "Posted pointer messages are delivered through the production WndProc as normalized events.",
         "CF_UNICODETEXT clipboard writes and reads through generated User32 and Kernel32 bindings.",
+        "OpenClipboard tries the window then NULL, pumps the thread queue between retries, and records ERROR_ACCESS_DENIED instead of failing the session.",
         "WM_ENTERSIZEMOVE starts a timer that drains scheduled UI work before WM_EXITSIZEMOVE.",
         "RegisterDragDrop installs an IDropTarget whose Drop vtable entry records a drop.",
         "IDropTarget::Drop extracts CF_UNICODETEXT through IDataObject::GetData.",
         "CoCreateInstance creates ITfThreadMgr and Activate assigns a client id.",
-        "Display topology reports SDR fallback without inventing HDR presentation."
+        "Display topology reports SDR fallback without inventing HDR presentation.",
+        "A stay-open pump waits for thread messages and returns after the last HWND is closed."
       ],
       "capabilityModes": ["window-lifecycle", "sdr-fallback"],
       "limits": {
@@ -1130,6 +1164,7 @@
         "Menu, dialog, and tooltip dismiss through Escape or an outside pointer, and a menu item activation closes the menu.",
         "TextArea commits composition, a STATUS live region is polite, RTL packing moves children toward the end, and reduced-motion tokens transform animation specifications.",
         "TextField and TextArea publish UTF-16 selection and caret ranges, replace idle committed text, and reject live composition without changing the committed buffer.",
+        "Editors apply TextInputSession composition, commit, and rejection without the session writing editor state.",
         "A gesture arena resolves tap, drag, and long-press competition; an accepted drag scrolls the viewport."
       ],
       "capabilityModes": ["unstyled-controls", "keyboard-activation"],
@@ -1235,14 +1270,16 @@
         "The UIA projection exposes the increment control invoke action from the semantics snapshot.",
         "Toggle selected and slider range values from the semantics snapshot appear as UIA patterns.",
         "IRawElementProviderSimple::GetPropertyValue reports the Button control type through a COM VARIANT.",
-        "IInvokeProvider, IToggleProvider, and IRangeValueProvider dispatch through generated COM vtables.",
+        "IInvokeProvider, IToggleProvider, IRangeValueProvider, and ITextProvider dispatch through generated COM vtables.",
+        "ITextProvider exposes a document range and ITextRangeProvider::GetText returns the editor label.",
+        "ITextRangeProvider Clone, Compare, and GetEnclosingElement dispatch through generated COM vtables.",
         "ITextStoreACP grants document locks and exchanges UTF-16 text; ITfDocumentMgr pushes the store.",
         "ITextStoreACP maps GetACPFromPoint through the candidate rectangle and reports GetScreenExt; embedded and attribute slots return honest empty or not-supported results.",
         "A STATUS node projects as StatusBar with LiveSetting Polite through GetPropertyValue.",
         "An editor node projects its UTF-16 selection and caret as a UIA inspection text range.",
         "The shipped IME session rejects injected composition without rewriting surrounding text."
       ],
-      "capabilityModes": ["ime-composition", "uia-projection", "tsf-thread-mgr", "itext-store-acp"],
+      "capabilityModes": ["ime-composition", "uia-projection", "tsf-thread-mgr", "itext-store-acp", "itext-provider"],
       "limits": {
         "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
         "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
@@ -1251,6 +1288,37 @@
       "evidence": {
         "requiredArtifacts": ["build/conformance/m9-windows-ime-a11y/results.json"],
         "recordedArtifacts": ["build/conformance/m9-windows-ime-a11y/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m9-linux-a11y",
+      "profileVersion": 1,
+      "workPackage": "LINUX-A11Y-001",
+      "milestone": "M9",
+      "required": true,
+      "status": "passed",
+      "owner": "platform-api",
+      "environments": [
+        { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "linux-arm64-jvm", "os": "linux", "architecture": "arm64", "runtime": "jvm" },
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:platform-api:conformance"],
+      "fixtures": ["dbus-method-call-header-v1", "atspi-session-probe-v1"],
+      "assertions": [
+        "A little-endian D-Bus method-call header for org.a11y.Bus.GetAddress round-trips without a session bus.",
+        "A non-Linux host records an environment block instead of claiming an AT-SPI2 session."
+      ],
+      "capabilityModes": ["dbus-header", "atspi-probe"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m9-linux-a11y/results.json"],
+        "recordedArtifacts": ["build/conformance/m9-linux-a11y/results.json"]
       },
       "waivers": []
     },
@@ -1360,7 +1428,7 @@
       "fixtures": ["desktop-counter-v1"],
       "assertions": [
         "HimariDesktop opens a Windows HWND, runs the CounterApp tree to count 2, and captures inspector plus software PNG artifacts.",
-        "Smoke mode closes the session. Wayland, macOS, Metal, and Objective-C probes remain honest environment blocks on this host."
+        "Smoke mode closes the session without entering the stay-open message loop. Interactive mode honors CLOSE_REQUESTED and pumps WaitMessage until every HWND is closed. Wayland, macOS, Metal, and Objective-C probes remain honest environment blocks on this host."
       ],
       "capabilityModes": ["himari-desktop", "counter-app", "host-window-smoke"],
       "limits": {

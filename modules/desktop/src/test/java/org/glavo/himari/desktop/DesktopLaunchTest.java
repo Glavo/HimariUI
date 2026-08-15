@@ -6,6 +6,7 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// Verifies host detection and the Windows desktop smoke launch.
@@ -34,6 +35,7 @@ final class DesktopLaunchTest {
         assertTrue(result.presentedScanlines() >= 120);
         assertTrue(result.d3d12Presented());
         assertTrue(result.popupHosted());
+        assertFalse(result.messageLoopRan());
         assertEquals("environment-blocked", result.waylandStatus());
         assertTrue(result.macosStatus().equals("environment-blocked") || result.macosStatus().equals("resolved"));
         assertEquals("environment-blocked", result.metalStatus());

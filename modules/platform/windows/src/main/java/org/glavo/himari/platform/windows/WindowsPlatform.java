@@ -162,13 +162,42 @@ public final class WindowsPlatform implements PlatformSession<WindowsWindow>, Au
     public void pump() {
         eventLoop.checkOwnerThread();
         libraries.pumpThreadMessages();
+        consumeHostInput();
+        eventLoop.runUntilIdle();
+    }
+
+    /// Pumps until every HWND is closed or `WM_QUIT` arrives.
+    ///
+    /// After each drain this method blocks in `WaitMessage` when windows remain open. Callers must
+    /// close windows from `CLOSE_REQUESTED` handlers or post close work before the wait; otherwise
+    /// the call blocks until a thread message arrives.
+    public void pumpUntilClosed() {
+        eventLoop.checkOwnerThread();
+        while (!closed && openWindowCount() > 0) {
+            if (!libraries.pumpThreadMessages()) {
+                consumeHostInput();
+                eventLoop.runUntilIdle();
+                return;
+            }
+            consumeHostInput();
+            eventLoop.runUntilIdle();
+            if (closed || openWindowCount() == 0) {
+                return;
+            }
+            if (!libraries.waitForThreadMessage()) {
+                return;
+            }
+        }
+    }
+
+    /// Drains WndProc input and host geometry from every open window.
+    private void consumeHostInput() {
         for (WindowsWindow window : List.copyOf(windows.values())) {
             if (!window.isClosed()) {
                 window.consumeNativeInput();
                 publishHostGeometry(window);
             }
         }
-        eventLoop.runUntilIdle();
     }
 
     /// Returns the session libraries.

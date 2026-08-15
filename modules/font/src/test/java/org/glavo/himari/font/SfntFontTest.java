@@ -27,4 +27,26 @@ final class SfntFontTest {
         }
         assertTrue(covered > 0);
     }
+
+    /// Maps distinct Arabic presentation forms through the script sample font.
+    @Test
+    void mapsArabicPresentationForms() {
+        SfntFont font = ScriptSampleFont.create();
+        int nominal = font.glyphId('\u0628');
+        int isolated = font.glyphId('\uFE8F');
+        int initial = font.glyphId('\uFE91');
+        int medial = font.glyphId('\uFE92');
+        int finalForm = font.glyphId('\uFE90');
+        assertTrue(nominal > 0);
+        assertTrue(isolated > 0);
+        assertTrue(initial > 0);
+        assertTrue(medial > 0);
+        assertTrue(finalForm > 0);
+        assertTrue(isolated != nominal);
+        assertTrue(initial != medial);
+        assertTrue(medial != finalForm);
+        assertEquals(0, font.metrics(font.glyphId('\u064E')).advanceWidth());
+        assertTrue(font.glyphId('\uFB31') > 0);
+        assertTrue(font.glyphId('\uFB31') != font.glyphId('\u05D1'));
+    }
 }

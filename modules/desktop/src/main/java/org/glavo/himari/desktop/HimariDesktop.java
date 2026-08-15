@@ -16,6 +16,8 @@ public final class HimariDesktop {
     ///
     /// Recognized arguments are `--smoke` and an optional output directory. Smoke mode creates the
     /// host window, exercises the CounterApp tree, writes artifacts, and closes the session.
+    /// Without `--smoke`, Windows honors `CLOSE_REQUESTED` and pumps `WaitMessage` until every
+    /// HWND is closed.
     ///
     /// @param arguments the command-line arguments
     /// @throws Exception if the launch fails

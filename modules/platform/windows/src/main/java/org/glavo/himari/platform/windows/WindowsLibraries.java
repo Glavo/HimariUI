@@ -107,6 +107,13 @@ public final class WindowsLibraries implements AutoCloseable {
         return running;
     }
 
+    /// Blocks until a thread message is available.
+    ///
+    /// @return whether `WaitMessage` succeeded
+    public boolean waitForThreadMessage() {
+        return bindings.waitMessage() != 0;
+    }
+
     /// Reads the primary display from `GetSystemMetrics`.
     ///
     /// @param dpi the current window DPI used to convert physical pixels to logical bounds

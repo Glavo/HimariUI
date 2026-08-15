@@ -128,7 +128,7 @@ public final class BitmapSfntFont {
     /// @param y the min y
     /// @param width the width
     /// @param height the height
-    private static void writeSimpleRect(ByteArrayOutputStream output, int x, int y, int width, int height) {
+    static void writeSimpleRect(ByteArrayOutputStream output, int x, int y, int width, int height) {
         writeShorts(
                 output,
                 (short) 1,
@@ -263,7 +263,7 @@ public final class BitmapSfntFont {
     ///
     /// @param tables the tables
     /// @return the file
-    private static byte[] wrap(Map<String, byte[]> tables) {
+    static byte[] wrap(Map<String, byte[]> tables) {
         List<Map.Entry<String, byte[]>> ordered = new ArrayList<>(tables.entrySet());
         ordered.sort(Map.Entry.comparingByKey());
         int header = 12 + ordered.size() * 16;
@@ -343,7 +343,7 @@ public final class BitmapSfntFont {
     ///
     /// @param output the destination
     /// @param values the values
-    private static void writeShorts(ByteArrayOutputStream output, short... values) {
+    static void writeShorts(ByteArrayOutputStream output, short... values) {
         for (short value : values) {
             output.write((value >>> 8) & 0xFF);
             output.write(value & 0xFF);

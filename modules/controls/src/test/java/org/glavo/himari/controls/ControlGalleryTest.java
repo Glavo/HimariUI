@@ -1,5 +1,6 @@
 package org.glavo.himari.controls;
 
+import org.glavo.himari.platform.api.ImeSession;
 import org.glavo.himari.layout.Constraints;
 import org.glavo.himari.layout.LayoutTree;
 import org.glavo.himari.layout.input.KeyEvent;
@@ -120,6 +121,15 @@ final class ControlGalleryTest {
         assertEquals("!", field.rejectComposition());
         assertEquals("hao", field.text());
         assertEquals("!", field.lastRejected());
+        assertEquals(null, field.composition());
+        ImeSession ime = new ImeSession();
+        ime.setSurroundingText(field.text(), field.caret());
+        ime.updateComposition("!");
+        field.apply(ime);
+        assertEquals("!", field.composition());
+        assertEquals("!", ime.commit());
+        field.apply(ime);
+        assertEquals("hao!", field.text());
         assertEquals(null, field.composition());
     }
 

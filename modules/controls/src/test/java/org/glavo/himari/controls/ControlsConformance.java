@@ -1,5 +1,6 @@
 package org.glavo.himari.controls;
 
+import org.glavo.himari.platform.api.ImeSession;
 import org.glavo.himari.layout.Constraints;
 import org.glavo.himari.layout.LayoutTree;
 import org.glavo.himari.layout.input.KeyEvent;
@@ -78,6 +79,15 @@ public final class ControlsConformance {
                 || gallery.field().caret() != 2) {
             throw new IllegalStateException("Text-field selection or rejection failed");
         }
+        ImeSession ime = new ImeSession();
+        ime.setSurroundingText(gallery.field().text(), gallery.field().caret());
+        ime.updateComposition("z");
+        gallery.field().apply(ime);
+        ime.commit();
+        gallery.field().apply(ime);
+        if (!"abz".equals(gallery.field().text()) || gallery.field().composition() != null) {
+            throw new IllegalStateException("Text-field IME session apply failed");
+        }
         gallery.popup().show();
         if (!gallery.popup().isOpen() || gallery.theme().highContrast()) {
             throw new IllegalStateException("Popup or theme tokens were incorrect");
@@ -126,7 +136,7 @@ public final class ControlsConformance {
             throw new IllegalStateException("Control gallery outcomes were incorrect");
         }
         if (gallery.scroll().offset() != 16.0f || gallery.list().firstVisible() != 1
-                || !"ab".equals(gallery.field().text())) {
+                || !"abz".equals(gallery.field().text())) {
             throw new IllegalStateException("Scroll, list, or text-field outcomes were incorrect");
         }
         gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.DOWN, 24.0f, 60.0f), 0L);
@@ -169,9 +179,9 @@ public final class ControlsConformance {
         }
         SemanticsNode field = first(tree, SemanticsRole.TEXT_FIELD);
         if (field.textRange() == null
-                || field.textRange().start() != 2
-                || field.textRange().end() != 2
-                || field.textRange().caret() != 2
+                || field.textRange().start() != 3
+                || field.textRange().end() != 3
+                || field.textRange().caret() != 3
                 || first(tree, SemanticsRole.BUTTON).textRange() != null) {
             throw new IllegalStateException("Editor text range was not published");
         }
@@ -215,6 +225,7 @@ public final class ControlsConformance {
                           "gestureLongPress": true,
                           "listFirstVisible": %d,
                           "text": "%s",
+                          "imeSessionApplied": true,
                           "selectionRejected": true,
                           "textRangeStart": %d,
                           "textRangeEnd": %d,

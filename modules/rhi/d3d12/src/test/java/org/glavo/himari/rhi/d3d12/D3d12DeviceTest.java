@@ -22,6 +22,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @NotNullByDefault
 @EnabledOnOs(OS.WINDOWS)
 final class D3d12DeviceTest {
+    /// Returns a device from tryOpen when D3D12 is present.
+    @Test
+    void tryOpenReturnsDeviceWhenAdapterExists() {
+        D3d12Device device = D3d12Device.tryOpen();
+        if (device == null) {
+            throw new AssertionError("tryOpen returned null on a host that can open D3D12");
+        }
+        device.close();
+    }
+
     /// Creates a device and confirms the truthful SDR capability snapshot.
     @Test
     void queriesSdrRenderTargetSupport() {

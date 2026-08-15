@@ -21,6 +21,8 @@ import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.objc.ObjcBlockProbe;
 import org.glavo.himari.platform.api.LogicalRect;
 import org.glavo.himari.platform.api.WindowConfiguration;
+import org.glavo.himari.platform.api.WindowEvent;
+import org.glavo.himari.platform.api.WindowEventType;
 import org.glavo.himari.platform.api.WindowRequest;
 import org.glavo.himari.platform.api.WindowState;
 import org.glavo.himari.platform.macos.MacOSProbe;
@@ -69,8 +71,10 @@ public final class DesktopLaunch {
 
     /// Runs the desktop CounterApp and optionally writes artifacts.
     ///
-    /// On Windows a real HWND is created, pumped, presented, and closed when `smoke` is true. Other
-    /// hosts still execute the Headless CounterApp tree and record environment-blocked backend probes.
+    /// On Windows a real HWND is created, pumped, and presented. Smoke mode closes the session
+    /// before returning. Interactive mode honors `CLOSE_REQUESTED` and blocks in `WaitMessage` until
+    /// every HWND is closed. Other hosts still execute the Headless CounterApp tree and record
+    /// environment-blocked backend probes.
     ///
     /// @param smoke whether to close host windows before returning
     /// @param output the optional artifact directory
@@ -90,6 +94,7 @@ public final class DesktopLaunch {
         int presentedScanlines = 0;
         boolean d3d12Presented = false;
         boolean popupHosted = false;
+        boolean messageLoopRan = false;
         String inspectorJson;
         String label;
         MemorySegment png;
@@ -115,6 +120,7 @@ public final class DesktopLaunch {
             if (host == DesktopHost.WINDOWS) {
                 WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
                 try {
+                    WindowsWindow[] hosted = new WindowsWindow[2];
                     WindowsWindow primary = platform.createWindow(
                             WindowRequest.toplevel(new WindowConfiguration(
                                     "HimariUI",
@@ -122,8 +128,9 @@ public final class DesktopLaunch {
                                     true,
                                     WindowState.NORMAL
                             )),
-                            event -> { }
+                            event -> closeOnRequest(hosted, event)
                     ).toCompletableFuture().get();
+                    hosted[0] = primary;
                     WindowsWindow secondary = platform.createWindow(
                             WindowRequest.toplevel(new WindowConfiguration(
                                     "HimariUI-2",
@@ -131,8 +138,9 @@ public final class DesktopLaunch {
                                     true,
                                     WindowState.NORMAL
                             )),
-                            event -> { }
+                            event -> closeOnRequest(hosted, event)
                     ).toCompletableFuture().get();
+                    hosted[1] = secondary;
                     platform.pump();
                     primary.takePointerEvents();
                     secondary.takePointerEvents();
@@ -168,10 +176,7 @@ public final class DesktopLaunch {
                     MemorySegment rgba = surface.toSdrRgba();
                     presentedScanlines += primary.presentSdrRgba(rgba, WIDTH, HEIGHT);
                     presentedScanlines += secondary.presentSdrRgba(rgba, WIDTH, HEIGHT);
-                    try (D3d12Device d3d12 = D3d12Device.open()) {
-                        D3d12Presentation gpu = d3d12.presentSdrRgba(primary.nativeHandle(), rgba, WIDTH, HEIGHT);
-                        d3d12Presented = gpu.presented() && !gpu.hdrMetadataApplied();
-                    }
+                    d3d12Presented = presentD3d12(primary.nativeHandle(), rgba, WIDTH, HEIGHT);
                     platform.pump();
                     if (!new SceneEnvelope(SceneEnvelope.CURRENT_SCHEMA, WIDTH, HEIGHT, displayList)
                             .toCanonicalJson()
@@ -185,9 +190,12 @@ public final class DesktopLaunch {
                         primary.closeAsync().toCompletableFuture().get();
                         secondary.closeAsync().toCompletableFuture().get();
                         platform.pump();
+                    } else {
+                        platform.pumpUntilClosed();
+                        messageLoopRan = true;
                     }
                 } finally {
-                    if (smoke) {
+                    if (!platform.isClosed()) {
                         platform.close();
                     }
                 }
@@ -233,6 +241,7 @@ public final class DesktopLaunch {
                 presentedScanlines,
                 d3d12Presented,
                 popupHosted,
+                messageLoopRan,
                 wayland.status(),
                 macos.status(),
                 metal.status(),
@@ -246,6 +255,23 @@ public final class DesktopLaunch {
             Files.writeString(output.resolve("results.json"), result.toJson(), StandardCharsets.UTF_8);
         }
         return result;
+    }
+
+    /// Closes the matching hosted HWND when the host asks the application to decide.
+    ///
+    /// @param hosted the primary and secondary windows
+    /// @param event the host event
+    private static void closeOnRequest(WindowsWindow[] hosted, WindowEvent event) {
+        if (event.type() != WindowEventType.CLOSE_REQUESTED) {
+            return;
+        }
+        for (WindowsWindow candidate : hosted) {
+            if (candidate != null
+                    && !candidate.isClosed()
+                    && candidate.id().equals(event.snapshot().id())) {
+                candidate.closeAsync();
+            }
+        }
     }
 
     /// Posts one left-button click through WndProc and dispatches the drained events.
@@ -305,6 +331,28 @@ public final class DesktopLaunch {
             x += glyph.xAdvance() * (16.0f / font.unitsPerEm());
         }
         return new DisplayList(List.copyOf(ops));
+    }
+
+    /// Presents RGBA through D3D12 when a device is available.
+    ///
+    /// Missing adapters or present failures leave the GDI blit as the visible frame.
+    ///
+    /// @param hwnd the native window
+    /// @param rgba the software pixels
+    /// @param width the width
+    /// @param height the height
+    /// @return whether D3D12 presented without applying HDR metadata
+    static boolean presentD3d12(MemorySegment hwnd, MemorySegment rgba, int width, int height) {
+        @Nullable D3d12Device device = D3d12Device.tryOpen();
+        if (device == null) {
+            return false;
+        }
+        try (device) {
+            D3d12Presentation gpu = device.presentSdrRgba(hwnd, rgba, width, height);
+            return gpu.presented() && !gpu.hdrMetadataApplied();
+        } catch (RuntimeException ignored) {
+            return false;
+        }
     }
 
     /// Encodes floats as little-endian bytes.

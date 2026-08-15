@@ -1,5 +1,6 @@
 package org.glavo.himari.controls;
 
+import org.glavo.himari.platform.api.TextInputSession;
 import org.glavo.himari.layout.LayoutFactory;
 import org.glavo.himari.layout.LayoutModifier;
 import org.glavo.himari.layout.LayoutNode;
@@ -206,6 +207,34 @@ public final class TextArea {
         composition = null;
         selectionStart = text.length();
         selectionEnd = text.length();
+    }
+
+    /// Applies one IME session snapshot without letting the session write this editor.
+    ///
+    /// @param session the session
+    public void apply(TextInputSession session) {
+        Objects.requireNonNull(session, "session");
+        @Nullable String live = session.composition();
+        if (live != null) {
+            updateComposition(live);
+            return;
+        }
+        if (session.lastRejected() != null && composition != null) {
+            rejectComposition();
+            return;
+        }
+        String surrounding = session.surroundingText();
+        if (composition != null) {
+            composition = null;
+        }
+        if (!surrounding.equals(text)) {
+            undo.add(text);
+            redo.clear();
+            text = surrounding;
+        }
+        int caret = Math.min(Math.max(0, session.caret()), text.length());
+        selectionStart = caret;
+        selectionEnd = caret;
     }
 
     /// Builds the area leaf.

@@ -18,6 +18,7 @@ import java.util.Objects;
 /// @param presentedScanlines the GDI scanlines written into host windows
 /// @param d3d12Presented whether a software RGBA frame was copied through D3D12
 /// @param popupHosted whether an owner-relative popup HWND was created
+/// @param messageLoopRan whether interactive mode pumped until every HWND closed
 /// @param waylandStatus the Wayland probe status
 /// @param macosStatus the macOS probe status
 /// @param metalStatus the Metal probe status
@@ -36,6 +37,7 @@ public record DesktopLaunchResult(
         int presentedScanlines,
         boolean d3d12Presented,
         boolean popupHosted,
+        boolean messageLoopRan,
         String waylandStatus,
         String macosStatus,
         String metalStatus,
@@ -80,6 +82,7 @@ public record DesktopLaunchResult(
                   "presentedScanlines": %d,
                   "d3d12Presented": %s,
                   "popupHosted": %s,
+                  "messageLoopRan": %s,
                   "waylandStatus": "%s",
                   "macosStatus": "%s",
                   "metalStatus": "%s",
@@ -98,6 +101,7 @@ public record DesktopLaunchResult(
                 presentedScanlines,
                 d3d12Presented,
                 popupHosted,
+                messageLoopRan,
                 waylandStatus,
                 macosStatus,
                 metalStatus,

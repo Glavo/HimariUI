@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNullByDefault;
 
 /// Stores one default-shaped glyph.
 ///
-/// @param codePoint the source code point
+/// @param codePoint the mapped code point after Arabic or Hebrew presentation substitution
 /// @param glyphId the mapped glyph identity
 /// @param cluster the source cluster index
 /// @param xAdvance the advance in font units

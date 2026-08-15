@@ -144,6 +144,7 @@ public final class WindowsImeA11yConformance {
         boolean uiaToggleCom = false;
         boolean uiaRangeCom = false;
         boolean uiaLiveSetting = false;
+        boolean uiaTextCom = false;
         WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
         try {
             WindowsWindow window = platform.createWindow(
@@ -220,11 +221,25 @@ public final class WindowsImeA11yConformance {
                                 WindowsAutomationProvider.UIA_LIVE_SETTING_PROPERTY_ID
                         ) == WindowsAutomationProvider.LIVE_SETTING_POLITE;
             }
+            SemanticsNode fieldNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
+                    .findFirst()
+                    .orElseThrow();
+            try (WindowsAutomationProvider textProvider = window.automationProvider(fieldNode)) {
+                uiaTextCom = textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_PATTERN_ID)
+                        && textProvider.invokeDocumentRange()
+                        && textProvider.invokeSupportedTextSelection()
+                        == WindowsAutomationProvider.SUPPORTED_TEXT_SELECTION_SINGLE
+                        && "hello".equals(textProvider.invokeGetText(-1))
+                        && textProvider.invokeClone()
+                        && textProvider.invokeCompareSelf()
+                        && textProvider.invokeEnclosingElement();
+            }
             if (!textStoreLock || !textStoreGeometry || !documentAttached) {
                 throw new IllegalStateException("ITextStoreACP lock, geometry, or TSF document attach failed");
             }
-            if (!uiaInvoke || !uiaToggleCom || !uiaRangeCom || !uiaLiveSetting) {
-                throw new IllegalStateException("UIA Invoke/Toggle/Range/LiveSetting COM properties failed");
+            if (!uiaInvoke || !uiaToggleCom || !uiaRangeCom || !uiaLiveSetting || !uiaTextCom) {
+                throw new IllegalStateException("UIA Invoke/Toggle/Range/LiveSetting/Text COM properties failed");
             }
             window.closeAsync().toCompletableFuture().get();
             platform.pump();
@@ -258,6 +273,7 @@ public final class WindowsImeA11yConformance {
                           "uiaToggleCom": %s,
                           "uiaRangeCom": %s,
                           "uiaLiveSetting": %s,
+                          "uiaTextCom": %s,
                           "uiaTextRange": true,
                           "tsfThreadMgr": %s,
                           "textStoreAcp": %s,
@@ -272,6 +288,7 @@ public final class WindowsImeA11yConformance {
                         uiaToggleCom,
                         uiaRangeCom,
                         uiaLiveSetting,
+                        uiaTextCom,
                         tsfAvailable,
                         textStoreLock,
                         textStoreGeometry,
