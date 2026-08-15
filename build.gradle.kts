@@ -22,24 +22,45 @@ val junitLauncher = libs.junit.launcher
 val jetbrainsAnnotations = libs.jetbrains.annotations
 val productionModules = listOf(
     project(":modules:ffi"),
+    project(":modules:font"),
+    project(":modules:graphics"),
+    project(":modules:layout"),
     project(":modules:platform-api"),
     project(":modules:platform-headless"),
+    project(":modules:platform-windows"),
+    project(":modules:platform-wayland"),
+    project(":modules:platform-macos"),
+    project(":modules:controls"),
+    project(":modules:inspector"),
+    project(":modules:packaging"),
+    project(":modules:rhi-d3d12"),
+    project(":modules:rhi-vulkan"),
+    project(":modules:rhi-metal"),
+    project(":modules:objc"),
+    project(":modules:render-software"),
     project(":modules:runtime"),
     project(":modules:state"),
+    project(":modules:text"),
 )
 val toolModules = listOf(
     project(":tools:ffi-schema"),
+    project(":modules:samples:counter"),
 )
 val spikeModules = listOf(
     project(":spikes:abi-probe"),
     project(":spikes:d3d12"),
     project(":spikes:ffi-ffm"),
+    project(":spikes:macos"),
+    project(":spikes:metal"),
     project(":spikes:native-image-ffm"),
+    project(":spikes:objc-block"),
     project(":spikes:runtime-grouped"),
     project(":spikes:runtime-hybrid"),
     project(":spikes:runtime-decision"),
     project(":spikes:runtime-oneshot"),
     project(":spikes:runtime-sample"),
+    project(":spikes:vulkan"),
+    project(":spikes:wayland"),
     project(":spikes:win32"),
 )
 val guardedJavaModules = productionModules + toolModules + spikeModules

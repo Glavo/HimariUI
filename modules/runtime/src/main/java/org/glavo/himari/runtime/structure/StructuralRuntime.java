@@ -1,5 +1,15 @@
 package org.glavo.himari.runtime.structure;
 
+import org.glavo.himari.runtime.effect.EffectApplyResult;
+import org.glavo.himari.runtime.effect.EffectCallbacks;
+import org.glavo.himari.runtime.effect.EffectDependencies;
+import org.glavo.himari.runtime.effect.EffectHost;
+import org.glavo.himari.runtime.effect.EffectKey;
+import org.glavo.himari.runtime.mount.MountApplyResult;
+import org.glavo.himari.runtime.mount.MountedElementContent;
+import org.glavo.himari.runtime.mount.MountTree;
+import org.glavo.himari.runtime.trace.RuntimeTrace;
+import org.glavo.himari.runtime.trace.TraceEventKind;
 import org.glavo.himari.state.ReactiveObservation;
 import org.glavo.himari.state.ReactiveObserver;
 import org.glavo.himari.state.ReactiveOwner;
@@ -12,9 +22,11 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -67,6 +79,15 @@ public final class StructuralRuntime implements AutoCloseable {
 
     /// The current lifecycle status.
     private StructuralRuntimeStatus status = StructuralRuntimeStatus.ACTIVE;
+
+    /// The mounted-element and property-binding tree owned by this runtime.
+    private final MountTree mountTree;
+
+    /// The post-commit keyed-effect host owned by this runtime.
+    private final EffectHost effectHost;
+
+    /// The deterministic runtime trace owned by this runtime.
+    private final RuntimeTrace trace;
 
     /// The latest committed structural revision.
     private long revision;
@@ -132,6 +153,63 @@ public final class StructuralRuntime implements AutoCloseable {
         );
         root.content = checkedContent;
         committedStateEpoch = domain.epoch();
+        mountTree = new MountTree(domain);
+        effectHost = new EffectHost(domain);
+        trace = new RuntimeTrace();
+    }
+
+    /// Returns the mounted-element tree owned by this runtime.
+    ///
+    /// @return the mount tree
+    public MountTree mounts() {
+        checkOwnerThread();
+        return mountTree;
+    }
+
+    /// Returns the keyed-effect host owned by this runtime.
+    ///
+    /// @return the effect host
+    public EffectHost effects() {
+        checkOwnerThread();
+        return effectHost;
+    }
+
+    /// Returns the deterministic runtime trace owned by this runtime.
+    ///
+    /// @return the trace
+    public RuntimeTrace trace() {
+        checkOwnerThread();
+        return trace;
+    }
+
+    /// Applies invalidated mounted property bindings without rerunning structure.
+    ///
+    /// @return the apply result
+    public MountApplyResult applyMountedProperties() {
+        checkOperationEntry();
+        MountApplyResult result = mountTree.apply();
+        trace.record(
+                0L,
+                TraceEventKind.MOUNT_APPLY,
+                "root",
+                result.status().name() + ':' + result.changedBindingCount()
+        );
+        return result;
+    }
+
+    /// Applies declared keyed effects for the current state epoch.
+    ///
+    /// @return the apply result
+    public EffectApplyResult applyKeyedEffects() {
+        checkOperationEntry();
+        EffectApplyResult result = effectHost.apply();
+        trace.record(
+                0L,
+                TraceEventKind.EFFECT_APPLY,
+                "root",
+                result.status().name() + ':' + result.mountedCount() + '/' + result.updatedCount()
+        );
+        return result;
     }
 
     /// Executes every currently invalidated active structural group.
@@ -345,6 +423,8 @@ public final class StructuralRuntime implements AutoCloseable {
             disposeDirectMemories(root, cleanupFailures);
             detachManualDependencies(root);
             root.observer.clearDependencies();
+            effectHost.close();
+            mountTree.close();
             reactiveRootOwner.close();
             measureGroups.clear();
             boundaries.clear();
@@ -412,6 +492,48 @@ public final class StructuralRuntime implements AutoCloseable {
     /// Verifies that the caller is the state-domain owner thread.
     void checkOwnerThread() {
         domain.checkOwnerThread();
+    }
+
+    /// Collects every committed group identity, including retained dormant subtrees.
+    ///
+    /// @return the live group identities
+    private Set<Long> collectLiveGroupIds() {
+        LinkedHashSet<Long> ids = new LinkedHashSet<>();
+        collectLiveGroupIds(root, ids);
+        return Set.copyOf(ids);
+    }
+
+    /// Adds one group and its descendants to the live identity set.
+    ///
+    /// @param group the group
+    /// @param ids the accumulator
+    private static void collectLiveGroupIds(GroupNode group, Set<Long> ids) {
+        ids.add(group.id);
+        for (GroupNode child : group.activeChildren) {
+            collectLiveGroupIds(child, ids);
+        }
+        for (GroupNode child : group.dormantChildren) {
+            collectLiveGroupIds(child, ids);
+        }
+    }
+
+    /// Declares every active keyed effect for the next post-commit apply.
+    ///
+    /// @param group the root of the walk
+    private void publishActiveKeyedEffects(GroupNode group) {
+        if (!isActive(group)) {
+            return;
+        }
+        for (KeyedEffectDeclaration declaration : group.keyedEffects.values()) {
+            effectHost.declare(
+                    new EffectKey(group.ownerPath(), declaration.key),
+                    declaration.dependencies,
+                    declaration.callbacks
+            );
+        }
+        for (GroupNode child : group.activeChildren) {
+            publishActiveKeyedEffects(child);
+        }
     }
 
     /// Executes one normal update with an optional cooperative-cancellation flag.
@@ -614,6 +736,7 @@ public final class StructuralRuntime implements AutoCloseable {
 
     /// Runs one set of pairwise non-overlapping normal root drafts.
     private void runNormalAttempt(@Unmodifiable List<GroupNode> targets, AttemptContext context) {
+        mountTree.beginAttempt();
         for (GroupNode target : targets) {
             GroupDraft draft = GroupDraft.fromCommitted(target, context);
             context.rootDrafts.add(draft);
@@ -627,6 +750,7 @@ public final class StructuralRuntime implements AutoCloseable {
         if (group.kind != GroupKind.MEASURE || group.measureContent == null || group.measureKey == null) {
             throw new IllegalStateException("Committed materialization group is incomplete");
         }
+        mountTree.beginAttempt();
         GroupDraft draft = GroupDraft.fromCommitted(group, context);
         draft.materializing = true;
         context.rootDrafts.add(draft);
@@ -662,6 +786,10 @@ public final class StructuralRuntime implements AutoCloseable {
         }
         revision++;
         committedStateEpoch = context.stateEpoch;
+        mountTree.commitAttempt(collectLiveGroupIds());
+        publishActiveKeyedEffects(root);
+        effectHost.apply();
+        trace.record(0L, TraceEventKind.STRUCTURE_ATTEMPT, "root", "COMMITTED:" + revision);
 
         for (ProviderCell provider : plan.changedProviders.keySet()) {
             for (GroupNode consumer : List.copyOf(provider.consumers.keySet())) {
@@ -829,6 +957,7 @@ public final class StructuralRuntime implements AutoCloseable {
             effects.put(declaration.key, effect);
         }
         group.effects = effects;
+        group.keyedEffects = new LinkedHashMap<>(draft.keyedEffects);
 
         for (MemorySlot memory : group.memories) {
             if (!containsIdentity(draft.memories, memory)) {
@@ -910,6 +1039,7 @@ public final class StructuralRuntime implements AutoCloseable {
             AttemptContext context,
             @Nullable AttemptProblem problem
     ) {
+        mountTree.abortAttempt();
         for (ReactiveObservation observation : context.observations) {
             observation.close();
         }
@@ -1504,6 +1634,7 @@ public final class StructuralRuntime implements AutoCloseable {
 
         /// Executes one draft callback according to its group kind.
         private void executeDraft(GroupDraft draft) {
+            mountTree.visitGroup(draft.group.id);
             switch (draft.kind) {
                 case ROOT, NORMAL, BRANCH -> executeContent(draft, requireContent(draft), null);
                 case PROVIDER -> executeProvider(draft);
@@ -2117,6 +2248,31 @@ public final class StructuralRuntime implements AutoCloseable {
 
         /// {@inheritDoc}
         @Override
+        public void mount(String key, MountedElementContent content) {
+            checkCurrent();
+            mountTree.declare(draft.group.id, draft.group.ownerPath(), key, content);
+        }
+
+        /// {@inheritDoc}
+        @Override
+        public void keyedEffect(String key, EffectDependencies dependencies, EffectCallbacks callbacks) {
+            checkCurrent();
+            String checkedKey = StructuralContracts.requireName(key, "key");
+            if (draft.keyedEffects.containsKey(checkedKey)) {
+                throw composer.problem("duplicate-effect-key", draft, null);
+            }
+            draft.keyedEffects.put(
+                    checkedKey,
+                    new KeyedEffectDeclaration(
+                            checkedKey,
+                            Objects.requireNonNull(dependencies, "dependencies"),
+                            Objects.requireNonNull(callbacks, "callbacks")
+                    )
+            );
+        }
+
+        /// {@inheritDoc}
+        @Override
         public <T> T ambient(AmbientKey<T> key) {
             checkCurrent();
             return composer.ambient(draft, key);
@@ -2322,6 +2478,9 @@ public final class StructuralRuntime implements AutoCloseable {
         /// Direct active effects by local key.
         LinkedHashMap<String, OwnedEffect> effects = new LinkedHashMap<>();
 
+        /// Direct keyed post-commit effects by local key.
+        LinkedHashMap<String, KeyedEffectDeclaration> keyedEffects = new LinkedHashMap<>();
+
         /// Committed ambient dependencies.
         IdentityHashMap<ProviderCell, Boolean> ambientDependencies = new IdentityHashMap<>();
 
@@ -2423,6 +2582,9 @@ public final class StructuralRuntime implements AutoCloseable {
 
         /// Declared effects by local key.
         private final LinkedHashMap<String, EffectDeclaration> effects = new LinkedHashMap<>();
+
+        /// Declared keyed post-commit effects by local key.
+        private final LinkedHashMap<String, KeyedEffectDeclaration> keyedEffects = new LinkedHashMap<>();
 
         /// Draft ambient dependencies.
         private final IdentityHashMap<ProviderCell, Boolean> ambientDependencies = new IdentityHashMap<>();
@@ -2726,6 +2888,34 @@ public final class StructuralRuntime implements AutoCloseable {
         /// Returns the deterministic effect owner path.
         private String ownerPath() {
             return owner.ownerPath() + "#effect[" + key + ']';
+        }
+    }
+
+    /// Stores one keyed post-commit effect declaration.
+    @NotNullByDefault
+    private static final class KeyedEffectDeclaration {
+        /// The local effect key.
+        private final String key;
+
+        /// The comparable dependency identity.
+        private final EffectDependencies dependencies;
+
+        /// The lifecycle callbacks.
+        private final EffectCallbacks callbacks;
+
+        /// Creates one declaration.
+        ///
+        /// @param key the local key
+        /// @param dependencies the dependency identity
+        /// @param callbacks the callbacks
+        private KeyedEffectDeclaration(
+                String key,
+                EffectDependencies dependencies,
+                EffectCallbacks callbacks
+        ) {
+            this.key = key;
+            this.dependencies = dependencies;
+            this.callbacks = callbacks;
         }
     }
 

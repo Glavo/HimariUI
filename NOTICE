@@ -1,0 +1,6 @@
+HimariUI
+Copyright 2026 Glavo and contributors
+
+Licensed under the Apache License, Version 2.0.
+First-stable desktop artifacts contain no project-built native libraries.
+Native access uses generated FFM bindings to operating-system libraries only.

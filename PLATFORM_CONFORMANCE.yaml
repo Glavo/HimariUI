@@ -15,7 +15,7 @@
       "workPackage": "FFI-SCHEMA-001",
       "milestone": "M0",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "ffi-schema",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
@@ -34,7 +34,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m0-ffi-schema/schema.json", "build/conformance/m0-ffi-schema/report.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m0-ffi-schema/schema.json", "build/conformance/m0-ffi-schema/report.json"]
       },
       "waivers": []
     },
@@ -44,7 +44,7 @@
       "workPackage": "FFI-FFM-001",
       "milestone": "M0",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "ffi-runtime",
       "environments": [
         { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
@@ -69,7 +69,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m0-ffi-ffm/results.json", "build/conformance/m0-ffi-ffm/native-load.log"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m0-ffi-ffm/results.json", "build/conformance/m0-ffi-ffm/native-load.log"]
       },
       "waivers": []
     },
@@ -79,7 +79,7 @@
       "workPackage": "ABI-PROBE-001",
       "milestone": "M0",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "ffi-abi",
       "environments": [
         { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
@@ -103,7 +103,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m0-abi-probe/probe.json", "build/conformance/m0-abi-probe/comparison.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m0-abi-probe/probe.json", "build/conformance/m0-abi-probe/comparison.json"]
       },
       "waivers": []
     },
@@ -144,11 +144,12 @@
       "workPackage": "SPIKE-VK-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "passed",
       "owner": "rhi-vulkan",
       "environments": [
         { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
-        { "id": "linux-arm64-jvm", "os": "linux", "architecture": "arm64", "runtime": "jvm" }
+        { "id": "linux-arm64-jvm", "os": "linux", "architecture": "arm64", "runtime": "jvm" },
+        { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" }
       ],
       "commands": ["./gradlew -g .gradle-user-home :spikes:vulkan:conformance"],
       "fixtures": ["vulkan-device-v1", "vulkan-surface-formats-v1", "vulkan-sdr-clear-v1"],
@@ -165,7 +166,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m0-vulkan-surface/capabilities.json", "build/conformance/m0-vulkan-surface/validation.log", "build/conformance/m0-vulkan-surface/presentation.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m0-vulkan-surface/capabilities.json", "build/conformance/m0-vulkan-surface/validation.log", "build/conformance/m0-vulkan-surface/presentation.json"]
       },
       "waivers": []
     },
@@ -175,7 +176,7 @@
       "workPackage": "SPIKE-WIN-001",
       "milestone": "M0",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "platform-windows",
       "environments": [
         { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" },
@@ -196,7 +197,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m0-win32-window/events.json", "build/conformance/m0-win32-window/capabilities.json", "build/conformance/m0-win32-window/native-load.log"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m0-win32-window/events.json", "build/conformance/m0-win32-window/capabilities.json", "build/conformance/m0-win32-window/native-load.log"]
       },
       "waivers": []
     },
@@ -206,7 +207,7 @@
       "workPackage": "SPIKE-D3D12-001",
       "milestone": "M0",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "rhi-d3d12",
       "environments": [
         { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" },
@@ -226,7 +227,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m0-d3d12-surface/capabilities.json", "build/conformance/m0-d3d12-surface/debug-layer.log", "build/conformance/m0-d3d12-surface/presentation.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m0-d3d12-surface/capabilities.json", "build/conformance/m0-d3d12-surface/debug-layer.log", "build/conformance/m0-d3d12-surface/presentation.json"]
       },
       "waivers": []
     },
@@ -236,7 +237,7 @@
       "workPackage": "SPIKE-MAC-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "active",
       "owner": "platform-macos",
       "environments": [
         { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
@@ -266,7 +267,7 @@
       "workPackage": "SPIKE-METAL-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "active",
       "owner": "rhi-metal",
       "environments": [
         { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
@@ -296,7 +297,7 @@
       "workPackage": "SPIKE-OBJC-BLOCK-001",
       "milestone": "M0",
       "required": true,
-      "status": "planned",
+      "status": "active",
       "owner": "platform-macos-abi",
       "environments": [
         { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
@@ -327,7 +328,7 @@
       "workPackage": "NI-FFM-001",
       "milestone": "M0",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "native-image",
       "environments": [
         { "id": "linux-x86_64-native-image", "os": "linux", "architecture": "x86_64", "runtime": "native-image" },
@@ -352,7 +353,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m0-native-image-ffm/build.json", "build/conformance/m0-native-image-ffm/results.json", "build/conformance/m0-native-image-ffm/native-load.log"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m0-native-image-ffm/build.json", "build/conformance/m0-native-image-ffm/results.json", "build/conformance/m0-native-image-ffm/native-load.log"]
       },
       "waivers": []
     },
@@ -362,7 +363,7 @@
       "workPackage": "RUNTIME-SAMPLE-001",
       "milestone": "M1",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "runtime",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
@@ -401,7 +402,11 @@
           "build/conformance/m1-runtime-sample/rubric.json",
           "build/conformance/m1-runtime-sample/self-test-report.json"
         ],
-        "recordedArtifacts": []
+        "recordedArtifacts": [
+          "build/conformance/m1-runtime-sample/suite.json",
+          "build/conformance/m1-runtime-sample/rubric.json",
+          "build/conformance/m1-runtime-sample/self-test-report.json"
+        ]
       },
       "waivers": []
     },
@@ -411,7 +416,7 @@
       "workPackage": "RUNTIME-SPIKE-GROUPED-001",
       "milestone": "M1",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "runtime-grouped",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
@@ -446,7 +451,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m1-runtime-grouped/report.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m1-runtime-grouped/report.json"]
       },
       "waivers": []
     },
@@ -456,7 +461,7 @@
       "workPackage": "RUNTIME-SPIKE-ONESHOT-001",
       "milestone": "M1",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "runtime-oneshot",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
@@ -491,7 +496,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m1-runtime-oneshot/report.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m1-runtime-oneshot/report.json"]
       },
       "waivers": []
     },
@@ -501,7 +506,7 @@
       "workPackage": "RUNTIME-SPIKE-HYBRID-001",
       "milestone": "M1",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "runtime-hybrid",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
@@ -536,7 +541,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m1-runtime-hybrid/report.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m1-runtime-hybrid/report.json"]
       },
       "waivers": []
     },
@@ -546,7 +551,7 @@
       "workPackage": "RUNTIME-ADR-001",
       "milestone": "M1",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "runtime",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" },
@@ -588,7 +593,20 @@
           "build/conformance/m1-runtime-decision/native-image/oneshot-report.json",
           "build/conformance/m1-runtime-decision/native-image/hybrid-report.json"
         ],
-        "recordedArtifacts": []
+        "recordedArtifacts": [
+          "build/conformance/m1-runtime-decision/decision.json",
+          "build/conformance/m1-runtime-decision/decision.md",
+          "build/conformance/m1-runtime-decision/selection.properties",
+          "build/conformance/m1-runtime-decision/ceremony/manifest.properties",
+          "build/conformance/m1-runtime-decision/jvm-grouped/report.json",
+          "build/conformance/m1-runtime-decision/jvm-oneshot/report.json",
+          "build/conformance/m1-runtime-decision/jvm-hybrid/report.json",
+          "build/conformance/m1-runtime-decision/native-image/build.properties",
+          "build/conformance/m1-runtime-decision/native-image/results.properties",
+          "build/conformance/m1-runtime-decision/native-image/grouped-report.json",
+          "build/conformance/m1-runtime-decision/native-image/oneshot-report.json",
+          "build/conformance/m1-runtime-decision/native-image/hybrid-report.json"
+        ]
       },
       "waivers": []
     },
@@ -598,7 +616,7 @@
       "workPackage": "STRUCTURE-001",
       "milestone": "M1",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "runtime-structure",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
@@ -634,7 +652,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m1-structure/results.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m1-structure/results.json"]
       },
       "waivers": []
     },
@@ -644,7 +662,7 @@
       "workPackage": "HEADLESS-001",
       "milestone": "M1",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "platform-headless",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
@@ -665,7 +683,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m1-headless/results.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m1-headless/results.json"]
       },
       "waivers": []
     },
@@ -675,7 +693,7 @@
       "workPackage": "SCHED-001",
       "milestone": "M1",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "runtime-scheduler",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
@@ -696,7 +714,7 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m1-scheduler/results.json"],
-        "recordedArtifacts": []
+        "recordedArtifacts": ["build/conformance/m1-scheduler/results.json"]
       },
       "waivers": []
     },
@@ -706,7 +724,7 @@
       "workPackage": "ANIM-CORE-001",
       "milestone": "M1",
       "required": true,
-      "status": "active",
+      "status": "passed",
       "owner": "runtime-animation",
       "environments": [
         { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
@@ -739,6 +757,644 @@
       },
       "evidence": {
         "requiredArtifacts": ["build/conformance/m1-animation/results.json"],
+        "recordedArtifacts": ["build/conformance/m1-animation/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-mount",
+      "profileVersion": 1,
+      "workPackage": "MOUNT-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "passed",
+      "owner": "runtime-mount",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:runtime:mountConformance"],
+      "fixtures": [
+        "mount-independent-bindings-v1",
+        "mount-incremental-phase-apply-v1",
+        "mount-failed-apply-atomic-v1"
+      ],
+      "assertions": [
+        "Typed property bindings are independent reactive consumers and do not rerun their owning structural group.",
+        "A changed binding publishes only its declared earliest phase impact and required successors.",
+        "A failed property capture leaves previously committed model targets unchanged."
+      ],
+      "capabilityModes": [
+        "typed-property-bindings",
+        "phase-isolated-apply",
+        "failure-atomic-ui-commit"
+      ],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-mount/results.json"],
+        "recordedArtifacts": ["build/conformance/m1-mount/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-effect",
+      "profileVersion": 1,
+      "workPackage": "EFFECT-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "passed",
+      "owner": "runtime-effect",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:runtime:effectConformance"],
+      "fixtures": [
+        "effect-mount-after-commit-v1",
+        "effect-dependency-update-v1",
+        "effect-once-per-epoch-v1"
+      ],
+      "assertions": [
+        "Keyed effects mount only after a successful commit.",
+        "A changed dependency identity updates an existing effect instead of remounting it.",
+        "Each state-domain epoch applies a given effect declaration set at most once."
+      ],
+      "capabilityModes": [
+        "post-commit-mount",
+        "dependency-keyed-update",
+        "once-per-epoch-apply"
+      ],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-effect/results.json"],
+        "recordedArtifacts": ["build/conformance/m1-effect/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-runtime-mbt",
+      "profileVersion": 1,
+      "workPackage": "RUNTIME-MBT-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "passed",
+      "owner": "runtime-mbt",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:runtime:mbtConformance"],
+      "fixtures": ["runtime-mbt-randomized-sequences-v1"],
+      "assertions": [
+        "Randomized writes, branch flips, keyed reorders, and disposals match a recompute-everything reference evaluator after every step."
+      ],
+      "capabilityModes": ["model-based-differential"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 32 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-runtime-mbt/results.json"],
+        "recordedArtifacts": ["build/conformance/m1-runtime-mbt/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-trace",
+      "profileVersion": 1,
+      "workPackage": "TRACE-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "passed",
+      "owner": "runtime-trace",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:runtime:traceConformance"],
+      "fixtures": ["runtime-trace-canonical-v1"],
+      "assertions": [
+        "The runtime trace is pointer-free, canonically encoded, and round-trips through parse and replay."
+      ],
+      "capabilityModes": ["canonical-trace-v1"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-trace/results.json", "build/conformance/m1-trace/trace.json"],
+        "recordedArtifacts": ["build/conformance/m1-trace/results.json", "build/conformance/m1-trace/trace.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m1-sample",
+      "profileVersion": 1,
+      "workPackage": "SAMPLE-001",
+      "milestone": "M1",
+      "required": true,
+      "status": "passed",
+      "owner": "runtime-sample",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:runtime:sampleConformance"],
+      "fixtures": ["headless-counter-sample-v1"],
+      "assertions": [
+        "CounterApp increments through the selected structural runtime and independent mounted bindings without loading a native library."
+      ],
+      "capabilityModes": ["headless-counter"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 2 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m1-sample/counter.json", "build/conformance/m1-sample/trace.json"],
+        "recordedArtifacts": ["build/conformance/m1-sample/counter.json", "build/conformance/m1-sample/trace.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m2-layout",
+      "profileVersion": 1,
+      "workPackage": "LAYOUT-001",
+      "milestone": "M2",
+      "required": true,
+      "status": "passed",
+      "owner": "layout",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:layout:conformance"],
+      "fixtures": ["layout-single-measure-v1", "layout-bootstrap-counter-v1", "layout-semantics-bounds-v1"],
+      "assertions": [
+        "Each layout node is measured at most once per pass.",
+        "Injected pointer activation increments the bootstrap counter.",
+        "Semantics bounds match the last placement."
+      ],
+      "capabilityModes": ["constraints-down-sizes-up", "pointer-keyboard-routing", "semantics-snapshot"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m2-layout/results.json"],
+        "recordedArtifacts": ["build/conformance/m2-layout/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m3-software",
+      "profileVersion": 1,
+      "workPackage": "SW-001",
+      "milestone": "M3",
+      "required": true,
+      "status": "passed",
+      "owner": "render-software",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:render-software:conformance"],
+      "fixtures": ["software-rect-png-v1"],
+      "assertions": [
+        "The software renderer fills rectangles into an extended-linear surface and encodes a real SDR PNG."
+      ],
+      "capabilityModes": ["scalar-rect-fill", "sdr-png"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m3-software/results.json"],
+        "recordedArtifacts": ["build/conformance/m3-software/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m4-font",
+      "profileVersion": 1,
+      "workPackage": "FONT-001",
+      "milestone": "M4",
+      "required": true,
+      "status": "passed",
+      "owner": "font",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:font:conformance"],
+      "fixtures": ["sfnt-cmap-raster-v1"],
+      "assertions": [
+        "The SFNT reader maps Latin glyphs through cmap and the grayscale rasterizer produces coverage."
+      ],
+      "capabilityModes": ["sfnt-reader", "grayscale-glyph"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m4-font/results.json"],
+        "recordedArtifacts": ["build/conformance/m4-font/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "v0-counter",
+      "profileVersion": 1,
+      "workPackage": "SAMPLE-001",
+      "milestone": "M4",
+      "required": true,
+      "status": "passed",
+      "owner": "sample-v0",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:samples:counter:v0Sample"],
+      "fixtures": ["v0-counter-png-scene-v1"],
+      "assertions": [
+        "V0 CounterApp increments through structure, layout, injected pointer, SFNT text, and writes a PNG plus scene replay without native libraries."
+      ],
+      "capabilityModes": ["headless-v0"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 2 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 24 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/v0-counter/counter.png", "build/conformance/v0-counter/counter.extlin", "build/conformance/v0-counter/scene.json", "build/conformance/v0-counter/results.json"],
+        "recordedArtifacts": ["build/conformance/v0-counter/counter.png", "build/conformance/v0-counter/counter.extlin", "build/conformance/v0-counter/scene.json", "build/conformance/v0-counter/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m6-windows",
+      "profileVersion": 1,
+      "workPackage": "WIN-001",
+      "milestone": "M6",
+      "required": true,
+      "status": "passed",
+      "owner": "platform-windows",
+      "environments": [
+        { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:platform-windows:conformance"],
+      "fixtures": ["windows-window-lifecycle-v1"],
+      "assertions": [
+        "The production Windows backend opens, shows, and closes an HWND through generated FFM bindings.",
+        "Two HWNDs can be open at once; destroying one does not quit the session or its peer.",
+        "GetDpiForWindow and GetSystemMetrics publish a truthful scale factor and primary display size.",
+        "Posted pointer messages are delivered through the production WndProc as normalized events.",
+        "CF_UNICODETEXT clipboard writes and reads through generated User32 and Kernel32 bindings.",
+        "WM_ENTERSIZEMOVE starts a timer that drains scheduled UI work before WM_EXITSIZEMOVE.",
+        "RegisterDragDrop installs an IDropTarget whose Drop vtable entry records a drop.",
+        "Display topology reports SDR fallback without inventing HDR presentation."
+      ],
+      "capabilityModes": ["window-lifecycle", "sdr-fallback"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 268435456, "maxHandles": 128, "maxThreads": 16 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m6-windows/results.json"],
+        "recordedArtifacts": ["build/conformance/m6-windows/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m6-d3d12",
+      "profileVersion": 1,
+      "workPackage": "D3D12-001",
+      "milestone": "M6",
+      "required": true,
+      "status": "passed",
+      "owner": "rhi-d3d12",
+      "environments": [
+        { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:rhi-d3d12:conformance"],
+      "fixtures": ["d3d12-device-sdr-present-v1"],
+      "assertions": [
+        "Generated bindings create a D3D12 device and query R8G8B8A8 render-target support.",
+        "A flip-model SDR swapchain presents once to a production HWND without claiming HDR output.",
+        "CreateCommittedResource maps an upload buffer and a shader-visible CBV/SRV/UAV heap exists.",
+        "CopyBufferRegion copies an upload buffer through a default-heap resource and a readback buffer."
+      ],
+      "capabilityModes": ["d3d12-device", "swapchain-sdr-presentation"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.00392156862745098 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 536870912, "maxNativeBytes": 1073741824, "maxHandles": 256, "maxThreads": 16 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m6-d3d12/results.json", "build/conformance/m6-d3d12/capabilities.json", "build/conformance/m6-d3d12/presentation.json"],
+        "recordedArtifacts": ["build/conformance/m6-d3d12/results.json", "build/conformance/m6-d3d12/capabilities.json", "build/conformance/m6-d3d12/presentation.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m9-controls",
+      "profileVersion": 1,
+      "workPackage": "CTRL-001",
+      "milestone": "M9",
+      "required": true,
+      "status": "passed",
+      "owner": "controls",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:controls:conformance"],
+      "fixtures": ["controls-gallery-v1"],
+      "assertions": [
+        "Button, toggle, slider, scroll viewport, lazy-list, and text-field produce the declared keyboard and pointer outcomes.",
+        "Every control exposes semantics roles and actions without depending on a platform backend."
+      ],
+      "capabilityModes": ["unstyled-controls", "keyboard-activation"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m9-controls/results.json"],
+        "recordedArtifacts": ["build/conformance/m9-controls/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m9-windows-ime-a11y",
+      "profileVersion": 1,
+      "workPackage": "A11Y-CORE-001",
+      "milestone": "M9",
+      "required": true,
+      "status": "passed",
+      "owner": "platform-windows",
+      "environments": [
+        { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:platform-windows:imeA11yConformance"],
+      "fixtures": ["windows-ime-composition-v1", "windows-uia-projection-v1"],
+      "assertions": [
+        "The shipped IME session commits injected composition without writing application state itself.",
+        "WM_CHAR printable text is committed through the window-attached IME session.",
+        "The UIA projection exposes the increment control invoke action from the semantics snapshot.",
+        "Toggle selected and slider range values from the semantics snapshot appear as UIA patterns."
+      ],
+      "capabilityModes": ["ime-composition", "uia-projection"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m9-windows-ime-a11y/results.json"],
+        "recordedArtifacts": ["build/conformance/m9-windows-ime-a11y/results.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m10-inspector",
+      "profileVersion": 1,
+      "workPackage": "INSPECT-001",
+      "milestone": "M10",
+      "required": true,
+      "status": "passed",
+      "owner": "inspector",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:inspector:conformance"],
+      "fixtures": ["inspector-gallery-trace-v1"],
+      "assertions": [
+        "The inspector captures placed layout nodes, semantics roles, and a canonical runtime trace.",
+        "The captured document is pointer-free and the trace fragment round-trips through parse."
+      ],
+      "capabilityModes": ["tree-inspector", "trace-embed"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m10-inspector/results.json", "build/conformance/m10-inspector/inspector.json"],
+        "recordedArtifacts": ["build/conformance/m10-inspector/results.json", "build/conformance/m10-inspector/inspector.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m10-replay",
+      "profileVersion": 1,
+      "workPackage": "REPLAY-001",
+      "milestone": "M10",
+      "required": true,
+      "status": "passed",
+      "owner": "render-software",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:render-software:replayConformance"],
+      "fixtures": ["scene-replay-offline-v1"],
+      "assertions": [
+        "scene-replay rasters a canonical scene document onto a fresh software surface without ambient fonts.",
+        "Two replays of the same document produce bit-identical extended-linear pixels."
+      ],
+      "capabilityModes": ["offline-scene-replay"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 2 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m10-replay/results.json", "build/conformance/m10-replay/scene.json"],
+        "recordedArtifacts": ["build/conformance/m10-replay/results.json", "build/conformance/m10-replay/scene.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m11-packaging",
+      "profileVersion": 1,
+      "workPackage": "PACK-001",
+      "milestone": "M11",
+      "required": true,
+      "status": "passed",
+      "owner": "packaging",
+      "environments": [
+        { "id": "jdk25-any", "os": "any", "architecture": "any", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:packaging:conformance"],
+      "fixtures": ["packaging-bom-sbom-v1"],
+      "assertions": [
+        "BOM, SBOM, NOTICE, and Native Image backend registry name the first-stable desktop modules.",
+        "The documents claim no project-built native payload."
+      ],
+      "capabilityModes": ["bom", "sbom", "native-image-registry"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 120, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 0, "maxHandles": 16, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m11-packaging/results.json", "build/conformance/m11-packaging/bom.json", "build/conformance/m11-packaging/sbom.json", "build/conformance/m11-packaging/notice.txt", "build/conformance/m11-packaging/native-image-registry.json", "build/conformance/m11-packaging/diagnostics.json"],
+        "recordedArtifacts": ["build/conformance/m11-packaging/results.json", "build/conformance/m11-packaging/bom.json", "build/conformance/m11-packaging/sbom.json", "build/conformance/m11-packaging/notice.txt", "build/conformance/m11-packaging/native-image-registry.json", "build/conformance/m11-packaging/diagnostics.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m5-wayland",
+      "profileVersion": 1,
+      "workPackage": "WAYLAND-001",
+      "milestone": "M5",
+      "required": true,
+      "status": "active",
+      "owner": "platform-linux-wayland",
+      "environments": [
+        { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "linux-arm64-jvm", "os": "linux", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:platform-wayland:conformance"],
+      "fixtures": ["wayland-display-connect-v1"],
+      "assertions": [
+        "Generated FFM bindings connect to a Wayland compositor and disconnect without inventing HDR capability.",
+        "A non-Linux host records an environment block instead of claiming a compositor session."
+      ],
+      "capabilityModes": ["display-connect", "sdr-fallback"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 268435456, "maxHandles": 64, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m5-wayland/results.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m5-vulkan",
+      "profileVersion": 1,
+      "workPackage": "VULKAN-001",
+      "milestone": "M5",
+      "required": true,
+      "status": "passed",
+      "owner": "rhi-vulkan",
+      "environments": [
+        { "id": "linux-x86_64-jvm", "os": "linux", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "linux-arm64-jvm", "os": "linux", "architecture": "arm64", "runtime": "jvm" },
+        { "id": "windows-x86_64-jvm", "os": "windows", "architecture": "x86_64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:rhi-vulkan:conformance"],
+      "fixtures": ["vulkan-instance-enumerate-v1"],
+      "assertions": [
+        "Generated bindings create a Vulkan instance and enumerate physical devices without claiming HDR output.",
+        "A host without a Vulkan loader records an environment block."
+      ],
+      "capabilityModes": ["vulkan-instance", "sdr-fallback"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 536870912, "maxHandles": 128, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m5-vulkan/results.json", "build/conformance/m5-vulkan/capabilities.json"],
+        "recordedArtifacts": ["build/conformance/m5-vulkan/results.json", "build/conformance/m5-vulkan/capabilities.json"]
+      },
+      "waivers": []
+    },
+    {
+      "id": "m7-macos",
+      "profileVersion": 1,
+      "workPackage": "COCOA-001",
+      "milestone": "M7",
+      "required": true,
+      "status": "active",
+      "owner": "platform-macos",
+      "environments": [
+        { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "macos-arm64-jvm", "os": "macos", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:platform-macos:conformance"],
+      "fixtures": ["macos-objc-runtime-v1"],
+      "assertions": [
+        "Generated Objective-C bindings resolve NSObject and the alloc selector.",
+        "A non-macOS host records an environment block instead of claiming an NSWindow session."
+      ],
+      "capabilityModes": ["objc-runtime", "sdr-fallback"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 268435456, "maxHandles": 64, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m7-macos/results.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m7-metal",
+      "profileVersion": 1,
+      "workPackage": "METAL-001",
+      "milestone": "M7",
+      "required": true,
+      "status": "active",
+      "owner": "rhi-metal",
+      "environments": [
+        { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "macos-arm64-jvm", "os": "macos", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:rhi-metal:conformance"],
+      "fixtures": ["metal-default-device-v1"],
+      "assertions": [
+        "Generated bindings create and release the system-default Metal device without claiming EDR output.",
+        "A non-macOS host records an environment block."
+      ],
+      "capabilityModes": ["metal-device", "sdr-fallback"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 536870912, "maxHandles": 128, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m7-metal/results.json"],
+        "recordedArtifacts": []
+      },
+      "waivers": []
+    },
+    {
+      "id": "m7-objc-block",
+      "profileVersion": 1,
+      "workPackage": "OBJC-001",
+      "milestone": "M7",
+      "required": true,
+      "status": "active",
+      "owner": "platform-macos-abi",
+      "environments": [
+        { "id": "macos-x86_64-jvm", "os": "macos", "architecture": "x86_64", "runtime": "jvm" },
+        { "id": "macos-arm64-jvm", "os": "macos", "architecture": "arm64", "runtime": "jvm" }
+      ],
+      "commands": ["./gradlew -g .gradle-user-home :modules:objc:conformance"],
+      "fixtures": ["objc-block-layout-v1"],
+      "assertions": [
+        "The generated 64-bit block object layout matches the documented Apple ABI.",
+        "Production policy prefers block-free APIs; a non-macOS host records an environment block for symbol resolution."
+      ],
+      "capabilityModes": ["block-abi", "prefer-block-free-apis"],
+      "limits": {
+        "tolerances": { "numericAbsolute": 0.0, "numericRelative": 0.0, "imageMaxChannelDelta": 0.0 },
+        "durations": { "timeoutSeconds": 180, "soakSeconds": 0, "repetitions": 1 },
+        "budgets": { "maxHeapBytes": 268435456, "maxNativeBytes": 268435456, "maxHandles": 64, "maxThreads": 8 }
+      },
+      "evidence": {
+        "requiredArtifacts": ["build/conformance/m7-objc-block/results.json", "build/conformance/m7-objc-block/lifetime.json"],
         "recordedArtifacts": []
       },
       "waivers": []

@@ -1,0 +1,45 @@
+{
+  "$schema": "schema/ffi-schema.schema.json",
+  "schemaVersion": 1,
+  "namespace": "org.glavo.himari.rhi.metal.generated",
+  "library": "metal",
+  "target": {
+    "operatingSystem": "macos",
+    "architecture": "x86_64",
+    "byteOrder": "little_endian",
+    "addressSize": 8,
+    "addressAlignment": 8
+  },
+  "types": [
+    { "kind": "primitive", "name": "void", "primitiveKind": "void", "byteSize": 0, "alignment": 1, "signedness": "none", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "void_ptr", "pointee": "void", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "handle", "name": "mtl_device", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } }
+  ],
+  "callbacks": [],
+  "functions": [
+    {
+      "name": "mtlCreateSystemDefaultDevice",
+      "symbol": "MTLCreateSystemDefaultDevice",
+      "result": { "type": "mtl_device", "nullability": "nullable", "ownership": "owned" },
+      "parameters": [],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "cfRelease",
+      "symbol": "CFRelease",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "value", "type": "mtl_device", "direction": "in", "nullability": "non_null", "ownership": "transferred" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    }
+  ]
+}

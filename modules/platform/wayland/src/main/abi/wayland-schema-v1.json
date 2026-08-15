@@ -1,0 +1,76 @@
+{
+  "$schema": "schema/ffi-schema.schema.json",
+  "schemaVersion": 1,
+  "namespace": "org.glavo.himari.platform.wayland.generated",
+  "library": "wayland_client",
+  "target": {
+    "operatingSystem": "linux",
+    "architecture": "x86_64",
+    "byteOrder": "little_endian",
+    "addressSize": 8,
+    "addressAlignment": 8
+  },
+  "types": [
+    { "kind": "primitive", "name": "void", "primitiveKind": "void", "byteSize": 0, "alignment": 1, "signedness": "none", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "i32", "primitiveKind": "integer", "byteSize": 4, "alignment": 4, "signedness": "signed", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "u8", "primitiveKind": "integer", "byteSize": 1, "alignment": 1, "signedness": "unsigned", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "void_ptr", "pointee": "void", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "const_char_ptr", "pointee": "u8", "constant": true, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "handle", "name": "wl_display", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } }
+  ],
+  "callbacks": [],
+  "functions": [
+    {
+      "name": "wlDisplayConnect",
+      "symbol": "wl_display_connect",
+      "result": { "type": "wl_display", "nullability": "nullable", "ownership": "owned" },
+      "parameters": [
+        { "name": "name", "type": "const_char_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "wlDisplayDisconnect",
+      "symbol": "wl_display_disconnect",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "display", "type": "wl_display", "direction": "in", "nullability": "non_null", "ownership": "transferred" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "wlDisplayRoundtrip",
+      "symbol": "wl_display_roundtrip",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "display", "type": "wl_display", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "wlDisplayGetFd",
+      "symbol": "wl_display_get_fd",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "display", "type": "wl_display", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    }
+  ]
+}

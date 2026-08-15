@@ -1,0 +1,64 @@
+{
+  "$schema": "schema/ffi-schema.schema.json",
+  "schemaVersion": 1,
+  "namespace": "org.glavo.himari.objc.generated",
+  "library": "objc_block",
+  "target": {
+    "operatingSystem": "macos",
+    "architecture": "x86_64",
+    "byteOrder": "little_endian",
+    "addressSize": 8,
+    "addressAlignment": 8
+  },
+  "types": [
+    { "kind": "primitive", "name": "void", "primitiveKind": "void", "byteSize": 0, "alignment": 1, "signedness": "none", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "primitive", "name": "i32", "primitiveKind": "integer", "byteSize": 4, "alignment": 4, "signedness": "signed", "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "void_ptr", "pointee": "void", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "handle", "name": "objc_block", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    {
+      "kind": "aggregate",
+      "name": "block_layout",
+      "aggregateKind": "struct",
+      "byteSize": 32,
+      "alignment": 8,
+      "packing": 0,
+      "fields": [
+        { "name": "isa", "type": "void_ptr", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "reserved", "type": "i32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "invoke", "type": "void_ptr", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "descriptor", "type": "void_ptr", "byteOffset": 24, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    }
+  ],
+  "callbacks": [],
+  "functions": [
+    {
+      "name": "blockCopy",
+      "symbol": "_Block_copy",
+      "result": { "type": "objc_block", "nullability": "nullable", "ownership": "owned" },
+      "parameters": [
+        { "name": "block", "type": "objc_block", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "blockRelease",
+      "symbol": "_Block_release",
+      "result": { "type": "void", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "block", "type": "objc_block", "direction": "in", "nullability": "non_null", "ownership": "transferred" }
+      ],
+      "callingConvention": "system",
+      "variadicFrom": null,
+      "errorPolicy": "none",
+      "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    }
+  ]
+}

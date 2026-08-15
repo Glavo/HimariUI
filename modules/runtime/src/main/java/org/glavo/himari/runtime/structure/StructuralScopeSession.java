@@ -33,6 +33,16 @@ interface StructuralScopeSession {
     /// Declares one effect.
     void effect(String key, Runnable mount, Runnable cleanup);
 
+    /// Declares one mounted element with typed property bindings.
+    void mount(String key, org.glavo.himari.runtime.mount.MountedElementContent content);
+
+    /// Declares one keyed post-commit effect.
+    void keyedEffect(
+            String key,
+            org.glavo.himari.runtime.effect.EffectDependencies dependencies,
+            org.glavo.himari.runtime.effect.EffectCallbacks callbacks
+    );
+
     /// Reads one ambient value.
     <T> T ambient(AmbientKey<T> key);
 

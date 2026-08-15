@@ -6,5 +6,9 @@ module org.glavo.himari.runtime {
 
     exports org.glavo.himari.runtime;
     exports org.glavo.himari.runtime.animation;
+    exports org.glavo.himari.runtime.effect;
+    exports org.glavo.himari.runtime.mount;
+    exports org.glavo.himari.runtime.sample;
     exports org.glavo.himari.runtime.structure;
+    exports org.glavo.himari.runtime.trace;
 }

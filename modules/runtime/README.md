@@ -26,9 +26,14 @@ write outside every attempt invalidates only active readers. `BranchRetention.RE
 local memory and resources while hiding a branch, but detaches reactive and ambient edges and runs
 effect cleanup; reactivation recaptures dependencies and remounts effects.
 
-The structural `effect` operation is the minimal mount/cleanup primitive required to prove topology
-ownership and failure cleanup in M1. Dependency-keyed effect updates, asynchronous work, and the
-broader effect scheduling API remain in `EFFECT-001`.
+The structural `effect` operation remains the minimal mount/cleanup primitive. `keyedEffect`
+and `EffectHost` implement `EFFECT-001`: dependency-keyed update, at-most-once apply per epoch,
+asynchronous work cancellation, and child-before-parent cleanup after a successful commit.
+
+`scope.mount` and `MountTree` implement `MOUNT-001`. Typed property bindings are independent
+reactive consumers with declared phase impacts. `UiCommitTransaction` publishes topology and
+property targets atomically; `applyMountedProperties` incrementally applies only invalidated
+bindings.
 
 ## Boundaries, ambient values, and current measure
 

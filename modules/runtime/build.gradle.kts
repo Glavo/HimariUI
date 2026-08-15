@@ -17,6 +17,21 @@ val animationConformanceDirectory = rootProject.layout.buildDirectory.dir(
 val structureConformanceDirectory = rootProject.layout.buildDirectory.dir(
     "conformance/m1-structure",
 )
+val mountConformanceDirectory = rootProject.layout.buildDirectory.dir(
+    "conformance/m1-mount",
+)
+val effectConformanceDirectory = rootProject.layout.buildDirectory.dir(
+    "conformance/m1-effect",
+)
+val mbtConformanceDirectory = rootProject.layout.buildDirectory.dir(
+    "conformance/m1-runtime-mbt",
+)
+val traceConformanceDirectory = rootProject.layout.buildDirectory.dir(
+    "conformance/m1-trace",
+)
+val sampleConformanceDirectory = rootProject.layout.buildDirectory.dir(
+    "conformance/m1-sample",
+)
 
 tasks.register<JavaExec>("conformance") {
     group = "verification"
@@ -68,4 +83,54 @@ tasks.register<JavaExec>("structureConformance") {
     mainClass.set("org.glavo.himari.runtime.structure.RuntimeStructureConformance")
     args(structureConformanceDirectory.get().asFile.absolutePath)
     outputs.file(structureConformanceDirectory.map { it.file("results.json") })
+}
+
+tasks.register<JavaExec>("mountConformance") {
+    group = "verification"
+    description = "Runs the deterministic M1 mounted-property binding profile."
+    dependsOn("testClasses", "test", "pureJavaGuard")
+    classpath = sourceSets.named("test").get().runtimeClasspath
+    mainClass.set("org.glavo.himari.runtime.mount.RuntimeMountConformance")
+    args(mountConformanceDirectory.get().asFile.absolutePath)
+    outputs.file(mountConformanceDirectory.map { it.file("results.json") })
+}
+
+tasks.register<JavaExec>("effectConformance") {
+    group = "verification"
+    description = "Runs the deterministic M1 keyed-effect lifecycle profile."
+    dependsOn("testClasses", "test", "pureJavaGuard")
+    classpath = sourceSets.named("test").get().runtimeClasspath
+    mainClass.set("org.glavo.himari.runtime.effect.RuntimeEffectConformance")
+    args(effectConformanceDirectory.get().asFile.absolutePath)
+    outputs.file(effectConformanceDirectory.map { it.file("results.json") })
+}
+
+tasks.register<JavaExec>("mbtConformance") {
+    group = "verification"
+    description = "Runs the model-based structural and mount differential harness."
+    dependsOn("testClasses", "test", "pureJavaGuard")
+    classpath = sourceSets.named("test").get().runtimeClasspath
+    mainClass.set("org.glavo.himari.runtime.mbt.RuntimeModelBasedConformance")
+    args(mbtConformanceDirectory.get().asFile.absolutePath)
+    outputs.file(mbtConformanceDirectory.map { it.file("results.json") })
+}
+
+tasks.register<JavaExec>("traceConformance") {
+    group = "verification"
+    description = "Runs the deterministic M1 runtime-trace profile."
+    dependsOn("testClasses", "test", "pureJavaGuard")
+    classpath = sourceSets.named("test").get().runtimeClasspath
+    mainClass.set("org.glavo.himari.runtime.trace.RuntimeTraceConformance")
+    args(traceConformanceDirectory.get().asFile.absolutePath)
+    outputs.file(traceConformanceDirectory.map { it.file("results.json") })
+}
+
+tasks.register<JavaExec>("sampleConformance") {
+    group = "verification"
+    description = "Runs the deterministic Headless CounterApp sample."
+    dependsOn("testClasses", "test", "pureJavaGuard")
+    classpath = sourceSets.named("test").get().runtimeClasspath
+    mainClass.set("org.glavo.himari.runtime.sample.CounterApp")
+    args(sampleConformanceDirectory.get().asFile.absolutePath)
+    outputs.file(sampleConformanceDirectory.map { it.file("counter.json") })
 }

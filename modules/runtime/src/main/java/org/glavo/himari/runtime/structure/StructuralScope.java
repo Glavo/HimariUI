@@ -1,5 +1,8 @@
 package org.glavo.himari.runtime.structure;
 
+import org.glavo.himari.runtime.effect.EffectCallbacks;
+import org.glavo.himari.runtime.effect.EffectDependencies;
+import org.glavo.himari.runtime.mount.MountedElementContent;
 import org.jetbrains.annotations.NotNullByDefault;
 
 import java.util.Objects;
@@ -119,6 +122,33 @@ public final class StructuralScope {
     public void effect(String key, Runnable mount, Runnable cleanup) {
         checkActive();
         session.effect(key, mount, cleanup);
+    }
+
+    /// Declares one mounted element whose property bindings are independent reactive consumers.
+    ///
+    /// Binding reads do not become structural-group dependencies. Changing a bound source invalidates
+    /// only the binding and the phases declared by its impact.
+    ///
+    /// @param key the nonblank group-local mount key
+    /// @param content the binding declaration callback
+    public void mount(String key, MountedElementContent content) {
+        checkActive();
+        session.mount(key, content);
+    }
+
+    /// Declares one keyed effect that mounts or updates only after a successful structural commit.
+    ///
+    /// A changed dependency identity schedules [EffectCallbacks#onUpdate(EffectSession)] at most
+    /// once per apply.
+    /// Removing the key schedules cleanup. Lifecycle callbacks must not write application state
+    /// directly.
+    ///
+    /// @param key the nonblank group-local effect identity
+    /// @param dependencies the comparable dependency identity
+    /// @param callbacks the lifecycle callbacks
+    public void keyedEffect(String key, EffectDependencies dependencies, EffectCallbacks callbacks) {
+        checkActive();
+        session.keyedEffect(key, dependencies, callbacks);
     }
 
     /// Reads the nearest inherited value and records its structural dependency.
