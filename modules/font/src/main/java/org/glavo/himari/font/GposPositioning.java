@@ -11,8 +11,8 @@ import java.util.Arrays;
 ///
 /// Type-1 X-advance values are published through [`#singleAdjustment(int)`]. Type-7 Format-1
 /// two-glyph rules flatten into a pair map. Type-8 Format-1 rules with one lookahead glyph
-/// publish [`#chainAdjustment(int, int, int)`]. Type-8 rules may require one preceding
-/// backtrack glyph, matched by [`#chainAdjustment(int[], int, int)`]. Lookups with `IgnoreMarks` (`0x0008`) write
+/// publish [`#chainAdjustment(int, int, int)`]. Type-8 rules may require up to nine preceding
+/// backtrack glyphs, matched by [`#chainAdjustment(int[], int, int)`]. Lookups with `IgnoreMarks` (`0x0008`) write
 /// [`#skipPairAdjustment(int, int)`] and [`#skipChainAdjustment(int, int, int)`]. Lookups with
 /// a non-zero `MarkAttachmentType` (`0xFF00`) write the attach maps. Other formats are skipped.
 @NotNullByDefault
@@ -20,8 +20,8 @@ final class GposPositioning {
     /// Empty positioning.
     static final GposPositioning NONE = empty();
 
-    /// Shared empty three-slot backtrack walk.
-    private static final int[] EMPTY_BACKS = {0, 0, 0};
+    /// Shared empty nine-slot backtrack walk.
+    private static final int[] EMPTY_BACKS = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     /// Packed `(left << 16) | right` keys, sorted.
     private final int[] keys;
@@ -46,6 +46,15 @@ final class GposPositioning {
 
     /// Packed required preceding glyphs for type-8 rules, or `0` when unused.
     private final long[] chainBacks;
+
+    /// Fifth required preceding glyph for type-8 rules, or `0` when unused.
+    private final int[] chainFifths;
+
+    /// Seventh required preceding glyph for type-8 rules, or `0` when unused.
+    private final int[] chainSevenths;
+
+    /// Ninth required preceding glyph for type-8 rules, or `0` when unused.
+    private final int[] chainNinths;
 
     /// Packed `(mark << 16) | base` keys, sorted.
     private final int[] markKeys;
@@ -123,6 +132,9 @@ final class GposPositioning {
     /// @param chainLooks the adjacent chained lookahead glyphs
     /// @param chainDeltas the adjacent chained X-advance deltas
     /// @param chainBacks the required preceding glyphs, or `0`
+    /// @param chainFifths the fifth required preceding glyph, or `0`
+    /// @param chainSevenths the seventh required preceding glyph, or `0`
+    /// @param chainNinths the ninth required preceding glyph, or `0`
     /// @param markKeys the mark/base keys
     /// @param markXs the mark X offsets
     /// @param markYs the mark Y offsets
@@ -154,6 +166,9 @@ final class GposPositioning {
             int[] chainLooks,
             short[] chainDeltas,
             long[] chainBacks,
+            int[] chainFifths,
+            int[] chainSevenths,
+            int[] chainNinths,
             int[] markKeys,
             short[] markXs,
             short[] markYs,
@@ -185,6 +200,9 @@ final class GposPositioning {
         this.chainLooks = chainLooks;
         this.chainDeltas = chainDeltas;
         this.chainBacks = chainBacks;
+        this.chainFifths = chainFifths;
+        this.chainSevenths = chainSevenths;
+        this.chainNinths = chainNinths;
         this.markKeys = markKeys;
         this.markXs = markXs;
         this.markYs = markYs;
@@ -215,7 +233,7 @@ final class GposPositioning {
         short[] shorts = new short[0];
         long[] longs = new long[0];
         return new GposPositioning(
-                ints, shorts, ints, shorts, ints, ints, shorts, longs, ints, shorts, shorts, ints,
+                ints, shorts, ints, shorts, ints, ints, shorts, longs, ints, ints, ints, ints, shorts, shorts, ints,
                 ints, shorts, ints, ints, shorts, longs, ints, shorts, ints, ints, ints, shorts, ints, longs, ints,
                 GdefTable.NONE,
                 new FlaggedPair[0],
@@ -248,7 +266,10 @@ final class GposPositioning {
     /// @param lookahead the first lookahead glyph
     /// @return the signed delta, or `0`
     int chainAdjustment(int current, int next, int lookahead) {
-        return chainDelta(chainPairs, chainLooks, chainDeltas, chainBacks, current, next, lookahead, EMPTY_BACKS);
+        return chainDelta(
+                chainPairs, chainLooks, chainDeltas, chainBacks, chainFifths, chainSevenths, chainNinths,
+                current, next, lookahead, EMPTY_BACKS
+        );
     }
 
     /// Returns the `IgnoreMarks` pair X-advance for `(left, right)`.
@@ -272,6 +293,9 @@ final class GposPositioning {
                 skipChainLooks,
                 skipChainDeltas,
                 skipChainBacks,
+                new int[0],
+                new int[0],
+                new int[0],
                 current,
                 next,
                 lookahead,
@@ -337,7 +361,7 @@ final class GposPositioning {
     /// @param attachType the lookup high-byte class
     /// @param backNear the nearest kept preceding glyph, or `0`
     /// @param backMid the next kept preceding glyph, or `0`
-    /// @param backFar the farthest kept preceding glyph, or `0`
+    /// @param backFar the next kept preceding glyph, or `0`
     /// @return the signed delta, or `0`
     int attachChainAdjustment(
             int current,
@@ -348,6 +372,30 @@ final class GposPositioning {
             int backMid,
             int backFar
     ) {
+        return attachChainAdjustment(current, next, lookahead, attachType, backNear, backMid, backFar, 0);
+    }
+
+    /// Returns the `MarkAttachmentType` type-8 X-advance, honoring four backtrack glyphs.
+    ///
+    /// @param current the first input glyph
+    /// @param next the next non-skipped glyph
+    /// @param lookahead the following non-skipped glyph
+    /// @param attachType the lookup high-byte class
+    /// @param backNear the nearest kept preceding glyph, or `0`
+    /// @param backMid the next kept preceding glyph, or `0`
+    /// @param backFar the next kept preceding glyph, or `0`
+    /// @param backFarther the farthest kept preceding glyph, or `0`
+    /// @return the signed delta, or `0`
+    int attachChainAdjustment(
+            int current,
+            int next,
+            int lookahead,
+            int attachType,
+            int backNear,
+            int backMid,
+            int backFar,
+            int backFarther
+    ) {
         if (current < 0 || next < 0 || lookahead < 0 || current > 0xFFFF || next > 0xFFFF) {
             return 0;
         }
@@ -356,7 +404,7 @@ final class GposPositioning {
             if (attachChainPairs[index] == key
                     && attachChainLooks[index] == lookahead
                     && attachChainTypes[index] == attachType
-                    && backMatches(attachChainBacks[index], backNear, backMid, backFar)) {
+                    && backMatches(attachChainBacks[index], 0, 0, 0, 0, 0, backNear, backMid, backFar, backFarther, 0, 0, 0, 0, 0)) {
                 return attachChainDeltas[index];
             }
         }
@@ -423,6 +471,9 @@ final class GposPositioning {
                 chainLooks,
                 chainDeltas,
                 chainBacks,
+                chainFifths,
+                chainSevenths,
+                chainNinths,
                 current,
                 glyphIds[start + 1],
                 glyphIds[start + 2],
@@ -438,6 +489,9 @@ final class GposPositioning {
                     skipChainLooks,
                     skipChainDeltas,
                     skipChainBacks,
+                    new int[0],
+                    new int[0],
+                    new int[0],
                     current,
                     glyphIds[skippedNext],
                     glyphIds[skippedLook],
@@ -459,7 +513,8 @@ final class GposPositioning {
                         attachType,
                         attachedBacks[0],
                         attachedBacks[1],
-                        attachedBacks[2]
+                        attachedBacks[2],
+                        attachedBacks[3]
                 );
             }
         }
@@ -471,7 +526,8 @@ final class GposPositioning {
                 int[] flaggedBacks = keptBacks(glyphIds, start, rule.flag, rule.markSet);
                 if (flaggedBacks[0] != rule.back
                         || (rule.far != 0 && flaggedBacks[1] != rule.far)
-                        || (rule.farther != 0 && flaggedBacks[2] != rule.farther)) {
+                        || (rule.farther != 0 && flaggedBacks[2] != rule.farther)
+                        || (rule.farthest != 0 && flaggedBacks[3] != rule.farthest)) {
                     continue;
                 }
             }
@@ -501,13 +557,16 @@ final class GposPositioning {
 
     /// Linear-searches a chain map.
     ///
-    /// Packed backtrack words store nearest, next, and farthest preceding glyphs in 16-bit
+    /// Packed backtrack words store nearest through fourth preceding glyphs in 16-bit
     /// lanes. A zero lane is unused.
     private static int chainDelta(
             int[] pairs,
             int[] looks,
             short[] deltas,
             long[] backs,
+            int[] fifths,
+            int[] sevenths,
+            int[] ninths,
             int current,
             int next,
             int lookahead,
@@ -520,24 +579,55 @@ final class GposPositioning {
         int near = walked.length > 0 ? walked[0] : 0;
         int mid = walked.length > 1 ? walked[1] : 0;
         int far = walked.length > 2 ? walked[2] : 0;
+        int farther = walked.length > 3 ? walked[3] : 0;
+        int fifth = walked.length > 4 ? walked[4] : 0;
+        int sixth = walked.length > 5 ? walked[5] : 0;
+        int seventh = walked.length > 6 ? walked[6] : 0;
+        int eighth = walked.length > 7 ? walked[7] : 0;
+        int ninth = walked.length > 8 ? walked[8] : 0;
         for (int index = 0; index < pairs.length; index++) {
+            int packedTail = index < fifths.length ? fifths[index] : 0;
+            int requiredFifth = packedTail & 0xFFFF;
+            int requiredSixth = (packedTail >>> 16) & 0xFFFF;
+            int packedFar = index < sevenths.length ? sevenths[index] : 0;
+            int requiredSeventh = packedFar & 0xFFFF;
+            int requiredEighth = (packedFar >>> 16) & 0xFFFF;
+            int requiredNinth = index < ninths.length ? ninths[index] : 0;
             if (pairs[index] == key
                     && looks[index] == lookahead
-                    && backMatches(index < backs.length ? backs[index] : 0L, near, mid, far)) {
+                    && backMatches(
+                            index < backs.length ? backs[index] : 0L,
+                            requiredFifth,
+                            requiredSixth,
+                            requiredSeventh,
+                            requiredEighth,
+                            requiredNinth,
+                            near,
+                            mid,
+                            far,
+                            farther,
+                            fifth,
+                            sixth,
+                            seventh,
+                            eighth,
+                            ninth)) {
                 return deltas[index];
             }
         }
         return 0;
     }
 
-    /// Packs up to three backtrack glyphs. Index 0 is nearest.
-    private static long packBack(int near, int mid, int far) {
-        return (near & 0xFFFFL) | ((mid & 0xFFFFL) << 16) | ((far & 0xFFFFL) << 32);
+    /// Packs up to four backtrack glyphs. Index 0 is nearest.
+    private static long packBack(int near, int mid, int far, int farther) {
+        return (near & 0xFFFFL)
+                | ((mid & 0xFFFFL) << 16)
+                | ((far & 0xFFFFL) << 32)
+                | ((farther & 0xFFFFL) << 48);
     }
 
     /// Reads up to `max` backtrack glyph or class ids. Index 0 is nearest.
     ///
-    /// @return `{near, mid, far}`, or `null` when the count exceeds `max` or the table is truncated
+    /// @return `{near, mid, far, farther}`, or `null` when the count exceeds `max` or the table is truncated
     private static int @Nullable [] readBacktrackIds(ByteBuffer buffer, int max) {
         if (buffer.remaining() < 2) {
             return null;
@@ -546,7 +636,7 @@ final class GposPositioning {
         if (count > max) {
             return null;
         }
-        int[] ids = new int[3];
+        int[] ids = new int[9];
         for (int index = 0; index < count; index++) {
             if (buffer.remaining() < 2) {
                 return null;
@@ -557,26 +647,61 @@ final class GposPositioning {
     }
 
     /// Returns whether `packed` is unused or matches the walked preceding glyphs.
-    private static boolean backMatches(long packed, int backNear, int backMid, int backFar) {
+    private static boolean backMatches(
+            long packed,
+            int requiredFifth,
+            int requiredSixth,
+            int requiredSeventh,
+            int requiredEighth,
+            int requiredNinth,
+            int backNear,
+            int backMid,
+            int backFar,
+            int backFarther,
+            int backFifth,
+            int backSixth,
+            int backSeventh,
+            int backEighth,
+            int backNinth
+    ) {
         int requiredNear = (int) (packed & 0xFFFFL);
         int requiredMid = (int) ((packed >>> 16) & 0xFFFFL);
         int requiredFar = (int) ((packed >>> 32) & 0xFFFFL);
+        int requiredFarther = (int) ((packed >>> 48) & 0xFFFFL);
         if (requiredNear != 0 && requiredNear != backNear) {
             return false;
         }
         if (requiredMid != 0 && requiredMid != backMid) {
             return false;
         }
-        return requiredFar == 0 || requiredFar == backFar;
+        if (requiredFar != 0 && requiredFar != backFar) {
+            return false;
+        }
+        if (requiredFarther != 0 && requiredFarther != backFarther) {
+            return false;
+        }
+        if (requiredFifth != 0 && requiredFifth != backFifth) {
+            return false;
+        }
+        if (requiredSixth != 0 && requiredSixth != backSixth) {
+            return false;
+        }
+        if (requiredSeventh != 0 && requiredSeventh != backSeventh) {
+            return false;
+        }
+        if (requiredEighth != 0 && requiredEighth != backEighth) {
+            return false;
+        }
+        return requiredNinth == 0 || requiredNinth == backNinth;
     }
 
-    /// Walks at most three kept preceding glyphs under `lookupFlag`.
+    /// Walks at most nine kept preceding glyphs under `lookupFlag`.
     ///
-    /// @return `{near, mid, far}`, using `0` when a slot is missing
+    /// @return `{near, mid, far, farther, fifth, sixth, seventh, eighth, ninth}`, using `0` when a slot is missing
     private int[] keptBacks(int[] glyphIds, int start, int lookupFlag, int markSet) {
-        int[] ids = {0, 0, 0};
+        int[] ids = {0, 0, 0, 0, 0, 0, 0, 0, 0};
         int cursor = start - 1;
-        for (int slot = 0; slot < 3; slot++) {
+        for (int slot = 0; slot < 9; slot++) {
             int index = gdef.prevKeptIndex(glyphIds, cursor, lookupFlag, markSet);
             if (index < 0) {
                 break;
@@ -1248,7 +1373,7 @@ final class GposPositioning {
             }
             saved = buffer.position();
             buffer.position(rule);
-            int @Nullable [] backs = readBacktrackIds(buffer, 3);
+            int @Nullable [] backs = readBacktrackIds(buffer, 9);
             if (backs == null) {
                 buffer.position(saved);
                 continue;
@@ -1278,7 +1403,7 @@ final class GposPositioning {
             }
             int delta = lookupXAdvance(buffer, lookupOffsets[lookupIndex]);
             if (delta != 0) {
-                chains.put(first, second, lookahead, (short) delta, backs[0], backs[1], backs[2]);
+                chains.put(first, second, lookahead, (short) delta, backs[0], backs[1], backs[2], backs[3], backs[4], backs[5], backs[6], backs[7], backs[8]);
             }
         }
     }
@@ -1357,7 +1482,7 @@ final class GposPositioning {
             }
             saved = buffer.position();
             buffer.position(rule);
-            int @Nullable [] backClassesIds = readBacktrackIds(buffer, 3);
+            int @Nullable [] backClassesIds = readBacktrackIds(buffer, 9);
             if (backClassesIds == null) {
                 buffer.position(saved);
                 continue;
@@ -1392,16 +1517,45 @@ final class GposPositioning {
             int[] nearGlyphs = backClassesIds[0] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassesIds[0]);
             int[] midGlyphs = backClassesIds[1] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassesIds[1]);
             int[] farGlyphs = backClassesIds[2] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassesIds[2]);
-            for (int far : farGlyphs) {
-                for (int mid : midGlyphs) {
-                    for (int near : nearGlyphs) {
-                        for (int second : inputClasses.glyphsOf(secondClass)) {
-                            for (int look : lookClasses.glyphsOf(lookClass)) {
-                                chains.put(first, second, look, (short) delta, near, mid, far);
+            int[] fartherGlyphs = backClassesIds[3] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassesIds[3]);
+            int[] fifthGlyphs = backClassesIds[4] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassesIds[4]);
+            int[] sixthGlyphs = backClassesIds[5] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassesIds[5]);
+            int[] seventhGlyphs = backClassesIds[6] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassesIds[6]);
+            int[] eighthGlyphs = backClassesIds[7] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassesIds[7]);
+            for (int eighth : eighthGlyphs) {
+            for (int seventh : seventhGlyphs) {
+                for (int sixth : sixthGlyphs) {
+                    for (int fifth : fifthGlyphs) {
+                        for (int farther : fartherGlyphs) {
+                            for (int far : farGlyphs) {
+                                for (int mid : midGlyphs) {
+                                    for (int near : nearGlyphs) {
+                                        for (int second : inputClasses.glyphsOf(secondClass)) {
+                                            for (int look : lookClasses.glyphsOf(lookClass)) {
+                                                chains.put(
+                                                        first,
+                                                        second,
+                                                        look,
+                                                        (short) delta,
+                                                        near,
+                                                        mid,
+                                                        far,
+                                                        farther,
+                                                        fifth,
+                                                        sixth,
+                                                        seventh,
+                                                        eighth,
+                                                        0
+                                                );
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
+            }
             }
         }
     }
@@ -1420,7 +1574,12 @@ final class GposPositioning {
         int nearCoverage = 0;
         int midCoverage = 0;
         int farCoverage = 0;
-        if (backtrackCount > 3) {
+        int fartherCoverage = 0;
+        int fifthCoverage = 0;
+        int sixthCoverage = 0;
+        int seventhCoverage = 0;
+        int eighthCoverage = 0;
+        if (backtrackCount > 9) {
             return;
         }
         if (backtrackCount >= 1) {
@@ -1435,11 +1594,47 @@ final class GposPositioning {
             }
             midCoverage = offset + Short.toUnsignedInt(buffer.getShort());
         }
-        if (backtrackCount == 3) {
+        if (backtrackCount >= 3) {
             if (buffer.remaining() < 2) {
                 return;
             }
             farCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 4) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            fartherCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 5) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            fifthCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 6) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            sixthCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 7) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            seventhCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 8) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            eighthCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount == 9) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
         }
         if (buffer.remaining() < 2) {
             return;
@@ -1480,18 +1675,47 @@ final class GposPositioning {
         int[] nearGlyphs = nearCoverage == 0 ? new int[] {0} : readCoverageGlyphs(buffer, nearCoverage);
         int[] midGlyphs = midCoverage == 0 ? new int[] {0} : readCoverageGlyphs(buffer, midCoverage);
         int[] farGlyphs = farCoverage == 0 ? new int[] {0} : readCoverageGlyphs(buffer, farCoverage);
-        for (int far : farGlyphs) {
-            for (int mid : midGlyphs) {
-                for (int near : nearGlyphs) {
-                    for (int first : firsts) {
-                        for (int second : seconds) {
-                            for (int look : looks) {
-                                chains.put(first, second, look, (short) delta, near, mid, far);
+        int[] fartherGlyphs = fartherCoverage == 0 ? new int[] {0} : readCoverageGlyphs(buffer, fartherCoverage);
+        int[] fifthGlyphs = fifthCoverage == 0 ? new int[] {0} : readCoverageGlyphs(buffer, fifthCoverage);
+        int[] sixthGlyphs = sixthCoverage == 0 ? new int[] {0} : readCoverageGlyphs(buffer, sixthCoverage);
+        int[] seventhGlyphs = seventhCoverage == 0 ? new int[] {0} : readCoverageGlyphs(buffer, seventhCoverage);
+        int[] eighthGlyphs = eighthCoverage == 0 ? new int[] {0} : readCoverageGlyphs(buffer, eighthCoverage);
+        for (int eighth : eighthGlyphs) {
+        for (int seventh : seventhGlyphs) {
+            for (int sixth : sixthGlyphs) {
+                for (int fifth : fifthGlyphs) {
+                    for (int farther : fartherGlyphs) {
+                        for (int far : farGlyphs) {
+                            for (int mid : midGlyphs) {
+                                for (int near : nearGlyphs) {
+                                    for (int first : firsts) {
+                                        for (int second : seconds) {
+                                            for (int look : looks) {
+                                                chains.put(
+                                                        first,
+                                                        second,
+                                                        look,
+                                                        (short) delta,
+                                                        near,
+                                                        mid,
+                                                        far,
+                                                        farther,
+                                                        fifth,
+                                                        sixth,
+                                                        seventh,
+                                                        eighth,
+                                                        0
+                                                );
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+        }
         }
     }
 
@@ -2207,15 +2431,45 @@ final class GposPositioning {
         /// Packed required preceding glyphs, or `0`.
         private long[] backs = new long[8];
 
+        /// Fifth required preceding glyph, or `0`.
+        private int[] fifths = new int[8];
+
+        /// Seventh required preceding glyph, or `0`.
+        private int[] sevenths = new int[8];
+
+        /// Ninth required preceding glyph, or `0`.
+        private int[] ninths = new int[8];
+
         /// Count.
         private int count;
 
         /// Inserts a chain rule when the current/next/look/backtrack tuple is new.
-        private void put(int current, int next, int lookahead, short delta, int backNear, int backMid, int backFar) {
-            long packed = packBack(backNear, backMid, backFar);
+        private void put(
+                int current,
+                int next,
+                int lookahead,
+                short delta,
+                int backNear,
+                int backMid,
+                int backFar,
+                int backFarther,
+                int backFifth,
+                int backSixth,
+                int backSeventh,
+                int backEighth,
+                int backNinth
+        ) {
+            long packed = packBack(backNear, backMid, backFar, backFarther);
+            int packedTail = (backFifth & 0xFFFF) | ((backSixth & 0xFFFF) << 16);
+            int packedFar = (backSeventh & 0xFFFF) | ((backEighth & 0xFFFF) << 16);
             int key = (current << 16) | (next & 0xFFFF);
             for (int index = 0; index < count; index++) {
-                if (pairs[index] == key && looks[index] == lookahead && backs[index] == packed) {
+                if (pairs[index] == key
+                        && looks[index] == lookahead
+                        && backs[index] == packed
+                        && fifths[index] == packedTail
+                        && sevenths[index] == packedFar
+                        && ninths[index] == backNinth) {
                     return;
                 }
             }
@@ -2224,11 +2478,17 @@ final class GposPositioning {
                 looks = Arrays.copyOf(looks, looks.length * 2);
                 deltas = Arrays.copyOf(deltas, deltas.length * 2);
                 backs = Arrays.copyOf(backs, backs.length * 2);
+                fifths = Arrays.copyOf(fifths, fifths.length * 2);
+                sevenths = Arrays.copyOf(sevenths, sevenths.length * 2);
+                ninths = Arrays.copyOf(ninths, ninths.length * 2);
             }
             pairs[count] = key;
             looks[count] = lookahead;
             deltas[count] = delta;
             backs[count] = packed;
+            fifths[count] = packedTail;
+            sevenths[count] = packedFar;
+            ninths[count] = backNinth;
             count++;
         }
     }
@@ -2315,7 +2575,8 @@ final class GposPositioning {
     /// @param markSet the mark-filter set
     /// @param back the nearest required preceding glyph, or `0`
     /// @param far the next required preceding glyph, or `0`
-    /// @param farther the farthest required preceding glyph, or `0`
+    /// @param farther the next required preceding glyph, or `0`
+    /// @param farthest the farthest required preceding glyph, or `0`
     private record FlaggedChain(
             int current,
             int next,
@@ -2325,7 +2586,8 @@ final class GposPositioning {
             int markSet,
             int back,
             int far,
-            int farther
+            int farther,
+            int farthest
     ) {
     }
 
@@ -2391,7 +2653,8 @@ final class GposPositioning {
                         markSet,
                         (int) (packed & 0xFFFFL),
                         (int) ((packed >>> 16) & 0xFFFFL),
-                        (int) ((packed >>> 32) & 0xFFFFL)
+                        (int) ((packed >>> 32) & 0xFFFFL),
+                        (int) ((packed >>> 48) & 0xFFFFL)
                 ));
             }
         }
@@ -2465,6 +2728,9 @@ final class GposPositioning {
         int[] chainLooks = Arrays.copyOf(chains.looks, chains.count);
         short[] chainDeltas = Arrays.copyOf(chains.deltas, chains.count);
         long[] chainBacks = Arrays.copyOf(chains.backs, chains.count);
+        int[] chainFifths = Arrays.copyOf(chains.fifths, chains.count);
+        int[] chainSevenths = Arrays.copyOf(chains.sevenths, chains.count);
+        int[] chainNinths = Arrays.copyOf(chains.ninths, chains.count);
         int[] skipOrder = sortOrder(skipPairs.keys, skipPairs.count);
         int[] sortedSkipKeys = new int[skipPairs.count];
         short[] sortedSkipDeltas = new short[skipPairs.count];
@@ -2508,6 +2774,9 @@ final class GposPositioning {
                 chainLooks,
                 chainDeltas,
                 chainBacks,
+                chainFifths,
+                chainSevenths,
+                chainNinths,
                 sortedMarkKeys,
                 sortedXs,
                 sortedYs,

@@ -239,7 +239,15 @@ final class GsubSubstitutions {
                         skippedLookahead,
                         skippedLookahead
                 );
-                if (rule.backtrack != 0 || rule.backtrackFar != 0 || rule.backtrackFarther != 0) {
+                if (rule.backtrack != 0
+                        || rule.backtrackFar != 0
+                        || rule.backtrackFarther != 0
+                        || rule.backtrackFarthest != 0
+                        || rule.backtrackFifth != 0
+                        || rule.backtrackSixth != 0
+                        || rule.backtrackSeventh != 0
+                        || rule.backtrackEighth != 0
+                        || rule.backtrackNinth != 0) {
                     continue;
                 }
                 if (rule.current == current && rule.next == candidateNext && rule.lookahead == candidateLook) {
@@ -277,6 +285,12 @@ final class GsubSubstitutions {
                         rule.backtrack,
                         rule.backtrackFar,
                         rule.backtrackFarther,
+                        rule.backtrackFarthest,
+                        rule.backtrackFifth,
+                        rule.backtrackSixth,
+                        rule.backtrackSeventh,
+                        rule.backtrackEighth,
+                        rule.backtrackNinth,
                         rule.lookupFlag,
                         rule.markSet
                 )) {
@@ -307,10 +321,17 @@ final class GsubSubstitutions {
             int backNear,
             int backMid,
             int backFar,
+            int backFarther,
+            int backFifth,
+            int backSixth,
+            int backSeventh,
+            int backEighth,
+            int backNinth,
             int lookupFlag,
             int markSet
     ) {
-        if (backNear == 0 && backMid == 0 && backFar == 0) {
+        if (backNear == 0 && backMid == 0 && backFar == 0 && backFarther == 0
+                && backFifth == 0 && backSixth == 0 && backSeventh == 0 && backEighth == 0 && backNinth == 0) {
             return true;
         }
         if (backNear == 0) {
@@ -320,19 +341,69 @@ final class GsubSubstitutions {
         if (nearIndex < 0 || glyphIds[nearIndex] != backNear) {
             return false;
         }
-        if (backMid == 0 && backFar == 0) {
+        if (backMid == 0 && backFar == 0 && backFarther == 0 && backFifth == 0 && backSixth == 0
+                && backSeventh == 0 && backEighth == 0) {
             return true;
         }
         int midIndex = gdef.prevKeptIndex(glyphIds, nearIndex - 1, lookupFlag, markSet);
         if (backMid != 0 && (midIndex < 0 || glyphIds[midIndex] != backMid)) {
             return false;
         }
-        if (backFar == 0) {
+        if (backFar == 0 && backFarther == 0 && backFifth == 0 && backSixth == 0
+                && backSeventh == 0 && backEighth == 0) {
             return true;
         }
         int cursor = backMid == 0 ? nearIndex : midIndex;
         int farIndex = gdef.prevKeptIndex(glyphIds, cursor - 1, lookupFlag, markSet);
-        return farIndex >= 0 && glyphIds[farIndex] == backFar;
+        if (backFar != 0 && (farIndex < 0 || glyphIds[farIndex] != backFar)) {
+            return false;
+        }
+        if (backFarther == 0 && backFifth == 0 && backSixth == 0 && backSeventh == 0 && backEighth == 0) {
+            return true;
+        }
+        int fartherCursor = backFar == 0 ? cursor : farIndex;
+        int fartherIndex = gdef.prevKeptIndex(glyphIds, fartherCursor - 1, lookupFlag, markSet);
+        if (backFarther != 0 && (fartherIndex < 0 || glyphIds[fartherIndex] != backFarther)) {
+            return false;
+        }
+        if (backFifth == 0 && backSixth == 0 && backSeventh == 0 && backEighth == 0) {
+            return true;
+        }
+        int fifthCursor = backFarther == 0 ? fartherCursor : fartherIndex;
+        int fifthIndex = gdef.prevKeptIndex(glyphIds, fifthCursor - 1, lookupFlag, markSet);
+        if (backFifth != 0 && (fifthIndex < 0 || glyphIds[fifthIndex] != backFifth)) {
+            return false;
+        }
+        if (backSixth == 0 && backSeventh == 0 && backEighth == 0) {
+            return true;
+        }
+        int sixthCursor = backFifth == 0 ? fifthCursor : fifthIndex;
+        int sixthIndex = gdef.prevKeptIndex(glyphIds, sixthCursor - 1, lookupFlag, markSet);
+        if (backSixth != 0 && (sixthIndex < 0 || glyphIds[sixthIndex] != backSixth)) {
+            return false;
+        }
+        if (backSeventh == 0 && backEighth == 0) {
+            return true;
+        }
+        int seventhCursor = backSixth == 0 ? sixthCursor : sixthIndex;
+        int seventhIndex = gdef.prevKeptIndex(glyphIds, seventhCursor - 1, lookupFlag, markSet);
+        if (backSeventh != 0 && (seventhIndex < 0 || glyphIds[seventhIndex] != backSeventh)) {
+            return false;
+        }
+        if (backEighth == 0 && backNinth == 0) {
+            return true;
+        }
+        int eighthCursor = backSeventh == 0 ? seventhCursor : seventhIndex;
+        int eighthIndex = gdef.prevKeptIndex(glyphIds, eighthCursor - 1, lookupFlag, markSet);
+        if (backEighth != 0 && (eighthIndex < 0 || glyphIds[eighthIndex] != backEighth)) {
+            return false;
+        }
+        if (backNinth == 0) {
+            return true;
+        }
+        int ninthCursor = backEighth == 0 ? eighthCursor : eighthIndex;
+        int ninthIndex = gdef.prevKeptIndex(glyphIds, ninthCursor - 1, lookupFlag, markSet);
+        return ninthIndex >= 0 && glyphIds[ninthIndex] == backNinth;
     }
 
     /// Reads up to `max` backtrack glyph or class ids. Index 0 is nearest.
@@ -344,7 +415,7 @@ final class GsubSubstitutions {
         if (count > max) {
             return null;
         }
-        int[] ids = new int[3];
+        int[] ids = new int[9];
         for (int index = 0; index < count; index++) {
             if (buffer.remaining() < 2) {
                 return null;
@@ -423,7 +494,15 @@ final class GsubSubstitutions {
                 continue;
             }
             for (ReverseRule rule : feature.reverses) {
-                if (rule.backtrack != 0 || rule.backtrackFar != 0 || rule.backtrackFarther != 0) {
+                if (rule.backtrack != 0
+                        || rule.backtrackFar != 0
+                        || rule.backtrackFarther != 0
+                        || rule.backtrackFarthest != 0
+                        || rule.backtrackFifth != 0
+                        || rule.backtrackSixth != 0
+                        || rule.backtrackSeventh != 0
+                        || rule.backtrackEighth != 0
+                        || rule.backtrackNinth != 0) {
                     continue;
                 }
                 if (rule.current == current && rule.lookahead == lookahead) {
@@ -459,6 +538,12 @@ final class GsubSubstitutions {
                         rule.backtrack,
                         rule.backtrackFar,
                         rule.backtrackFarther,
+                        rule.backtrackFarthest,
+                        rule.backtrackFifth,
+                        rule.backtrackSixth,
+                        rule.backtrackSeventh,
+                        rule.backtrackEighth,
+                        rule.backtrackNinth,
                         rule.lookupFlag,
                         rule.markSet
                 )) {
@@ -1156,7 +1241,7 @@ final class GsubSubstitutions {
             buffer.position(saved);
             return null;
         }
-        int @Nullable [] backs = readBacktrackIds(buffer, 3);
+        int @Nullable [] backs = readBacktrackIds(buffer, 9);
         if (backs == null) {
             buffer.position(saved);
             return null;
@@ -1195,7 +1280,13 @@ final class GsubSubstitutions {
                 markSet,
                 backs[0],
                 backs[1],
-                backs[2]
+                backs[2],
+                backs[3],
+                backs[4],
+                backs[5],
+                backs[6],
+                backs[7],
+                backs[8]
         );
     }
 
@@ -1258,7 +1349,7 @@ final class GsubSubstitutions {
                 }
                 saved = buffer.position();
                 buffer.position(ruleOffset);
-                int @Nullable [] backClassIds = readBacktrackIds(buffer, 3);
+                int @Nullable [] backClassIds = readBacktrackIds(buffer, 9);
                 if (backClassIds == null) {
                     buffer.position(saved);
                     continue;
@@ -1290,27 +1381,45 @@ final class GsubSubstitutions {
                 int[] nearGlyphs = backClassIds[0] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassIds[0]);
                 int[] midGlyphs = backClassIds[1] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassIds[1]);
                 int[] farGlyphs = backClassIds[2] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassIds[2]);
-                for (int far : farGlyphs) {
-                    for (int mid : midGlyphs) {
-                        for (int near : nearGlyphs) {
-                            for (int second : inputClasses.glyphsOf(secondClass)) {
-                                for (int look : lookClasses.glyphsOf(lookClass)) {
-                                    if (written == rules.length) {
-                                        rules = Arrays.copyOf(rules, rules.length * 2);
+                int[] fartherGlyphs = backClassIds[3] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassIds[3]);
+                int[] fifthGlyphs = backClassIds[4] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassIds[4]);
+                int[] sixthGlyphs = backClassIds[5] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassIds[5]);
+                int[] seventhGlyphs = backClassIds[6] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassIds[6]);
+                for (int seventh : seventhGlyphs) {
+                    for (int sixth : sixthGlyphs) {
+                        for (int fifth : fifthGlyphs) {
+                            for (int farther : fartherGlyphs) {
+                                for (int far : farGlyphs) {
+                                    for (int mid : midGlyphs) {
+                                        for (int near : nearGlyphs) {
+                                            for (int second : inputClasses.glyphsOf(secondClass)) {
+                                                for (int look : lookClasses.glyphsOf(lookClass)) {
+                                                    if (written == rules.length) {
+                                                        rules = Arrays.copyOf(rules, rules.length * 2);
+                                                    }
+                                                    rules[written++] = new ChainRule(
+                                                            first,
+                                                            second,
+                                                            look,
+                                                            substitute,
+                                                            ignoreMarks,
+                                                            attachType,
+                                                            lookupFlag,
+                                                            markSet,
+                                                            near,
+                                                            mid,
+                                                            far,
+                                                            farther,
+                                                            fifth,
+                                                            sixth,
+                                                            seventh,
+                                                            0,
+                                                            0
+                                                    );
+                                                }
+                                            }
+                                        }
                                     }
-                                    rules[written++] = new ChainRule(
-                                            first,
-                                            second,
-                                            look,
-                                            substitute,
-                                            ignoreMarks,
-                                            attachType,
-                                            lookupFlag,
-                                            markSet,
-                                            near,
-                                            mid,
-                                            far
-                                    );
                                 }
                             }
                         }
@@ -1338,7 +1447,12 @@ final class GsubSubstitutions {
         int nearCoverage = 0;
         int midCoverage = 0;
         int farCoverage = 0;
-        if (backtrackCount > 3) {
+        int fartherCoverage = 0;
+        int fifthCoverage = 0;
+        int sixthCoverage = 0;
+        int seventhCoverage = 0;
+        int eighthCoverage = 0;
+        if (backtrackCount > 9) {
             return new ChainRule[0];
         }
         if (backtrackCount >= 1) {
@@ -1353,11 +1467,47 @@ final class GsubSubstitutions {
             }
             midCoverage = offset + Short.toUnsignedInt(buffer.getShort());
         }
-        if (backtrackCount == 3) {
+        if (backtrackCount >= 3) {
             if (buffer.remaining() < 2) {
                 return new ChainRule[0];
             }
             farCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 4) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            fartherCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 5) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            fifthCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 6) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            sixthCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 7) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            seventhCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 8) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            eighthCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount == 9) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
         }
         if (buffer.remaining() < 2) {
             return new ChainRule[0];
@@ -1394,10 +1544,16 @@ final class GsubSubstitutions {
         int[] nearGlyphs = nearCoverage == 0 ? new int[] {0} : coverageGlyphs(readCoverage(buffer, nearCoverage));
         int[] midGlyphs = midCoverage == 0 ? new int[] {0} : coverageGlyphs(readCoverage(buffer, midCoverage));
         int[] farGlyphs = farCoverage == 0 ? new int[] {0} : coverageGlyphs(readCoverage(buffer, farCoverage));
+        int[] fartherGlyphs = fartherCoverage == 0 ? new int[] {0} : coverageGlyphs(readCoverage(buffer, fartherCoverage));
+        int[] fifthGlyphs = fifthCoverage == 0 ? new int[] {0} : coverageGlyphs(readCoverage(buffer, fifthCoverage));
+        int[] sixthGlyphs = sixthCoverage == 0 ? new int[] {0} : coverageGlyphs(readCoverage(buffer, sixthCoverage));
+        int[] seventhGlyphs = seventhCoverage == 0 ? new int[] {0} : coverageGlyphs(readCoverage(buffer, seventhCoverage));
         ChainRule[] rules = new ChainRule[Math.max(
                 0,
                 firsts.size() * seconds.size() * looks.size()
                         * nearGlyphs.length * midGlyphs.length * farGlyphs.length
+                        * fartherGlyphs.length * fifthGlyphs.length * sixthGlyphs.length
+                        * seventhGlyphs.length
         )];
         int written = 0;
         for (int firstIndex = 0; firstIndex < firsts.size(); firstIndex++) {
@@ -1410,22 +1566,36 @@ final class GsubSubstitutions {
                     if (first < 0 || second < 0 || look < 0) {
                         continue;
                     }
-                    for (int far : farGlyphs) {
-                        for (int mid : midGlyphs) {
-                            for (int near : nearGlyphs) {
-                                rules[written++] = new ChainRule(
-                                        first,
-                                        second,
-                                        look,
-                                        substitute,
-                                        ignoreMarks,
-                                        attachType,
-                                        lookupFlag,
-                                        markSet,
-                                        near,
-                                        mid,
-                                        far
-                                );
+                    for (int seventh : seventhGlyphs) {
+                        for (int sixth : sixthGlyphs) {
+                            for (int fifth : fifthGlyphs) {
+                                for (int farther : fartherGlyphs) {
+                                    for (int far : farGlyphs) {
+                                        for (int mid : midGlyphs) {
+                                            for (int near : nearGlyphs) {
+                                                rules[written++] = new ChainRule(
+                                                        first,
+                                                        second,
+                                                        look,
+                                                        substitute,
+                                                        ignoreMarks,
+                                                        attachType,
+                                                        lookupFlag,
+                                                        markSet,
+                                                        near,
+                                                        mid,
+                                                        far,
+                                                        farther,
+                                                        fifth,
+                                                        sixth,
+                                                        seventh,
+                                                        0,
+                                                        0
+                                                );
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -1448,13 +1618,18 @@ final class GsubSubstitutions {
         }
         int coverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
         int backtrackCount = Short.toUnsignedInt(buffer.getShort());
-        if (backtrackCount > 3) {
+        if (backtrackCount > 9) {
             buffer.position(saved);
             return new ReverseRule[0];
         }
         int nearCoverageOffset = 0;
         int midCoverageOffset = 0;
         int farCoverageOffset = 0;
+        int fartherCoverageOffset = 0;
+        int fifthCoverageOffset = 0;
+        int sixthCoverageOffset = 0;
+        int seventhCoverageOffset = 0;
+        int eighthCoverageOffset = 0;
         if (backtrackCount >= 1) {
             if (buffer.remaining() < 2) {
                 buffer.position(saved);
@@ -1469,12 +1644,54 @@ final class GsubSubstitutions {
             }
             midCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
         }
-        if (backtrackCount == 3) {
+        if (backtrackCount >= 3) {
             if (buffer.remaining() < 2) {
                 buffer.position(saved);
                 return new ReverseRule[0];
             }
             farCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 4) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            fartherCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 5) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            fifthCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 6) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            sixthCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 7) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            seventhCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 8) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            eighthCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount == 9) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
         }
         int lookaheadCount = Short.toUnsignedInt(buffer.getShort());
         if (lookaheadCount != 1 || buffer.remaining() < 2) {
@@ -1497,6 +1714,8 @@ final class GsubSubstitutions {
         int backtrack = 0;
         int backtrackFar = 0;
         int backtrackFarther = 0;
+        int backtrackFarthest = 0;
+        int backtrackFifth = 0;
         if (nearCoverageOffset != 0) {
             backtrack = readCoverage(buffer, nearCoverageOffset).glyphAt(0);
         }
@@ -1505,6 +1724,24 @@ final class GsubSubstitutions {
         }
         if (farCoverageOffset != 0) {
             backtrackFarther = readCoverage(buffer, farCoverageOffset).glyphAt(0);
+        }
+        if (fartherCoverageOffset != 0) {
+            backtrackFarthest = readCoverage(buffer, fartherCoverageOffset).glyphAt(0);
+        }
+        if (fifthCoverageOffset != 0) {
+            backtrackFifth = readCoverage(buffer, fifthCoverageOffset).glyphAt(0);
+        }
+        int backtrackSixth = 0;
+        if (sixthCoverageOffset != 0) {
+            backtrackSixth = readCoverage(buffer, sixthCoverageOffset).glyphAt(0);
+        }
+        int backtrackSeventh = 0;
+        if (seventhCoverageOffset != 0) {
+            backtrackSeventh = readCoverage(buffer, seventhCoverageOffset).glyphAt(0);
+        }
+        int backtrackEighth = 0;
+        if (eighthCoverageOffset != 0) {
+            backtrackEighth = readCoverage(buffer, eighthCoverageOffset).glyphAt(0);
         }
         ReverseRule[] rules = new ReverseRule[glyphCount];
         int written = 0;
@@ -1521,7 +1758,13 @@ final class GsubSubstitutions {
                     markSet,
                     backtrack,
                     backtrackFar,
-                    backtrackFarther
+                    backtrackFarther,
+                    backtrackFarthest,
+                    backtrackFifth,
+                    backtrackSixth,
+                    backtrackSeventh,
+                    backtrackEighth,
+                    0
             );
         }
         buffer.position(saved);
@@ -1774,7 +2017,12 @@ final class GsubSubstitutions {
     /// @param markSet the `UseMarkFilteringSet` index, or `0`
     /// @param backtrack the nearest required preceding glyph, or `0` when unused
     /// @param backtrackFar the next required preceding glyph, or `0` when unused
-    /// @param backtrackFarther the farthest required preceding glyph, or `0` when unused
+    /// @param backtrackFarther the next required preceding glyph, or `0` when unused
+    /// @param backtrackFarthest the fourth required preceding glyph, or `0` when unused
+    /// @param backtrackFifth the fifth required preceding glyph, or `0` when unused
+    /// @param backtrackSixth the sixth required preceding glyph, or `0` when unused
+    /// @param backtrackSeventh the seventh required preceding glyph, or `0` when unused
+    /// @param backtrackEighth the eighth required preceding glyph, or `0` when unused
     private record ChainRule(
             int current,
             int next,
@@ -1786,7 +2034,13 @@ final class GsubSubstitutions {
             int markSet,
             int backtrack,
             int backtrackFar,
-            int backtrackFarther
+            int backtrackFarther,
+            int backtrackFarthest,
+            int backtrackFifth,
+            int backtrackSixth,
+            int backtrackSeventh,
+            int backtrackEighth,
+            int backtrackNinth
     ) {
     }
 
@@ -1799,7 +2053,12 @@ final class GsubSubstitutions {
     /// @param markSet the `UseMarkFilteringSet` index, or `0`
     /// @param backtrack the nearest required preceding glyph, or `0` when unused
     /// @param backtrackFar the next required preceding glyph, or `0` when unused
-    /// @param backtrackFarther the farthest required preceding glyph, or `0` when unused
+    /// @param backtrackFarther the next required preceding glyph, or `0` when unused
+    /// @param backtrackFarthest the fourth required preceding glyph, or `0` when unused
+    /// @param backtrackFifth the fifth required preceding glyph, or `0` when unused
+    /// @param backtrackSixth the sixth required preceding glyph, or `0` when unused
+    /// @param backtrackSeventh the seventh required preceding glyph, or `0` when unused
+    /// @param backtrackEighth the eighth required preceding glyph, or `0` when unused
     private record ReverseRule(
             int current,
             int lookahead,
@@ -1808,7 +2067,13 @@ final class GsubSubstitutions {
             int markSet,
             int backtrack,
             int backtrackFar,
-            int backtrackFarther
+            int backtrackFarther,
+            int backtrackFarthest,
+            int backtrackFifth,
+            int backtrackSixth,
+            int backtrackSeventh,
+            int backtrackEighth,
+            int backtrackNinth
     ) {
     }
 

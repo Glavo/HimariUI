@@ -95,11 +95,22 @@ public final class GaspTable {
     /// Returns whether vertical-only grid fitting is requested at `ppem`.
     ///
     /// First-stable honors this without a hinting VM by snapping the unhinted
-    /// outline bounding box to the destination pixel grid.
+    /// outline y-box to the destination pixel grid.
     ///
     /// @param ppem the destination pixels-per-em
     /// @return whether grid fitting is requested
     public boolean gridFits(int ppem) {
         return (flagsAt(ppem) & (GRIDFIT | SYMMETRIC_GRIDFIT)) != 0;
+    }
+
+    /// Returns whether symmetric grid fitting is requested at `ppem`.
+    ///
+    /// First-stable honors this without a hinting VM by snapping the unhinted
+    /// outline x-box to the destination pixel grid.
+    ///
+    /// @param ppem the destination pixels-per-em
+    /// @return whether symmetric grid fitting is requested
+    public boolean symmetricGridFits(int ppem) {
+        return (flagsAt(ppem) & SYMMETRIC_GRIDFIT) != 0;
     }
 }

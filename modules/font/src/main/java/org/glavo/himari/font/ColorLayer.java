@@ -8,8 +8,9 @@ import org.jetbrains.annotations.Nullable;
 /// @param glyphId the layer glyph
 /// @param paletteIndex the CPAL entry, or [`PaletteColor#FOREGROUND`]
 /// @param color the palette color, or `null` when the layer uses the foreground
+/// @param translateX the applied `PaintVarTranslate` X offset in font units after variation
 @NotNullByDefault
-public record ColorLayer(int glyphId, int paletteIndex, @Nullable PaletteColor color) {
+public record ColorLayer(int glyphId, int paletteIndex, @Nullable PaletteColor color, int translateX) {
     /// Validates the layer.
     public ColorLayer {
         if (glyphId < 0 || paletteIndex < 0 || paletteIndex > PaletteColor.FOREGROUND) {

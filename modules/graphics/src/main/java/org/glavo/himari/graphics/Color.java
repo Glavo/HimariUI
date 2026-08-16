@@ -167,6 +167,20 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
         );
     }
 
+    /// Converts extended-linear sRGB into CIE XYZ D65.
+    ///
+    /// @param red the linear red
+    /// @param green the linear green
+    /// @param blue the linear blue
+    /// @return `{X, Y, Z}`
+    static float[] extendedToXyzD65(float red, float green, float blue) {
+        return new float[] {
+            0.4123907993f * red + 0.3575843394f * green + 0.1804807884f * blue,
+            0.2126390059f * red + 0.7151686788f * green + 0.0721923154f * blue,
+            0.0193308187f * red + 0.1191947798f * green + 0.9505321522f * blue
+        };
+    }
+
     /// Decodes one BT.2020/BT.709 OETF component.
     ///
     /// @param encoded the encoded component

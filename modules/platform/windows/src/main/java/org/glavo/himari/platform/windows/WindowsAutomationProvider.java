@@ -16,11 +16,12 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
 
-/// Implements `IRawElementProviderSimple` plus Invoke, Toggle, RangeValue, ExpandCollapse,
-/// SelectionItem, Grid, Table, Scroll, and Text COM patterns.
+/// Implements `IRawElementProviderSimple` plus Invoke, Toggle, RangeValue, Value,
+/// ExpandCollapse, SelectionItem, Grid, Table, Scroll, ScrollItem, Window, and Text COM patterns.
 @SuppressWarnings("restricted")
 @NotNullByDefault
 public final class WindowsAutomationProvider implements AutoCloseable {
@@ -63,6 +64,15 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `IScrollProvider`.
     private static final UUID ISCROLL_PROVIDER = UUID.fromString("b38b8077-1fc3-42a5-8cae-d40c2215055a");
 
+    /// `IScrollItemProvider`.
+    private static final UUID ISCROLL_ITEM_PROVIDER = UUID.fromString("2360c714-4bf1-4b26-ba65-9b21316127eb");
+
+    /// `IValueProvider`.
+    private static final UUID IVALUE_PROVIDER = UUID.fromString("c7935180-6fb3-4201-b174-7df73adbf64a");
+
+    /// `IWindowProvider`.
+    private static final UUID IWINDOW_PROVIDER = UUID.fromString("987df77b-db06-4d77-8f8a-86a9c3bb90b9");
+
     /// `ITextProvider`.
     private static final UUID ITEXT_PROVIDER = UUID.fromString("3589c92c-63f3-4367-99bb-ada653b77cf2");
 
@@ -93,11 +103,17 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `UIA_InvokePatternId`.
     static final int UIA_INVOKE_PATTERN_ID = 10000;
 
+    /// `UIA_ValuePatternId`.
+    static final int UIA_VALUE_PATTERN_ID = 10002;
+
     /// `UIA_RangeValuePatternId`.
     static final int UIA_RANGE_VALUE_PATTERN_ID = 10003;
 
     /// `UIA_ScrollPatternId`.
     static final int UIA_SCROLL_PATTERN_ID = 10004;
+
+    /// `UIA_ScrollItemPatternId`.
+    static final int UIA_SCROLL_ITEM_PATTERN_ID = 10017;
 
     /// `UIA_ExpandCollapsePatternId`.
     static final int UIA_EXPAND_COLLAPSE_PATTERN_ID = 10005;
@@ -107,6 +123,9 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// `UIA_GridItemPatternId`.
     static final int UIA_GRID_ITEM_PATTERN_ID = 10007;
+
+    /// `UIA_WindowPatternId`.
+    static final int UIA_WINDOW_PATTERN_ID = 10009;
 
     /// `UIA_SelectionItemPatternId`.
     static final int UIA_SELECTION_ITEM_PATTERN_ID = 10010;
@@ -146,6 +165,15 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// `ToggleState_Indeterminate`.
     static final int TOGGLE_STATE_INDETERMINATE = 2;
+
+    /// `WindowVisualState_Normal`.
+    static final int WINDOW_VISUAL_STATE_NORMAL = 0;
+
+    /// `WindowVisualState_Maximized`.
+    static final int WINDOW_VISUAL_STATE_MAXIMIZED = 1;
+
+    /// `WindowInteractionState_ReadyForUserInteraction`.
+    static final int WINDOW_INTERACTION_READY = 2;
 
     /// `ExpandCollapseState_Collapsed`.
     static final int EXPAND_COLLAPSE_STATE_COLLAPSED = 0;
@@ -203,6 +231,15 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// Invoke provider COM object.
     private final MemorySegment invokeObject;
+
+    /// Scroll-item provider COM object.
+    private final MemorySegment scrollItemObject;
+
+    /// Value provider COM object.
+    private final MemorySegment valueObject;
+
+    /// Window provider COM object.
+    private final MemorySegment windowObject;
 
     /// Toggle provider COM object.
     private final MemorySegment toggleObject;
@@ -315,12 +352,26 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// Whether [`#scrollIntoView`] has been invoked.
     private boolean scrolledIntoView;
 
+    /// Number of `IScrollItemProvider::ScrollIntoView` invocations.
+    private int scrollItemCount;
+
+    /// Current `IValueProvider` string.
+    private String valueText;
+
+    /// Current `IWindowProvider` visual state.
+    private int windowVisualState;
+
+    /// Number of `IWindowProvider::Close` invocations.
+    private int windowCloseCount;
+
     /// Whether closed.
     private boolean closed;
 
     /// Creates one provider.
     private WindowsAutomationProvider(Win32FfmBindings bindings, SemanticsNode node) {
         this.node = node;
+        this.valueText = node.label();
+        this.windowVisualState = WINDOW_VISUAL_STATE_NORMAL;
         this.toggleState = initialToggleState(node);
         this.rangeValue = node.rangeValue() == null ? 0.0 : node.rangeValue();
         this.expandState = initialExpandState(node);
@@ -384,6 +435,45 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         invokeVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
         invokeVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
         invokeVtable.setAtIndex(ValueLayout.ADDRESS, 3L, bindings.createIinvokeProviderInvokeStub(this::invoke, failures, arena));
+        this.scrollItemObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment scrollItemVtable = arena.allocate(ValueLayout.ADDRESS, 4);
+        scrollItemObject.set(ValueLayout.ADDRESS, 0L, scrollItemVtable);
+        scrollItemVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryScrollItem, failures, arena));
+        scrollItemVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        scrollItemVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        scrollItemVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIscrollItemProviderScrollIntoViewStub(this::scrollItemIntoView, failures, arena)
+        );
+        this.valueObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment valueVtable = arena.allocate(ValueLayout.ADDRESS, 6);
+        valueObject.set(ValueLayout.ADDRESS, 0L, valueVtable);
+        valueVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryValue, failures, arena));
+        valueVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        valueVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        valueVtable.setAtIndex(ValueLayout.ADDRESS, 3L, bindings.createIvalueProviderSetValueStub(this::setValue, failures, arena));
+        valueVtable.setAtIndex(ValueLayout.ADDRESS, 4L, bindings.createIvalueProviderGetValueStub(this::getValue, failures, arena));
+        valueVtable.setAtIndex(ValueLayout.ADDRESS, 5L, bindings.createIvalueProviderGetIsReadOnlyStub(this::getValueReadOnly, failures, arena));
+        this.windowObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment windowVtable = arena.allocate(ValueLayout.ADDRESS, 12);
+        windowObject.set(ValueLayout.ADDRESS, 0L, windowVtable);
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryWindow, failures, arena));
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 3L, bindings.createIwindowProviderSetVisualStateStub(this::setVisualState, failures, arena));
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 4L, bindings.createIwindowProviderCloseStub(this::closeWindow, failures, arena));
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 5L, bindings.createIwindowProviderWaitForInputIdleStub(this::waitForInputIdle, failures, arena));
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 6L, bindings.createIwindowProviderGetCanMaximizeStub(this::getCanMaximize, failures, arena));
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 7L, bindings.createIwindowProviderGetCanMinimizeStub(this::getCanMinimize, failures, arena));
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 8L, bindings.createIwindowProviderGetIsModalStub(this::getIsModal, failures, arena));
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 9L, bindings.createIwindowProviderGetWindowVisualStateStub(this::getWindowVisualState, failures, arena));
+        windowVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                10L,
+                bindings.createIwindowProviderGetWindowInteractionStateStub(this::getWindowInteractionState, failures, arena)
+        );
+        windowVtable.setAtIndex(ValueLayout.ADDRESS, 11L, bindings.createIwindowProviderGetIsTopmostStub(this::getIsTopmost, failures, arena));
         this.toggleObject = arena.allocate(ValueLayout.ADDRESS);
         MemorySegment toggleVtable = arena.allocate(ValueLayout.ADDRESS, 5);
         toggleObject.set(ValueLayout.ADDRESS, 0L, toggleVtable);
@@ -738,6 +828,141 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 )
         );
         return invokeCount;
+    }
+
+    /// Invokes `IScrollItemProvider::ScrollIntoView` through the generated COM vtable.
+    ///
+    /// @return the invocation count after the call
+    public int invokeScrollItem() {
+        requireOpen();
+        requireSuccess(
+                "IScrollItemProvider::ScrollIntoView",
+                Win32FfmBindings.invokeIscrollItemProviderScrollIntoViewPointer(
+                        functionAt(scrollItemObject, 3),
+                        scrollItemObject
+                )
+        );
+        return scrollItemCount;
+    }
+
+    /// Invokes `IValueProvider::SetValue` through the generated COM vtable.
+    ///
+    /// @param value the new string
+    /// @return the stored string
+    public String setValue(String value) {
+        requireOpen();
+        Objects.requireNonNull(value, "value");
+        MemorySegment chars = arena.allocate((value.length() + 1L) * 2L);
+        byte[] utf16 = value.getBytes(StandardCharsets.UTF_16LE);
+        MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
+        requireSuccess(
+                "IValueProvider::SetValue",
+                Win32FfmBindings.invokeIvalueProviderSetValuePointer(
+                        functionAt(valueObject, 3),
+                        valueObject,
+                        chars
+                )
+        );
+        return valueText;
+    }
+
+    /// Reads `IValueProvider::get_Value` through the generated COM vtable.
+    ///
+    /// @return the stored string
+    public String value() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IValueProvider::get_Value",
+                Win32FfmBindings.invokeIvalueProviderGetValuePointer(
+                        functionAt(valueObject, 4),
+                        valueObject,
+                        result
+                )
+        );
+        MemorySegment chars = result.get(ValueLayout.ADDRESS, 0L);
+        if (chars.address() == 0L) {
+            return "";
+        }
+        if (chars.byteSize() == 0L) {
+            chars = chars.reinterpret(4096);
+        }
+        StringBuilder text = new StringBuilder();
+        int limit = Math.toIntExact(Math.min(2048L, chars.byteSize() / 2L));
+        for (int index = 0; index < limit; index++) {
+            char unit = chars.getAtIndex(ValueLayout.JAVA_CHAR, index);
+            if (unit == 0) {
+                break;
+            }
+            text.append(unit);
+        }
+        return text.toString();
+    }
+
+    /// Reads `IValueProvider::get_IsReadOnly` through the generated COM vtable.
+    ///
+    /// @return whether the value is read-only
+    public boolean valueReadOnly() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IValueProvider::get_IsReadOnly",
+                Win32FfmBindings.invokeIvalueProviderGetIsReadOnlyPointer(
+                        functionAt(valueObject, 5),
+                        valueObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Invokes `IWindowProvider::SetVisualState` through the generated COM vtable.
+    ///
+    /// @param state the visual state
+    /// @return the stored state
+    public int setWindowVisualState(int state) {
+        requireOpen();
+        requireSuccess(
+                "IWindowProvider::SetVisualState",
+                Win32FfmBindings.invokeIwindowProviderSetVisualStatePointer(
+                        functionAt(windowObject, 3),
+                        windowObject,
+                        state
+                )
+        );
+        return windowVisualState;
+    }
+
+    /// Invokes `IWindowProvider::Close` through the generated COM vtable.
+    ///
+    /// @return the close count
+    public int closeWindow() {
+        requireOpen();
+        requireSuccess(
+                "IWindowProvider::Close",
+                Win32FfmBindings.invokeIwindowProviderClosePointer(functionAt(windowObject, 4), windowObject)
+        );
+        return windowCloseCount;
+    }
+
+    /// Reads `IWindowProvider::get_CanMaximize` through the generated COM vtable.
+    ///
+    /// @return whether maximize is advertised
+    public boolean canMaximize() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IWindowProvider::get_CanMaximize",
+                Win32FfmBindings.invokeIwindowProviderGetCanMaximizePointer(
+                        functionAt(windowObject, 6),
+                        windowObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
     }
 
     /// Invokes `IToggleProvider::Toggle` through the generated COM vtable.
@@ -1726,6 +1951,21 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return query(interfaceId, result, ISCROLL_PROVIDER, scrollObject);
     }
 
+    /// Implements ScrollItem QI.
+    private int queryScrollItem(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ISCROLL_ITEM_PROVIDER, scrollItemObject);
+    }
+
+    /// Implements Value QI.
+    private int queryValue(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IVALUE_PROVIDER, valueObject);
+    }
+
+    /// Implements Window QI.
+    private int queryWindow(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IWINDOW_PROVIDER, windowObject);
+    }
+
     /// Implements Text QI.
     private int queryText(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
         return query(interfaceId, result, ITEXT_PROVIDER, textObject);
@@ -1789,6 +2029,14 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             selected = tableItemObject;
         } else if (patternId == UIA_SCROLL_PATTERN_ID && node.scroll() != null) {
             selected = scrollObject;
+        } else if (patternId == UIA_SCROLL_ITEM_PATTERN_ID
+                && node.actions().contains(SemanticsAction.SCROLL_INTO_VIEW)) {
+            selected = scrollItemObject;
+        } else if (patternId == UIA_VALUE_PATTERN_ID
+                && (node.role() == SemanticsRole.TEXT_FIELD || node.role() == SemanticsRole.TEXT_AREA)) {
+            selected = valueObject;
+        } else if (patternId == UIA_WINDOW_PATTERN_ID && node.role() == SemanticsRole.DIALOG) {
+            selected = windowObject;
         } else if (patternId == UIA_TEXT_PATTERN_ID && node.textRange() != null) {
             selected = textObject;
         }
@@ -1820,6 +2068,96 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     private int invoke(MemorySegment self) {
         invokeCount++;
         return S_OK;
+    }
+
+    /// Implements `IScrollItemProvider::ScrollIntoView`.
+    private int scrollItemIntoView(MemorySegment self) {
+        scrollItemCount++;
+        return S_OK;
+    }
+
+    /// Implements `IValueProvider::SetValue`.
+    private int setValue(MemorySegment self, MemorySegment value) {
+        if (value.address() == 0L) {
+            valueText = "";
+            return S_OK;
+        }
+        MemorySegment chars = value.reinterpret(256);
+        StringBuilder text = new StringBuilder();
+        int limit = 64;
+        for (int index = 0; index < limit; index++) {
+            char unit = chars.getAtIndex(ValueLayout.JAVA_CHAR, index);
+            if (unit == 0) {
+                break;
+            }
+            text.append(unit);
+        }
+        valueText = text.toString();
+        return S_OK;
+    }
+
+    /// Implements `IValueProvider::get_Value`.
+    private int getValue(MemorySegment self, MemorySegment result) {
+        if (result.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment chars = arena.allocate((valueText.length() + 1L) * 2L);
+        byte[] utf16 = valueText.getBytes(StandardCharsets.UTF_16LE);
+        MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
+        result.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, chars);
+        return S_OK;
+    }
+
+    /// Implements `IValueProvider::get_IsReadOnly`.
+    private int getValueReadOnly(MemorySegment self, MemorySegment state) {
+        return writeInt(state, 0);
+    }
+
+    /// Implements `IWindowProvider::SetVisualState`.
+    private int setVisualState(MemorySegment self, int state) {
+        windowVisualState = state;
+        return S_OK;
+    }
+
+    /// Implements `IWindowProvider::Close`.
+    private int closeWindow(MemorySegment self) {
+        windowCloseCount++;
+        return S_OK;
+    }
+
+    /// Implements `IWindowProvider::WaitForInputIdle`.
+    private int waitForInputIdle(MemorySegment self, int milliseconds, MemorySegment success) {
+        return writeInt(success, 1);
+    }
+
+    /// Implements `IWindowProvider::get_CanMaximize`.
+    private int getCanMaximize(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 1);
+    }
+
+    /// Implements `IWindowProvider::get_CanMinimize`.
+    private int getCanMinimize(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 1);
+    }
+
+    /// Implements `IWindowProvider::get_IsModal`.
+    private int getIsModal(MemorySegment self, MemorySegment value) {
+        return writeInt(value, node.role() == SemanticsRole.DIALOG ? 1 : 0);
+    }
+
+    /// Implements `IWindowProvider::get_WindowVisualState`.
+    private int getWindowVisualState(MemorySegment self, MemorySegment value) {
+        return writeInt(value, windowVisualState);
+    }
+
+    /// Implements `IWindowProvider::get_WindowInteractionState`.
+    private int getWindowInteractionState(MemorySegment self, MemorySegment value) {
+        return writeInt(value, WINDOW_INTERACTION_READY);
+    }
+
+    /// Implements `IWindowProvider::get_IsTopmost`.
+    private int getIsTopmost(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 0);
     }
 
     /// Implements `IToggleProvider::Toggle`.

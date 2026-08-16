@@ -338,6 +338,270 @@ public final class FontConformance {
         ) != GposChainTripleBacktrackSampleFont.CHAIN_DELTA) {
             throw new IllegalStateException("GPOS three-glyph chain backtrack leftover did not require FED");
         }
+        SfntFont translate = ColrV1TranslateSampleFont.create();
+        if (translate.colorLayers(ColrV1TranslateSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintTranslate leftover did not flatten");
+        }
+        SfntFont gradient = ColrV1GradientSampleFont.create();
+        if (gradient.colorLayers(ColrV1GradientSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintLinearGradient leftover did not flatten");
+        }
+        SfntFont colrGlyph = ColrV1ColrGlyphSampleFont.create();
+        if (colrGlyph.colorLayers(ColrV1ColrGlyphSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintColrGlyph leftover did not flatten");
+        }
+        SfntFont scale = ColrV1ScaleSampleFont.create();
+        if (scale.colorLayers(ColrV1ScaleSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintScale leftover did not flatten");
+        }
+        if (ColrV1RotateSampleFont.create().colorLayers(ColrV1RotateSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintRotate leftover did not flatten");
+        }
+        if (ColrV1TransformSampleFont.create().colorLayers(ColrV1TransformSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintTransform leftover did not flatten");
+        }
+        if (ColrV1RadialSampleFont.create().colorLayers(ColrV1RadialSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintRadialGradient leftover did not flatten");
+        }
+        if (ColrV1SweepSampleFont.create().colorLayers(ColrV1SweepSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintSweepGradient leftover did not flatten");
+        }
+        if (ColrV1CompositeSampleFont.create().colorLayers(ColrV1CompositeSampleFont.GLYPH_BASE).size() != 2) {
+            throw new IllegalStateException("COLR v1 PaintComposite leftover did not flatten two layers");
+        }
+        SfntFont varSolid = ColrV1VarSolidSampleFont.create();
+        if (ColrV1VarTranslateSampleFont.create().colorLayers(ColrV1VarTranslateSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintVarTranslate leftover did not flatten");
+        }
+        if (ColrV1VarScaleSampleFont.create().colorLayers(ColrV1VarScaleSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintVarScale leftover did not flatten");
+        }
+        if (ColrV1VarRotateSampleFont.create().colorLayers(ColrV1VarRotateSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintVarRotate leftover did not flatten");
+        }
+        if (ColrV1VarTransformSampleFont.create().colorLayers(ColrV1VarTransformSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintVarTransform leftover did not flatten");
+        }
+        if (ColrV1VarTranslateDeltaSampleFont.create()
+                        .colorLayers(
+                                ColrV1VarTranslateDeltaSampleFont.GLYPH_BASE,
+                                0,
+                                new float[] {ColrV1VarTranslateDeltaSampleFont.MAX_WEIGHT})
+                        .getFirst()
+                        .translateX()
+                != ColrV1VarTranslateDeltaSampleFont.BASE_TRANSLATE_X
+                        + ColrV1VarTranslateDeltaSampleFont.TRANSLATE_DELTA) {
+            throw new IllegalStateException("COLR v1 PaintVarTranslate leftover did not apply the store delta");
+        }
+        if (ColrV1VarLinearSampleFont.create().colorLayers(ColrV1VarLinearSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintVarLinearGradient leftover did not flatten");
+        }
+        if (ColrV1VarRadialSampleFont.create().colorLayers(ColrV1VarRadialSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintVarRadialGradient leftover did not flatten");
+        }
+        if (ColrV1VarSweepSampleFont.create().colorLayers(ColrV1VarSweepSampleFont.GLYPH_BASE).size() != 1) {
+            throw new IllegalStateException("COLR v1 PaintVarSweepGradient leftover did not flatten");
+        }
+        SfntFont varLinearDelta = ColrV1VarLinearDeltaSampleFont.create();
+        if (varLinearDelta.colorLayers(ColrV1VarLinearDeltaSampleFont.GLYPH_BASE).getFirst().paletteIndex() != 0
+                || varLinearDelta.colorLayers(
+                                ColrV1VarLinearDeltaSampleFont.GLYPH_BASE,
+                                0,
+                                new float[] {ColrV1VarLinearDeltaSampleFont.MAX_WEIGHT})
+                        .getFirst()
+                        .paletteIndex()
+                        != 1) {
+            throw new IllegalStateException("COLR v1 VarColorLine leftover did not apply the store delta");
+        }
+        if (varSolid.colorLayers(ColrV1VarSolidSampleFont.GLYPH_BASE).getFirst().paletteIndex() != 0
+                || varSolid.colorLayers(
+                                ColrV1VarSolidSampleFont.GLYPH_BASE,
+                                0,
+                                new float[] {ColrV1VarSolidSampleFont.MAX_WEIGHT})
+                        .getFirst()
+                        .paletteIndex()
+                        != 1) {
+            throw new IllegalStateException("COLR v1 PaintVarSolid leftover did not apply the store delta");
+        }
+        SfntFont symmetric = GaspSymmetricGridFitSampleFont.create();
+        if (!symmetric.gaspSymmetricGridFits(GaspSymmetricGridFitSampleFont.GRID_PPEM)
+                || GlyphRasterizer.rasterize(
+                                symmetric,
+                                GaspSymmetricGridFitSampleFont.GLYPH_A,
+                                GaspSymmetricGridFitSampleFont.GRID_PPEM)
+                        .width()
+                        != 10) {
+            throw new IllegalStateException("gasp SYMMETRIC_GRIDFIT leftover did not snap the outline x-box");
+        }
+        SfntFont quad = GposChainQuadBacktrackSampleFont.create();
+        if (quad.chainAdjustment(
+                new int[] {
+                    GposChainQuadBacktrackSampleFont.GLYPH_G,
+                    GposChainQuadBacktrackSampleFont.GLYPH_F,
+                    GposChainQuadBacktrackSampleFont.GLYPH_E,
+                    GposChainQuadBacktrackSampleFont.GLYPH_D,
+                    GposChainQuadBacktrackSampleFont.GLYPH_A,
+                    GposChainQuadBacktrackSampleFont.GLYPH_B,
+                    GposChainQuadBacktrackSampleFont.GLYPH_C
+                },
+                4,
+                3
+        ) != GposChainQuadBacktrackSampleFont.CHAIN_DELTA) {
+            throw new IllegalStateException("GPOS four-glyph chain backtrack leftover did not require GFED");
+        }
+        SfntFont gsubQuad = GsubChainQuadBacktrackSampleFont.create();
+        if (gsubQuad.chainSubstitute(
+                new int[] {
+                    GsubChainQuadBacktrackSampleFont.GLYPH_G,
+                    GsubChainQuadBacktrackSampleFont.GLYPH_F,
+                    GsubChainQuadBacktrackSampleFont.GLYPH_E,
+                    GsubChainQuadBacktrackSampleFont.GLYPH_D,
+                    GsubChainQuadBacktrackSampleFont.GLYPH_A,
+                    GsubChainQuadBacktrackSampleFont.GLYPH_B,
+                    GsubChainQuadBacktrackSampleFont.GLYPH_C
+                },
+                4,
+                3,
+                SfntFont.TAG_CALT
+        ) != GsubChainQuadBacktrackSampleFont.GLYPH_Y) {
+            throw new IllegalStateException("GSUB four-glyph chain backtrack leftover did not require GFED");
+        }
+        SfntFont penta = GposChainPentaBacktrackSampleFont.create();
+        if (penta.chainAdjustment(
+                new int[] {
+                    GposChainPentaBacktrackSampleFont.GLYPH_H,
+                    GposChainPentaBacktrackSampleFont.GLYPH_G,
+                    GposChainPentaBacktrackSampleFont.GLYPH_F,
+                    GposChainPentaBacktrackSampleFont.GLYPH_E,
+                    GposChainPentaBacktrackSampleFont.GLYPH_D,
+                    GposChainPentaBacktrackSampleFont.GLYPH_A,
+                    GposChainPentaBacktrackSampleFont.GLYPH_B,
+                    GposChainPentaBacktrackSampleFont.GLYPH_C
+                },
+                5,
+                3
+        ) != GposChainPentaBacktrackSampleFont.CHAIN_DELTA) {
+            throw new IllegalStateException("GPOS five-glyph chain backtrack leftover did not require HGFED");
+        }
+        SfntFont hexa = GposChainHexaBacktrackSampleFont.create();
+        if (hexa.chainAdjustment(
+                new int[] {
+                    GposChainHexaBacktrackSampleFont.GLYPH_I,
+                    GposChainHexaBacktrackSampleFont.GLYPH_H,
+                    GposChainHexaBacktrackSampleFont.GLYPH_G,
+                    GposChainHexaBacktrackSampleFont.GLYPH_F,
+                    GposChainHexaBacktrackSampleFont.GLYPH_E,
+                    GposChainHexaBacktrackSampleFont.GLYPH_D,
+                    GposChainHexaBacktrackSampleFont.GLYPH_A,
+                    GposChainHexaBacktrackSampleFont.GLYPH_B,
+                    GposChainHexaBacktrackSampleFont.GLYPH_C
+                },
+                6,
+                3
+        ) != GposChainHexaBacktrackSampleFont.CHAIN_DELTA) {
+            throw new IllegalStateException("GPOS six-glyph chain backtrack leftover did not require IHGFED");
+        }
+        SfntFont hepta = GposChainHeptaBacktrackSampleFont.create();
+        if (hepta.chainAdjustment(
+                new int[] {
+                    GposChainHeptaBacktrackSampleFont.GLYPH_J,
+                    GposChainHeptaBacktrackSampleFont.GLYPH_I,
+                    GposChainHeptaBacktrackSampleFont.GLYPH_H,
+                    GposChainHeptaBacktrackSampleFont.GLYPH_G,
+                    GposChainHeptaBacktrackSampleFont.GLYPH_F,
+                    GposChainHeptaBacktrackSampleFont.GLYPH_E,
+                    GposChainHeptaBacktrackSampleFont.GLYPH_D,
+                    GposChainHeptaBacktrackSampleFont.GLYPH_A,
+                    GposChainHeptaBacktrackSampleFont.GLYPH_B,
+                    GposChainHeptaBacktrackSampleFont.GLYPH_C
+                },
+                7,
+                3
+        ) != GposChainHeptaBacktrackSampleFont.CHAIN_DELTA) {
+            throw new IllegalStateException("GPOS seven-glyph chain backtrack leftover did not require JIHGFED");
+        }
+        SfntFont gsubHepta = GsubChainHeptaBacktrackSampleFont.create();
+        if (gsubHepta.chainSubstitute(
+                new int[] {
+                    GsubChainHeptaBacktrackSampleFont.GLYPH_J,
+                    GsubChainHeptaBacktrackSampleFont.GLYPH_I,
+                    GsubChainHeptaBacktrackSampleFont.GLYPH_H,
+                    GsubChainHeptaBacktrackSampleFont.GLYPH_G,
+                    GsubChainHeptaBacktrackSampleFont.GLYPH_F,
+                    GsubChainHeptaBacktrackSampleFont.GLYPH_E,
+                    GsubChainHeptaBacktrackSampleFont.GLYPH_D,
+                    GsubChainHeptaBacktrackSampleFont.GLYPH_A,
+                    GsubChainHeptaBacktrackSampleFont.GLYPH_B,
+                    GsubChainHeptaBacktrackSampleFont.GLYPH_C
+                },
+                7,
+                3,
+                SfntFont.TAG_CALT
+        ) != GsubChainHeptaBacktrackSampleFont.GLYPH_Y) {
+            throw new IllegalStateException("GSUB seven-glyph chain backtrack leftover did not require JIHGFED");
+        }
+        SfntFont octa = GposChainOctaBacktrackSampleFont.create();
+        if (octa.chainAdjustment(
+                new int[] {
+                    GposChainOctaBacktrackSampleFont.GLYPH_K,
+                    GposChainOctaBacktrackSampleFont.GLYPH_J,
+                    GposChainOctaBacktrackSampleFont.GLYPH_I,
+                    GposChainOctaBacktrackSampleFont.GLYPH_H,
+                    GposChainOctaBacktrackSampleFont.GLYPH_G,
+                    GposChainOctaBacktrackSampleFont.GLYPH_F,
+                    GposChainOctaBacktrackSampleFont.GLYPH_E,
+                    GposChainOctaBacktrackSampleFont.GLYPH_D,
+                    GposChainOctaBacktrackSampleFont.GLYPH_A,
+                    GposChainOctaBacktrackSampleFont.GLYPH_B,
+                    GposChainOctaBacktrackSampleFont.GLYPH_C
+                },
+                8,
+                3
+        ) != GposChainOctaBacktrackSampleFont.CHAIN_DELTA) {
+            throw new IllegalStateException("GPOS eight-glyph chain backtrack leftover did not require KJIHGFED");
+        }
+        SfntFont gsubOcta = GsubChainOctaBacktrackSampleFont.create();
+        if (gsubOcta.chainSubstitute(
+                new int[] {
+                    GsubChainOctaBacktrackSampleFont.GLYPH_K,
+                    GsubChainOctaBacktrackSampleFont.GLYPH_J,
+                    GsubChainOctaBacktrackSampleFont.GLYPH_I,
+                    GsubChainOctaBacktrackSampleFont.GLYPH_H,
+                    GsubChainOctaBacktrackSampleFont.GLYPH_G,
+                    GsubChainOctaBacktrackSampleFont.GLYPH_F,
+                    GsubChainOctaBacktrackSampleFont.GLYPH_E,
+                    GsubChainOctaBacktrackSampleFont.GLYPH_D,
+                    GsubChainOctaBacktrackSampleFont.GLYPH_A,
+                    GsubChainOctaBacktrackSampleFont.GLYPH_B,
+                    GsubChainOctaBacktrackSampleFont.GLYPH_C
+                },
+                8,
+                3,
+                SfntFont.TAG_CALT
+        ) != GsubChainOctaBacktrackSampleFont.GLYPH_Y) {
+            throw new IllegalStateException("GSUB eight-glyph chain backtrack leftover did not require KJIHGFED");
+        }
+        SfntFont nona = GposChainNonaBacktrackSampleFont.create();
+        if (nona.chainAdjustment(
+                new int[] {
+                    GposChainNonaBacktrackSampleFont.GLYPH_L,
+                    GposChainNonaBacktrackSampleFont.GLYPH_K,
+                    GposChainNonaBacktrackSampleFont.GLYPH_J,
+                    GposChainNonaBacktrackSampleFont.GLYPH_I,
+                    GposChainNonaBacktrackSampleFont.GLYPH_H,
+                    GposChainNonaBacktrackSampleFont.GLYPH_G,
+                    GposChainNonaBacktrackSampleFont.GLYPH_F,
+                    GposChainNonaBacktrackSampleFont.GLYPH_E,
+                    GposChainNonaBacktrackSampleFont.GLYPH_D,
+                    GposChainNonaBacktrackSampleFont.GLYPH_A,
+                    GposChainNonaBacktrackSampleFont.GLYPH_B,
+                    GposChainNonaBacktrackSampleFont.GLYPH_C
+                },
+                9,
+                3
+        ) != GposChainNonaBacktrackSampleFont.CHAIN_DELTA) {
+            throw new IllegalStateException("GPOS nine-glyph chain backtrack leftover did not require LKJIHGFED");
+        }
         SfntFont grid = GaspGridFitSampleFont.create();
         if (!grid.gaspGridFits(GaspGridFitSampleFont.GRID_PPEM)
                 || GlyphRasterizer.rasterize(grid, GaspGridFitSampleFont.GLYPH_A, GaspGridFitSampleFont.GRID_PPEM)

@@ -49,8 +49,53 @@ final class IccProfileTest {
         assertEquals(0.0f, xyz[2], 0.001f);
     }
 
+    /// Uses AToB1 when AToB0 is absent.
+    @Test
+    void atoB1ClutIsUsedWhenAToB0IsMissing() {
+        IccProfile lut = IccProfile.parse(matrixPlusTaggedLut(0x4132_4231, 13107));
+        assertEquals(null, lut.clut());
+        assertNotNull(lut.clutAToB1());
+        float[] xyz = lut.clutAToB1().transform(1.0f, 0.0f, 0.0f);
+        assertEquals(0.2f, xyz[0], 0.001f);
+        Color converted = lut.toExtendedLinear(1.0f, 0.0f, 0.0f, 1.0f);
+        assertTrue(converted.red() > 0.05f);
+    }
+
+    /// Uses BToA0 when inverting a unique CLUT cell.
+    @Test
+    void bToA0ClutInvertsAUniqueCell() {
+        IccProfile lut = IccProfile.parse(matrixPlusB2a0());
+        assertNotNull(lut.clutBToA0());
+        float[] rgb = lut.clutBToA0().transform(1.0f, 0.0f, 0.0f);
+        assertEquals(1.0f, rgb[0], 0.001f);
+        assertEquals(0.0f, rgb[1], 0.001f);
+        assertEquals(0.0f, rgb[2], 0.001f);
+        Color device = lut.fromExtendedLinear(Color.extendedLinear(1.0f, 0.0f, 0.0f, 1.0f));
+        assertTrue(device.red() >= 0.0f);
+    }
+
+    /// Inverts the matrix/TRC path so encoded white stays near white.
+    @Test
+    void matrixPathFromExtendedLinearRoundTripsWhite() {
+        IccProfile profile = IccProfile.parse(minimalSrgbMatrixProfile());
+        Color encoded = profile.fromExtendedLinear(Color.extendedLinear(1.0f, 1.0f, 1.0f, 1.0f));
+        assertEquals(1.0f, encoded.red(), 0.05f);
+        assertEquals(1.0f, encoded.green(), 0.05f);
+        assertEquals(1.0f, encoded.blue(), 0.05f);
+    }
+
     /// Builds the matrix profile plus a 2³ `mft2` AToB0 tag.
     private static byte[] matrixPlusA2b0() {
+        return matrixPlusTaggedLut(0x4132_4230, 13107);
+    }
+
+    /// Builds the matrix profile plus a 2³ `mft2` BToA0 tag.
+    private static byte[] matrixPlusB2a0() {
+        return matrixPlusTaggedLut(0x4232_4130, 65535);
+    }
+
+    /// Builds the matrix profile plus a 2³ `mft2` tag with `signature`.
+    private static byte[] matrixPlusTaggedLut(int signature, int uniqueRed) {
         byte[] base = minimalSrgbMatrixProfile();
         int grid = 2;
         int inputTable = 256 * 3;
@@ -79,7 +124,7 @@ final class IccProfileTest {
         putTag(bytes, 3, 0x7254_5243, redTrc, curveSize);
         putTag(bytes, 4, 0x6754_5243, greenTrc, curveSize);
         putTag(bytes, 5, 0x6254_5243, blueTrc, curveSize);
-        putTag(bytes, 6, 0x4132_4230, a2b0, mft2Size);
+        putTag(bytes, 6, signature, a2b0, mft2Size);
         putXyz(bytes, redXyz, 0.4360657f, 0.2224884f, 0.0139160f);
         putXyz(bytes, greenXyz, 0.3851477f, 0.7168732f, 0.0971045f);
         putXyz(bytes, blueXyz, 0.1430664f, 0.0606084f, 0.7141733f);
@@ -101,8 +146,8 @@ final class IccProfileTest {
         for (int red = 0; red < grid; red++) {
             for (int green = 0; green < grid; green++) {
                 for (int blue = 0; blue < grid; blue++) {
-                    boolean uniqueRed = red == 1 && green == 0 && blue == 0;
-                    putU16(bytes, cursor, uniqueRed ? 13107 : 0);
+                    boolean uniqueCell = red == 1 && green == 0 && blue == 0;
+                    putU16(bytes, cursor, uniqueCell ? uniqueRed : 0);
                     putU16(bytes, cursor + 2, 0);
                     putU16(bytes, cursor + 4, 0);
                     cursor += 6;

@@ -10,7 +10,8 @@ import java.util.Objects;
 /// Coverage is 4×4 supersampled non-zero winding of flattened quadratic and cubic contours. The
 /// shipped path does not fill the raw `glyf` point list as a polyline. When `gasp` withholds
 /// grayscale at the destination ppem, coverage is snapped to 0 or 255. When `gasp` requests
-/// grid fitting, the outline box is snapped vertically to the destination pixel grid.
+/// grid fitting, the outline y-box is snapped to the destination pixel grid. When `gasp`
+/// requests symmetric grid fitting, the outline x-box is snapped as well.
 @NotNullByDefault
 public final class GlyphRasterizer {
     /// Subsamples per pixel axis.
@@ -85,6 +86,10 @@ public final class GlyphRasterizer {
         if (font.gaspGridFits(pixelHeight)) {
             yMin = (float) Math.floor(yMin * scale) / scale;
             yMax = (float) Math.ceil(yMax * scale) / scale;
+        }
+        if (font.gaspSymmetricGridFits(pixelHeight)) {
+            xMin = (float) Math.floor(xMin * scale) / scale;
+            xMax = (float) Math.ceil(xMax * scale) / scale;
         }
         int width = Math.max(1, Math.round((xMax - xMin) * scale));
         int height = Math.max(1, Math.round((yMax - yMin) * scale));

@@ -36,7 +36,9 @@ import java.util.Objects;
 /// @param greenTrc the green tone curve
 /// @param blueTrc the blue tone curve
 /// @param sha256 the lowercase SHA-256 digest of the exact profile bytes
-/// @param clut the optional AToB0 `mft2` CLUT, or `null` when the matrix/TRC path is used
+/// @param clut the optional AToB0 `mft2` CLUT, or `null` when unused
+/// @param clutAToB1 the optional AToB1 `mft2` CLUT, or `null` when unused
+/// @param clutBToA0 the optional BToA0 `mft2` CLUT, or `null` when unused
 @NotNullByDefault
 public record IccProfile(
         int size,
@@ -59,7 +61,9 @@ public record IccProfile(
         Curve greenTrc,
         Curve blueTrc,
         String sha256,
-        @Nullable IccClut clut
+        @Nullable IccClut clut,
+        @Nullable IccClut clutAToB1,
+        @Nullable IccClut clutBToA0
 ) {
     /// Maximum accepted profile size.
     public static final int MAX_PROFILE_BYTES = 1_048_576;
@@ -99,6 +103,12 @@ public record IccProfile(
 
     /// Tag `'A2B0'`.
     private static final int TAG_A2B0 = 0x4132_4230;
+
+    /// Tag `'A2B1'`.
+    private static final int TAG_A2B1 = 0x4132_4231;
+
+    /// Tag `'B2A0'`.
+    private static final int TAG_B2A0 = 0x4232_4130;
 
     /// Type `'XYZ '`.
     private static final int TYPE_XYZ = 0x5859_5A20;
@@ -187,15 +197,18 @@ public record IccProfile(
                 readCurve(bytes, requireTag(bytes, tagCount, TAG_G_TRC)),
                 readCurve(bytes, requireTag(bytes, tagCount, TAG_B_TRC)),
                 sha256(bytes),
-                readClut(bytes, tagCount)
+                readClut(bytes, tagCount, TAG_A2B0),
+                readClut(bytes, tagCount, TAG_A2B1),
+                readClut(bytes, tagCount, TAG_B2A0)
         );
     }
 
     /// Converts one RGB sample through this profile into extended-linear sRGB.
     ///
-    /// When [`#clut()`] is present, the AToB0 `mft2` table is used. Otherwise the matrix/TRC path
-    /// is used. PCS XYZ is chromatically adapted from the header illuminant to D65 when the
-    /// illuminant is not already D65-like. The result is not clamped.
+    /// When [`#clut()`] is present, the AToB0 `mft2` table is used. Otherwise [`#clutAToB1()`]
+    /// is used when present. Otherwise the matrix/TRC path is used. PCS XYZ is chromatically
+    /// adapted from the header illuminant to D65 when the illuminant is not already D65-like.
+    /// The result is not clamped.
     ///
     /// @param red the device red in `[0, 1]`
     /// @param green the device green in `[0, 1]`
@@ -212,8 +225,9 @@ public record IccProfile(
         float x;
         float y;
         float z;
-        if (clut != null) {
-            float[] xyz = clut.transform(red, green, blue);
+        IccClut forward = clut != null ? clut : clutAToB1;
+        if (forward != null) {
+            float[] xyz = forward.transform(red, green, blue);
             x = xyz[0];
             y = xyz[1];
             z = xyz[2];
@@ -232,6 +246,75 @@ public record IccProfile(
             z = adapted[2];
         }
         return Color.xyzD65ToExtended(x, y, z, alpha);
+    }
+
+    /// Converts one extended-linear color into encoded device RGB through this profile.
+    ///
+    /// When [`#clutBToA0()`] is present, that `mft2` table is used with PCS XYZ as the three
+    /// inputs. Otherwise the inverse matrix/TRC path is used. D65 working XYZ is adapted to the
+    /// header illuminant when that illuminant is not already D65-like. Encoded components are
+    /// clamped to `[0, 1]`.
+    ///
+    /// @param color the source color
+    /// @return the encoded sRGB-tagged device RGB
+    public Color fromExtendedLinear(Color color) {
+        Objects.requireNonNull(color, "color");
+        Color linear = color.toExtendedLinear();
+        float[] xyz = Color.extendedToXyzD65(linear.red(), linear.green(), linear.blue());
+        float x = xyz[0];
+        float y = xyz[1];
+        float z = xyz[2];
+        if (!isD65(illuminantX, illuminantY, illuminantZ)) {
+            float[] adapted = adaptBradford(x, y, z, 0.95047f, 1.0f, 1.08883f, illuminantX, illuminantY, illuminantZ);
+            x = adapted[0];
+            y = adapted[1];
+            z = adapted[2];
+        }
+        float red;
+        float green;
+        float blue;
+        if (clutBToA0 != null) {
+            float[] rgb = clutBToA0.transform(x, y, z);
+            red = rgb[0];
+            green = rgb[1];
+            blue = rgb[2];
+        } else {
+            float[] inverse = invertMatrix();
+            float linearRed = inverse[0] * x + inverse[1] * y + inverse[2] * z;
+            float linearGreen = inverse[3] * x + inverse[4] * y + inverse[5] * z;
+            float linearBlue = inverse[6] * x + inverse[7] * y + inverse[8] * z;
+            red = redTrc.encode(linearRed);
+            green = greenTrc.encode(linearGreen);
+            blue = blueTrc.encode(linearBlue);
+        }
+        return Color.srgb(clamp01(red), clamp01(green), clamp01(blue), linear.alpha());
+    }
+
+    /// Inverts the 3×3 PCS matrix whose columns are the RGB primaries.
+    private float[] invertMatrix() {
+        float det = redX * (greenY * blueZ - blueY * greenZ)
+                - greenX * (redY * blueZ - blueY * redZ)
+                + blueX * (redY * greenZ - greenY * redZ);
+        if (!Float.isFinite(det) || Math.abs(det) < 1.0e-8f) {
+            throw new IllegalStateException("ICC primary matrix is not invertible");
+        }
+        float inv = 1.0f / det;
+        return new float[] {
+            inv * (greenY * blueZ - blueY * greenZ),
+            inv * (blueX * greenZ - greenX * blueZ),
+            inv * (greenX * blueY - blueX * greenY),
+            inv * (blueY * redZ - redY * blueZ),
+            inv * (redX * blueZ - blueX * redZ),
+            inv * (blueX * redY - redX * blueY),
+            inv * (redY * greenZ - greenY * redZ),
+            inv * (greenX * redZ - redX * greenZ),
+            inv * (redX * greenY - greenX * redY)
+        };
+    }
+
+    /// Clamps one component into `[0, 1]`.
+    private static float clamp01(float value) {
+        return Math.clamp(value, 0.0f, 1.0f);
     }
 
     /// One tone-reproduction curve.
@@ -280,11 +363,45 @@ public record IccProfile(
             float fraction = position - index;
             return Math.fma(table[index + 1] - table[index], fraction, table[index]);
         }
+
+        /// Applies the inverse curve to one linearized component.
+        ///
+        /// @param linear the linearized component
+        /// @return the encoded component
+        public float encode(float linear) {
+            float unit = Math.clamp(linear, 0.0f, 1.0f);
+            if (table.length == 0) {
+                if (gamma == 1.0f) {
+                    return unit;
+                }
+                return (float) Math.pow(unit, 1.0 / gamma);
+            }
+            if (table.length == 1) {
+                float exponent = table[0];
+                if (exponent == 0.0f) {
+                    return 0.0f;
+                }
+                return (float) Math.pow(unit, 1.0 / exponent);
+            }
+            if (unit <= table[0]) {
+                return 0.0f;
+            }
+            if (unit >= table[table.length - 1]) {
+                return 1.0f;
+            }
+            int index = 0;
+            while (index < table.length - 2 && table[index + 1] < unit) {
+                index++;
+            }
+            float span = table[index + 1] - table[index];
+            float fraction = span == 0.0f ? 0.0f : (unit - table[index]) / span;
+            return (index + fraction) / (table.length - 1);
+        }
     }
 
-    /// Parses an optional `A2B0` `mft2` tag.
-    private static @Nullable IccClut readClut(byte[] bytes, int tagCount) {
-        int entry = findTag(bytes, tagCount, TAG_A2B0);
+    /// Parses an optional `mft2` tag with `signature`.
+    private static @Nullable IccClut readClut(byte[] bytes, int tagCount, int signature) {
+        int entry = findTag(bytes, tagCount, signature);
         if (entry < 0) {
             return null;
         }

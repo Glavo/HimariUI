@@ -12,5 +12,8 @@ public enum SemanticsAction {
     INCREMENT,
 
     /// Decreases a bounded value or rewinds a collection window.
-    DECREMENT
+    DECREMENT,
+
+    /// Scrolls this item into the nearest scrollable ancestor viewport.
+    SCROLL_INTO_VIEW
 }

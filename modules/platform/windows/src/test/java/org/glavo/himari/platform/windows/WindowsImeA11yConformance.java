@@ -116,7 +116,17 @@ public final class WindowsImeA11yConformance {
                 () -> { }
         );
         field.setTextRange(new SemanticsTextRange(1, 4, 4));
-        valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider, status, field));
+        LayoutNode list = factory.leaf(
+                "list",
+                new Size(160.0f, 40.0f),
+                List.of(),
+                true,
+                SemanticsRole.LIST,
+                "Items",
+                java.util.Set.of(SemanticsAction.SCROLL_INTO_VIEW),
+                null
+        );
+        valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider, status, field, list));
         valueTree.measure(Constraints.loose(400.0f, 400.0f));
         valueTree.place();
         List<WindowsAutomationNode> valueNodes = WindowsAutomationBridge.inspect(valueTree.semantics());
@@ -145,6 +155,7 @@ public final class WindowsImeA11yConformance {
         boolean uiaRangeCom = false;
         boolean uiaLiveSetting = false;
         boolean uiaTextCom = false;
+        boolean uiaScrollItemCom = false;
         WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
         try {
             WindowsWindow window = platform.createWindow(
@@ -267,11 +278,20 @@ public final class WindowsImeA11yConformance {
                 textProvider.invokeAddToSelection();
                 uiaTextCom = uiaTextCom && textProvider.invokeGetSelection();
             }
+            SemanticsNode listNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.LIST)
+                    .findFirst()
+                    .orElseThrow();
+            try (WindowsAutomationProvider scrollItemProvider = window.automationProvider(listNode)) {
+                uiaScrollItemCom = scrollItemProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_SCROLL_ITEM_PATTERN_ID
+                ) && scrollItemProvider.invokeScrollItem() == 1;
+            }
             if (!textStoreLock || !textStoreGeometry || !documentAttached) {
                 throw new IllegalStateException("ITextStoreACP lock, geometry, or TSF document attach failed");
             }
-            if (!uiaInvoke || !uiaToggleCom || !uiaRangeCom || !uiaLiveSetting || !uiaTextCom) {
-                throw new IllegalStateException("UIA Invoke/Toggle/Range/LiveSetting/Text COM properties failed");
+            if (!uiaInvoke || !uiaToggleCom || !uiaRangeCom || !uiaLiveSetting || !uiaTextCom || !uiaScrollItemCom) {
+                throw new IllegalStateException("UIA Invoke/Toggle/Range/LiveSetting/Text/ScrollItem COM properties failed");
             }
             window.closeAsync().toCompletableFuture().get();
             platform.pump();
@@ -306,6 +326,7 @@ public final class WindowsImeA11yConformance {
                           "uiaRangeCom": %s,
                           "uiaLiveSetting": %s,
                           "uiaTextCom": %s,
+                          "uiaScrollItemCom": %s,
                           "uiaTextRange": true,
                           "tsfThreadMgr": %s,
                           "textStoreAcp": %s,
@@ -321,6 +342,7 @@ public final class WindowsImeA11yConformance {
                         uiaRangeCom,
                         uiaLiveSetting,
                         uiaTextCom,
+                        uiaScrollItemCom,
                         tsfAvailable,
                         textStoreLock,
                         textStoreGeometry,

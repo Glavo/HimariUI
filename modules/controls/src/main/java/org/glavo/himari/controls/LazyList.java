@@ -105,8 +105,11 @@ public final class LazyList {
                     SemanticsRole.LIST,
                     label,
                     index == firstVisible
-                            ? Set.of(SemanticsAction.INCREMENT, SemanticsAction.DECREMENT)
-                            : Set.of(),
+                            ? Set.of(
+                                    SemanticsAction.INCREMENT,
+                                    SemanticsAction.DECREMENT,
+                                    SemanticsAction.SCROLL_INTO_VIEW)
+                            : Set.of(SemanticsAction.SCROLL_INTO_VIEW),
                     null,
                     index == firstVisible ? this::adjust : null
             ));

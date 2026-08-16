@@ -649,10 +649,23 @@ final class WindowsPlatformTest {
                     true,
                     SemanticsRole.LIST,
                     "Items",
-                    java.util.Set.of(SemanticsAction.INCREMENT, SemanticsAction.DECREMENT),
+                    java.util.Set.of(
+                            SemanticsAction.INCREMENT,
+                            SemanticsAction.DECREMENT,
+                            SemanticsAction.SCROLL_INTO_VIEW),
                     null
             );
             list.setScroll(new SemanticsScroll(25.0, 20.0, true, 10.0, 30.0, true));
+            LayoutNode dialog = factory.leaf(
+                    "dialog",
+                    new Size(80.0f, 40.0f),
+                    List.of(),
+                    true,
+                    SemanticsRole.DIALOG,
+                    "Confirm",
+                    java.util.Set.of(),
+                    null
+            );
             valueTree.setRoot(factory.column(
                     "root",
                     Alignment.START,
@@ -665,7 +678,8 @@ final class WindowsPlatformTest {
                     cell,
                     list,
                     status,
-                    field
+                    field,
+                    dialog
             ));
             valueTree.measure(Constraints.loose(400.0f, 400.0f));
             valueTree.place();
@@ -755,6 +769,21 @@ final class WindowsPlatformTest {
                 assertEquals(50.0, scrollProvider.scrollVertical(WindowsAutomationProvider.SCROLL_AMOUNT_SMALL_INCREMENT));
                 assertEquals(20.0, scrollProvider.setHorizontalScrollPercent(20.0));
                 assertEquals(30.0, scrollProvider.scrollHorizontal(WindowsAutomationProvider.SCROLL_AMOUNT_SMALL_INCREMENT));
+                assertTrue(scrollProvider.invokePatternProvider(WindowsAutomationProvider.UIA_SCROLL_ITEM_PATTERN_ID));
+                assertEquals(1, scrollProvider.invokeScrollItem());
+            }
+            SemanticsNode dialogNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.DIALOG)
+                    .findFirst()
+                    .orElseThrow();
+            try (WindowsAutomationProvider windowProvider = window.automationProvider(dialogNode)) {
+                assertTrue(windowProvider.invokePatternProvider(WindowsAutomationProvider.UIA_WINDOW_PATTERN_ID));
+                assertTrue(windowProvider.canMaximize());
+                assertEquals(
+                        WindowsAutomationProvider.WINDOW_VISUAL_STATE_MAXIMIZED,
+                        windowProvider.setWindowVisualState(WindowsAutomationProvider.WINDOW_VISUAL_STATE_MAXIMIZED)
+                );
+                assertEquals(1, windowProvider.closeWindow());
             }
             try (WindowsAutomationProvider statusProvider = window.automationProvider(statusNode)) {
                 assertEquals(
@@ -771,6 +800,11 @@ final class WindowsPlatformTest {
                     .findFirst()
                     .orElseThrow();
             try (WindowsAutomationProvider textProvider = window.automationProvider(fieldNode)) {
+                assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_VALUE_PATTERN_ID));
+                assertEquals("hello", textProvider.value());
+                assertEquals("world", textProvider.setValue("world"));
+                assertEquals("world", textProvider.value());
+                assertFalse(textProvider.valueReadOnly());
                 assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_PATTERN_ID));
                 assertTrue(textProvider.invokeDocumentRange());
                 assertEquals(

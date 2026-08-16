@@ -254,6 +254,14 @@ public final class SfntFont {
         return gasp.gridFits(ppem);
     }
 
+    /// Returns whether `gasp` requests symmetric grid fitting at `ppem`.
+    ///
+    /// @param ppem the destination pixels-per-em
+    /// @return whether the rasterizer will snap the outline x-box to the pixel grid
+    public boolean gaspSymmetricGridFits(int ppem) {
+        return gasp.symmetricGridFits(ppem);
+    }
+
     /// Returns the default `hhea` ascender.
     ///
     /// @return the ascender in font units
@@ -854,7 +862,21 @@ public final class SfntFont {
     /// @param palette the CPAL palette index
     /// @return the layers, empty when the glyph is not a color base
     public @Unmodifiable List<ColorLayer> colorLayers(int glyphId, int palette) {
-        return colr.layers(glyphId, palette);
+        return colorLayers(glyphId, palette, defaultVariation());
+    }
+
+    /// Returns COLR v0 or flattened v1 layers for `glyphId` from `palette` at `axisValues`.
+    ///
+    /// Design-space coordinates follow [`#variationAxes()`] order and are remapped by `avar`
+    /// before a COLR ItemVariationStore delta is applied to `PaintVarSolid` palette indices
+    /// and `PaintVarTranslate` X offsets.
+    ///
+    /// @param glyphId the base glyph
+    /// @param palette the CPAL palette index
+    /// @param axisValues design-space axis values
+    /// @return the layers, empty when the glyph is not a color base
+    public @Unmodifiable List<ColorLayer> colorLayers(int glyphId, int palette, float[] axisValues) {
+        return colr.layers(glyphId, palette, instanceCoords(axisValues));
     }
 
     /// Returns one CPAL color, or `null` for the foreground sentinel.

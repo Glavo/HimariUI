@@ -45,6 +45,20 @@ final class GaspTableTest {
         assertEquals(10, mask.height());
     }
 
+    /// Snaps the outline x-box when `gasp` requests symmetric grid fitting.
+    @Test
+    void rasterizerHonorsGaspSymmetricGridFit() {
+        SfntFont fitted = GaspSymmetricGridFitSampleFont.create();
+        assertTrue(fitted.gaspSymmetricGridFits(GaspSymmetricGridFitSampleFont.GRID_PPEM));
+        assertFalse(GaspGridFitSampleFont.create().gaspSymmetricGridFits(GaspGridFitSampleFont.GRID_PPEM));
+        GlyphMask mask = GlyphRasterizer.rasterize(
+                fitted,
+                GaspSymmetricGridFitSampleFont.GLYPH_A,
+                GaspSymmetricGridFitSampleFont.GRID_PPEM
+        );
+        assertEquals(10, mask.width());
+    }
+
     /// Returns whether `mask` contains an intermediate coverage sample.
     private static boolean hasPartial(GlyphMask mask) {
         for (byte sample : mask.coverage()) {
