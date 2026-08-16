@@ -68,6 +68,15 @@ val desktopLaunch = tasks.register<JavaExec>("desktopLaunch") {
     outputs.dir(launchDirectory)
 }
 
+tasks.register<JavaExec>("desktopRun") {
+    group = "application"
+    description = "Launches the production himari-desktop CounterApp and stays open until the last HWND closes."
+    dependsOn("classes")
+    classpath = sourceSets.named("main").get().runtimeClasspath
+    mainClass.set("org.glavo.himari.desktop.HimariDesktop")
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
 val conformance = tasks.register<JavaExec>("conformance") {
     group = "verification"
     description = "Runs the production himari-desktop profile."

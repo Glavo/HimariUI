@@ -18,7 +18,8 @@ import java.util.Objects;
 /// compose onto Presentation Forms-A when the font maps the composed form. Hangul
 /// choseong/jungseong/jongseong sequences compose onto syllables when the font maps the syllable.
 /// Thai and Lao decompose SARA AM and reorder Nikhahit over above-base marks; left vowels stay
-/// in Unicode visual order. The shaper does not write editor state and does not reorder RTL runs.
+/// in Unicode visual order. Consecutive pairs then receive GPOS type-2 or format-0 `kern`
+/// X-advance adjustments. The shaper does not write editor state and does not reorder RTL runs.
 @NotNullByDefault
 public final class DefaultShaper {
     /// Prevents instantiation.
@@ -65,6 +66,7 @@ public final class DefaultShaper {
             cluster++;
             index += Character.charCount(codePoint);
         }
+        applyPairs(font, glyphs, count);
         return Collections.unmodifiableList(Arrays.asList(glyphs));
     }
 
@@ -149,10 +151,32 @@ public final class DefaultShaper {
             written++;
             index += consumed;
         }
-        if (written == count) {
-            return Collections.unmodifiableList(Arrays.asList(glyphs));
+        if (written != count) {
+            glyphs = Arrays.copyOf(glyphs, written);
         }
-        return Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(glyphs, written)));
+        applyPairs(font, glyphs, written);
+        return Collections.unmodifiableList(Arrays.asList(glyphs));
+    }
+
+    /// Applies GPOS/`kern` pair X-advance deltas in place and clamps each advance to be nonnegative.
+    private static void applyPairs(SfntFont font, ShapedGlyph[] glyphs, int count) {
+        for (int index = 0; index < count - 1; index++) {
+            int delta = font.pairAdjustment(glyphs[index].glyphId(), glyphs[index + 1].glyphId());
+            if (delta == 0) {
+                continue;
+            }
+            int advance = glyphs[index].xAdvance() + delta;
+            if (advance < 0) {
+                advance = 0;
+            }
+            ShapedGlyph current = glyphs[index];
+            glyphs[index] = new ShapedGlyph(
+                    current.codePoint(),
+                    current.glyphId(),
+                    current.cluster(),
+                    advance
+            );
+        }
     }
 
     /// Returns one cluster identity per code point.

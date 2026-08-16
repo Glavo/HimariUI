@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/// Reads a checked SFNT directory, `cmap`, `hmtx`, `loca`, `glyf`, and optional GSUB.
+/// Reads a checked SFNT directory, `cmap`, `hmtx`, `loca`, `glyf`, optional GSUB, and GPOS/`kern`.
 ///
 /// The font file is retained as a read-only [MemorySegment] so the same view can back a heap array
 /// or a later mapped file. Sequential table decoding uses [ByteBuffer] cursors over those slices.
@@ -54,6 +54,9 @@ public final class SfntFont {
 
     /// GSUB type-1 substitutions, or empty when the table is absent.
     private final GsubSubstitutions gsub;
+
+    /// GPOS type-2 and format-0 `kern` pair adjustments, or empty when both tables are absent.
+    private final GposPositioning gpos;
 
     /// Creates a font from heap SFNT bytes.
     ///
@@ -117,6 +120,7 @@ public final class SfntFont {
         this.advances = readAdvances();
         this.loca = readLoca(head);
         this.gsub = GsubSubstitutions.parse(findTable("GSUB"));
+        this.gpos = GposPositioning.parse(findTable("GPOS"), findTable("kern"));
     }
 
     /// Returns the retained font file.
@@ -189,6 +193,17 @@ public final class SfntFont {
     /// @return the substituted glyph, or `glyphId`
     public int substitute(int glyphId, int featureTag) {
         return gsub.apply(glyphId, featureTag);
+    }
+
+    /// Returns the GPOS/`kern` X-advance delta for the consecutive pair `(left, right)`.
+    ///
+    /// A missing pair or missing table returns `0`. The delta is in font units and may be negative.
+    ///
+    /// @param left the first glyph
+    /// @param right the second glyph
+    /// @return the signed X-advance adjustment applied to `left`
+    public int pairAdjustment(int left, int right) {
+        return gpos.pairAdjustment(left, right);
     }
 
     /// Returns a big-endian glyf cursor, empty for a space or `.notdef` with no outline.
