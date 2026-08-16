@@ -1,6 +1,7 @@
 package org.glavo.himari.text;
 
 import org.glavo.himari.font.BitmapSfntFont;
+import org.glavo.himari.font.GsubSampleFont;
 import org.glavo.himari.font.ScriptSampleFont;
 import org.glavo.himari.font.SfntFont;
 import org.jetbrains.annotations.NotNullByDefault;
@@ -168,6 +169,26 @@ final class DefaultShaperTest {
         assertEquals(0x0E81, glyphs.get(0).codePoint());
         assertEquals(0x0ECD, glyphs.get(1).codePoint());
         assertEquals(0x0EB2, glyphs.get(2).codePoint());
+    }
+
+    /// Applies GSUB joining forms when the font has no Presentation Forms-B cmap.
+    @Test
+    void shapesArabicThroughGsubWhenPresent() {
+        SfntFont font = GsubSampleFont.create();
+        List<ShapedGlyph> isolated = DefaultShaper.shape(font, "\u0628");
+        assertEquals(1, isolated.size());
+        assertEquals(0x0628, isolated.getFirst().codePoint());
+        assertEquals(GsubSampleFont.GLYPH_ISOL, isolated.getFirst().glyphId());
+        assertEquals(GsubSampleFont.ADVANCE_ISOL, isolated.getFirst().xAdvance());
+
+        List<ShapedGlyph> triple = DefaultShaper.shape(font, "\u0628\u0628\u0628");
+        assertEquals(3, triple.size());
+        assertEquals(GsubSampleFont.GLYPH_INIT, triple.get(0).glyphId());
+        assertEquals(GsubSampleFont.GLYPH_MEDI, triple.get(1).glyphId());
+        assertEquals(GsubSampleFont.GLYPH_FINA, triple.get(2).glyphId());
+        assertEquals(GsubSampleFont.ADVANCE_INIT, triple.get(0).xAdvance());
+        assertEquals(GsubSampleFont.ADVANCE_MEDI, triple.get(1).xAdvance());
+        assertEquals(GsubSampleFont.ADVANCE_FINA, triple.get(2).xAdvance());
     }
 
     /// Composes Shin plus shin-dot onto `U+FB2A`.

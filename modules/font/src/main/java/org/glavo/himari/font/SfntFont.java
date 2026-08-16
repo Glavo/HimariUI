@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/// Reads a checked SFNT directory, `cmap`, `hmtx`, `loca`, and `glyf`.
+/// Reads a checked SFNT directory, `cmap`, `hmtx`, `loca`, `glyf`, and optional GSUB.
 ///
 /// The font file is retained as a read-only [MemorySegment] so the same view can back a heap array
 /// or a later mapped file. Sequential table decoding uses [ByteBuffer] cursors over those slices.
@@ -51,6 +51,9 @@ public final class SfntFont {
 
     /// loca offsets into glyf.
     private final int[] loca;
+
+    /// GSUB type-1 substitutions, or empty when the table is absent.
+    private final GsubSubstitutions gsub;
 
     /// Creates a font from heap SFNT bytes.
     ///
@@ -113,6 +116,7 @@ public final class SfntFont {
         this.cmapGlyphIds = cmap.glyphIds;
         this.advances = readAdvances();
         this.loca = readLoca(head);
+        this.gsub = GsubSubstitutions.parse(findTable("GSUB"));
     }
 
     /// Returns the retained font file.
@@ -164,6 +168,29 @@ public final class SfntFont {
         return new GlyphMetrics(glyphId, advances[glyphId], 0);
     }
 
+    /// Walks the TrueType outline for `glyphId` into `pen`.
+    ///
+    /// Empty glyphs emit no commands. Simple contours include implied on-curve midpoints as
+    /// untruncated averages. Composite glyphs are expanded up to 16 nested components. Hint
+    /// instructions are skipped. Coordinates are font units with y upward.
+    ///
+    /// @param glyphId the glyph identity
+    /// @param pen the destination
+    public void outline(int glyphId, OutlinePen pen) {
+        OutlineWalker.walk(this, glyphId, pen, 0);
+    }
+
+    /// Applies GSUB single substitutions listed by `featureTag`.
+    ///
+    /// Lookups other than type 1 are skipped. A missing GSUB table or feature returns `glyphId`.
+    ///
+    /// @param glyphId the input glyph
+    /// @param featureTag a four-byte OpenType tag as a big-endian `int`
+    /// @return the substituted glyph, or `glyphId`
+    public int substitute(int glyphId, int featureTag) {
+        return gsub.apply(glyphId, featureTag);
+    }
+
     /// Returns a big-endian glyf cursor, empty for a space or `.notdef` with no outline.
     ///
     /// @param glyphId the glyph id
@@ -187,6 +214,18 @@ public final class SfntFont {
     /// @return the table
     private ByteBuffer table(String tag) {
         TableRecord record = requireTable(tag);
+        return cursor(data.asSlice(record.offset, record.length));
+    }
+
+    /// Returns a table cursor when `tag` is present.
+    ///
+    /// @param tag the table tag
+    /// @return the table, or `null`
+    private @Nullable ByteBuffer findTable(String tag) {
+        @Nullable TableRecord record = tables.get(tag);
+        if (record == null) {
+            return null;
+        }
         return cursor(data.asSlice(record.offset, record.length));
     }
 

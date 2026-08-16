@@ -13,12 +13,12 @@ import java.util.Objects;
 /// Maps clusters through `cmap` and `hmtx`, applying first-stable script presentation.
 ///
 /// Latin, Greek, Cyrillic, Han, and Kana use one-to-one `cmap` mapping. Arabic joining letters
-/// select `isol`/`init`/`medi`/`fina` Presentation Forms-B when the font maps those forms. Hebrew
-/// letter-plus-mark pairs compose onto Presentation Forms-A when the font maps the composed form.
-/// Hangul choseong/jungseong/jongseong sequences compose onto syllables when the font maps the
-/// syllable. Thai and Lao decompose SARA AM and reorder Nikhahit over above-base marks; left
-/// vowels stay in Unicode visual order. The shaper does not write editor state and does not
-/// reorder RTL runs.
+/// apply GSUB `isol`/`init`/`medi`/`fina` when the font lists those features, otherwise they
+/// select Presentation Forms-B when the font maps those forms. Hebrew letter-plus-mark pairs
+/// compose onto Presentation Forms-A when the font maps the composed form. Hangul
+/// choseong/jungseong/jongseong sequences compose onto syllables when the font maps the syllable.
+/// Thai and Lao decompose SARA AM and reorder Nikhahit over above-base marks; left vowels stay
+/// in Unicode visual order. The shaper does not write editor state and does not reorder RTL runs.
 @NotNullByDefault
 public final class DefaultShaper {
     /// Prevents instantiation.
@@ -119,18 +119,27 @@ public final class DefaultShaper {
                     consumed = 2;
                 }
             }
+            int glyphId;
             if (consumed == 1 && forms[index] != ArabicForm.NONE) {
-                int presentation = ArabicPresentation.apply(codePoint, forms[index]);
-                if (presentation != codePoint && font.glyphId(presentation) != 0) {
-                    mapped = presentation;
+                int nominalGlyph = font.glyphId(codePoint);
+                int substituted = font.substitute(nominalGlyph, forms[index].featureTag());
+                if (substituted != nominalGlyph) {
+                    glyphId = substituted;
+                } else {
+                    int presentation = ArabicPresentation.apply(codePoint, forms[index]);
+                    if (presentation != codePoint && font.glyphId(presentation) != 0) {
+                        mapped = presentation;
+                    }
+                    glyphId = font.glyphId(mapped);
                 }
+            } else {
+                glyphId = font.glyphId(mapped);
             }
             if (consumed == 1 && ArabicJoining.type(codePoint) == JoiningType.TRANSPARENT && written > 0) {
                 cluster = lastLetterCluster;
             } else {
                 lastLetterCluster = cluster;
             }
-            int glyphId = font.glyphId(mapped);
             glyphs[written] = new ShapedGlyph(
                     mapped,
                     glyphId,

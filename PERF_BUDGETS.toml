@@ -1,0 +1,41 @@
+# Reference-path budgets for font outline, raster, and shaping.
+# First numbers are captured per machine; they are regression baselines for the
+# Java path, not a requirement to beat FreeType or HarfBuzz.
+
+[measurement]
+warmup_iterations = 8
+measurement_iterations = 24
+command_font = "./gradlew -g .gradle-user-home :modules:font:test --tests org.glavo.himari.font.FontReferenceBenchmarkTest"
+command_text = "./gradlew -g .gradle-user-home :modules:text:test --tests org.glavo.himari.text.TextReferenceBenchmarkTest"
+main_font = "org.glavo.himari.font.FontReferenceBenchmark"
+main_text = "org.glavo.himari.text.TextReferenceBenchmark"
+note = "Matching FreeType/HarfBuzz speed and RSS is a later optimization goal."
+
+[scenes]
+outline_walk = "OutlineSampleFont bump + composite + implied-on-curve"
+grayscale_raster = "unhinted 48ppem bump + composite"
+latin_cmap_10k = "10_000 cmap/hmtx lookups"
+gsub_isol_10k = "10_000 GSUB isol/init/medi/fina applies"
+shape_latin_10k = "DefaultShaper on 10_000 Latin letters"
+shape_arabic_presentation_10k = "DefaultShaper Presentation Forms-B fallback"
+shape_arabic_gsub_10k = "DefaultShaper GSUB joining forms"
+
+# First implementer capture on this Windows host. Not a cross-machine SLA.
+[baselines.first_reference]
+status = "recorded"
+beat_freetype = false
+beat_harfbuzz = false
+outline_walk_p50_ns = 6300
+outline_walk_p95_ns = 18100
+grayscale_raster_p50_ns = 2323100
+grayscale_raster_p95_ns = 2747400
+latin_cmap_10k_p50_ns = 53300
+latin_cmap_10k_p95_ns = 89600
+gsub_isol_10k_p50_ns = 220900
+gsub_isol_10k_p95_ns = 455800
+shape_latin_10k_p50_ns = 278200
+shape_latin_10k_p95_ns = 471800
+shape_arabic_presentation_10k_p50_ns = 538300
+shape_arabic_presentation_10k_p95_ns = 669800
+shape_arabic_gsub_10k_p50_ns = 440700
+shape_arabic_gsub_10k_p95_ns = 550800
