@@ -1,6 +1,7 @@
 package org.glavo.himari.text;
 
 import org.glavo.himari.font.BitmapSfntFont;
+import org.glavo.himari.font.CffSampleFont;
 import org.glavo.himari.font.GsubSampleFont;
 import org.glavo.himari.font.ScriptSampleFont;
 import org.glavo.himari.font.SfntFont;
@@ -26,6 +27,17 @@ final class DefaultShaperTest {
         assertEquals(font.glyphId('A'), glyphs.get(0).glyphId());
         assertEquals(0, glyphs.get(0).cluster());
         assertEquals(1, glyphs.get(1).cluster());
+    }
+
+    /// Maps Latin through a CFF 1 face using the shipped shaper.
+    @Test
+    void shapesCffLatin() {
+        SfntFont font = CffSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "A");
+        assertEquals(1, glyphs.size());
+        assertEquals('A', glyphs.getFirst().codePoint());
+        assertEquals(CffSampleFont.GLYPH_A, glyphs.getFirst().glyphId());
+        assertEquals(font.metrics(CffSampleFont.GLYPH_A).advanceWidth(), glyphs.getFirst().xAdvance());
     }
 
     /// Maps isolated, initial, medial, and final Beh through Presentation Forms-B.

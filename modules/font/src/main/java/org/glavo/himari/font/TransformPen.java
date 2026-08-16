@@ -75,6 +75,18 @@ final class TransformPen implements OutlinePen {
     }
 
     @Override
+    public void cubicTo(float c1x, float c1y, float c2x, float c2y, float x, float y) {
+        map(c1x, c1y);
+        float firstX = mappedX;
+        float firstY = mappedY;
+        map(c2x, c2y);
+        float secondX = mappedX;
+        float secondY = mappedY;
+        map(x, y);
+        inner.cubicTo(firstX, firstY, secondX, secondY, mappedX, mappedY);
+    }
+
+    @Override
     public void close() {
         inner.close();
     }

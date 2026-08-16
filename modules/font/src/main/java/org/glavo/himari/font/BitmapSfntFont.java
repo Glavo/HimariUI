@@ -264,6 +264,23 @@ public final class BitmapSfntFont {
     /// @param tables the tables
     /// @return the file
     static byte[] wrap(Map<String, byte[]> tables) {
+        return wrap(0x00010000, tables);
+    }
+
+    /// Wraps tables in an `OTTO` CFF container and fixes the `head` checksum.
+    ///
+    /// @param tables the tables
+    /// @return the file
+    static byte[] wrapOtto(Map<String, byte[]> tables) {
+        return wrap(0x4F54544F, tables);
+    }
+
+    /// Wraps tables in an SFNT container with `sfntTag` and fixes the `head` checksum.
+    ///
+    /// @param sfntTag the four-byte scalar type
+    /// @param tables the tables
+    /// @return the file
+    static byte[] wrap(int sfntTag, Map<String, byte[]> tables) {
         List<Map.Entry<String, byte[]>> ordered = new ArrayList<>(tables.entrySet());
         ordered.sort(Map.Entry.comparingByKey());
         int header = 12 + ordered.size() * 16;
@@ -277,7 +294,7 @@ public final class BitmapSfntFont {
             fileSize += padded;
         }
         ByteBuffer file = ByteBuffer.allocate(fileSize).order(ByteOrder.BIG_ENDIAN);
-        file.putInt(0x00010000);
+        file.putInt(sfntTag);
         file.putShort((short) ordered.size());
         int search = Integer.highestOneBit(ordered.size()) * 16;
         file.putShort((short) search);

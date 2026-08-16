@@ -13,7 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/// Reads a checked SFNT directory, `cmap`, `hmtx`, `loca`, `glyf`, optional GSUB, and GPOS/`kern`.
+/// Reads a checked SFNT directory, `cmap` format 4/12, `hmtx`, TrueType `loca`/`glyf` or
+/// CFF/CFF2 Type 2 outlines, optional GSUB, and GPOS/`kern`.
 ///
 /// The font file is retained as a read-only [MemorySegment] so the same view can back a heap array
 /// or a later mapped file. Sequential table decoding uses [ByteBuffer] cursors over those slices.
@@ -46,11 +47,23 @@ public final class SfntFont {
     /// Format-4 cmap: glyph id array referenced by range offsets.
     private final int[] cmapGlyphIds;
 
+    /// Format-12 cmap: start code points, empty when absent.
+    private final int[] cmap12Start;
+
+    /// Format-12 cmap: end code points, empty when absent.
+    private final int[] cmap12End;
+
+    /// Format-12 cmap: start glyph ids, empty when absent.
+    private final int[] cmap12Glyph;
+
     /// Advance widths.
     private final int[] advances;
 
-    /// loca offsets into glyf.
+    /// loca offsets into glyf, empty for a CFF face.
     private final int[] loca;
+
+    /// CFF/CFF2 outlines, or `null` for a TrueType face.
+    private final @Nullable CffOutlines cff;
 
     /// GSUB type-1 substitutions, or empty when the table is absent.
     private final GsubSubstitutions gsub;
@@ -111,14 +124,27 @@ public final class SfntFont {
         }
         maxp.position(4);
         this.glyphCount = Short.toUnsignedInt(maxp.getShort());
-        CmapFormat4 cmap = readCmap();
-        this.cmapStart = cmap.startCodes;
-        this.cmapEnd = cmap.endCodes;
-        this.cmapDelta = cmap.idDeltas;
-        this.cmapRangeOffset = cmap.idRangeOffsets;
-        this.cmapGlyphIds = cmap.glyphIds;
+        CmapTables cmap = readCmap();
+        this.cmapStart = cmap.format4.startCodes;
+        this.cmapEnd = cmap.format4.endCodes;
+        this.cmapDelta = cmap.format4.idDeltas;
+        this.cmapRangeOffset = cmap.format4.idRangeOffsets;
+        this.cmapGlyphIds = cmap.format4.glyphIds;
+        this.cmap12Start = cmap.format12.startCodes;
+        this.cmap12End = cmap.format12.endCodes;
+        this.cmap12Glyph = cmap.format12.startGlyphs;
         this.advances = readAdvances();
-        this.loca = readLoca(head);
+        @Nullable ByteBuffer cffTable = findTable("CFF ");
+        @Nullable ByteBuffer cff2Table = findTable("CFF2");
+        if (tables.containsKey("glyf") && tables.containsKey("loca")) {
+            this.loca = readLoca(head);
+            this.cff = null;
+        } else if (cffTable != null || cff2Table != null) {
+            this.loca = new int[0];
+            this.cff = CffOutlines.parse(cffTable, cff2Table);
+        } else {
+            throw new IllegalArgumentException("SFNT has neither glyf/loca nor CFF/CFF2");
+        }
         this.gsub = GsubSubstitutions.parse(findTable("GSUB"));
         this.gpos = GposPositioning.parse(findTable("GPOS"), findTable("kern"));
     }
@@ -137,11 +163,30 @@ public final class SfntFont {
         return unitsPerEm;
     }
 
+    /// Returns whether `cmap` maps `codePoint` to a nonzero glyph.
+    ///
+    /// Glyph `0` is `.notdef`. A missing mapping does not search another face.
+    ///
+    /// @param codePoint the code point
+    /// @return whether this face covers the code point
+    public boolean hasGlyph(int codePoint) {
+        return glyphId(codePoint) != 0;
+    }
+
     /// Maps a Unicode code point through `cmap`.
     ///
     /// @param codePoint the code point
     /// @return the glyph id, or `0`
     public int glyphId(int codePoint) {
+        int format4 = glyphIdFormat4(codePoint);
+        if (format4 != 0) {
+            return format4;
+        }
+        return glyphIdFormat12(codePoint);
+    }
+
+    /// Maps through the format-4 table.
+    private int glyphIdFormat4(int codePoint) {
         for (int index = 0; index < cmapEnd.length; index++) {
             if (codePoint >= cmapStart[index] && codePoint <= cmapEnd[index]) {
                 if (cmapRangeOffset[index] == 0) {
@@ -161,6 +206,20 @@ public final class SfntFont {
         return 0;
     }
 
+    /// Maps through the format-12 table.
+    private int glyphIdFormat12(int codePoint) {
+        for (int index = 0; index < cmap12End.length; index++) {
+            if (codePoint >= cmap12Start[index] && codePoint <= cmap12End[index]) {
+                long glyphId = (long) cmap12Glyph[index] + (long) (codePoint - cmap12Start[index]);
+                if (glyphId <= 0L || glyphId > 0xFFFFL) {
+                    return 0;
+                }
+                return (int) glyphId;
+            }
+        }
+        return 0;
+    }
+
     /// Returns horizontal metrics for a glyph.
     ///
     /// @param glyphId the glyph id
@@ -172,15 +231,33 @@ public final class SfntFont {
         return new GlyphMetrics(glyphId, advances[glyphId], 0);
     }
 
-    /// Walks the TrueType outline for `glyphId` into `pen`.
+    /// Returns whether this face stores TrueType `glyf` outlines.
     ///
-    /// Empty glyphs emit no commands. Simple contours include implied on-curve midpoints as
-    /// untruncated averages. Composite glyphs are expanded up to 16 nested components. Hint
-    /// instructions are skipped. Coordinates are font units with y upward.
+    /// @return whether `glyf`/`loca` are present
+    public boolean hasTrueTypeOutlines() {
+        return cff == null;
+    }
+
+    /// Returns whether this face stores CFF2 rather than CFF 1.
+    ///
+    /// @return whether the `CFF2` table supplied the outlines
+    public boolean hasCff2Outlines() {
+        return cff != null && cff.isCff2();
+    }
+
+    /// Walks the outline for `glyphId` into `pen`.
+    ///
+    /// Empty glyphs emit no commands. TrueType simple contours include implied on-curve midpoints
+    /// as untruncated averages, and composites expand up to 16 nested components. CFF/CFF2 glyphs
+    /// emit Type 2 lines and cubics; hints are skipped. Coordinates are font units with y upward.
     ///
     /// @param glyphId the glyph identity
     /// @param pen the destination
     public void outline(int glyphId, OutlinePen pen) {
+        if (cff != null) {
+            cff.outline(glyphId, pen);
+            return;
+        }
         OutlineWalker.walk(this, glyphId, pen, 0);
     }
 
@@ -204,6 +281,23 @@ public final class SfntFont {
     /// @return the signed X-advance adjustment applied to `left`
     public int pairAdjustment(int left, int right) {
         return gpos.pairAdjustment(left, right);
+    }
+
+    /// Returns whether `glyphId` is covered by a GPOS mark table.
+    ///
+    /// @param glyphId the glyph
+    /// @return whether the glyph is a mark
+    public boolean isMark(int glyphId) {
+        return gpos.isMark(glyphId);
+    }
+
+    /// Returns the mark-to-base placement for `(markGlyph, baseGlyph)`.
+    ///
+    /// @param markGlyph the mark glyph
+    /// @param baseGlyph the base glyph
+    /// @return the placement, or `null` when uncovered
+    public @Nullable MarkPlacement markPlacement(int markGlyph, int baseGlyph) {
+        return gpos.markPlacement(markGlyph, baseGlyph);
     }
 
     /// Returns a big-endian glyf cursor, empty for a space or `.notdef` with no outline.
@@ -256,10 +350,10 @@ public final class SfntFont {
         return record;
     }
 
-    /// Reads a format-4 cmap.
+    /// Reads Unicode format-4 and format-12 cmap subtables.
     ///
-    /// @return the cmap
-    private CmapFormat4 readCmap() {
+    /// @return the parsed tables; a missing format is empty
+    private CmapTables readCmap() {
         ByteBuffer cmap = table("cmap");
         if (cmap.remaining() < 4) {
             throw new IllegalArgumentException("cmap is truncated");
@@ -267,21 +361,49 @@ public final class SfntFont {
         cmap.getShort();
         int records = Short.toUnsignedInt(cmap.getShort());
         int format4 = -1;
+        int format4Score = -1;
+        int format12 = -1;
+        int format12Score = -1;
         for (int index = 0; index < records; index++) {
             int platform = Short.toUnsignedInt(cmap.getShort());
-            cmap.getShort();
+            int encoding = Short.toUnsignedInt(cmap.getShort());
             int offset = cmap.getInt();
-            if ((platform == 0 || platform == 3) && format4 < 0) {
+            if (platform != 0 && platform != 3) {
+                continue;
+            }
+            if (offset < 0 || offset + 2 > cmap.limit()) {
+                continue;
+            }
+            int mark = cmap.position();
+            cmap.position(offset);
+            int format = Short.toUnsignedInt(cmap.getShort());
+            cmap.position(mark);
+            int candidate = platform == 3 && (encoding == 1 || encoding == 10) ? 3 : platform == 0 ? 2 : 1;
+            if (format == 4 && candidate > format4Score) {
+                format4Score = candidate;
                 format4 = offset;
+            } else if (format == 12 && candidate > format12Score) {
+                format12Score = candidate;
+                format12 = offset;
             }
         }
-        if (format4 < 0) {
-            throw new IllegalArgumentException("cmap has no Unicode record");
+        if (format4 < 0 && format12 < 0) {
+            throw new IllegalArgumentException("cmap has no Unicode format-4 or format-12 record");
         }
-        cmap.position(format4);
-        if (Short.toUnsignedInt(cmap.getShort()) != 4) {
-            throw new IllegalArgumentException("Only cmap format 4 is supported");
-        }
+        return new CmapTables(
+                format4 < 0 ? CmapFormat4.empty() : parseFormat4(cmap, format4),
+                format12 < 0 ? CmapFormat12.empty() : parseFormat12(cmap, format12)
+        );
+    }
+
+    /// Parses a format-4 subtable at `offset`.
+    ///
+    /// @param cmap the cmap table
+    /// @param offset the subtable offset
+    /// @return the segments
+    private static CmapFormat4 parseFormat4(ByteBuffer cmap, int offset) {
+        cmap.position(offset);
+        cmap.getShort();
         cmap.getShort();
         cmap.getShort();
         int segCount = Short.toUnsignedInt(cmap.getShort()) / 2;
@@ -311,6 +433,38 @@ public final class SfntFont {
             glyphIds[index] = Short.toUnsignedInt(cmap.getShort());
         }
         return new CmapFormat4(startCodes, endCodes, deltas, rangeOffsets, glyphIds);
+    }
+
+    /// Parses a format-12 subtable at `offset`.
+    ///
+    /// @param cmap the cmap table
+    /// @param offset the subtable offset
+    /// @return the sequential map groups
+    private static CmapFormat12 parseFormat12(ByteBuffer cmap, int offset) {
+        cmap.position(offset);
+        if (cmap.remaining() < 16) {
+            throw new IllegalArgumentException("cmap format 12 is truncated");
+        }
+        cmap.getShort();
+        cmap.getShort();
+        cmap.getInt();
+        cmap.getInt();
+        int groups = cmap.getInt();
+        if (groups < 0 || cmap.remaining() < groups * 12) {
+            throw new IllegalArgumentException("cmap format 12 groups are truncated");
+        }
+        int[] startCodes = new int[groups];
+        int[] endCodes = new int[groups];
+        int[] startGlyphs = new int[groups];
+        for (int index = 0; index < groups; index++) {
+            startCodes[index] = cmap.getInt();
+            endCodes[index] = cmap.getInt();
+            startGlyphs[index] = cmap.getInt();
+            if (Integer.compareUnsigned(endCodes[index], startCodes[index]) < 0) {
+                throw new IllegalArgumentException("cmap format 12 group is inverted");
+            }
+        }
+        return new CmapFormat12(startCodes, endCodes, startGlyphs);
     }
 
     /// Reads advance widths from `hmtx`.
@@ -368,6 +522,13 @@ public final class SfntFont {
     private record TableRecord(int offset, int length) {
     }
 
+    /// Stores parsed Unicode cmap subtables.
+    ///
+    /// @param format4 the format-4 segments
+    /// @param format12 the format-12 groups
+    private record CmapTables(CmapFormat4 format4, CmapFormat12 format12) {
+    }
+
     /// Stores a parsed format-4 cmap.
     ///
     /// @param startCodes start codes
@@ -382,5 +543,25 @@ public final class SfntFont {
             int[] idRangeOffsets,
             int[] glyphIds
     ) {
+        /// Returns an empty format-4 table.
+        ///
+        /// @return empty segments
+        private static CmapFormat4 empty() {
+            return new CmapFormat4(new int[0], new int[0], new short[0], new int[0], new int[0]);
+        }
+    }
+
+    /// Stores a parsed format-12 cmap.
+    ///
+    /// @param startCodes start code points
+    /// @param endCodes end code points
+    /// @param startGlyphs start glyph ids
+    private record CmapFormat12(int[] startCodes, int[] endCodes, int[] startGlyphs) {
+        /// Returns an empty format-12 table.
+        ///
+        /// @return empty groups
+        private static CmapFormat12 empty() {
+            return new CmapFormat12(new int[0], new int[0], new int[0]);
+        }
     }
 }

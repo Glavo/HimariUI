@@ -14,6 +14,8 @@ final class SfntFontTest {
     void mapsAndRastersLatinGlyphs() {
         SfntFont font = BitmapSfntFont.create();
         int glyph = font.glyphId('C');
+        assertTrue(font.hasGlyph('C'));
+        assertTrue(!font.hasGlyph(0x0628));
         assertTrue(glyph > 0);
         assertEquals(6, font.metrics(glyph).advanceWidth());
         GlyphMask mask = GlyphRasterizer.rasterize(font, glyph, 16);

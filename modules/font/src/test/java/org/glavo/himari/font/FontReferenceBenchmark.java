@@ -129,6 +129,10 @@ public final class FontReferenceBenchmark {
         }
 
         @Override
+        public void cubicTo(float c1x, float c1y, float c2x, float c2y, float x, float y) {
+        }
+
+        @Override
         public void close() {
         }
     }

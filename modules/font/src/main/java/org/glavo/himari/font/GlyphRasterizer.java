@@ -7,8 +7,8 @@ import java.util.Objects;
 
 /// Rasters an unhinted TrueType outline to an 8-bit grayscale coverage mask.
 ///
-/// Coverage is 4×4 supersampled non-zero winding of flattened quadratic contours. The shipped path
-/// does not fill the raw `glyf` point list as a polyline.
+/// Coverage is 4×4 supersampled non-zero winding of flattened quadratic and cubic contours. The
+/// shipped path does not fill the raw `glyf` point list as a polyline.
 @NotNullByDefault
 public final class GlyphRasterizer {
     /// Subsamples per pixel axis.
@@ -38,19 +38,46 @@ public final class GlyphRasterizer {
         if (pixelHeight <= 0) {
             throw new IllegalArgumentException("pixelHeight must be positive");
         }
-        ByteBuffer glyf = font.glyf(glyphId);
-        if (glyf.remaining() < 10) {
-            return new GlyphMask(0, 0, new byte[0]);
-        }
-        glyf.getShort();
-        short xMin = glyf.getShort();
-        short yMin = glyf.getShort();
-        short xMax = glyf.getShort();
-        short yMax = glyf.getShort();
         FlatteningPen flatten = new FlatteningPen();
         font.outline(glyphId, flatten);
         if (flatten.pointCount == 0) {
             return new GlyphMask(0, 0, new byte[0]);
+        }
+        float xMin;
+        float yMin;
+        float xMax;
+        float yMax;
+        if (font.hasTrueTypeOutlines()) {
+            ByteBuffer glyf = font.glyf(glyphId);
+            if (glyf.remaining() < 10) {
+                return new GlyphMask(0, 0, new byte[0]);
+            }
+            glyf.getShort();
+            xMin = glyf.getShort();
+            yMin = glyf.getShort();
+            xMax = glyf.getShort();
+            yMax = glyf.getShort();
+        } else {
+            xMin = flatten.xs[0];
+            yMin = flatten.ys[0];
+            xMax = xMin;
+            yMax = yMin;
+            for (int index = 1; index < flatten.pointCount; index++) {
+                float x = flatten.xs[index];
+                float y = flatten.ys[index];
+                if (x < xMin) {
+                    xMin = x;
+                }
+                if (y < yMin) {
+                    yMin = y;
+                }
+                if (x > xMax) {
+                    xMax = x;
+                }
+                if (y > yMax) {
+                    yMax = y;
+                }
+            }
         }
         float scale = pixelHeight / (float) font.unitsPerEm();
         int width = Math.max(1, Math.round((xMax - xMin) * scale));
@@ -138,6 +165,16 @@ public final class GlyphRasterizer {
         }
 
         @Override
+        public void cubicTo(float c1x, float c1y, float c2x, float c2y, float x, float y) {
+            if (!open) {
+                moveTo(c1x, c1y);
+            }
+            flattenCubic(currentX, currentY, c1x, c1y, c2x, c2y, x, y, 0);
+            currentX = x;
+            currentY = y;
+        }
+
+        @Override
         public void close() {
             if (!open || pointCount <= contourStart) {
                 open = false;
@@ -189,6 +226,46 @@ public final class GlyphRasterizer {
             float my = (ay + by) * 0.5f;
             flattenQuad(x0, y0, ax, ay, mx, my, depth + 1);
             flattenQuad(mx, my, bx, by, x1, y1, depth + 1);
+        }
+
+        /// Subdivides a cubic until it is flat.
+        private void flattenCubic(
+                float x0,
+                float y0,
+                float x1,
+                float y1,
+                float x2,
+                float y2,
+                float x3,
+                float y3,
+                int depth
+        ) {
+            float dx = x3 - x0;
+            float dy = y3 - y0;
+            float d1 = Math.abs((x1 - x0) * dy - (y1 - y0) * dx);
+            float d2 = Math.abs((x2 - x0) * dy - (y2 - y0) * dx);
+            float chord = dx * dx + dy * dy;
+            if (chord < 1.0e-6f) {
+                chord = 1.0f;
+            }
+            if (depth >= MAX_FLATTEN_DEPTH || (d1 + d2) * (d1 + d2) <= FLATNESS_SQUARED * chord) {
+                add(x3, y3);
+                return;
+            }
+            float ax = (x0 + x1) * 0.5f;
+            float ay = (y0 + y1) * 0.5f;
+            float bx = (x1 + x2) * 0.5f;
+            float by = (y1 + y2) * 0.5f;
+            float cx = (x2 + x3) * 0.5f;
+            float cy = (y2 + y3) * 0.5f;
+            float dx1 = (ax + bx) * 0.5f;
+            float dy1 = (ay + by) * 0.5f;
+            float dx2 = (bx + cx) * 0.5f;
+            float dy2 = (by + cy) * 0.5f;
+            float mx = (dx1 + dx2) * 0.5f;
+            float my = (dy1 + dy2) * 0.5f;
+            flattenCubic(x0, y0, ax, ay, dx1, dy1, mx, my, depth + 1);
+            flattenCubic(mx, my, dx2, dy2, cx, cy, x3, y3, depth + 1);
         }
 
         /// Appends one point.

@@ -15,6 +15,10 @@ public enum OutlineVerb {
     /// [`OutlineOp#x1()`]/[`OutlineOp#y1()`].
     QUAD,
 
+    /// Draws a cubic. First control is [`OutlineOp#x0()`]/[`OutlineOp#y0()`], second control is
+    /// [`OutlineOp#x1()`]/[`OutlineOp#y1()`], destination is [`OutlineOp#x2()`]/[`OutlineOp#y2()`].
+    CUBIC,
+
     /// Closes the current contour. Coordinate fields are unused.
     CLOSE
 }

@@ -1,5 +1,6 @@
 package org.glavo.himari.text;
 
+import org.glavo.himari.font.MarkPlacement;
 import org.glavo.himari.font.SfntFont;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +20,8 @@ import java.util.Objects;
 /// choseong/jungseong/jongseong sequences compose onto syllables when the font maps the syllable.
 /// Thai and Lao decompose SARA AM and reorder Nikhahit over above-base marks; left vowels stay
 /// in Unicode visual order. Consecutive pairs then receive GPOS type-2 or format-0 `kern`
-/// X-advance adjustments. The shaper does not write editor state and does not reorder RTL runs.
+/// X-advance adjustments. Marks covered by GPOS type 4 attach to the preceding base.
+/// The shaper does not write editor state and does not reorder RTL runs.
 @NotNullByDefault
 public final class DefaultShaper {
     /// Prevents instantiation.
@@ -67,6 +69,7 @@ public final class DefaultShaper {
             index += Character.charCount(codePoint);
         }
         applyPairs(font, glyphs, count);
+        applyMarks(font, glyphs, count);
         return Collections.unmodifiableList(Arrays.asList(glyphs));
     }
 
@@ -155,6 +158,7 @@ public final class DefaultShaper {
             glyphs = Arrays.copyOf(glyphs, written);
         }
         applyPairs(font, glyphs, written);
+        applyMarks(font, glyphs, written);
         return Collections.unmodifiableList(Arrays.asList(glyphs));
     }
 
@@ -174,8 +178,40 @@ public final class DefaultShaper {
                     current.codePoint(),
                     current.glyphId(),
                     current.cluster(),
-                    advance
+                    advance,
+                    current.xOffset(),
+                    current.yOffset(),
+                    current.fontIndex()
             );
+        }
+    }
+
+    /// Attaches GPOS marks to the preceding base glyph.
+    private static void applyMarks(SfntFont font, ShapedGlyph[] glyphs, int count) {
+        int baseIndex = -1;
+        for (int index = 0; index < count; index++) {
+            int glyphId = glyphs[index].glyphId();
+            if (font.isMark(glyphId)) {
+                if (baseIndex < 0) {
+                    continue;
+                }
+                @Nullable MarkPlacement placement = font.markPlacement(glyphId, glyphs[baseIndex].glyphId());
+                if (placement == null) {
+                    continue;
+                }
+                ShapedGlyph current = glyphs[index];
+                glyphs[index] = new ShapedGlyph(
+                        current.codePoint(),
+                        current.glyphId(),
+                        current.cluster(),
+                        current.xAdvance(),
+                        placement.xOffset(),
+                        placement.yOffset(),
+                        current.fontIndex()
+                );
+            } else {
+                baseIndex = index;
+            }
         }
     }
 

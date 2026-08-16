@@ -72,6 +72,20 @@ final class OutlineCompare {
                     lastY = y;
                     havePoint = true;
                 }
+                case CUBIC -> {
+                    float c1x = coord(command.x0(), scaled);
+                    float c1y = coord(command.y0(), scaled);
+                    float c2x = coord(command.x1(), scaled);
+                    float c2y = coord(command.y1(), scaled);
+                    float x = coord(command.x2(), scaled);
+                    float y = coord(command.y2(), scaled);
+                    flush(regularized, pendingMove);
+                    pendingMove = null;
+                    regularized.add(OutlineOp.cubic(c1x, c1y, c2x, c2y, x, y));
+                    lastX = x;
+                    lastY = y;
+                    havePoint = true;
+                }
                 case CLOSE -> {
                     if (havePoint && (lastX != startX || lastY != startY)) {
                         flush(regularized, pendingMove);

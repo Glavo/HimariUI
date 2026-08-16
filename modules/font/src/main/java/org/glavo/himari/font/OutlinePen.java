@@ -29,6 +29,16 @@ public interface OutlinePen {
     /// @param y the destination y coordinate in font units
     void quadTo(float cx, float cy, float x, float y);
 
+    /// Draws a cubic Bézier to `(x, y)` with control points `(c1x, c1y)` and `(c2x, c2y)`.
+    ///
+    /// @param c1x the first control x coordinate in font units
+    /// @param c1y the first control y coordinate in font units
+    /// @param c2x the second control x coordinate in font units
+    /// @param c2y the second control y coordinate in font units
+    /// @param x the destination x coordinate in font units
+    /// @param y the destination y coordinate in font units
+    void cubicTo(float c1x, float c1y, float c2x, float c2y, float x, float y);
+
     /// Closes the current contour back to its starting point.
     void close();
 }
