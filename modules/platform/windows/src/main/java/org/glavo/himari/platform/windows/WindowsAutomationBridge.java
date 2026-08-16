@@ -57,9 +57,16 @@ public final class WindowsAutomationBridge {
         return switch (role) {
             case BUTTON -> "Button";
             case TOGGLE -> "CheckBox";
+            case CHECKBOX -> "CheckBox";
+            case RADIO -> "RadioButton";
             case SLIDER -> "Slider";
+            case SCROLLBAR -> "ScrollBar";
+            case PROGRESS -> "ProgressBar";
             case TEXT_FIELD, TEXT_AREA -> "Edit";
             case LIST -> "List";
+            case TABLE -> "Table";
+            case TABLE_ROW -> "DataItem";
+            case TABLE_CELL -> "DataItem";
             case TEXT -> "Text";
             case STATUS -> "StatusBar";
             case NONE -> "Pane";
@@ -68,6 +75,12 @@ public final class WindowsAutomationBridge {
             case MENU_ITEM -> "MenuItem";
             case DIALOG -> "Window";
             case TOOLTIP -> "ToolTip";
+            case TAB_LIST -> "Tab";
+            case TAB -> "TabItem";
+            case TAB_PANEL -> "Pane";
+            case SPLIT_PANE -> "Pane";
+            case TREE -> "Tree";
+            case TREE_ITEM -> "TreeItem";
         };
     }
 

@@ -20,6 +20,9 @@ import java.util.Set;
 /// @param rangeValue the numeric range value, or `null` when the node does not expose a range
 /// @param liveRegion the live-region politeness
 /// @param textRange the UTF-16 selection and caret, or `null` when the node is not an editor
+/// @param grid the table or grid extent, or `null` when the node does not expose a grid
+/// @param scroll the scroll snapshot, or `null` when the node does not expose scroll
+/// @param gridItem the cell position, or `null` when the node is not a grid item
 @NotNullByDefault
 public record SemanticsNode(
         long id,
@@ -31,7 +34,10 @@ public record SemanticsNode(
         @Nullable Boolean selected,
         @Nullable Double rangeValue,
         SemanticsLiveRegion liveRegion,
-        @Nullable SemanticsTextRange textRange
+        @Nullable SemanticsTextRange textRange,
+        @Nullable SemanticsGrid grid,
+        @Nullable SemanticsScroll scroll,
+        @Nullable SemanticsGridItem gridItem
 ) {
     /// Validates one semantics node.
     public SemanticsNode {

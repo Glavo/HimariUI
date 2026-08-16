@@ -74,6 +74,26 @@ final class ColorConversionTest {
         assertEquals(1.0f, linear.blue(), 0.002f);
     }
 
+    /// Versioned SDR fallback keeps highlight chroma that hard-clip `toSrgb` would flatten.
+    @Test
+    void sdrFallbackPreservesHighlightChroma() {
+        Color linear = Color.extendedLinear(10.0f, 2.0f, 2.0f, 1.0f);
+        Color clipped = linear.toSrgb();
+        assertEquals(1.0f, clipped.red(), EPSILON);
+        assertEquals(1.0f, clipped.green(), EPSILON);
+        assertEquals(1.0f, clipped.blue(), EPSILON);
+        Color mapped = SdrFallback.map(linear);
+        assertEquals(SdrFallback.VERSION, 1);
+        assertEquals(ColorEncoding.SRGB, mapped.encoding());
+        assertEquals(1.0f, mapped.red(), EPSILON);
+        assertTrue(mapped.green() < 0.5f);
+        assertTrue(mapped.blue() < 0.5f);
+        Color white = SdrFallback.map(Color.extendedLinear(1.0f, 1.0f, 1.0f, 1.0f));
+        assertEquals(1.0f, white.red(), EPSILON);
+        assertEquals(1.0f, white.green(), EPSILON);
+        assertEquals(1.0f, white.blue(), EPSILON);
+    }
+
     /// HLG 0.5 decodes through the inverse OETF before the BT.2020 primary conversion.
     @Test
     void hlgMidSignalUsesInverseOetf() {

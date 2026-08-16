@@ -46,7 +46,27 @@ public final class LayoutFactory {
             List<LayoutModifier> modifiers,
             LayoutNode... children
     ) {
-        return container(name, LayoutKind.ROW, alignment, modifiers, SemanticsRole.NONE, name, children);
+        return row(name, alignment, modifiers, SemanticsRole.NONE, name, children);
+    }
+
+    /// Creates a horizontal row with an explicit semantics role.
+    ///
+    /// @param name the diagnostic name
+    /// @param alignment the cross-axis alignment
+    /// @param modifiers the modifiers
+    /// @param role the semantics role
+    /// @param label the semantics label
+    /// @param children the children
+    /// @return the row
+    public LayoutNode row(
+            String name,
+            Alignment alignment,
+            List<LayoutModifier> modifiers,
+            SemanticsRole role,
+            String label,
+            LayoutNode... children
+    ) {
+        return container(name, LayoutKind.ROW, alignment, modifiers, role, label, children);
     }
 
     /// Creates a vertical column.

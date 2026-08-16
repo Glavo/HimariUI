@@ -7,7 +7,9 @@ import org.glavo.himari.layout.LayoutNode;
 import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.SemanticsScroll;
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +53,38 @@ public final class LazyList {
         return firstVisible;
     }
 
+    /// Returns the total logical item count.
+    ///
+    /// @return the count
+    public int itemCount() {
+        return itemCount;
+    }
+
+    /// Returns labels for every logical item, including unmounted rows.
+    ///
+    /// @return the labels in document order
+    public @Unmodifiable List<String> logicalLabels() {
+        ArrayList<String> labels = new ArrayList<>(itemCount);
+        for (int index = 0; index < itemCount; index++) {
+            labels.add("Item " + index);
+        }
+        return List.copyOf(labels);
+    }
+
+    /// Returns labels for items outside the materialized window.
+    ///
+    /// @return the unmounted labels in document order
+    public @Unmodifiable List<String> unmountedLabels() {
+        ArrayList<String> labels = new ArrayList<>();
+        int last = Math.min(itemCount, firstVisible + windowSize);
+        for (int index = 0; index < itemCount; index++) {
+            if (index < firstVisible || index >= last) {
+                labels.add("Item " + index);
+            }
+        }
+        return List.copyOf(labels);
+    }
+
     /// Builds the current window as a column of leaves.
     ///
     /// @param factory the node factory
@@ -77,8 +111,29 @@ public final class LazyList {
                     index == firstVisible ? this::adjust : null
             ));
         }
-        return factory.column(name, Alignment.START, List.of(new LayoutModifier.Padding(0.0f)),
-                items.toArray(LayoutNode[]::new));
+        LayoutNode column = factory.column(
+                name,
+                Alignment.START,
+                List.of(new LayoutModifier.Padding(0.0f)),
+                SemanticsRole.LIST,
+                name,
+                items.toArray(LayoutNode[]::new)
+        );
+        column.setScroll(scrollSnapshot());
+        return column;
+    }
+
+    /// Builds the vertical-scroll snapshot for the current window.
+    ///
+    /// @return the snapshot
+    public SemanticsScroll scrollSnapshot() {
+        if (itemCount <= windowSize) {
+            return new SemanticsScroll(0.0, 100.0, false);
+        }
+        int maximum = itemCount - windowSize;
+        double percent = 100.0 * firstVisible / maximum;
+        double viewSize = 100.0 * windowSize / itemCount;
+        return new SemanticsScroll(percent, viewSize, true);
     }
 
     /// Moves the window by one item.

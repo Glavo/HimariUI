@@ -8,12 +8,16 @@ import org.glavo.himari.layout.LayoutTree;
 import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.bootstrap.BootstrapCounterPane;
 import org.glavo.himari.layout.input.LogicalKey;
+import org.glavo.himari.layout.input.PointerDeviceKind;
 import org.glavo.himari.layout.input.PointerEvent;
 import org.glavo.himari.layout.input.PointerEventType;
 import org.glavo.himari.layout.semantics.SemanticsAction;
+import org.glavo.himari.layout.semantics.SemanticsGrid;
+import org.glavo.himari.layout.semantics.SemanticsGridItem;
 import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.SemanticsScroll;
 import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.glavo.himari.platform.api.LogicalRect;
 import org.glavo.himari.platform.api.SurfaceRole;
@@ -186,6 +190,7 @@ final class WindowsPlatformTest {
             assertEquals(PointerEventType.DOWN, pointers.getFirst().type());
             assertEquals(12.0f, pointers.getFirst().x());
             assertEquals(18.0f, pointers.getFirst().y());
+            assertEquals(PointerDeviceKind.MOUSE, pointers.getFirst().device());
             assertEquals(PointerEventType.UP, pointers.get(1).type());
             List<org.glavo.himari.layout.input.KeyEvent> keys = window.takeKeyEvents();
             assertEquals(2, keys.size());
@@ -193,6 +198,44 @@ final class WindowsPlatformTest {
             assertEquals(LogicalKey.ESCAPE, keys.get(1).key());
             assertEquals("ni", window.ime().surroundingText());
             assertTrue(window.ime().committed());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Classifies `GetPointerType` results and queries the generated binding.
+    @Test
+    void classifiesPenAndQueriesGetPointerType() throws Exception {
+        assertEquals(PointerDeviceKind.PEN, WindowsNativeWindow.deviceKindFromPointerType(WindowsNativeWindow.PT_PEN));
+        assertEquals(PointerDeviceKind.MOUSE, WindowsNativeWindow.deviceKindFromPointerType(WindowsNativeWindow.PT_MOUSE));
+        assertEquals(PointerDeviceKind.TOUCH, WindowsNativeWindow.deviceKindFromPointerType(WindowsNativeWindow.PT_TOUCH));
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "PointerType", 32.0, 32.0);
+            platform.pump();
+            assertEquals(0, window.queryPointerType(0x00FFFFFF));
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Delivers `WM_POINTER*` through the production WndProc as touch events.
+    @Test
+    void deliversPostedTouchThroughWndProc() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "Touch", 32.0, 32.0);
+            platform.pump();
+            window.postPointer(PointerEventType.DOWN, 20, 24, PointerDeviceKind.TOUCH);
+            window.postPointer(PointerEventType.UP, 20, 24, PointerDeviceKind.TOUCH);
+            platform.pump();
+            List<PointerEvent> pointers = window.takePointerEvents();
+            assertEquals(2, pointers.size());
+            assertEquals(PointerEventType.DOWN, pointers.getFirst().type());
+            assertEquals(PointerDeviceKind.TOUCH, pointers.getFirst().device());
+            assertEquals(20.0f, pointers.getFirst().x());
+            assertEquals(24.0f, pointers.getFirst().y());
+            assertEquals(PointerDeviceKind.TOUCH, pointers.get(1).device());
         } finally {
             platform.close();
         }
@@ -349,6 +392,27 @@ final class WindowsPlatformTest {
                 .findFirst()
                 .orElseThrow();
         assertEquals(new SemanticsTextRange(1, 4, 4), edit.textRange());
+        LayoutTree barTree = new LayoutTree();
+        LayoutFactory barFactory = new LayoutFactory(barTree);
+        LayoutNode bar = barFactory.leaf(
+                "bar",
+                new Size(160.0f, 16.0f),
+                List.of(),
+                true,
+                SemanticsRole.SCROLLBAR,
+                "Thumb",
+                java.util.Set.of(SemanticsAction.INCREMENT, SemanticsAction.DECREMENT),
+                null
+        );
+        bar.setRangeValue(20.0);
+        barTree.setRoot(barFactory.column("root", Alignment.START, List.of(), bar));
+        barTree.measure(Constraints.loose(200.0f, 200.0f));
+        barTree.place();
+        WindowsAutomationNode scrollBar = WindowsAutomationBridge.inspect(barTree.semantics()).stream()
+                .filter(node -> node.controlType().equals("ScrollBar"))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(20.0, scrollBar.rangeValue());
     }
 
     /// Writes and reads Unicode clipboard text through generated User32/Kernel32 bindings.
@@ -513,6 +577,27 @@ final class WindowsPlatformTest {
                     null
             );
             slider.setRangeValue(3.0);
+            LayoutNode option = factory.leaf(
+                    "option",
+                    new Size(120.0f, 20.0f),
+                    List.of(),
+                    true,
+                    SemanticsRole.RADIO,
+                    "Left",
+                    java.util.Set.of(SemanticsAction.ACTIVATE),
+                    () -> { }
+            );
+            option.setSelected(false);
+            LayoutNode item = factory.leaf(
+                    "item",
+                    new Size(160.0f, 20.0f),
+                    List.of(),
+                    true,
+                    SemanticsRole.TREE_ITEM,
+                    "Folder",
+                    java.util.Set.of(SemanticsAction.ACTIVATE, SemanticsAction.INCREMENT, SemanticsAction.DECREMENT),
+                    () -> { }
+            );
             LayoutNode status = factory.leaf(
                     "status",
                     new Size(120.0f, 20.0f),
@@ -535,7 +620,53 @@ final class WindowsPlatformTest {
                     () -> { }
             );
             field.setTextRange(new SemanticsTextRange(1, 4, 4));
-            valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider, status, field));
+            LayoutNode table = factory.leaf(
+                    "table",
+                    new Size(160.0f, 40.0f),
+                    List.of(),
+                    false,
+                    SemanticsRole.TABLE,
+                    "People",
+                    java.util.Set.of(),
+                    null
+            );
+            table.setGrid(new SemanticsGrid(2, 3));
+            LayoutNode cell = factory.leaf(
+                    "cell",
+                    new Size(80.0f, 20.0f),
+                    List.of(),
+                    false,
+                    SemanticsRole.TABLE_CELL,
+                    "r0c1",
+                    java.util.Set.of(),
+                    null
+            );
+            cell.setGridItem(new SemanticsGridItem(0, 1));
+            LayoutNode list = factory.leaf(
+                    "list",
+                    new Size(160.0f, 40.0f),
+                    List.of(),
+                    true,
+                    SemanticsRole.LIST,
+                    "Items",
+                    java.util.Set.of(SemanticsAction.INCREMENT, SemanticsAction.DECREMENT),
+                    null
+            );
+            list.setScroll(new SemanticsScroll(25.0, 20.0, true, 10.0, 30.0, true));
+            valueTree.setRoot(factory.column(
+                    "root",
+                    Alignment.START,
+                    List.of(),
+                    toggle,
+                    slider,
+                    option,
+                    item,
+                    table,
+                    cell,
+                    list,
+                    status,
+                    field
+            ));
             valueTree.measure(Constraints.loose(400.0f, 400.0f));
             valueTree.place();
             SemanticsNode toggleNode = valueTree.semantics().nodes().stream()
@@ -544,6 +675,14 @@ final class WindowsPlatformTest {
                     .orElseThrow();
             SemanticsNode sliderNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.SLIDER)
+                    .findFirst()
+                    .orElseThrow();
+            SemanticsNode optionNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.RADIO)
+                    .findFirst()
+                    .orElseThrow();
+            SemanticsNode itemNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.TREE_ITEM)
                     .findFirst()
                     .orElseThrow();
             SemanticsNode statusNode = valueTree.semantics().nodes().stream()
@@ -560,6 +699,62 @@ final class WindowsPlatformTest {
                 assertEquals(3.0, rangeProvider.rangeValue());
                 assertEquals(7.5, rangeProvider.setRangeValue(7.5));
                 assertEquals(7.5, rangeProvider.rangeValue());
+            }
+            try (WindowsAutomationProvider selectionProvider = window.automationProvider(optionNode)) {
+                assertTrue(selectionProvider.invokePatternProvider(WindowsAutomationProvider.UIA_SELECTION_ITEM_PATTERN_ID));
+                assertFalse(selectionProvider.itemSelected());
+                assertTrue(selectionProvider.selectItem());
+                assertFalse(selectionProvider.removeItemFromSelection());
+            }
+            try (WindowsAutomationProvider expandProvider = window.automationProvider(itemNode)) {
+                assertTrue(expandProvider.invokePatternProvider(WindowsAutomationProvider.UIA_EXPAND_COLLAPSE_PATTERN_ID));
+                assertEquals(WindowsAutomationProvider.EXPAND_COLLAPSE_STATE_EXPANDED, expandProvider.expandState());
+                assertEquals(WindowsAutomationProvider.EXPAND_COLLAPSE_STATE_COLLAPSED, expandProvider.collapse());
+                assertEquals(WindowsAutomationProvider.EXPAND_COLLAPSE_STATE_EXPANDED, expandProvider.expand());
+            }
+            SemanticsNode tableNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.TABLE)
+                    .findFirst()
+                    .orElseThrow();
+            try (WindowsAutomationProvider gridProvider = window.automationProvider(tableNode)) {
+                assertTrue(gridProvider.invokePatternProvider(WindowsAutomationProvider.UIA_GRID_PATTERN_ID));
+                assertTrue(gridProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TABLE_PATTERN_ID));
+                assertEquals(2, gridProvider.gridRowCount());
+                assertEquals(3, gridProvider.gridColumnCount());
+                assertTrue(gridProvider.invokeGetItem(1, 2));
+                assertEquals(1, gridProvider.invokeFetchedItemRow());
+                assertEquals(2, gridProvider.invokeFetchedItemColumn());
+                assertTrue(gridProvider.invokeFetchedContainingGrid());
+                assertFalse(gridProvider.invokeGetItem(2, 0));
+                assertEquals(0, gridProvider.invokeRowHeaders());
+                assertEquals(0, gridProvider.invokeColumnHeaders());
+                assertEquals(WindowsAutomationProvider.ROW_OR_COLUMN_MAJOR_ROW, gridProvider.rowOrColumnMajor());
+            }
+            SemanticsNode cellNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.TABLE_CELL)
+                    .findFirst()
+                    .orElseThrow();
+            try (WindowsAutomationProvider cellProvider = window.automationProvider(cellNode)) {
+                assertTrue(cellProvider.invokePatternProvider(WindowsAutomationProvider.UIA_GRID_ITEM_PATTERN_ID));
+                assertTrue(cellProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TABLE_ITEM_PATTERN_ID));
+                assertEquals(0, cellProvider.gridItemRow());
+                assertEquals(1, cellProvider.gridItemColumn());
+                assertEquals(0, cellProvider.invokeRowHeaderItems());
+            }
+            SemanticsNode listNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.LIST)
+                    .findFirst()
+                    .orElseThrow();
+            try (WindowsAutomationProvider scrollProvider = window.automationProvider(listNode)) {
+                assertTrue(scrollProvider.invokePatternProvider(WindowsAutomationProvider.UIA_SCROLL_PATTERN_ID));
+                assertTrue(scrollProvider.verticallyScrollable());
+                assertTrue(scrollProvider.horizontallyScrollable());
+                assertEquals(25.0, scrollProvider.verticalScrollPercent());
+                assertEquals(10.0, scrollProvider.horizontalScrollPercent());
+                assertEquals(40.0, scrollProvider.setVerticalScrollPercent(40.0));
+                assertEquals(50.0, scrollProvider.scrollVertical(WindowsAutomationProvider.SCROLL_AMOUNT_SMALL_INCREMENT));
+                assertEquals(20.0, scrollProvider.setHorizontalScrollPercent(20.0));
+                assertEquals(30.0, scrollProvider.scrollHorizontal(WindowsAutomationProvider.SCROLL_AMOUNT_SMALL_INCREMENT));
             }
             try (WindowsAutomationProvider statusProvider = window.automationProvider(statusNode)) {
                 assertEquals(
@@ -587,6 +782,50 @@ final class WindowsPlatformTest {
                 assertTrue(textProvider.invokeClone());
                 assertTrue(textProvider.invokeCompareSelf());
                 assertTrue(textProvider.invokeEnclosingElement());
+                textProvider.invokeExpandToEnclosingUnit(WindowsAutomationProvider.TEXT_UNIT_DOCUMENT);
+                assertEquals("hello", textProvider.invokeGetText(-1));
+                assertEquals(-2, textProvider.invokeMove(WindowsAutomationProvider.TEXT_UNIT_CHARACTER, -2));
+                assertEquals(
+                        4,
+                        textProvider.invokeExpandToEnclosingUnit(WindowsAutomationProvider.TEXT_UNIT_CHARACTER).end()
+                );
+                assertEquals("l", textProvider.invokeGetText(-1));
+                double[] rects = textProvider.invokeGetBoundingRectangles();
+                assertEquals(4, rects.length);
+                assertEquals(fieldNode.bounds().width(), rects[2], 0.01);
+                assertEquals(fieldNode.bounds().height(), rects[3], 0.01);
+                textProvider.invokeExpandToEnclosingUnit(WindowsAutomationProvider.TEXT_UNIT_DOCUMENT);
+                assertTrue(textProvider.invokeCompareEndpoints(
+                        WindowsAutomationProvider.TEXT_PATTERN_RANGE_ENDPOINT_START,
+                        WindowsAutomationProvider.TEXT_PATTERN_RANGE_ENDPOINT_END
+                ) < 0);
+                assertTrue(textProvider.invokeFindText("ell", false));
+                assertEquals("ell", textProvider.invokeGetText(-1));
+                assertEquals(
+                        1,
+                        textProvider.invokeMoveEndpointByUnit(
+                                WindowsAutomationProvider.TEXT_PATTERN_RANGE_ENDPOINT_END,
+                                WindowsAutomationProvider.TEXT_UNIT_CHARACTER,
+                                1
+                        )
+                );
+                assertEquals("ello", textProvider.invokeGetText(-1));
+                textProvider.invokeMoveEndpointByRange(
+                        WindowsAutomationProvider.TEXT_PATTERN_RANGE_ENDPOINT_END,
+                        WindowsAutomationProvider.TEXT_PATTERN_RANGE_ENDPOINT_START
+                );
+                assertEquals("", textProvider.invokeGetText(-1));
+                assertFalse(textProvider.invokeGetSelection());
+                textProvider.invokeSelect();
+                assertTrue(textProvider.invokeGetSelection());
+                assertFalse(textProvider.invokeFindAttribute(40013));
+                assertEquals(0, textProvider.invokeGetAttributeValue(40013));
+                textProvider.invokeRemoveFromSelection();
+                assertFalse(textProvider.invokeGetSelection());
+                textProvider.invokeAddToSelection();
+                assertTrue(textProvider.invokeGetSelection());
+                assertTrue(textProvider.invokeScrollIntoView(true));
+                assertEquals(0, textProvider.invokeGetChildren());
             }
         } finally {
             platform.close();

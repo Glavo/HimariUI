@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// Verifies Arabic joining types and isol/init/medi/fina selection.
 @NotNullByDefault
@@ -46,6 +47,19 @@ final class ArabicJoiningTest {
         assertEquals(ArabicForm.INITIAL, form("\u0628\u064E\u062A", 0));
         assertEquals(ArabicForm.NONE, form("\u0628\u064E\u062A", 1));
         assertEquals(ArabicForm.FINAL, form("\u0628\u064E\u062A", 2));
+    }
+
+    /// Selects isolated versus final lam-alef from LAM joining.
+    @Test
+    void selectsLamAlefForms() {
+        assertEquals(0xFEFB, ArabicPresentation.lamAlef(0x0627, ArabicForm.ISOLATED));
+        assertEquals(0xFEFB, ArabicPresentation.lamAlef(0x0627, ArabicForm.INITIAL));
+        assertEquals(0xFEFC, ArabicPresentation.lamAlef(0x0627, ArabicForm.MEDIAL));
+        assertEquals(0xFEFC, ArabicPresentation.lamAlef(0x0627, ArabicForm.FINAL));
+        assertEquals(0xFEF5, ArabicPresentation.lamAlef(0x0622, ArabicForm.ISOLATED));
+        assertEquals(0, ArabicPresentation.lamAlef(0x0627, ArabicForm.NONE));
+        assertTrue(ArabicPresentation.isLam(0x0644));
+        assertTrue(ArabicPresentation.isAlef(0x0627));
     }
 
     /// Forces a final form after ZWJ.

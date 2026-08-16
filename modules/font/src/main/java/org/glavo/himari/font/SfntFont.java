@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/// Reads a checked SFNT directory, `cmap` format 4/12, `hmtx`, TrueType `loca`/`glyf` or
-/// CFF/CFF2 Type 2 outlines, optional GSUB, GPOS/`kern`, COLR v0/CPAL, `fvar`, `avar`, `gvar`,
-/// `HVAR`, `sbix`, CBLC/CBDT, and EBLC/EBDT.
+/// Reads a checked SFNT, TTC first face, or WOFF1 directory, `cmap` format 4/12, `hmtx`, TrueType `loca`/`glyf` or
+/// CFF/CFF2 Type 2 outlines, optional GSUB, GDEF, GPOS/`kern`, COLR v0/v1/CPAL, `fvar`, `avar`, `gvar`,
+/// `HVAR`, `VVAR`, `MVAR`, `sbix`, CBLC/CBDT, EBLC/EBDT, and `gasp`.
 ///
 /// The font file is retained as a read-only [MemorySegment] so the same view can back a heap array
 /// or a later mapped file. Sequential table decoding uses [ByteBuffer] cursors over those slices.
@@ -67,6 +67,9 @@ public final class SfntFont {
     /// CFF/CFF2 outlines, or `null` for a TrueType face.
     private final @Nullable CffOutlines cff;
 
+    /// GDEF glyph classes, empty when the table is absent.
+    private final GdefTable gdef;
+
     /// GSUB type-1 substitutions, or empty when the table is absent.
     private final GsubSubstitutions gsub;
 
@@ -88,6 +91,18 @@ public final class SfntFont {
     /// `HVAR` advance deltas, empty when the table is absent.
     private final HvarTable hvar;
 
+    /// `VVAR` vertical-advance deltas, empty when the table is absent.
+    private final HvarTable vvar;
+
+    /// `MVAR` font-wide metric deltas, empty when the table is absent.
+    private final MvarTable mvar;
+
+    /// Default `hhea` ascender in font units.
+    private final int ascender;
+
+    /// Vertical advances from `vmtx`, or zeros when the table is absent.
+    private final int[] verticalAdvances;
+
     /// First `sbix` strike, empty when the table is absent.
     private final SbixTable sbix;
 
@@ -96,6 +111,9 @@ public final class SfntFont {
 
     /// First EBLC/EBDT format-1 strike, empty when the tables are absent.
     private final CbdtCblc ebdt;
+
+    /// `gasp` grayscale ranges, empty when the table is absent.
+    private final GaspTable gasp;
 
     /// Shared empty normalized instance used for the default outline.
     private static final float[] DEFAULT_NORMALIZED = new float[0];
@@ -115,7 +133,11 @@ public final class SfntFont {
     /// @param bytes the complete font file
     public SfntFont(MemorySegment bytes) {
         Objects.requireNonNull(bytes, "bytes");
-        this.data = MemorySegment.ofArray(bytes.toArray(ValueLayout.JAVA_BYTE)).asReadOnly();
+        MemorySegment sfnt = WoffFile.isWoff(bytes) ? WoffFile.unwrap(bytes) : bytes;
+        if (TtcFile.isTtc(sfnt)) {
+            sfnt = TtcFile.firstFont(sfnt);
+        }
+        this.data = MemorySegment.ofArray(sfnt.toArray(ValueLayout.JAVA_BYTE)).asReadOnly();
         ByteBuffer buffer = cursor(data);
         if (buffer.remaining() < 12) {
             throw new IllegalArgumentException("SFNT header is truncated");
@@ -163,6 +185,7 @@ public final class SfntFont {
         this.cmap12End = cmap.format12.endCodes;
         this.cmap12Glyph = cmap.format12.startGlyphs;
         this.advances = readAdvances();
+        this.ascender = readAscender();
         @Nullable ByteBuffer cffTable = findTable("CFF ");
         @Nullable ByteBuffer cff2Table = findTable("CFF2");
         if (tables.containsKey("glyf") && tables.containsKey("loca")) {
@@ -174,16 +197,21 @@ public final class SfntFont {
         } else {
             throw new IllegalArgumentException("SFNT has neither glyf/loca nor CFF/CFF2");
         }
-        this.gsub = GsubSubstitutions.parse(findTable("GSUB"));
-        this.gpos = GposPositioning.parse(findTable("GPOS"), findTable("kern"));
+        this.gdef = GdefTable.parse(findTable("GDEF"));
+        this.gsub = GsubSubstitutions.parse(findTable("GSUB"), this.gdef);
+        this.gpos = GposPositioning.parse(findTable("GPOS"), findTable("kern"), this.gdef);
         this.colr = ColrCpal.parse(findTable("COLR"), findTable("CPAL"));
         this.fvar = FvarTable.parse(findTable("fvar"));
         this.gvar = GvarTable.parse(findTable("gvar"), glyphCount);
         this.avar = AvarTable.parse(findTable("avar"), fvar.axes().size());
         this.hvar = HvarTable.parse(findTable("HVAR"), fvar.axes().size());
+        this.vvar = HvarTable.parse(findTable("VVAR"), fvar.axes().size());
+        this.mvar = MvarTable.parse(findTable("MVAR"), fvar.axes().size());
+        this.verticalAdvances = readVerticalAdvances();
         this.sbix = SbixTable.parse(findTable("sbix"), glyphCount);
         this.cbdt = CbdtCblc.parse(findTable("CBLC"), findTable("CBDT"), CbdtCblc.TAG_CBDT);
         this.ebdt = CbdtCblc.parse(findTable("EBLC"), findTable("EBDT"), CbdtCblc.TAG_EBDT);
+        this.gasp = GaspTable.parse(findTable("gasp"));
     }
 
     /// Returns the retained font file.
@@ -198,6 +226,48 @@ public final class SfntFont {
     /// @return the em size
     public int unitsPerEm() {
         return unitsPerEm;
+    }
+
+    /// Returns the `gasp` behavior flags at `ppem`.
+    ///
+    /// A missing table reports [`GaspTable#DOGRAY`].
+    ///
+    /// @param ppem the destination pixels-per-em
+    /// @return the flags
+    public int gaspFlags(int ppem) {
+        return gasp.flagsAt(ppem);
+    }
+
+    /// Returns whether unhinted grayscale is permitted at `ppem`.
+    ///
+    /// @param ppem the destination pixels-per-em
+    /// @return whether grayscale coverage may be produced
+    public boolean gaspAllowsGrayscale(int ppem) {
+        return gasp.allowsGrayscale(ppem);
+    }
+
+    /// Returns whether `gasp` requests vertical-only grid fitting at `ppem`.
+    ///
+    /// @param ppem the destination pixels-per-em
+    /// @return whether the rasterizer will snap the outline box to the pixel grid
+    public boolean gaspGridFits(int ppem) {
+        return gasp.gridFits(ppem);
+    }
+
+    /// Returns the default `hhea` ascender.
+    ///
+    /// @return the ascender in font units
+    public int ascender() {
+        return ascender(defaultVariation());
+    }
+
+    /// Returns the ascender at `axisValues`, applying an `MVAR` `hasc` delta when present.
+    ///
+    /// @param axisValues design-space coordinates, one per axis
+    /// @return the varied ascender
+    public int ascender(float[] axisValues) {
+        Objects.requireNonNull(axisValues, "axisValues");
+        return ascender + mvar.hascDelta(instanceCoords(axisValues));
     }
 
     /// Returns whether `cmap` maps `codePoint` to a nonzero glyph.
@@ -265,11 +335,12 @@ public final class SfntFont {
         return metrics(glyphId, defaultVariation());
     }
 
-    /// Returns horizontal metrics for a glyph at `axisValues`.
+    /// Returns horizontal and vertical metrics for a glyph at `axisValues`.
     ///
     /// Design-space coordinates follow [`#variationAxes()`] order and are remapped by `avar`
-    /// before `gvar` and `HVAR`. A simple `gvar` glyph adds phantom deltas; `HVAR` then adds
-    /// its advance delta. A negative varied advance is clamped to `0`.
+    /// before `gvar`, `HVAR`, and `VVAR`. A simple `gvar` glyph adds phantom deltas; `HVAR` then
+    /// adds its advance-width delta and `VVAR` adds its advance-height delta. A negative varied
+    /// advance is clamped to `0`.
     ///
     /// @param glyphId the glyph id
     /// @param axisValues design-space coordinates, one per axis
@@ -287,8 +358,12 @@ public final class SfntFont {
         if (advance < 0) {
             advance = 0;
         }
+        int height = verticalAdvances[glyphId] + vvar.advanceDelta(glyphId, normalized);
+        if (height < 0) {
+            height = 0;
+        }
         int lsb = gvar.leftSideBearingDelta(glyphId, pointCount, normalized);
-        return new GlyphMetrics(glyphId, advance, lsb);
+        return new GlyphMetrics(glyphId, advance, lsb, height);
     }
 
     /// Returns whether this face stores TrueType `glyf` outlines.
@@ -384,6 +459,21 @@ public final class SfntFont {
         return last + 1;
     }
 
+    /// GSUB `rlig` feature tag.
+    public static final int TAG_RLIG = 0x726C6967;
+
+    /// GSUB `liga` feature tag.
+    public static final int TAG_LIGA = 0x6C696761;
+
+    /// GSUB `calt` feature tag.
+    public static final int TAG_CALT = 0x63616C74;
+
+    /// GSUB `ccmp` feature tag.
+    public static final int TAG_CCMP = 0x63636D70;
+
+    /// GSUB `aalt` feature tag.
+    public static final int TAG_AALT = 0x61616C74;
+
     /// Applies GSUB single substitutions listed by `featureTag`.
     ///
     /// Lookups other than type 1 are skipped. A missing GSUB table or feature returns `glyphId`.
@@ -395,15 +485,342 @@ public final class SfntFont {
         return gsub.apply(glyphId, featureTag);
     }
 
+    /// Applies the first GSUB type-2 multiple substitution listed by `featureTag`.
+    ///
+    /// Type-7 ExtensionSubst wrappers are unwrapped before the type-2 subtable is read. A missing
+    /// table, missing feature, or glyph outside coverage returns `null`.
+    ///
+    /// @param glyphId the input glyph
+    /// @param featureTag a four-byte OpenType tag as a big-endian `int`
+    /// @return the substitute sequence, or `null`
+    public int @Nullable [] decompose(int glyphId, int featureTag) {
+        return gsub.decompose(glyphId, featureTag);
+    }
+
+    /// Applies the first GSUB type-3 alternate listed by `featureTag`.
+    ///
+    /// The first-stable subset returns the first glyph of the matching AlternateSet. A missing
+    /// table, missing feature, or glyph outside coverage returns `glyphId`.
+    ///
+    /// @param glyphId the input glyph
+    /// @param featureTag a four-byte OpenType tag as a big-endian `int`
+    /// @return the first alternate, or `glyphId`
+    public int alternate(int glyphId, int featureTag) {
+        return gsub.alternate(glyphId, featureTag);
+    }
+
+    /// Applies the first GSUB type-4 ligature listed by `featureTag` at `start`.
+    ///
+    /// Lookups other than type 4 are skipped. A missing table, missing feature, or failed match
+    /// returns `null`. The first matching ligature in table order wins.
+    ///
+    /// @param glyphIds the mapped glyph identities
+    /// @param start the first glyph index
+    /// @param remaining the number of glyphs available from `start`
+    /// @param featureTag a four-byte OpenType tag as a big-endian `int`
+    /// @return the match, or `null`
+    public @Nullable GlyphLigature ligature(int[] glyphIds, int start, int remaining, int featureTag) {
+        return gsub.ligature(glyphIds, start, remaining, featureTag);
+    }
+
+    /// Applies a GSUB type-5 two-glyph context substitution listed by `featureTag`.
+    ///
+    /// @param current the first input glyph
+    /// @param next the second input glyph
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or `current`
+    public int contextSubstitute(int current, int next, int featureTag) {
+        return gsub.contextSubstitute(current, next, featureTag);
+    }
+
+    /// Applies a type-5 rule, using `skippedNext` when the lookup has `IgnoreMarks`.
+    ///
+    /// @param current the first input glyph
+    /// @param next the immediately following glyph
+    /// @param skippedNext the first non-mark after `current`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or `current`
+    public int contextSubstitute(int current, int next, int skippedNext, int featureTag) {
+        return gsub.contextSubstitute(current, next, skippedNext, featureTag);
+    }
+
+    /// Applies a type-5 rule by walking `glyphIds` with `IgnoreMarks` and `MarkAttachmentType`.
+    ///
+    /// @param glyphIds the mapped glyph identities
+    /// @param start the first glyph index
+    /// @param remaining the number of glyphs available from `start`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or the glyph at `start`
+    public int contextSubstitute(int[] glyphIds, int start, int remaining, int featureTag) {
+        return gsub.contextSubstitute(glyphIds, start, remaining, featureTag);
+    }
+
+    /// Applies a GSUB type-6 one-lookahead chain substitution listed by `featureTag`.
+    ///
+    /// @param current the first input glyph
+    /// @param next the second input glyph
+    /// @param lookahead the first lookahead glyph
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or `current`
+    public int chainSubstitute(int current, int next, int lookahead, int featureTag) {
+        return gsub.chainSubstitute(current, next, lookahead, featureTag);
+    }
+
+    /// Applies a type-6 rule, using skipped glyphs when the lookup has `IgnoreMarks`.
+    ///
+    /// @param current the first input glyph
+    /// @param next the immediately following glyph
+    /// @param lookahead the first lookahead glyph
+    /// @param skippedNext the first non-mark after `current`
+    /// @param skippedLookahead the first non-mark after `skippedNext`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or `current`
+    public int chainSubstitute(
+            int current,
+            int next,
+            int lookahead,
+            int skippedNext,
+            int skippedLookahead,
+            int featureTag
+    ) {
+        return gsub.chainSubstitute(current, next, lookahead, skippedNext, skippedLookahead, featureTag);
+    }
+
+    /// Applies a type-6 rule by walking `glyphIds` with `IgnoreMarks` and `MarkAttachmentType`.
+    ///
+    /// @param glyphIds the mapped glyph identities
+    /// @param start the first glyph index
+    /// @param remaining the number of glyphs available from `start`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or the glyph at `start`
+    public int chainSubstitute(int[] glyphIds, int start, int remaining, int featureTag) {
+        return gsub.chainSubstitute(glyphIds, start, remaining, featureTag);
+    }
+
+    /// Applies a GSUB type-8 reverse-chain substitution listed by `featureTag`.
+    ///
+    /// The first-stable subset matches one lookahead glyph and no backtrack. A missing table,
+    /// missing feature, or failed match returns `current`.
+    ///
+    /// @param current the input glyph
+    /// @param lookahead the following glyph
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted glyph, or `current`
+    public int reverseSubstitute(int current, int lookahead, int featureTag) {
+        return gsub.reverseSubstitute(current, lookahead, featureTag);
+    }
+
+    /// Applies a type-8 reverse rule by walking lookahead glyphs with skip flags.
+    ///
+    /// @param glyphIds the mapped glyphs
+    /// @param start the input glyph index
+    /// @param remaining the number of glyphs available from `start`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted glyph, or the glyph at `start`
+    public int reverseSubstitute(int[] glyphIds, int start, int remaining, int featureTag) {
+        return gsub.reverseSubstitute(glyphIds, start, remaining, featureTag);
+    }
+
+    /// Returns the GDEF glyph class, or `0` when unassigned or GDEF is absent.
+    ///
+    /// @param glyphId the glyph
+    /// @return the class
+    public int glyphClass(int glyphId) {
+        return gdef.glyphClass(glyphId);
+    }
+
+    /// Returns whether GDEF classifies `glyphId` as a combining mark.
+    ///
+    /// @param glyphId the glyph
+    /// @return whether it is a mark
+    public boolean isGdefMark(int glyphId) {
+        return gdef.isMark(glyphId);
+    }
+
+    /// Returns whether GDEF classifies `glyphId` as a base glyph.
+    ///
+    /// @param glyphId the glyph
+    /// @return whether it is a base
+    public boolean isGdefBase(int glyphId) {
+        return gdef.isBase(glyphId);
+    }
+
+    /// Returns whether GDEF classifies `glyphId` as a ligature glyph.
+    ///
+    /// @param glyphId the glyph
+    /// @return whether it is a ligature
+    public boolean isGdefLigature(int glyphId) {
+        return gdef.isLigature(glyphId);
+    }
+
+    /// Returns whether `glyphId` is covered by GDEF MarkGlyphSet `setIndex`.
+    ///
+    /// @param glyphId the glyph
+    /// @param setIndex the mark-filter set
+    /// @return whether the glyph is in the set
+    public boolean inMarkSet(int glyphId, int setIndex) {
+        return gdef.inMarkSet(glyphId, setIndex);
+    }
+
+    /// Returns the GDEF mark-attach class, or `0` when unassigned or GDEF is absent.
+    ///
+    /// @param glyphId the glyph
+    /// @return the class
+    public int markAttachClass(int glyphId) {
+        return gdef.markAttachClass(glyphId);
+    }
+
+    /// Returns the unique GPOS `MarkAttachmentType` values present in this face.
+    ///
+    /// @return the classes, possibly empty
+    public int @Unmodifiable [] markAttachmentTypes() {
+        return gpos.attachmentTypes();
+    }
+
     /// Returns the GPOS/`kern` X-advance delta for the consecutive pair `(left, right)`.
     ///
-    /// A missing pair or missing table returns `0`. The delta is in font units and may be negative.
+    /// Type-2 pair positioning, format-0 `kern`, type-3 cursive exit-to-entry X deltas, and
+    /// type-7 two-glyph context rules without skip flags share this map. `IgnoreMarks` and
+    /// `MarkAttachmentType` lookups use [`#skipPairAdjustment(int, int)`] and
+    /// [`#attachPairAdjustment(int, int, int)`]. A missing pair or missing table returns `0`.
+    /// The delta is in font units and may be negative.
     ///
     /// @param left the first glyph
     /// @param right the second glyph
     /// @return the signed X-advance adjustment applied to `left`
     public int pairAdjustment(int left, int right) {
         return gpos.pairAdjustment(left, right);
+    }
+
+    /// Returns the GPOS `IgnoreMarks` pair X-advance for `(left, right)`.
+    ///
+    /// Type-2 and type-7 lookups with flag `0x0008` share this map. `right` is the first
+    /// following glyph that is not a GDEF mark.
+    ///
+    /// @param left the first glyph
+    /// @param right the next non-mark glyph
+    /// @return the signed adjustment, or `0`
+    public int skipPairAdjustment(int left, int right) {
+        return gpos.skipPairAdjustment(left, right);
+    }
+
+    /// Returns the GPOS `MarkAttachmentType` pair X-advance for class `attachType`.
+    ///
+    /// Type-2 and type-7 lookups with a non-zero high-byte flag share this map. `right` is the
+    /// first following glyph that is not a mark whose attach class differs from `attachType`.
+    ///
+    /// @param left the first glyph
+    /// @param right the next non-skipped glyph
+    /// @param attachType the lookup high-byte class
+    /// @return the signed adjustment, or `0`
+    public int attachPairAdjustment(int left, int right, int attachType) {
+        return gpos.attachPairAdjustment(left, right, attachType);
+    }
+
+    /// Applies every stored pair lookup at `start`, honoring skip flags.
+    ///
+    /// @param glyphIds the mapped glyphs
+    /// @param start the first glyph index
+    /// @param remaining the number of glyphs available from `start`
+    /// @return the summed X-advance delta
+    public int pairAdjustment(int[] glyphIds, int start, int remaining) {
+        return gpos.pairAdjustment(glyphIds, start, remaining);
+    }
+
+    /// Returns the GPOS type-1 X-advance for `glyphId`.
+    ///
+    /// @param glyphId the glyph
+    /// @return the signed adjustment, or `0`
+    public int singleAdjustment(int glyphId) {
+        return gpos.singleAdjustment(glyphId);
+    }
+
+    /// Returns the GPOS type-8 X-advance for the triple `(current, next, lookahead)`.
+    ///
+    /// Adjacent lookups without skip flags or backtrack use this map. Rules that require a
+    /// preceding glyph are applied only through [`#chainAdjustment(int[], int, int)`].
+    /// `IgnoreMarks` and `MarkAttachmentType` lookups use [`#skipChainAdjustment(int, int, int)`]
+    /// and [`#attachChainAdjustment(int, int, int, int)`].
+    ///
+    /// @param current the first input glyph
+    /// @param next the second input glyph
+    /// @param lookahead the first lookahead glyph
+    /// @return the signed adjustment, or `0`
+    public int chainAdjustment(int current, int next, int lookahead) {
+        return gpos.chainAdjustment(current, next, lookahead);
+    }
+
+    /// Returns the GPOS `IgnoreMarks` type-8 X-advance.
+    ///
+    /// @param current the first input glyph
+    /// @param next the next non-mark glyph
+    /// @param lookahead the following non-mark glyph
+    /// @return the signed adjustment, or `0`
+    public int skipChainAdjustment(int current, int next, int lookahead) {
+        return gpos.skipChainAdjustment(current, next, lookahead);
+    }
+
+    /// Returns the GPOS `MarkAttachmentType` type-8 X-advance for class `attachType`.
+    ///
+    /// @param current the first input glyph
+    /// @param next the next non-skipped glyph
+    /// @param lookahead the following non-skipped glyph
+    /// @param attachType the lookup high-byte class
+    /// @return the signed adjustment, or `0`
+    public int attachChainAdjustment(int current, int next, int lookahead, int attachType) {
+        return gpos.attachChainAdjustment(current, next, lookahead, attachType);
+    }
+
+    /// Returns the GPOS `MarkAttachmentType` type-8 X-advance, honoring required backtrack glyphs.
+    ///
+    /// @param current the first input glyph
+    /// @param next the next non-skipped glyph
+    /// @param lookahead the following non-skipped glyph
+    /// @param attachType the lookup high-byte class
+    /// @param backNear the nearest kept preceding glyph, or `0`
+    /// @param backFar the next kept preceding glyph, or `0`
+    /// @return the signed adjustment, or `0`
+    public int attachChainAdjustment(
+            int current,
+            int next,
+            int lookahead,
+            int attachType,
+            int backNear,
+            int backMid
+    ) {
+        return gpos.attachChainAdjustment(current, next, lookahead, attachType, backNear, backMid, 0);
+    }
+
+    /// Returns the GPOS `MarkAttachmentType` type-8 X-advance with three backtrack glyphs.
+    ///
+    /// @param current the first input glyph
+    /// @param next the next non-skipped glyph
+    /// @param lookahead the following non-skipped glyph
+    /// @param attachType the lookup high-byte class
+    /// @param backNear the nearest kept preceding glyph, or `0`
+    /// @param backMid the next kept preceding glyph, or `0`
+    /// @param backFar the farthest kept preceding glyph, or `0`
+    /// @return the signed adjustment, or `0`
+    public int attachChainAdjustment(
+            int current,
+            int next,
+            int lookahead,
+            int attachType,
+            int backNear,
+            int backMid,
+            int backFar
+    ) {
+        return gpos.attachChainAdjustment(current, next, lookahead, attachType, backNear, backMid, backFar);
+    }
+
+    /// Applies every stored type-8 lookup at `start`, honoring skip flags.
+    ///
+    /// @param glyphIds the mapped glyphs
+    /// @param start the first glyph index
+    /// @param remaining the number of glyphs available from `start`
+    /// @return the summed X-advance delta
+    public int chainAdjustment(int[] glyphIds, int start, int remaining) {
+        return gpos.chainAdjustment(glyphIds, start, remaining);
     }
 
     /// Returns whether `glyphId` is covered by a GPOS mark table.
@@ -423,7 +840,7 @@ public final class SfntFont {
         return gpos.markPlacement(markGlyph, baseGlyph);
     }
 
-    /// Returns COLR v0 layers for `glyphId` from palette `0`.
+    /// Returns COLR v0 or flattened v1 layers for `glyphId` from palette `0`.
     ///
     /// @param glyphId the base glyph
     /// @return the layers, empty when the glyph is not a color base
@@ -431,7 +848,7 @@ public final class SfntFont {
         return colorLayers(glyphId, 0);
     }
 
-    /// Returns COLR v0 layers for `glyphId` from `palette`.
+    /// Returns COLR v0 or flattened v1 layers for `glyphId` from `palette`.
     ///
     /// @param glyphId the base glyph
     /// @param palette the CPAL palette index
@@ -654,6 +1071,16 @@ public final class SfntFont {
         return new CmapFormat12(startCodes, endCodes, startGlyphs);
     }
 
+    /// Reads the `hhea` ascender.
+    private int readAscender() {
+        ByteBuffer hhea = table("hhea");
+        if (hhea.remaining() < 6) {
+            throw new IllegalArgumentException("hhea is truncated");
+        }
+        hhea.position(4);
+        return hhea.getShort();
+    }
+
     /// Reads advance widths from `hmtx`.
     ///
     /// @return the advances
@@ -671,6 +1098,31 @@ public final class SfntFont {
             if (index < metricsCount) {
                 last = Short.toUnsignedInt(hmtx.getShort());
                 hmtx.getShort();
+            }
+            values[index] = last;
+        }
+        return values;
+    }
+
+    /// Reads vertical advances from `vmtx`, or zeros when `vhea`/`vmtx` are absent.
+    ///
+    /// @return the advances
+    private int[] readVerticalAdvances() {
+        @Nullable ByteBuffer vhea = findTable("vhea");
+        @Nullable ByteBuffer vmtx = findTable("vmtx");
+        int[] values = new int[glyphCount];
+        if (vhea == null || vmtx == null || vhea.remaining() < 36) {
+            return values;
+        }
+        ByteBuffer header = vhea.duplicate().order(java.nio.ByteOrder.BIG_ENDIAN);
+        header.position(34);
+        int metricsCount = Short.toUnsignedInt(header.getShort());
+        ByteBuffer metrics = vmtx.duplicate().order(java.nio.ByteOrder.BIG_ENDIAN);
+        int last = 0;
+        for (int index = 0; index < glyphCount; index++) {
+            if (index < metricsCount && metrics.remaining() >= 4) {
+                last = Short.toUnsignedInt(metrics.getShort());
+                metrics.getShort();
             }
             values[index] = last;
         }

@@ -4,6 +4,7 @@ import org.glavo.himari.ffi.CallbackFailureQueue;
 import org.glavo.himari.layout.input.KeyEvent;
 import org.glavo.himari.layout.input.KeyEventType;
 import org.glavo.himari.layout.input.LogicalKey;
+import org.glavo.himari.layout.input.PointerDeviceKind;
 import org.glavo.himari.layout.input.PointerEvent;
 import org.glavo.himari.layout.input.PointerEventType;
 import org.glavo.himari.platform.windows.generated.Win32FfmBindings;
@@ -62,6 +63,24 @@ public final class WindowsNativeWindow implements AutoCloseable {
 
     /// Left button up.
     private static final int WM_LBUTTONUP = 0x0202;
+
+    /// `PT_TOUCH`.
+    public static final int PT_TOUCH = 2;
+
+    /// `PT_PEN`.
+    public static final int PT_PEN = 3;
+
+    /// `PT_MOUSE`.
+    public static final int PT_MOUSE = 4;
+
+    /// Pointer update.
+    private static final int WM_POINTERUPDATE = 0x0245;
+
+    /// Pointer down.
+    private static final int WM_POINTERDOWN = 0x0246;
+
+    /// Pointer up.
+    private static final int WM_POINTERUP = 0x0247;
 
     /// Key down.
     private static final int WM_KEYDOWN = 0x0100;
@@ -371,6 +390,41 @@ public final class WindowsNativeWindow implements AutoCloseable {
         return scanlines;
     }
 
+    /// Maps a `POINTER_INPUT_TYPE` onto a device kind.
+    ///
+    /// @param pointerType the `GetPointerType` result
+    /// @return the device kind
+    public static PointerDeviceKind deviceKindFromPointerType(int pointerType) {
+        return switch (pointerType) {
+            case PT_PEN -> PointerDeviceKind.PEN;
+            case PT_MOUSE -> PointerDeviceKind.MOUSE;
+            default -> PointerDeviceKind.TOUCH;
+        };
+    }
+
+    /// Queries `GetPointerType` for `pointerId`.
+    ///
+    /// @param pointerId the pointer identity from `wParam`
+    /// @return the type, or `0` when the query fails
+    public int queryPointerType(int pointerId) {
+        requireOpen();
+        MemorySegment typeOut = arena.allocate(ValueLayout.JAVA_INT);
+        Win32FfmBindings.GetPointerTypeResult result = bindings.getPointerType(pointerId, typeOut);
+        if (result.value() == 0) {
+            return 0;
+        }
+        return typeOut.get(ValueLayout.JAVA_INT, 0);
+    }
+
+    /// Resolves the device for one `WM_POINTER*` `wParam`.
+    private PointerDeviceKind pointerDevice(long wParam) {
+        int type = queryPointerType(lowWord(wParam));
+        if (type == 0) {
+            return PointerDeviceKind.TOUCH;
+        }
+        return deviceKindFromPointerType(type);
+    }
+
     /// Posts one message to this HWND so the production WndProc delivers it.
     ///
     /// @param message the Win32 message identifier
@@ -513,15 +567,57 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 yield 0L;
             }
             case WM_MOUSEMOVE -> {
-                pointerEvents.add(new PointerEvent(PointerEventType.MOVE, lowWord(lParam), highWord(lParam)));
+                pointerEvents.add(new PointerEvent(
+                        PointerEventType.MOVE,
+                        lowWord(lParam),
+                        highWord(lParam),
+                        PointerDeviceKind.MOUSE
+                ));
                 yield 0L;
             }
             case WM_LBUTTONDOWN -> {
-                pointerEvents.add(new PointerEvent(PointerEventType.DOWN, lowWord(lParam), highWord(lParam)));
+                pointerEvents.add(new PointerEvent(
+                        PointerEventType.DOWN,
+                        lowWord(lParam),
+                        highWord(lParam),
+                        PointerDeviceKind.MOUSE
+                ));
                 yield 0L;
             }
             case WM_LBUTTONUP -> {
-                pointerEvents.add(new PointerEvent(PointerEventType.UP, lowWord(lParam), highWord(lParam)));
+                pointerEvents.add(new PointerEvent(
+                        PointerEventType.UP,
+                        lowWord(lParam),
+                        highWord(lParam),
+                        PointerDeviceKind.MOUSE
+                ));
+                yield 0L;
+            }
+            case WM_POINTERUPDATE -> {
+                pointerEvents.add(new PointerEvent(
+                        PointerEventType.MOVE,
+                        lowWord(lParam),
+                        highWord(lParam),
+                        pointerDevice(wParam)
+                ));
+                yield 0L;
+            }
+            case WM_POINTERDOWN -> {
+                pointerEvents.add(new PointerEvent(
+                        PointerEventType.DOWN,
+                        lowWord(lParam),
+                        highWord(lParam),
+                        pointerDevice(wParam)
+                ));
+                yield 0L;
+            }
+            case WM_POINTERUP -> {
+                pointerEvents.add(new PointerEvent(
+                        PointerEventType.UP,
+                        lowWord(lParam),
+                        highWord(lParam),
+                        pointerDevice(wParam)
+                ));
                 yield 0L;
             }
             case WM_KEYDOWN -> {

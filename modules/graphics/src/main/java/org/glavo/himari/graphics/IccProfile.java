@@ -1,6 +1,7 @@
 package org.glavo.himari.graphics;
 
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.nio.charset.StandardCharsets;
@@ -35,6 +36,7 @@ import java.util.Objects;
 /// @param greenTrc the green tone curve
 /// @param blueTrc the blue tone curve
 /// @param sha256 the lowercase SHA-256 digest of the exact profile bytes
+/// @param clut the optional AToB0 `mft2` CLUT, or `null` when the matrix/TRC path is used
 @NotNullByDefault
 public record IccProfile(
         int size,
@@ -56,7 +58,8 @@ public record IccProfile(
         Curve redTrc,
         Curve greenTrc,
         Curve blueTrc,
-        String sha256
+        String sha256,
+        @Nullable IccClut clut
 ) {
     /// Maximum accepted profile size.
     public static final int MAX_PROFILE_BYTES = 1_048_576;
@@ -93,6 +96,9 @@ public record IccProfile(
 
     /// Tag `'bTRC'`.
     private static final int TAG_B_TRC = 0x6254_5243;
+
+    /// Tag `'A2B0'`.
+    private static final int TAG_A2B0 = 0x4132_4230;
 
     /// Type `'XYZ '`.
     private static final int TYPE_XYZ = 0x5859_5A20;
@@ -180,14 +186,16 @@ public record IccProfile(
                 readCurve(bytes, requireTag(bytes, tagCount, TAG_R_TRC)),
                 readCurve(bytes, requireTag(bytes, tagCount, TAG_G_TRC)),
                 readCurve(bytes, requireTag(bytes, tagCount, TAG_B_TRC)),
-                sha256(bytes)
+                sha256(bytes),
+                readClut(bytes, tagCount)
         );
     }
 
     /// Converts one RGB sample through this profile into extended-linear sRGB.
     ///
-    /// PCS XYZ is chromatically adapted from the header illuminant to D65 when the illuminant is
-    /// not already D65-like. The result is not clamped.
+    /// When [`#clut()`] is present, the AToB0 `mft2` table is used. Otherwise the matrix/TRC path
+    /// is used. PCS XYZ is chromatically adapted from the header illuminant to D65 when the
+    /// illuminant is not already D65-like. The result is not clamped.
     ///
     /// @param red the device red in `[0, 1]`
     /// @param green the device green in `[0, 1]`
@@ -201,12 +209,22 @@ public record IccProfile(
         if (outsideUnit(red) || outsideUnit(green) || outsideUnit(blue) || outsideUnit(alpha)) {
             throw new IllegalArgumentException("ICC sample components must be in [0, 1]");
         }
-        float linearRed = redTrc.decode(red);
-        float linearGreen = greenTrc.decode(green);
-        float linearBlue = blueTrc.decode(blue);
-        float x = redX * linearRed + greenX * linearGreen + blueX * linearBlue;
-        float y = redY * linearRed + greenY * linearGreen + blueY * linearBlue;
-        float z = redZ * linearRed + greenZ * linearGreen + blueZ * linearBlue;
+        float x;
+        float y;
+        float z;
+        if (clut != null) {
+            float[] xyz = clut.transform(red, green, blue);
+            x = xyz[0];
+            y = xyz[1];
+            z = xyz[2];
+        } else {
+            float linearRed = redTrc.decode(red);
+            float linearGreen = greenTrc.decode(green);
+            float linearBlue = blueTrc.decode(blue);
+            x = redX * linearRed + greenX * linearGreen + blueX * linearBlue;
+            y = redY * linearRed + greenY * linearGreen + blueY * linearBlue;
+            z = redZ * linearRed + greenZ * linearGreen + blueZ * linearBlue;
+        }
         if (!isD65(illuminantX, illuminantY, illuminantZ)) {
             float[] adapted = adaptBradford(x, y, z, illuminantX, illuminantY, illuminantZ, 0.95047f, 1.0f, 1.08883f);
             x = adapted[0];
@@ -262,6 +280,28 @@ public record IccProfile(
             float fraction = position - index;
             return Math.fma(table[index + 1] - table[index], fraction, table[index]);
         }
+    }
+
+    /// Parses an optional `A2B0` `mft2` tag.
+    private static @Nullable IccClut readClut(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_A2B0);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccClut.parseMft2(bytes, offset, size);
+    }
+
+    /// Locates one tag-table entry, or `-1` when absent.
+    private static int findTag(byte[] bytes, int tagCount, int signature) {
+        for (int index = 0; index < tagCount; index++) {
+            int entry = 132 + index * 12;
+            if (u32(bytes, entry) == signature) {
+                return entry;
+            }
+        }
+        return -1;
     }
 
     /// Locates one required tag.

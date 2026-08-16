@@ -2,10 +2,10 @@ package org.glavo.himari.text;
 
 import org.jetbrains.annotations.NotNullByDefault;
 
-/// Composes first-stable Hebrew letter-plus-mark pairs onto Presentation Forms-A.
+/// Composes first-stable Hebrew letter-plus-mark sequences onto Presentation Forms-A.
 ///
-/// Only pairs that have a dedicated presentation form are composed. The shaper applies a
-/// composition only when the font maps that form.
+/// Pair and shin triple forms that have a dedicated presentation code point are composed. The
+/// shaper applies a composition only when the font maps that form.
 @NotNullByDefault
 public final class HebrewPresentation {
     /// Prevents instantiation.
@@ -18,6 +18,9 @@ public final class HebrewPresentation {
     /// @param mark the following combining mark
     /// @return the composed code point, or `0`
     public static int compose(int letter, int mark) {
+        if (letter == 0x05D5 && mark == 0x05B9) {
+            return 0xFB4B;
+        }
         if (letter == 0x05E9 && mark == 0x05C1) {
             return 0xFB2A;
         }
@@ -52,6 +55,31 @@ public final class HebrewPresentation {
             case 0x05EA -> 0xFB4A;
             default -> 0;
         };
+    }
+
+    /// Returns the presentation form for `letter` plus two marks, or `0` when none exists.
+    ///
+    /// Shin plus shin-dot plus dagesh maps to `U+FB2C`. Shin plus sin-dot plus dagesh maps to
+    /// `U+FB2D`. Mark order is accepted either way.
+    ///
+    /// @param letter the Hebrew letter
+    /// @param first the first combining mark
+    /// @param second the second combining mark
+    /// @return the composed code point, or `0`
+    public static int compose(int letter, int first, int second) {
+        if (letter != 0x05E9) {
+            return 0;
+        }
+        boolean dagesh = first == 0x05BC || second == 0x05BC;
+        boolean shin = first == 0x05C1 || second == 0x05C1;
+        boolean sin = first == 0x05C2 || second == 0x05C2;
+        if (dagesh && shin && !sin) {
+            return 0xFB2C;
+        }
+        if (dagesh && sin && !shin) {
+            return 0xFB2D;
+        }
+        return 0;
     }
 
     /// Returns whether `codePoint` is a first-stable Hebrew letter.

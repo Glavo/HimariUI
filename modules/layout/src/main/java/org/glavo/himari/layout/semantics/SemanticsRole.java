@@ -17,11 +17,32 @@ public enum SemanticsRole {
     /// A two-state switch.
     TOGGLE,
 
+    /// An independently checkable box.
+    CHECKBOX,
+
+    /// One exclusive radio option.
+    RADIO,
+
     /// A bounded numeric value.
     SLIDER,
 
+    /// A scrollbar that publishes a bounded range value.
+    SCROLLBAR,
+
+    /// A determinate progress indicator.
+    PROGRESS,
+
     /// A scrollable or lazy collection.
     LIST,
+
+    /// A virtualized table of keyed rows.
+    TABLE,
+
+    /// One row inside a table.
+    TABLE_ROW,
+
+    /// One cell inside a table row.
+    TABLE_CELL,
 
     /// An editable text field.
     TEXT_FIELD,
@@ -45,5 +66,23 @@ public enum SemanticsRole {
     DIALOG,
 
     /// A non-activating tooltip surface.
-    TOOLTIP
+    TOOLTIP,
+
+    /// A tab strip that hosts tab items.
+    TAB_LIST,
+
+    /// One selectable tab.
+    TAB,
+
+    /// The panel shown for the selected tab.
+    TAB_PANEL,
+
+    /// A resizable two-pane split.
+    SPLIT_PANE,
+
+    /// A hierarchical outline.
+    TREE,
+
+    /// One row inside a tree.
+    TREE_ITEM
 }

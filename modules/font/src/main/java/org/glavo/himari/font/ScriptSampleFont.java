@@ -11,8 +11,8 @@ import java.util.LinkedHashMap;
 
 /// Generates a checked SFNT that maps ASCII, Hebrew, Arabic, Thai, Lao, Hangul, and Presentation Forms.
 ///
-/// Presentation-form glyphs are distinct from their nominal letters so joining and Hebrew
-/// composition can be observed through `cmap` identities.
+/// Presentation-form glyphs are distinct from their nominal letters so joining, lam-alef, and
+/// Hebrew composition can be observed through `cmap` identities.
 @NotNullByDefault
 public final class ScriptSampleFont {
     /// Units per em.
@@ -43,13 +43,16 @@ public final class ScriptSampleFont {
     private static final int GLYPH_FB2A = 176;
 
     /// Glyph of `U+FB30`.
-    private static final int GLYPH_FB30 = 178;
+    private static final int GLYPH_FB30 = 180;
+
+    /// Glyph of `U+FB4B`.
+    private static final int GLYPH_FB4B = 182;
 
     /// Glyph of `U+FE80`.
-    private static final int GLYPH_FE80 = 180;
+    private static final int GLYPH_FE80 = 183;
 
-    /// Last Presentation Forms-B code point stored in this font.
-    private static final int FE_LAST = 0xFEF4;
+    /// Last Presentation Forms-B code point stored in this font, including lam-alef ligatures.
+    private static final int FE_LAST = 0xFEFC;
 
     /// Glyph of choseong `U+1100`.
     private static final int GLYPH_HANGUL_LEAD = GLYPH_FE80 + (FE_LAST - 0xFE80) + 1;
@@ -139,19 +142,19 @@ public final class ScriptSampleFont {
     /// Writes the format-4 cmap.
     private static byte[] cmap() {
         int[] starts = {
-                ASCII_FIRST, 0x05BC, 0x05C1, 0x05D0, 0x0621, 0x064B,
-                0x0E01, 0x0E81, 0x1100, 0x1161, 0x11A8, 0xAC00, 0xFB2A, 0xFB30, 0xFE80, 0xFFFF
+                ASCII_FIRST, 0x05B9, 0x05BC, 0x05C1, 0x05D0, 0x0621, 0x064B,
+                0x0E01, 0x0E81, 0x1100, 0x1161, 0x11A8, 0xAC00, 0xFB2A, 0xFB30, 0xFB4B, 0xFE80, 0xFFFF
         };
         int[] ends = {
-                ASCII_LAST, 0x05BC, 0x05C2, 0x05EA, 0x064A, 0x0652,
-                THAI_LAST, LAO_LAST, 0x1100, 0x1161, 0x11A8, 0xAC01, 0xFB2B, 0xFB31, FE_LAST, 0xFFFF
+                ASCII_LAST, 0x05B9, 0x05BC, 0x05C2, 0x05EA, 0x064A, 0x0652,
+                THAI_LAST, LAO_LAST, 0x1100, 0x1161, 0x11A8, 0xAC01, 0xFB2D, 0xFB31, 0xFB4B, FE_LAST, 0xFFFF
         };
         int[] firstGlyphs = {
-                GLYPH_SPACE, GLYPH_HEBREW_MARK, GLYPH_HEBREW_MARK + 1, GLYPH_HEBREW_LETTER,
+                GLYPH_SPACE, GLYPH_HEBREW_MARK, GLYPH_HEBREW_MARK, GLYPH_HEBREW_MARK + 1, GLYPH_HEBREW_LETTER,
                 GLYPH_ARABIC_LETTER, GLYPH_ARABIC_MARK,
                 GLYPH_THAI, GLYPH_LAO,
                 GLYPH_HANGUL_LEAD, GLYPH_HANGUL_VOWEL, GLYPH_HANGUL_TRAIL, GLYPH_HANGUL_GA,
-                GLYPH_FB2A, GLYPH_FB30, GLYPH_FE80, 0
+                GLYPH_FB2A, GLYPH_FB30, GLYPH_FB4B, GLYPH_FE80, 0
         };
         int segCount = starts.length;
         ByteBuffer buffer = ByteBuffer.allocate(384).order(ByteOrder.BIG_ENDIAN);

@@ -55,6 +55,19 @@ final class GlyphAtlasTest {
         assertEquals(2, atlas.glyphCount());
     }
 
+    /// Rejects a new intern once the occupancy budget is full.
+    @Test
+    void rejectsInternBeyondGlyphBudget() {
+        SfntFont font = BitmapSfntFont.create();
+        GlyphAtlas atlas = new GlyphAtlas(64, 64, 1);
+        assertEquals(1, atlas.maxGlyphs());
+        assertNotNull(atlas.intern(font, font.glyphId('A'), 16));
+        assertNull(atlas.intern(font, font.glyphId('B'), 16));
+        assertEquals(1, atlas.glyphCount());
+        assertNotNull(atlas.locate(font, font.glyphId('A'), 16));
+        assertNull(atlas.locate(font, font.glyphId('B'), 16));
+    }
+
     /// Leaves a mask uncached when it cannot fit the remaining sheet.
     @Test
     void rejectsGlyphThatDoesNotFit() {

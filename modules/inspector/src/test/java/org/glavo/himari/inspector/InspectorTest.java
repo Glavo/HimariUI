@@ -37,5 +37,12 @@ final class InspectorTest {
         }
         InspectorSnapshot replay = Inspector.capture(tree, RuntimeTrace.parse(capturedTrace));
         assertEquals(snapshot.nodes().size(), replay.nodes().size());
+        InspectorSnapshot isolated = InspectorSnapshot.parse(snapshot.toCanonicalJson());
+        assertEquals(snapshot.nodes().size(), isolated.nodes().size());
+        assertEquals(snapshot.focusedId(), isolated.focusedId());
+        assertEquals(snapshot.traceJson(), isolated.traceJson());
+        assertEquals(snapshot.nodes().getFirst().role(), isolated.nodes().getFirst().role());
+        assertEquals(snapshot.nodes().getFirst().liveRegion(), isolated.nodes().getFirst().liveRegion());
+        assertEquals(snapshot.toCanonicalJson(), isolated.toCanonicalJson());
     }
 }

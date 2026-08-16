@@ -132,12 +132,39 @@ public final class ControlsConformance {
                 || gallery.tooltip().isOpen()) {
             throw new IllegalStateException("Tooltip did not show or dismiss");
         }
-        if (gallery.button().activations() != 2 || !gallery.toggle().isOn() || gallery.slider().value() != 5.0f) {
+        gallery.radio().select(1);
+        gallery.tabs().select(1);
+        gallery.split().setFraction(0.6f);
+        gallery.tree().toggle(0);
+        gallery.progress().setValue(0.5f);
+        SemanticsNode scrollbar = first(tree, SemanticsRole.SCROLLBAR);
+        tree.dispatch(new PointerEvent(PointerEventType.DOWN, scrollbar.bounds().x() + 1.0f, scrollbar.bounds().y() + 1.0f));
+        tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ARROW_RIGHT));
+        if (gallery.button().activations() != 2 || !gallery.toggle().isOn() || gallery.slider().value() != 5.0f
+                || gallery.progress().value() != 0.5f
+                || first(tree, SemanticsRole.PROGRESS).rangeValue() == null
+                || Math.abs(first(tree, SemanticsRole.PROGRESS).rangeValue() - 0.5) > 1.0e-6
+                || gallery.scrollbar().value() != 30.0f
+                || first(tree, SemanticsRole.SCROLLBAR).rangeValue() == null
+                || Math.abs(first(tree, SemanticsRole.SCROLLBAR).rangeValue() - 30.0) > 1.0e-6
+                || gallery.list().unmountedLabels().size() != 16
+                || gallery.radio().selected() != 1
+                || first(tree, SemanticsRole.CHECKBOX).bounds().height() <= 0.0f
+                || gallery.iconButton().icon().isEmpty()
+                || gallery.tabs().selected() != 1
+                || gallery.split().fraction() != 0.6f
+                || gallery.tree().isExpanded(0)
+                || gallery.tree().visibleIndices().size() != 1
+                || first(tree, SemanticsRole.TAB_LIST).bounds().height() <= 0.0f
+                || first(tree, SemanticsRole.SPLIT_PANE).bounds().height() <= 0.0f
+                || first(tree, SemanticsRole.TREE).bounds().height() <= 0.0f) {
             throw new IllegalStateException("Control gallery outcomes were incorrect");
         }
         if (gallery.scroll().offset() != 16.0f || gallery.list().firstVisible() != 1
-                || !"abz".equals(gallery.field().text())) {
-            throw new IllegalStateException("Scroll, list, or text-field outcomes were incorrect");
+                || !"abz".equals(gallery.field().text())
+                || !"r0".equals(gallery.table().firstMaterializedKey())
+                || first(tree, SemanticsRole.TABLE).bounds().height() <= 0.0f) {
+            throw new IllegalStateException("Scroll, list, table, or text-field outcomes were incorrect");
         }
         gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.DOWN, 24.0f, 60.0f), 0L);
         gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.MOVE, 24.0f, 40.0f), 16_000_000L);

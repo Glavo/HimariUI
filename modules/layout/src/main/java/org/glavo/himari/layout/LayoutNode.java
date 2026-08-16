@@ -1,8 +1,11 @@
 package org.glavo.himari.layout;
 
 import org.glavo.himari.layout.semantics.SemanticsAction;
+import org.glavo.himari.layout.semantics.SemanticsGrid;
+import org.glavo.himari.layout.semantics.SemanticsGridItem;
 import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.SemanticsScroll;
 import org.glavo.himari.layout.semantics.SemanticsTextRange;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
@@ -67,6 +70,15 @@ public final class LayoutNode {
 
     /// Published text selection, or `null` when the node is not an editor.
     private @Nullable SemanticsTextRange textRange;
+
+    /// Published grid extent, or `null`.
+    private @Nullable SemanticsGrid grid;
+
+    /// Published vertical scroll snapshot, or `null`.
+    private @Nullable SemanticsScroll scroll;
+
+    /// Published cell position, or `null`.
+    private @Nullable SemanticsGridItem gridItem;
 
     /// Scroll offset applied when this node uses [LayoutKind#SCROLL].
     private float scrollOffset;
@@ -243,6 +255,27 @@ public final class LayoutNode {
         return textRange;
     }
 
+    /// Returns the published grid extent, or `null`.
+    ///
+    /// @return the extent
+    public @Nullable SemanticsGrid grid() {
+        return grid;
+    }
+
+    /// Returns the published vertical scroll snapshot, or `null`.
+    ///
+    /// @return the snapshot
+    public @Nullable SemanticsScroll scroll() {
+        return scroll;
+    }
+
+    /// Returns the published cell position, or `null`.
+    ///
+    /// @return the cell
+    public @Nullable SemanticsGridItem gridItem() {
+        return gridItem;
+    }
+
     /// Publishes a toggle state for the next semantics snapshot.
     ///
     /// @param selected the state
@@ -272,6 +305,27 @@ public final class LayoutNode {
     /// @param textRange the range
     public void setTextRange(SemanticsTextRange textRange) {
         this.textRange = Objects.requireNonNull(textRange, "textRange");
+    }
+
+    /// Publishes a grid extent for the next semantics snapshot.
+    ///
+    /// @param grid the extent
+    public void setGrid(SemanticsGrid grid) {
+        this.grid = Objects.requireNonNull(grid, "grid");
+    }
+
+    /// Publishes a vertical scroll snapshot for the next semantics snapshot.
+    ///
+    /// @param scroll the snapshot
+    public void setScroll(SemanticsScroll scroll) {
+        this.scroll = Objects.requireNonNull(scroll, "scroll");
+    }
+
+    /// Publishes a cell position for the next semantics snapshot.
+    ///
+    /// @param gridItem the cell
+    public void setGridItem(SemanticsGridItem gridItem) {
+        this.gridItem = Objects.requireNonNull(gridItem, "gridItem");
     }
 
     /// Adds a child in document order.

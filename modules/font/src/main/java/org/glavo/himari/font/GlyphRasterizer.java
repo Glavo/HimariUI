@@ -8,7 +8,9 @@ import java.util.Objects;
 /// Rasters an unhinted TrueType outline to an 8-bit grayscale coverage mask.
 ///
 /// Coverage is 4×4 supersampled non-zero winding of flattened quadratic and cubic contours. The
-/// shipped path does not fill the raw `glyf` point list as a polyline.
+/// shipped path does not fill the raw `glyf` point list as a polyline. When `gasp` withholds
+/// grayscale at the destination ppem, coverage is snapped to 0 or 255. When `gasp` requests
+/// grid fitting, the outline box is snapped vertically to the destination pixel grid.
 @NotNullByDefault
 public final class GlyphRasterizer {
     /// Subsamples per pixel axis.
@@ -80,10 +82,15 @@ public final class GlyphRasterizer {
             }
         }
         float scale = pixelHeight / (float) font.unitsPerEm();
+        if (font.gaspGridFits(pixelHeight)) {
+            yMin = (float) Math.floor(yMin * scale) / scale;
+            yMax = (float) Math.ceil(yMax * scale) / scale;
+        }
         int width = Math.max(1, Math.round((xMax - xMin) * scale));
         int height = Math.max(1, Math.round((yMax - yMin) * scale));
         byte[] coverage = new byte[width * height];
         int sampleMax = SUBSAMPLES * SUBSAMPLES;
+        boolean grayscale = font.gaspAllowsGrayscale(pixelHeight);
         for (int row = 0; row < height; row++) {
             for (int column = 0; column < width; column++) {
                 int hits = 0;
@@ -96,7 +103,11 @@ public final class GlyphRasterizer {
                         }
                     }
                 }
-                coverage[row * width + column] = (byte) ((hits * 255) / sampleMax);
+                int value = (hits * 255) / sampleMax;
+                if (!grayscale) {
+                    value = value >= 128 ? 255 : 0;
+                }
+                coverage[row * width + column] = (byte) value;
             }
         }
         return new GlyphMask(width, height, coverage);

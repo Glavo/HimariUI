@@ -23,6 +23,14 @@ public record InspectorSnapshot(
         nodes = List.copyOf(nodes);
     }
 
+    /// Parses a canonical inspector document without a live layout tree or producer objects.
+    ///
+    /// @param json the document produced by [`#toCanonicalJson()`]
+    /// @return the snapshot
+    public static InspectorSnapshot parse(String json) {
+        return new InspectorSnapshotParser(Objects.requireNonNull(json, "json")).parse();
+    }
+
     /// Encodes this snapshot as canonical JSON.
     ///
     /// @return the document

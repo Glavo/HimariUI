@@ -5,7 +5,8 @@ import org.jetbrains.annotations.NotNullByDefault;
 /// Composes first-stable Hangul jamo into precomposed syllables.
 ///
 /// The mapping is the Unicode LV/LVT arithmetic: `U+AC00 + ((L * 21) + V) * 28 + T`.
-/// Compatibility jamo are not remapped here.
+/// [`#asLead(int)`], [`#asVowel(int)`], and [`#asTrail(int)`] map Hangul Compatibility Jamo
+/// onto modern choseong, jungseong, and jongseong before [`#compose(int, int, int)`].
 @NotNullByDefault
 public final class HangulSyllable {
     /// First precomposed Hangul syllable.
@@ -57,12 +58,76 @@ public final class HangulSyllable {
         return codePoint >= TRAIL_BASE && codePoint < TRAIL_BASE + TRAIL_COUNT - 1;
     }
 
-    /// Returns whether `codePoint` is a modern combining jamo.
+    /// Choseong identities for `U+3131`–`U+314E`. Zero means the compatibility jamo is a cluster.
+    private static final int[] COMPAT_LEAD = {
+            0x1100, 0x1101, 0, 0x1102, 0, 0, 0x1103, 0x1104, 0x1105,
+            0, 0, 0, 0, 0, 0, 0, 0x1106, 0x1107, 0x1108, 0, 0x1109, 0x110A,
+            0x110B, 0x110C, 0x110D, 0x110E, 0x110F, 0x1110, 0x1111, 0x1112
+    };
+
+    /// Jongseong identities for `U+3131`–`U+314E`. Zero means the compatibility jamo is not a trailer.
+    private static final int[] COMPAT_TRAIL = {
+            0x11A8, 0x11A9, 0x11AA, 0x11AB, 0x11AC, 0x11AD, 0x11AE, 0, 0x11AF,
+            0x11B0, 0x11B1, 0x11B2, 0x11B3, 0x11B4, 0x11B5, 0x11B6, 0x11B7, 0x11B8, 0, 0x11B9,
+            0x11BA, 0x11BB, 0x11BC, 0x11BD, 0, 0x11BE, 0x11BF, 0x11C0, 0x11C1, 0x11C2
+    };
+
+    /// Returns whether `codePoint` is a modern combining jamo or a compatibility jamo.
     ///
     /// @param codePoint the code point
     /// @return whether Hangul composition may consume the code point
     public static boolean isJamo(int codePoint) {
-        return isLead(codePoint) || isVowel(codePoint) || isTrail(codePoint);
+        return isLead(codePoint) || isVowel(codePoint) || isTrail(codePoint) || isCompatibility(codePoint);
+    }
+
+    /// Returns whether `codePoint` is a Hangul Compatibility Jamo letter used by first-stable composition.
+    ///
+    /// @param codePoint the code point
+    /// @return whether the code point is `U+3131`–`U+3163`
+    public static boolean isCompatibility(int codePoint) {
+        return codePoint >= 0x3131 && codePoint <= 0x3163;
+    }
+
+    /// Maps a source code point onto a modern choseong, or `0` when it is not a lead.
+    ///
+    /// @param codePoint the source code point
+    /// @return the modern choseong, or `0`
+    public static int asLead(int codePoint) {
+        if (isLead(codePoint)) {
+            return codePoint;
+        }
+        if (codePoint >= 0x3131 && codePoint <= 0x314E) {
+            return COMPAT_LEAD[codePoint - 0x3131];
+        }
+        return 0;
+    }
+
+    /// Maps a source code point onto a modern jungseong, or `0` when it is not a vowel.
+    ///
+    /// @param codePoint the source code point
+    /// @return the modern jungseong, or `0`
+    public static int asVowel(int codePoint) {
+        if (isVowel(codePoint)) {
+            return codePoint;
+        }
+        if (codePoint >= 0x314F && codePoint <= 0x3163) {
+            return VOWEL_BASE + (codePoint - 0x314F);
+        }
+        return 0;
+    }
+
+    /// Maps a source code point onto a modern jongseong, or `0` when it is not a trailer.
+    ///
+    /// @param codePoint the source code point
+    /// @return the modern jongseong, or `0`
+    public static int asTrail(int codePoint) {
+        if (isTrail(codePoint)) {
+            return codePoint;
+        }
+        if (codePoint >= 0x3131 && codePoint <= 0x314E) {
+            return COMPAT_TRAIL[codePoint - 0x3131];
+        }
+        return 0;
     }
 
     /// Composes a lead and vowel, optionally with a trailing consonant.

@@ -237,7 +237,35 @@ public final class WindowsImeA11yConformance {
                         && "hello".equals(textProvider.invokeGetText(-1))
                         && textProvider.invokeClone()
                         && textProvider.invokeCompareSelf()
-                        && textProvider.invokeEnclosingElement();
+                        && textProvider.invokeEnclosingElement()
+                        && textProvider.invokeMove(WindowsAutomationProvider.TEXT_UNIT_CHARACTER, -1) == -1
+                        && textProvider.invokeExpandToEnclosingUnit(
+                                WindowsAutomationProvider.TEXT_UNIT_CHARACTER
+                        ).end() > 0
+                        && textProvider.invokeGetBoundingRectangles().length == 4
+                        && textProvider.invokeFindText("ell", false)
+                        && "ell".equals(textProvider.invokeGetText(-1))
+                        && textProvider.invokeCompareEndpoints(
+                                WindowsAutomationProvider.TEXT_PATTERN_RANGE_ENDPOINT_START,
+                                WindowsAutomationProvider.TEXT_PATTERN_RANGE_ENDPOINT_END
+                        ) < 0
+                        && textProvider.invokeMoveEndpointByUnit(
+                                WindowsAutomationProvider.TEXT_PATTERN_RANGE_ENDPOINT_END,
+                                WindowsAutomationProvider.TEXT_UNIT_CHARACTER,
+                                1
+                        ) == 1
+                        && !textProvider.invokeGetSelection();
+                textProvider.invokeSelect();
+                uiaTextCom = uiaTextCom
+                        && textProvider.invokeGetSelection()
+                        && !textProvider.invokeFindAttribute(40013)
+                        && textProvider.invokeGetAttributeValue(40013) == 0
+                        && textProvider.invokeScrollIntoView(true)
+                        && textProvider.invokeGetChildren() == 0;
+                textProvider.invokeRemoveFromSelection();
+                uiaTextCom = uiaTextCom && !textProvider.invokeGetSelection();
+                textProvider.invokeAddToSelection();
+                uiaTextCom = uiaTextCom && textProvider.invokeGetSelection();
             }
             if (!textStoreLock || !textStoreGeometry || !documentAttached) {
                 throw new IllegalStateException("ITextStoreACP lock, geometry, or TSF document attach failed");

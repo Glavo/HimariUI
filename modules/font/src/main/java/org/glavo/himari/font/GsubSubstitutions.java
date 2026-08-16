@@ -6,24 +6,36 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.Objects;
 
-/// Applies GSUB lookup type 1 (single substitution) for named features.
+/// Applies GSUB lookup types 1–6 and 8. Type 7 ExtensionSubst Format 1 unwraps onto those types.
 ///
 /// Other lookup types are skipped. Missing tables, unknown features, and glyphs outside coverage
-/// leave the input identity unchanged.
+/// leave the input identity unchanged. Type-5 two-glyph rules and type-6 one-lookahead rules
+/// resolve a nested type-1 lookup on the first input glyph. Type-2 sequences replace one glyph.
+/// Type-3 returns the first alternate. Type-8 reverse chaining substitutes one covered glyph when
+/// the following glyph is in the lookahead coverage. Type-6 chain rules may require one
+/// preceding backtrack glyph. Ligature and context lookups with
+/// `IgnoreMarks` skip GDEF class-3 marks. Lookups with a non-zero `MarkAttachmentType` skip
+/// marks whose GDEF mark-attach class differs from that value.
 @NotNullByDefault
 final class GsubSubstitutions {
     /// Empty substitutions.
-    static final GsubSubstitutions NONE = new GsubSubstitutions(new Feature[0]);
+    static final GsubSubstitutions NONE = new GsubSubstitutions(new Feature[0], GdefTable.NONE);
 
     /// Features in table order.
     private final Feature[] features;
 
+    /// GDEF classes used by `IgnoreMarks` ligature matching.
+    private final GdefTable gdef;
+
     /// Creates a substitution table.
     ///
     /// @param features the features
-    private GsubSubstitutions(Feature[] features) {
+    /// @param gdef the GDEF classes
+    private GsubSubstitutions(Feature[] features, GdefTable gdef) {
         this.features = features;
+        this.gdef = gdef;
     }
 
     /// Applies every type-1 lookup listed by `featureTag`.
@@ -37,8 +49,425 @@ final class GsubSubstitutions {
             if (feature.tag != featureTag) {
                 continue;
             }
-            for (SingleSubst subst : feature.lookups) {
+            for (SingleSubst subst : feature.singles) {
                 current = subst.apply(current);
+            }
+        }
+        return current;
+    }
+
+    /// Applies the first type-2 multiple substitution listed by `featureTag`.
+    ///
+    /// @param glyphId the input glyph
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substitute sequence, or `null` when the glyph is unchanged
+    int @Nullable [] decompose(int glyphId, int featureTag) {
+        for (Feature feature : features) {
+            if (feature.tag != featureTag) {
+                continue;
+            }
+            for (MultipleSubst subst : feature.multiples) {
+                int @Nullable [] sequence = subst.apply(glyphId);
+                if (sequence != null) {
+                    return sequence;
+                }
+            }
+        }
+        return null;
+    }
+
+    /// Applies the first type-3 alternate listed by `featureTag`.
+    ///
+    /// @param glyphId the input glyph
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the first alternate, or `glyphId`
+    int alternate(int glyphId, int featureTag) {
+        int current = glyphId;
+        for (Feature feature : features) {
+            if (feature.tag != featureTag) {
+                continue;
+            }
+            for (AlternateSubst subst : feature.alternates) {
+                current = subst.apply(current);
+            }
+        }
+        return current;
+    }
+
+    /// Applies the first type-4 ligature listed by `featureTag` at `start`.
+    ///
+    /// @param glyphIds the mapped glyph identities
+    /// @param start the first glyph index
+    /// @param remaining the number of glyphs available from `start`
+    /// @param featureTag a four-byte OpenType tag as a big-endian `int`
+    /// @return the match, or `null`
+    @Nullable GlyphLigature ligature(int[] glyphIds, int start, int remaining, int featureTag) {
+        Objects.requireNonNull(glyphIds, "glyphIds");
+        if (start < 0 || remaining < 2 || start + remaining > glyphIds.length) {
+            return null;
+        }
+        for (Feature feature : features) {
+            if (feature.tag != featureTag) {
+                continue;
+            }
+            for (LigatureSubst subst : feature.ligatures) {
+                @Nullable GlyphLigature match = subst.apply(glyphIds, start, remaining, gdef);
+                if (match != null) {
+                    return match;
+                }
+            }
+        }
+        return null;
+    }
+
+    /// Applies the first type-5 two-glyph context rule listed by `featureTag`.
+    ///
+    /// @param current the first input glyph
+    /// @param next the second input glyph
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or `current`
+    int contextSubstitute(int current, int next, int featureTag) {
+        return contextSubstitute(current, next, next, featureTag);
+    }
+
+    /// Applies the first type-5 two-glyph context rule, optionally skipping marks.
+    ///
+    /// @param current the first input glyph
+    /// @param next the immediately following glyph
+    /// @param skippedNext the first non-mark after `current`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or `current`
+    int contextSubstitute(int current, int next, int skippedNext, int featureTag) {
+        return contextSubstitute(current, next, skippedNext, next, featureTag);
+    }
+
+    /// Applies a type-5 rule, using `attachSkipped` when the lookup has `MarkAttachmentType`.
+    ///
+    /// @param current the first input glyph
+    /// @param next the immediately following glyph
+    /// @param skippedNext the first non-mark after `current`
+    /// @param attachSkipped the first glyph a `MarkAttachmentType` lookup does not skip
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or `current`
+    int contextSubstitute(int current, int next, int skippedNext, int attachSkipped, int featureTag) {
+        for (Feature feature : features) {
+            if (feature.tag != featureTag) {
+                continue;
+            }
+            for (ContextRule rule : feature.contexts) {
+                int candidate = ruleCandidate(rule.ignoreMarks, rule.attachType, next, skippedNext, attachSkipped);
+                if (rule.current == current && rule.next == candidate) {
+                    return rule.substitute;
+                }
+            }
+        }
+        return current;
+    }
+
+    /// Applies a type-5 rule by walking `glyphIds` with the lookup skip flags.
+    ///
+    /// @param glyphIds the mapped glyphs
+    /// @param start the first glyph index
+    /// @param remaining the number of glyphs available from `start`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or the glyph at `start`
+    int contextSubstitute(int[] glyphIds, int start, int remaining, int featureTag) {
+        Objects.requireNonNull(glyphIds, "glyphIds");
+        if (start < 0 || remaining < 2 || start + remaining > glyphIds.length) {
+            return start >= 0 && start < glyphIds.length ? glyphIds[start] : 0;
+        }
+        int current = glyphIds[start];
+        for (Feature feature : features) {
+            if (feature.tag != featureTag) {
+                continue;
+            }
+            for (ContextRule rule : feature.contexts) {
+                int candidateIndex = gdef.firstKeptIndex(
+                        glyphIds,
+                        start + 1,
+                        start + remaining,
+                        rule.lookupFlag,
+                        rule.markSet
+                );
+                int candidate = candidateIndex >= 0 ? glyphIds[candidateIndex] : -1;
+                if (rule.current == current && rule.next == candidate) {
+                    return rule.substitute;
+                }
+            }
+        }
+        return current;
+    }
+
+    /// Applies the first type-6 one-lookahead chain rule listed by `featureTag`.
+    ///
+    /// @param current the first input glyph
+    /// @param next the second input glyph
+    /// @param lookahead the first lookahead glyph
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or `current`
+    int chainSubstitute(int current, int next, int lookahead, int featureTag) {
+        return chainSubstitute(current, next, lookahead, next, lookahead, featureTag);
+    }
+
+    /// Applies the first type-6 chain rule, optionally skipping marks.
+    ///
+    /// @param current the first input glyph
+    /// @param next the immediately following glyph
+    /// @param lookahead the first lookahead glyph
+    /// @param skippedNext the first non-mark after `current`
+    /// @param skippedLookahead the first non-mark after `skippedNext`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or `current`
+    int chainSubstitute(
+            int current,
+            int next,
+            int lookahead,
+            int skippedNext,
+            int skippedLookahead,
+            int featureTag
+    ) {
+        for (Feature feature : features) {
+            if (feature.tag != featureTag) {
+                continue;
+            }
+            for (ChainRule rule : feature.chains) {
+                int candidateNext = ruleCandidate(rule.ignoreMarks, rule.attachType, next, skippedNext, skippedNext);
+                int candidateLook = ruleCandidate(
+                        rule.ignoreMarks,
+                        rule.attachType,
+                        lookahead,
+                        skippedLookahead,
+                        skippedLookahead
+                );
+                if (rule.backtrack != 0 || rule.backtrackFar != 0 || rule.backtrackFarther != 0) {
+                    continue;
+                }
+                if (rule.current == current && rule.next == candidateNext && rule.lookahead == candidateLook) {
+                    return rule.substitute;
+                }
+            }
+        }
+        return current;
+    }
+
+    /// Applies a type-6 rule by walking `glyphIds` with the lookup skip flags.
+    ///
+    /// @param glyphIds the mapped glyphs
+    /// @param start the first glyph index
+    /// @param remaining the number of glyphs available from `start`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted first glyph, or the glyph at `start`
+    int chainSubstitute(int[] glyphIds, int start, int remaining, int featureTag) {
+        Objects.requireNonNull(glyphIds, "glyphIds");
+        if (start < 0 || remaining < 1 || start + remaining > glyphIds.length) {
+            return start >= 0 && start < glyphIds.length ? glyphIds[start] : 0;
+        }
+        int current = glyphIds[start];
+        int end = start + remaining;
+        int next = start + 1 < end ? glyphIds[start + 1] : -1;
+        int lookahead = start + 2 < end ? glyphIds[start + 2] : -1;
+        for (Feature feature : features) {
+            if (feature.tag != featureTag) {
+                continue;
+            }
+            for (ChainRule rule : feature.chains) {
+                if (!backsMatch(
+                        glyphIds,
+                        start,
+                        rule.backtrack,
+                        rule.backtrackFar,
+                        rule.backtrackFarther,
+                        rule.lookupFlag,
+                        rule.markSet
+                )) {
+                    continue;
+                }
+                int nextIndex = gdef.firstKeptIndex(glyphIds, start + 1, end, rule.lookupFlag, rule.markSet);
+                if (nextIndex < 0) {
+                    continue;
+                }
+                int lookIndex = gdef.firstKeptIndex(glyphIds, nextIndex + 1, end, rule.lookupFlag, rule.markSet);
+                if (lookIndex < 0) {
+                    continue;
+                }
+                if (rule.current == current
+                        && rule.next == glyphIds[nextIndex]
+                        && rule.lookahead == glyphIds[lookIndex]) {
+                    return rule.substitute;
+                }
+            }
+        }
+        return current;
+    }
+
+    /// Returns whether required backtrack glyphs are present before `start`.
+    private boolean backsMatch(
+            int[] glyphIds,
+            int start,
+            int backNear,
+            int backMid,
+            int backFar,
+            int lookupFlag,
+            int markSet
+    ) {
+        if (backNear == 0 && backMid == 0 && backFar == 0) {
+            return true;
+        }
+        if (backNear == 0) {
+            return false;
+        }
+        int nearIndex = gdef.prevKeptIndex(glyphIds, start - 1, lookupFlag, markSet);
+        if (nearIndex < 0 || glyphIds[nearIndex] != backNear) {
+            return false;
+        }
+        if (backMid == 0 && backFar == 0) {
+            return true;
+        }
+        int midIndex = gdef.prevKeptIndex(glyphIds, nearIndex - 1, lookupFlag, markSet);
+        if (backMid != 0 && (midIndex < 0 || glyphIds[midIndex] != backMid)) {
+            return false;
+        }
+        if (backFar == 0) {
+            return true;
+        }
+        int cursor = backMid == 0 ? nearIndex : midIndex;
+        int farIndex = gdef.prevKeptIndex(glyphIds, cursor - 1, lookupFlag, markSet);
+        return farIndex >= 0 && glyphIds[farIndex] == backFar;
+    }
+
+    /// Reads up to `max` backtrack glyph or class ids. Index 0 is nearest.
+    private static int @Nullable [] readBacktrackIds(ByteBuffer buffer, int max) {
+        if (buffer.remaining() < 2) {
+            return null;
+        }
+        int count = Short.toUnsignedInt(buffer.getShort());
+        if (count > max) {
+            return null;
+        }
+        int[] ids = new int[3];
+        for (int index = 0; index < count; index++) {
+            if (buffer.remaining() < 2) {
+                return null;
+            }
+            ids[index] = Short.toUnsignedInt(buffer.getShort());
+        }
+        return ids;
+    }
+
+    /// Copies coverage glyphs, dropping negative slots.
+    private static int[] coverageGlyphs(Coverage coverage) {
+        int[] glyphs = new int[Math.max(0, coverage.size())];
+        int written = 0;
+        for (int index = 0; index < coverage.size(); index++) {
+            int glyph = coverage.glyphAt(index);
+            if (glyph >= 0) {
+                glyphs[written++] = glyph;
+            }
+        }
+        return written == 0 ? new int[] {0} : written == glyphs.length ? glyphs : Arrays.copyOf(glyphs, written);
+    }
+
+    /// Selects the input glyph for a lookup flag.
+    private static int ruleCandidate(
+            boolean ignoreMarks,
+            int attachType,
+            int next,
+            int skippedNext,
+            int attachSkipped
+    ) {
+        if (ignoreMarks) {
+            return skippedNext;
+        }
+        if (attachType != 0) {
+            return attachSkipped;
+        }
+        return next;
+    }
+
+    /// Returns the first glyph in `[start, end)` that the skip flags keep, or `-1`.
+    private int firstKept(int[] glyphIds, int start, int end, boolean ignoreMarks, int attachType) {
+        int index = firstKeptIndex(glyphIds, start, end, ignoreMarks, attachType);
+        return index >= 0 ? glyphIds[index] : -1;
+    }
+
+    /// Returns the index of the first kept glyph in `[start, end)`, or `-1`.
+    private int firstKeptIndex(int[] glyphIds, int start, int end, boolean ignoreMarks, int attachType) {
+        for (int index = start; index < end; index++) {
+            if (!skipped(glyphIds[index], ignoreMarks, attachType)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    /// Returns whether a lookup with these flags skips `glyphId`.
+    private boolean skipped(int glyphId, boolean ignoreMarks, int attachType) {
+        int flag = ignoreMarks ? GdefTable.FLAG_IGNORE_MARKS : attachType << 8;
+        return gdef.skip(glyphId, flag, 0);
+    }
+
+    /// Returns whether a lookup with `lookupFlag` skips `glyphId`.
+    private boolean skipped(int glyphId, int lookupFlag, int markSet) {
+        return gdef.skip(glyphId, lookupFlag, markSet);
+    }
+
+    /// Applies the first type-8 reverse-chain substitution listed by `featureTag`.
+    ///
+    /// @param current the input glyph
+    /// @param lookahead the glyph after `current`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted glyph, or `current`
+    int reverseSubstitute(int current, int lookahead, int featureTag) {
+        for (Feature feature : features) {
+            if (feature.tag != featureTag) {
+                continue;
+            }
+            for (ReverseRule rule : feature.reverses) {
+                if (rule.backtrack != 0 || rule.backtrackFar != 0 || rule.backtrackFarther != 0) {
+                    continue;
+                }
+                if (rule.current == current && rule.lookahead == lookahead) {
+                    return rule.substitute;
+                }
+            }
+        }
+        return current;
+    }
+
+    /// Applies a type-8 reverse rule by walking lookahead glyphs with the lookup skip flags.
+    ///
+    /// @param glyphIds the mapped glyphs
+    /// @param start the input glyph index
+    /// @param remaining the number of glyphs available from `start`
+    /// @param featureTag a four-byte OpenType tag
+    /// @return the substituted glyph, or the glyph at `start`
+    int reverseSubstitute(int[] glyphIds, int start, int remaining, int featureTag) {
+        Objects.requireNonNull(glyphIds, "glyphIds");
+        if (start < 0 || remaining < 1 || start + remaining > glyphIds.length) {
+            return start >= 0 && start < glyphIds.length ? glyphIds[start] : 0;
+        }
+        int current = glyphIds[start];
+        int end = start + remaining;
+        for (Feature feature : features) {
+            if (feature.tag != featureTag) {
+                continue;
+            }
+            for (ReverseRule rule : feature.reverses) {
+                if (!backsMatch(
+                        glyphIds,
+                        start,
+                        rule.backtrack,
+                        rule.backtrackFar,
+                        rule.backtrackFarther,
+                        rule.lookupFlag,
+                        rule.markSet
+                )) {
+                    continue;
+                }
+                int lookIndex = gdef.firstKeptIndex(glyphIds, start + 1, end, rule.lookupFlag, rule.markSet);
+                if (lookIndex >= 0 && rule.current == current && rule.lookahead == glyphIds[lookIndex]) {
+                    return rule.substitute;
+                }
             }
         }
         return current;
@@ -49,6 +478,15 @@ final class GsubSubstitutions {
     /// @param table the GSUB bytes, or `null`
     /// @return the substitutions
     static GsubSubstitutions parse(@Nullable ByteBuffer table) {
+        return parse(table, GdefTable.NONE);
+    }
+
+    /// Parses a GSUB table against `gdef`.
+    ///
+    /// @param table the GSUB bytes, or `null`
+    /// @param gdef the GDEF classes
+    /// @return the substitutions
+    static GsubSubstitutions parse(@Nullable ByteBuffer table, GdefTable gdef) {
         if (table == null || table.remaining() < 10) {
             return NONE;
         }
@@ -62,12 +500,12 @@ final class GsubSubstitutions {
         buffer.getShort();
         int featureList = start + Short.toUnsignedInt(buffer.getShort());
         int lookupList = start + Short.toUnsignedInt(buffer.getShort());
-        SingleSubst[] lookups = readLookups(buffer, lookupList);
-        return new GsubSubstitutions(readFeatures(buffer, featureList, lookups));
+        LookupTable lookups = readLookups(buffer, lookupList);
+        return new GsubSubstitutions(readFeatures(buffer, featureList, lookups), gdef);
     }
 
     /// Reads the feature list.
-    private static Feature[] readFeatures(ByteBuffer buffer, int featureList, SingleSubst[] lookups) {
+    private static Feature[] readFeatures(ByteBuffer buffer, int featureList, LookupTable lookups) {
         if (featureList + 2 > buffer.limit()) {
             throw new IllegalArgumentException("GSUB feature list is truncated");
         }
@@ -80,13 +518,13 @@ final class GsubSubstitutions {
             }
             int tag = buffer.getInt();
             int offset = featureList + Short.toUnsignedInt(buffer.getShort());
-            features[index] = new Feature(tag, readFeatureLookups(buffer, offset, lookups));
+            features[index] = readFeature(buffer, tag, offset, lookups);
         }
         return features;
     }
 
     /// Resolves lookup indices for one feature.
-    private static SingleSubst[] readFeatureLookups(ByteBuffer buffer, int offset, SingleSubst[] lookups) {
+    private static Feature readFeature(ByteBuffer buffer, int tag, int offset, LookupTable lookups) {
         if (offset + 4 > buffer.limit()) {
             throw new IllegalArgumentException("GSUB feature table is truncated");
         }
@@ -94,41 +532,113 @@ final class GsubSubstitutions {
         buffer.position(offset);
         buffer.getShort();
         int count = Short.toUnsignedInt(buffer.getShort());
-        SingleSubst[] selected = new SingleSubst[count];
-        int written = 0;
+        SingleSubst[] singles = new SingleSubst[count];
+        LigatureSubst[] ligatures = new LigatureSubst[count];
+        MultipleSubst[] multiples = new MultipleSubst[count];
+        AlternateSubst[] alternates = new AlternateSubst[count];
+        ContextRule[] contexts = new ContextRule[count];
+        ChainRule[] chains = new ChainRule[count];
+        ReverseRule[] reverses = new ReverseRule[count];
+        int singleCount = 0;
+        int ligatureCount = 0;
+        int multipleCount = 0;
+        int alternateCount = 0;
+        int contextCount = 0;
+        int chainCount = 0;
+        int reverseCount = 0;
         for (int index = 0; index < count; index++) {
             int lookupIndex = Short.toUnsignedInt(buffer.getShort());
-            if (lookupIndex < lookups.length && lookups[lookupIndex] != null) {
-                selected[written++] = lookups[lookupIndex];
+            if (lookupIndex >= lookups.singles.length) {
+                continue;
+            }
+            if (lookups.singles[lookupIndex] != null) {
+                singles[singleCount++] = lookups.singles[lookupIndex];
+            }
+            if (lookups.ligatures[lookupIndex] != null) {
+                ligatures[ligatureCount++] = lookups.ligatures[lookupIndex];
+            }
+            if (lookups.multiples[lookupIndex] != null) {
+                multiples[multipleCount++] = lookups.multiples[lookupIndex];
+            }
+            if (lookups.alternates[lookupIndex] != null) {
+                alternates[alternateCount++] = lookups.alternates[lookupIndex];
+            }
+            if (lookups.contexts[lookupIndex] != null) {
+                for (ContextRule rule : lookups.contexts[lookupIndex]) {
+                    if (contextCount == contexts.length) {
+                        contexts = Arrays.copyOf(contexts, contexts.length * 2);
+                    }
+                    contexts[contextCount++] = rule;
+                }
+            }
+            if (lookups.chains[lookupIndex] != null) {
+                for (ChainRule rule : lookups.chains[lookupIndex]) {
+                    if (chainCount == chains.length) {
+                        chains = Arrays.copyOf(chains, chains.length * 2);
+                    }
+                    chains[chainCount++] = rule;
+                }
+            }
+            if (lookups.reverses[lookupIndex] != null) {
+                for (ReverseRule rule : lookups.reverses[lookupIndex]) {
+                    if (reverseCount == reverses.length) {
+                        reverses = Arrays.copyOf(reverses, reverses.length * 2);
+                    }
+                    reverses[reverseCount++] = rule;
+                }
             }
         }
         buffer.position(saved);
-        if (written == selected.length) {
-            return selected;
-        }
-        return Arrays.copyOf(selected, written);
+        return new Feature(
+                tag,
+                singleCount == singles.length ? singles : Arrays.copyOf(singles, singleCount),
+                ligatureCount == ligatures.length ? ligatures : Arrays.copyOf(ligatures, ligatureCount),
+                multipleCount == multiples.length ? multiples : Arrays.copyOf(multiples, multipleCount),
+                alternateCount == alternates.length ? alternates : Arrays.copyOf(alternates, alternateCount),
+                contextCount == contexts.length ? contexts : Arrays.copyOf(contexts, contextCount),
+                chainCount == chains.length ? chains : Arrays.copyOf(chains, chainCount),
+                reverseCount == reverses.length ? reverses : Arrays.copyOf(reverses, reverseCount)
+        );
     }
 
-    /// Reads the lookup list, keeping only type-1 subtables.
-    private static SingleSubst[] readLookups(ByteBuffer buffer, int lookupList) {
+    /// Reads the lookup list, keeping type-1 through type-4 subtables after type-7 unwrap.
+    private static LookupTable readLookups(ByteBuffer buffer, int lookupList) {
         if (lookupList + 2 > buffer.limit()) {
             throw new IllegalArgumentException("GSUB lookup list is truncated");
         }
         buffer.position(lookupList);
         int count = Short.toUnsignedInt(buffer.getShort());
-        SingleSubst[] lookups = new SingleSubst[count];
+        SingleSubst[] singles = new SingleSubst[count];
+        LigatureSubst[] ligatures = new LigatureSubst[count];
+        MultipleSubst[] multiples = new MultipleSubst[count];
+        AlternateSubst[] alternates = new AlternateSubst[count];
+        ContextRule[][] contexts = new ContextRule[count][];
+        ChainRule[][] chains = new ChainRule[count][];
+        ReverseRule[][] reverses = new ReverseRule[count][];
         int[] offsets = new int[count];
         for (int index = 0; index < count; index++) {
             offsets[index] = lookupList + Short.toUnsignedInt(buffer.getShort());
         }
         for (int index = 0; index < count; index++) {
-            lookups[index] = readLookup(buffer, offsets[index]);
+            readLookup(buffer, offsets[index], singles, ligatures, multiples, alternates, reverses, index);
         }
-        return lookups;
+        for (int index = 0; index < count; index++) {
+            readContextLookup(buffer, offsets[index], offsets, singles, contexts, chains, index);
+        }
+        return new LookupTable(singles, ligatures, multiples, alternates, contexts, chains, reverses);
     }
 
-    /// Reads one lookup. Non-type-1 lookups become `null`.
-    private static @Nullable SingleSubst readLookup(ByteBuffer buffer, int offset) {
+    /// Reads one lookup into the matching slot arrays.
+    private static void readLookup(
+            ByteBuffer buffer,
+            int offset,
+            SingleSubst[] singles,
+            LigatureSubst[] ligatures,
+            MultipleSubst[] multiples,
+            AlternateSubst[] alternates,
+            ReverseRule[][] reverses,
+            int index
+    ) {
         if (offset + 6 > buffer.limit()) {
             throw new IllegalArgumentException("GSUB lookup is truncated");
         }
@@ -136,14 +646,166 @@ final class GsubSubstitutions {
         int type = Short.toUnsignedInt(buffer.getShort());
         int flag = Short.toUnsignedInt(buffer.getShort());
         int subtableCount = Short.toUnsignedInt(buffer.getShort());
-        if (type != 1 || subtableCount == 0) {
-            return null;
+        if (subtableCount == 0) {
+            return;
         }
         int first = offset + Short.toUnsignedInt(buffer.getShort());
-        if ((flag & 0x0010) != 0 && buffer.remaining() >= 2) {
+        for (int extra = 1; extra < subtableCount && buffer.remaining() >= 2; extra++) {
             buffer.getShort();
         }
-        return readSingleSubst(buffer, first);
+        int markSet = 0;
+        if ((flag & GdefTable.FLAG_MARK_FILTER) != 0 && buffer.remaining() >= 2) {
+            markSet = Short.toUnsignedInt(buffer.getShort());
+        }
+        int subtable = first;
+        if (type == 7) {
+            int unwrappedType = unwrapExtensionType(buffer, first);
+            int unwrappedOffset = unwrapExtensionOffset(buffer, first);
+            if (unwrappedType < 0 || unwrappedOffset < 0) {
+                return;
+            }
+            type = unwrappedType;
+            subtable = unwrappedOffset;
+        }
+        if (type == 1) {
+            singles[index] = readSingleSubst(buffer, subtable);
+        } else if (type == 2) {
+            multiples[index] = readMultipleSubst(buffer, subtable);
+        } else if (type == 3) {
+            alternates[index] = readAlternateSubst(buffer, subtable);
+        } else if (type == 4) {
+            ligatures[index] = readLigatureSubst(buffer, subtable, flag, markSet);
+        } else if (type == 8) {
+            reverses[index] = readReverseSubst(buffer, subtable, flag, markSet);
+        }
+    }
+
+    /// Reads a type-7 Format-1 extension lookup type, or `-1`.
+    private static int unwrapExtensionType(ByteBuffer buffer, int offset) {
+        if (offset + 8 > buffer.limit()) {
+            return -1;
+        }
+        int saved = buffer.position();
+        buffer.position(offset);
+        int format = Short.toUnsignedInt(buffer.getShort());
+        int type = Short.toUnsignedInt(buffer.getShort());
+        buffer.position(saved);
+        return format == 1 ? type : -1;
+    }
+
+    /// Reads a type-7 Format-1 extension subtable offset, or `-1`.
+    private static int unwrapExtensionOffset(ByteBuffer buffer, int offset) {
+        if (offset + 8 > buffer.limit()) {
+            return -1;
+        }
+        int saved = buffer.position();
+        buffer.position(offset + 4);
+        long relative = Integer.toUnsignedLong(buffer.getInt());
+        buffer.position(saved);
+        if (relative > Integer.MAX_VALUE - offset) {
+            return -1;
+        }
+        return offset + (int) relative;
+    }
+
+    /// Reads a type-2 multiple substitution subtable.
+    private static MultipleSubst readMultipleSubst(ByteBuffer buffer, int offset) {
+        return new MultipleSubst(readSequenceTable(buffer, offset, 1));
+    }
+
+    /// Reads a type-3 alternate substitution subtable.
+    private static AlternateSubst readAlternateSubst(ByteBuffer buffer, int offset) {
+        return new AlternateSubst(readSequenceTable(buffer, offset, 1));
+    }
+
+    /// Reads a coverage-indexed list of glyph sequences used by type 2 and type 3.
+    ///
+    /// @param minGlyphs the inclusive minimum sequence length
+    private static SequenceTable readSequenceTable(ByteBuffer buffer, int offset, int minGlyphs) {
+        if (offset + 6 > buffer.limit()) {
+            throw new IllegalArgumentException("GSUB sequence subst is truncated");
+        }
+        int saved = buffer.position();
+        buffer.position(offset);
+        if (Short.toUnsignedInt(buffer.getShort()) != 1) {
+            buffer.position(saved);
+            throw new IllegalArgumentException("Unsupported GSUB sequence subst format");
+        }
+        int coverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int count = Short.toUnsignedInt(buffer.getShort());
+        int[] setOffsets = new int[count];
+        for (int index = 0; index < count; index++) {
+            if (buffer.remaining() < 2) {
+                throw new IllegalArgumentException("GSUB sequence offset is truncated");
+            }
+            setOffsets[index] = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        Coverage coverage = readCoverage(buffer, coverageOffset);
+        int[][] sequences = new int[count][];
+        for (int index = 0; index < count; index++) {
+            sequences[index] = readGlyphSequence(buffer, setOffsets[index], minGlyphs);
+        }
+        buffer.position(saved);
+        return new SequenceTable(coverage, sequences);
+    }
+
+    /// Reads one glyph sequence.
+    private static int[] readGlyphSequence(ByteBuffer buffer, int offset, int minGlyphs) {
+        if (offset + 2 > buffer.limit()) {
+            throw new IllegalArgumentException("GSUB glyph sequence is truncated");
+        }
+        int saved = buffer.position();
+        buffer.position(offset);
+        int count = Short.toUnsignedInt(buffer.getShort());
+        if (count < minGlyphs) {
+            throw new IllegalArgumentException("GSUB glyph sequence is empty");
+        }
+        int[] glyphs = new int[count];
+        for (int index = 0; index < count; index++) {
+            if (buffer.remaining() < 2) {
+                throw new IllegalArgumentException("GSUB glyph sequence is truncated");
+            }
+            glyphs[index] = Short.toUnsignedInt(buffer.getShort());
+        }
+        buffer.position(saved);
+        return glyphs;
+    }
+
+    /// Reads type-5 and type-6 lookups after type-1 slots exist.
+    private static void readContextLookup(
+            ByteBuffer buffer,
+            int offset,
+            int[] lookupOffsets,
+            SingleSubst[] singles,
+            ContextRule[][] contexts,
+            ChainRule[][] chains,
+            int index
+    ) {
+        if (offset + 6 > buffer.limit()) {
+            return;
+        }
+        buffer.position(offset);
+        int type = Short.toUnsignedInt(buffer.getShort());
+        int flag = Short.toUnsignedInt(buffer.getShort());
+        int subtableCount = Short.toUnsignedInt(buffer.getShort());
+        if (subtableCount == 0 || (type != 5 && type != 6)) {
+            return;
+        }
+        int first = offset + Short.toUnsignedInt(buffer.getShort());
+        for (int extra = 1; extra < subtableCount && buffer.remaining() >= 2; extra++) {
+            buffer.getShort();
+        }
+        int markSet = 0;
+        if ((flag & GdefTable.FLAG_MARK_FILTER) != 0 && buffer.remaining() >= 2) {
+            markSet = Short.toUnsignedInt(buffer.getShort());
+        }
+        boolean ignoreMarks = (flag & GdefTable.FLAG_IGNORE_MARKS) != 0;
+        int attachType = (flag >>> 8) & 0xFF;
+        if (type == 5) {
+            contexts[index] = readContextSubst(buffer, first, singles, ignoreMarks, attachType, flag, markSet);
+        } else {
+            chains[index] = readChainSubst(buffer, first, singles, ignoreMarks, attachType, flag, markSet);
+        }
     }
 
     /// Reads a type-1 single substitution subtable.
@@ -168,6 +830,780 @@ final class GsubSubstitutions {
             substitutes[index] = Short.toUnsignedInt(buffer.getShort());
         }
         return new SingleSubst(coverage, 0, substitutes);
+    }
+
+    /// Reads a type-5 ContextSubst format-1 two-glyph rule set.
+    private static ContextRule[] readContextSubst(
+            ByteBuffer buffer,
+            int offset,
+            SingleSubst[] singles,
+            boolean ignoreMarks,
+            int attachType,
+            int lookupFlag,
+            int markSet
+    ) {
+        if (offset + 6 > buffer.limit()) {
+            return new ContextRule[0];
+        }
+        buffer.position(offset);
+        int format = Short.toUnsignedInt(buffer.getShort());
+        if (format == 3) {
+            return readContextSubstFormat3(buffer, offset, singles, ignoreMarks, attachType, lookupFlag, markSet);
+        }
+        if (format == 2) {
+            return readContextSubstFormat2(buffer, offset, singles, ignoreMarks, attachType, lookupFlag, markSet);
+        }
+        if (format != 1) {
+            return new ContextRule[0];
+        }
+        int coverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int setCount = Short.toUnsignedInt(buffer.getShort());
+        Coverage coverage = readCoverage(buffer, coverageOffset);
+        int[] setOffsets = new int[setCount];
+        for (int index = 0; index < setCount; index++) {
+            if (buffer.remaining() < 2) {
+                break;
+            }
+            setOffsets[index] = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        ContextRule[] rules = new ContextRule[setCount];
+        int written = 0;
+        for (int index = 0; index < setCount; index++) {
+            @Nullable ContextRule rule = readContextRule(
+                    buffer,
+                    setOffsets[index],
+                    coverage.glyphAt(index),
+                    singles,
+                    ignoreMarks,
+                    attachType,
+                    lookupFlag,
+                    markSet
+            );
+            if (rule != null) {
+                rules[written++] = rule;
+            }
+        }
+        return written == rules.length ? rules : Arrays.copyOf(rules, written);
+    }
+
+    /// Reads one two-glyph SubRule.
+    private static @Nullable ContextRule readContextRule(
+            ByteBuffer buffer,
+            int offset,
+            int first,
+            SingleSubst[] singles,
+            boolean ignoreMarks,
+            int attachType,
+            int lookupFlag,
+            int markSet
+    ) {
+        if (offset + 6 > buffer.limit() || first < 0) {
+            return null;
+        }
+        int saved = buffer.position();
+        buffer.position(offset);
+        int count = Short.toUnsignedInt(buffer.getShort());
+        if (count < 1) {
+            buffer.position(saved);
+            return null;
+        }
+        int ruleOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        buffer.position(ruleOffset);
+        if (buffer.remaining() < 8) {
+            buffer.position(saved);
+            return null;
+        }
+        int glyphCount = Short.toUnsignedInt(buffer.getShort());
+        int substCount = Short.toUnsignedInt(buffer.getShort());
+        if (glyphCount != 2 || substCount < 1 || buffer.remaining() < 6) {
+            buffer.position(saved);
+            return null;
+        }
+        int next = Short.toUnsignedInt(buffer.getShort());
+        int sequenceIndex = Short.toUnsignedInt(buffer.getShort());
+        int lookupIndex = Short.toUnsignedInt(buffer.getShort());
+        buffer.position(saved);
+        if (sequenceIndex != 0 || lookupIndex >= singles.length || singles[lookupIndex] == null) {
+            return null;
+        }
+        return new ContextRule(
+                first,
+                next,
+                singles[lookupIndex].apply(first),
+                ignoreMarks,
+                attachType,
+                lookupFlag,
+                markSet
+        );
+    }
+
+    /// Reads ContextSubst format 3: two coverage tables and a nested type-1 substitute.
+    private static ContextRule[] readContextSubstFormat3(
+            ByteBuffer buffer,
+            int offset,
+            SingleSubst[] singles,
+            boolean ignoreMarks,
+            int attachType,
+            int lookupFlag,
+            int markSet
+    ) {
+        if (buffer.remaining() < 4) {
+            return new ContextRule[0];
+        }
+        int glyphCount = Short.toUnsignedInt(buffer.getShort());
+        int substCount = Short.toUnsignedInt(buffer.getShort());
+        if (glyphCount != 2 || substCount < 1 || buffer.remaining() < 4 + substCount * 4) {
+            return new ContextRule[0];
+        }
+        int firstCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        int secondCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        int sequenceIndex = Short.toUnsignedInt(buffer.getShort());
+        int lookupIndex = Short.toUnsignedInt(buffer.getShort());
+        if (sequenceIndex != 0 || lookupIndex >= singles.length || singles[lookupIndex] == null) {
+            return new ContextRule[0];
+        }
+        Coverage firsts = readCoverage(buffer, firstCoverage);
+        Coverage seconds = readCoverage(buffer, secondCoverage);
+        ContextRule[] rules = new ContextRule[Math.max(0, firsts.size() * seconds.size())];
+        int written = 0;
+        for (int firstIndex = 0; firstIndex < firsts.size(); firstIndex++) {
+            int first = firsts.glyphAt(firstIndex);
+            int substitute = singles[lookupIndex].apply(first);
+            for (int secondIndex = 0; secondIndex < seconds.size(); secondIndex++) {
+                int second = seconds.glyphAt(secondIndex);
+                if (first < 0 || second < 0) {
+                    continue;
+                }
+                rules[written++] = new ContextRule(
+                        first,
+                        second,
+                        substitute,
+                        ignoreMarks,
+                        attachType,
+                        lookupFlag,
+                        markSet
+                );
+            }
+        }
+        return written == rules.length ? rules : Arrays.copyOf(rules, written);
+    }
+
+    /// Reads ContextSubst format 2: a ClassDef plus two-class ClassRules.
+    private static ContextRule[] readContextSubstFormat2(
+            ByteBuffer buffer,
+            int offset,
+            SingleSubst[] singles,
+            boolean ignoreMarks,
+            int attachType,
+            int lookupFlag,
+            int markSet
+    ) {
+        if (buffer.remaining() < 6) {
+            return new ContextRule[0];
+        }
+        int coverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int classDefOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int setCount = Short.toUnsignedInt(buffer.getShort());
+        int[] setOffsets = new int[setCount];
+        for (int index = 0; index < setCount; index++) {
+            if (buffer.remaining() < 2) {
+                return new ContextRule[0];
+            }
+            int relative = Short.toUnsignedInt(buffer.getShort());
+            setOffsets[index] = relative == 0 ? 0 : offset + relative;
+        }
+        Coverage coverage = readCoverage(buffer, coverageOffset);
+        ClassMap classes = ClassMap.read(buffer, classDefOffset);
+        ContextRule[] rules = new ContextRule[Math.max(4, coverage.size())];
+        int written = 0;
+        for (int index = 0; index < coverage.size(); index++) {
+            int first = coverage.glyphAt(index);
+            if (first < 0) {
+                continue;
+            }
+            int firstClass = classes.classOf(first);
+            if (firstClass < 0 || firstClass >= setCount || setOffsets[firstClass] == 0) {
+                continue;
+            }
+            if (setOffsets[firstClass] + 2 > buffer.limit()) {
+                continue;
+            }
+            int saved = buffer.position();
+            buffer.position(setOffsets[firstClass]);
+            int ruleCount = Short.toUnsignedInt(buffer.getShort());
+            int[] ruleOffsets = new int[ruleCount];
+            for (int ruleIndex = 0; ruleIndex < ruleCount && buffer.remaining() >= 2; ruleIndex++) {
+                ruleOffsets[ruleIndex] = setOffsets[firstClass] + Short.toUnsignedInt(buffer.getShort());
+            }
+            buffer.position(saved);
+            for (int ruleOffset : ruleOffsets) {
+                if (ruleOffset + 8 > buffer.limit()) {
+                    continue;
+                }
+                saved = buffer.position();
+                buffer.position(ruleOffset);
+                int glyphCount = Short.toUnsignedInt(buffer.getShort());
+                int substCount = Short.toUnsignedInt(buffer.getShort());
+                if (glyphCount != 2 || substCount < 1 || buffer.remaining() < 6) {
+                    buffer.position(saved);
+                    continue;
+                }
+                int secondClass = Short.toUnsignedInt(buffer.getShort());
+                int sequenceIndex = Short.toUnsignedInt(buffer.getShort());
+                int lookupIndex = Short.toUnsignedInt(buffer.getShort());
+                buffer.position(saved);
+                if (sequenceIndex != 0 || lookupIndex >= singles.length || singles[lookupIndex] == null) {
+                    continue;
+                }
+                int substitute = singles[lookupIndex].apply(first);
+                for (int second : classes.glyphsOf(secondClass)) {
+                    if (written == rules.length) {
+                        rules = Arrays.copyOf(rules, rules.length * 2);
+                    }
+                    rules[written++] = new ContextRule(
+                            first,
+                            second,
+                            substitute,
+                            ignoreMarks,
+                            attachType,
+                            lookupFlag,
+                            markSet
+                    );
+                }
+            }
+        }
+        return written == rules.length ? rules : Arrays.copyOf(rules, written);
+    }
+
+    /// Reads a type-6 ChainContextSubst format-1 one-lookahead rule set.
+    private static ChainRule[] readChainSubst(
+            ByteBuffer buffer,
+            int offset,
+            SingleSubst[] singles,
+            boolean ignoreMarks,
+            int attachType,
+            int lookupFlag,
+            int markSet
+    ) {
+        if (offset + 6 > buffer.limit()) {
+            return new ChainRule[0];
+        }
+        buffer.position(offset);
+        int format = Short.toUnsignedInt(buffer.getShort());
+        if (format == 3) {
+            return readChainSubstFormat3(buffer, offset, singles, ignoreMarks, attachType, lookupFlag, markSet);
+        }
+        if (format == 2) {
+            return readChainSubstFormat2(buffer, offset, singles, ignoreMarks, attachType, lookupFlag, markSet);
+        }
+        if (format != 1) {
+            return new ChainRule[0];
+        }
+        int coverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int setCount = Short.toUnsignedInt(buffer.getShort());
+        Coverage coverage = readCoverage(buffer, coverageOffset);
+        int[] setOffsets = new int[setCount];
+        for (int index = 0; index < setCount; index++) {
+            if (buffer.remaining() < 2) {
+                break;
+            }
+            setOffsets[index] = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        ChainRule[] rules = new ChainRule[setCount];
+        int written = 0;
+        for (int index = 0; index < setCount; index++) {
+            @Nullable ChainRule rule = readChainRule(
+                    buffer,
+                    setOffsets[index],
+                    coverage.glyphAt(index),
+                    singles,
+                    ignoreMarks,
+                    attachType,
+                    lookupFlag,
+                    markSet
+            );
+            if (rule != null) {
+                rules[written++] = rule;
+            }
+        }
+        return written == rules.length ? rules : Arrays.copyOf(rules, written);
+    }
+
+    /// Reads one first-stable chain SubRule.
+    private static @Nullable ChainRule readChainRule(
+            ByteBuffer buffer,
+            int offset,
+            int first,
+            SingleSubst[] singles,
+            boolean ignoreMarks,
+            int attachType,
+            int lookupFlag,
+            int markSet
+    ) {
+        if (offset + 6 > buffer.limit() || first < 0) {
+            return null;
+        }
+        int saved = buffer.position();
+        buffer.position(offset);
+        int count = Short.toUnsignedInt(buffer.getShort());
+        if (count < 1) {
+            buffer.position(saved);
+            return null;
+        }
+        int ruleOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        buffer.position(ruleOffset);
+        if (buffer.remaining() < 12) {
+            buffer.position(saved);
+            return null;
+        }
+        int @Nullable [] backs = readBacktrackIds(buffer, 3);
+        if (backs == null) {
+            buffer.position(saved);
+            return null;
+        }
+        int inputCount = Short.toUnsignedInt(buffer.getShort());
+        if (inputCount != 2 || buffer.remaining() < 2) {
+            buffer.position(saved);
+            return null;
+        }
+        int next = Short.toUnsignedInt(buffer.getShort());
+        int lookaheadCount = Short.toUnsignedInt(buffer.getShort());
+        if (lookaheadCount != 1 || buffer.remaining() < 2) {
+            buffer.position(saved);
+            return null;
+        }
+        int lookahead = Short.toUnsignedInt(buffer.getShort());
+        int substCount = Short.toUnsignedInt(buffer.getShort());
+        if (substCount < 1 || buffer.remaining() < 4) {
+            buffer.position(saved);
+            return null;
+        }
+        int sequenceIndex = Short.toUnsignedInt(buffer.getShort());
+        int lookupIndex = Short.toUnsignedInt(buffer.getShort());
+        buffer.position(saved);
+        if (sequenceIndex != 0 || lookupIndex >= singles.length || singles[lookupIndex] == null) {
+            return null;
+        }
+        return new ChainRule(
+                first,
+                next,
+                lookahead,
+                singles[lookupIndex].apply(first),
+                ignoreMarks,
+                attachType,
+                lookupFlag,
+                markSet,
+                backs[0],
+                backs[1],
+                backs[2]
+        );
+    }
+
+    /// Reads ChainContextSubst format 2: class-based input and one lookahead class.
+    private static ChainRule[] readChainSubstFormat2(
+            ByteBuffer buffer,
+            int offset,
+            SingleSubst[] singles,
+            boolean ignoreMarks,
+            int attachType,
+            int lookupFlag,
+            int markSet
+    ) {
+        if (buffer.remaining() < 10) {
+            return new ChainRule[0];
+        }
+        int coverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int backClassRel = Short.toUnsignedInt(buffer.getShort());
+        int backClassOffset = backClassRel == 0 ? 0 : offset + backClassRel;
+        int inputClassOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int lookClassOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int setCount = Short.toUnsignedInt(buffer.getShort());
+        int[] setOffsets = new int[setCount];
+        for (int index = 0; index < setCount; index++) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            int relative = Short.toUnsignedInt(buffer.getShort());
+            setOffsets[index] = relative == 0 ? 0 : offset + relative;
+        }
+        Coverage coverage = readCoverage(buffer, coverageOffset);
+        ClassMap backClasses = backClassOffset == 0 ? ClassMap.EMPTY : ClassMap.read(buffer, backClassOffset);
+        ClassMap inputClasses = ClassMap.read(buffer, inputClassOffset);
+        ClassMap lookClasses = ClassMap.read(buffer, lookClassOffset);
+        ChainRule[] rules = new ChainRule[Math.max(4, coverage.size())];
+        int written = 0;
+        for (int index = 0; index < coverage.size(); index++) {
+            int first = coverage.glyphAt(index);
+            if (first < 0) {
+                continue;
+            }
+            int firstClass = inputClasses.classOf(first);
+            if (firstClass < 0 || firstClass >= setCount || setOffsets[firstClass] == 0) {
+                continue;
+            }
+            if (setOffsets[firstClass] + 2 > buffer.limit()) {
+                continue;
+            }
+            int saved = buffer.position();
+            buffer.position(setOffsets[firstClass]);
+            int ruleCount = Short.toUnsignedInt(buffer.getShort());
+            int[] ruleOffsets = new int[ruleCount];
+            for (int ruleIndex = 0; ruleIndex < ruleCount && buffer.remaining() >= 2; ruleIndex++) {
+                ruleOffsets[ruleIndex] = setOffsets[firstClass] + Short.toUnsignedInt(buffer.getShort());
+            }
+            buffer.position(saved);
+            for (int ruleOffset : ruleOffsets) {
+                if (ruleOffset + 12 > buffer.limit()) {
+                    continue;
+                }
+                saved = buffer.position();
+                buffer.position(ruleOffset);
+                int @Nullable [] backClassIds = readBacktrackIds(buffer, 3);
+                if (backClassIds == null) {
+                    buffer.position(saved);
+                    continue;
+                }
+                int inputCount = Short.toUnsignedInt(buffer.getShort());
+                if (inputCount != 2 || buffer.remaining() < 2) {
+                    buffer.position(saved);
+                    continue;
+                }
+                int secondClass = Short.toUnsignedInt(buffer.getShort());
+                int lookaheadCount = Short.toUnsignedInt(buffer.getShort());
+                if (lookaheadCount != 1 || buffer.remaining() < 2) {
+                    buffer.position(saved);
+                    continue;
+                }
+                int lookClass = Short.toUnsignedInt(buffer.getShort());
+                int substCount = Short.toUnsignedInt(buffer.getShort());
+                if (substCount < 1 || buffer.remaining() < 4) {
+                    buffer.position(saved);
+                    continue;
+                }
+                int sequenceIndex = Short.toUnsignedInt(buffer.getShort());
+                int lookupIndex = Short.toUnsignedInt(buffer.getShort());
+                buffer.position(saved);
+                if (sequenceIndex != 0 || lookupIndex >= singles.length || singles[lookupIndex] == null) {
+                    continue;
+                }
+                int substitute = singles[lookupIndex].apply(first);
+                int[] nearGlyphs = backClassIds[0] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassIds[0]);
+                int[] midGlyphs = backClassIds[1] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassIds[1]);
+                int[] farGlyphs = backClassIds[2] == 0 ? new int[] {0} : backClasses.glyphsOf(backClassIds[2]);
+                for (int far : farGlyphs) {
+                    for (int mid : midGlyphs) {
+                        for (int near : nearGlyphs) {
+                            for (int second : inputClasses.glyphsOf(secondClass)) {
+                                for (int look : lookClasses.glyphsOf(lookClass)) {
+                                    if (written == rules.length) {
+                                        rules = Arrays.copyOf(rules, rules.length * 2);
+                                    }
+                                    rules[written++] = new ChainRule(
+                                            first,
+                                            second,
+                                            look,
+                                            substitute,
+                                            ignoreMarks,
+                                            attachType,
+                                            lookupFlag,
+                                            markSet,
+                                            near,
+                                            mid,
+                                            far
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return written == rules.length ? rules : Arrays.copyOf(rules, written);
+    }
+
+    /// Reads ChainContextSubst format 3 with two input coverages and one lookahead coverage.
+    private static ChainRule[] readChainSubstFormat3(
+            ByteBuffer buffer,
+            int offset,
+            SingleSubst[] singles,
+            boolean ignoreMarks,
+            int attachType,
+            int lookupFlag,
+            int markSet
+    ) {
+        if (buffer.remaining() < 2) {
+            return new ChainRule[0];
+        }
+        int backtrackCount = Short.toUnsignedInt(buffer.getShort());
+        int nearCoverage = 0;
+        int midCoverage = 0;
+        int farCoverage = 0;
+        if (backtrackCount > 3) {
+            return new ChainRule[0];
+        }
+        if (backtrackCount >= 1) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            nearCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 2) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            midCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount == 3) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            farCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (buffer.remaining() < 2) {
+            return new ChainRule[0];
+        }
+        int inputCount = Short.toUnsignedInt(buffer.getShort());
+        if (inputCount != 2 || buffer.remaining() < 4) {
+            return new ChainRule[0];
+        }
+        int firstCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        int secondCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        if (buffer.remaining() < 2) {
+            return new ChainRule[0];
+        }
+        int lookaheadCount = Short.toUnsignedInt(buffer.getShort());
+        if (lookaheadCount != 1 || buffer.remaining() < 2) {
+            return new ChainRule[0];
+        }
+        int lookaheadCoverage = offset + Short.toUnsignedInt(buffer.getShort());
+        if (buffer.remaining() < 2) {
+            return new ChainRule[0];
+        }
+        int substCount = Short.toUnsignedInt(buffer.getShort());
+        if (substCount < 1 || buffer.remaining() < 4) {
+            return new ChainRule[0];
+        }
+        int sequenceIndex = Short.toUnsignedInt(buffer.getShort());
+        int lookupIndex = Short.toUnsignedInt(buffer.getShort());
+        if (sequenceIndex != 0 || lookupIndex >= singles.length || singles[lookupIndex] == null) {
+            return new ChainRule[0];
+        }
+        Coverage firsts = readCoverage(buffer, firstCoverage);
+        Coverage seconds = readCoverage(buffer, secondCoverage);
+        Coverage looks = readCoverage(buffer, lookaheadCoverage);
+        int[] nearGlyphs = nearCoverage == 0 ? new int[] {0} : coverageGlyphs(readCoverage(buffer, nearCoverage));
+        int[] midGlyphs = midCoverage == 0 ? new int[] {0} : coverageGlyphs(readCoverage(buffer, midCoverage));
+        int[] farGlyphs = farCoverage == 0 ? new int[] {0} : coverageGlyphs(readCoverage(buffer, farCoverage));
+        ChainRule[] rules = new ChainRule[Math.max(
+                0,
+                firsts.size() * seconds.size() * looks.size()
+                        * nearGlyphs.length * midGlyphs.length * farGlyphs.length
+        )];
+        int written = 0;
+        for (int firstIndex = 0; firstIndex < firsts.size(); firstIndex++) {
+            int first = firsts.glyphAt(firstIndex);
+            int substitute = singles[lookupIndex].apply(first);
+            for (int secondIndex = 0; secondIndex < seconds.size(); secondIndex++) {
+                int second = seconds.glyphAt(secondIndex);
+                for (int lookIndex = 0; lookIndex < looks.size(); lookIndex++) {
+                    int look = looks.glyphAt(lookIndex);
+                    if (first < 0 || second < 0 || look < 0) {
+                        continue;
+                    }
+                    for (int far : farGlyphs) {
+                        for (int mid : midGlyphs) {
+                            for (int near : nearGlyphs) {
+                                rules[written++] = new ChainRule(
+                                        first,
+                                        second,
+                                        look,
+                                        substitute,
+                                        ignoreMarks,
+                                        attachType,
+                                        lookupFlag,
+                                        markSet,
+                                        near,
+                                        mid,
+                                        far
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return written == rules.length ? rules : Arrays.copyOf(rules, written);
+    }
+
+    /// Reads a type-8 reverse-chain format-1 one-lookahead substitution.
+    private static ReverseRule[] readReverseSubst(ByteBuffer buffer, int offset, int lookupFlag, int markSet) {
+        if (offset + 12 > buffer.limit()) {
+            return new ReverseRule[0];
+        }
+        int saved = buffer.position();
+        buffer.position(offset);
+        if (Short.toUnsignedInt(buffer.getShort()) != 1) {
+            buffer.position(saved);
+            return new ReverseRule[0];
+        }
+        int coverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int backtrackCount = Short.toUnsignedInt(buffer.getShort());
+        if (backtrackCount > 3) {
+            buffer.position(saved);
+            return new ReverseRule[0];
+        }
+        int nearCoverageOffset = 0;
+        int midCoverageOffset = 0;
+        int farCoverageOffset = 0;
+        if (backtrackCount >= 1) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            nearCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount >= 2) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            midCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        if (backtrackCount == 3) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            farCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        int lookaheadCount = Short.toUnsignedInt(buffer.getShort());
+        if (lookaheadCount != 1 || buffer.remaining() < 2) {
+            buffer.position(saved);
+            return new ReverseRule[0];
+        }
+        int lookaheadCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int glyphCount = Short.toUnsignedInt(buffer.getShort());
+        int[] substitutes = new int[glyphCount];
+        for (int index = 0; index < glyphCount; index++) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            substitutes[index] = Short.toUnsignedInt(buffer.getShort());
+        }
+        Coverage coverage = readCoverage(buffer, coverageOffset);
+        Coverage lookahead = readCoverage(buffer, lookaheadCoverageOffset);
+        int look = lookahead.glyphAt(0);
+        int backtrack = 0;
+        int backtrackFar = 0;
+        int backtrackFarther = 0;
+        if (nearCoverageOffset != 0) {
+            backtrack = readCoverage(buffer, nearCoverageOffset).glyphAt(0);
+        }
+        if (midCoverageOffset != 0) {
+            backtrackFar = readCoverage(buffer, midCoverageOffset).glyphAt(0);
+        }
+        if (farCoverageOffset != 0) {
+            backtrackFarther = readCoverage(buffer, farCoverageOffset).glyphAt(0);
+        }
+        ReverseRule[] rules = new ReverseRule[glyphCount];
+        int written = 0;
+        for (int index = 0; index < glyphCount; index++) {
+            int current = coverage.glyphAt(index);
+            if (current < 0 || look < 0) {
+                continue;
+            }
+            rules[written++] = new ReverseRule(
+                    current,
+                    look,
+                    substitutes[index],
+                    lookupFlag,
+                    markSet,
+                    backtrack,
+                    backtrackFar,
+                    backtrackFarther
+            );
+        }
+        buffer.position(saved);
+        return written == rules.length ? rules : Arrays.copyOf(rules, written);
+    }
+
+    /// Reads a type-4 ligature substitution subtable.
+    private static LigatureSubst readLigatureSubst(
+            ByteBuffer buffer,
+            int offset,
+            int lookupFlag,
+            int markSet
+    ) {
+        if (offset + 6 > buffer.limit()) {
+            throw new IllegalArgumentException("GSUB ligature subst is truncated");
+        }
+        buffer.position(offset);
+        int format = Short.toUnsignedInt(buffer.getShort());
+        if (format != 1) {
+            throw new IllegalArgumentException("Unsupported GSUB ligature subst format " + format);
+        }
+        int coverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
+        int setCount = Short.toUnsignedInt(buffer.getShort());
+        int[] setOffsets = new int[setCount];
+        for (int index = 0; index < setCount; index++) {
+            if (buffer.remaining() < 2) {
+                throw new IllegalArgumentException("GSUB ligature set offset is truncated");
+            }
+            setOffsets[index] = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        Coverage coverage = readCoverage(buffer, coverageOffset);
+        Ligature[][] sets = new Ligature[setCount][];
+        for (int index = 0; index < setCount; index++) {
+            sets[index] = readLigatureSet(buffer, setOffsets[index]);
+        }
+        return new LigatureSubst(coverage, sets, lookupFlag, markSet);
+    }
+
+    /// Reads one ligature set.
+    private static Ligature[] readLigatureSet(ByteBuffer buffer, int offset) {
+        if (offset + 2 > buffer.limit()) {
+            throw new IllegalArgumentException("GSUB ligature set is truncated");
+        }
+        int saved = buffer.position();
+        buffer.position(offset);
+        int count = Short.toUnsignedInt(buffer.getShort());
+        int[] ligatureOffsets = new int[count];
+        for (int index = 0; index < count; index++) {
+            if (buffer.remaining() < 2) {
+                throw new IllegalArgumentException("GSUB ligature offset is truncated");
+            }
+            ligatureOffsets[index] = offset + Short.toUnsignedInt(buffer.getShort());
+        }
+        Ligature[] ligatures = new Ligature[count];
+        for (int index = 0; index < count; index++) {
+            ligatures[index] = readLigature(buffer, ligatureOffsets[index]);
+        }
+        buffer.position(saved);
+        return ligatures;
+    }
+
+    /// Reads one ligature rule.
+    private static Ligature readLigature(ByteBuffer buffer, int offset) {
+        if (offset + 4 > buffer.limit()) {
+            throw new IllegalArgumentException("GSUB ligature is truncated");
+        }
+        int saved = buffer.position();
+        buffer.position(offset);
+        int glyph = Short.toUnsignedInt(buffer.getShort());
+        int componentCount = Short.toUnsignedInt(buffer.getShort());
+        if (componentCount < 2) {
+            throw new IllegalArgumentException("GSUB ligature must consume at least two glyphs");
+        }
+        int[] rest = new int[componentCount - 1];
+        for (int index = 0; index < rest.length; index++) {
+            if (buffer.remaining() < 2) {
+                throw new IllegalArgumentException("GSUB ligature component is truncated");
+            }
+            rest[index] = Short.toUnsignedInt(buffer.getShort());
+        }
+        buffer.position(saved);
+        return new Ligature(glyph, rest);
     }
 
     /// Reads a coverage table.
@@ -203,11 +1639,260 @@ final class GsubSubstitutions {
         return new Coverage(null, starts, ends, startIndices);
     }
 
-    /// Stores one named feature and its type-1 lookups.
+    /// Stores one named feature and its type-1 through type-6 lookups.
     ///
     /// @param tag the feature tag
-    /// @param lookups the type-1 lookups in apply order
-    private record Feature(int tag, SingleSubst[] lookups) {
+    /// @param singles the type-1 lookups in apply order
+    /// @param ligatures the type-4 lookups in apply order
+    /// @param multiples the type-2 lookups in apply order
+    /// @param alternates the type-3 lookups in apply order
+    /// @param contexts flattened type-5 two-glyph rules
+    /// @param chains flattened type-6 one-lookahead rules
+    /// @param reverses flattened type-8 one-lookahead reverse rules
+    private record Feature(
+            int tag,
+            SingleSubst[] singles,
+            LigatureSubst[] ligatures,
+            MultipleSubst[] multiples,
+            AlternateSubst[] alternates,
+            ContextRule[] contexts,
+            ChainRule[] chains,
+            ReverseRule[] reverses
+    ) {
+    }
+
+    /// Stores parsed lookup slots aligned by lookup-list index.
+    ///
+    /// @param singles type-1 lookups, or `null` slots
+    /// @param ligatures type-4 lookups, or `null` slots
+    /// @param multiples type-2 lookups, or `null` slots
+    /// @param alternates type-3 lookups, or `null` slots
+    /// @param contexts type-5 rules per lookup, or `null` slots
+    /// @param chains type-6 rules per lookup, or `null` slots
+    /// @param reverses type-8 rules per lookup, or `null` slots
+    private record LookupTable(
+            SingleSubst[] singles,
+            LigatureSubst[] ligatures,
+            MultipleSubst[] multiples,
+            AlternateSubst[] alternates,
+            ContextRule[][] contexts,
+            ChainRule[][] chains,
+            ReverseRule[][] reverses
+    ) {
+    }
+
+    /// Coverage plus per-index glyph sequences.
+    ///
+    /// @param coverage the input coverage
+    /// @param sequences sequences in coverage order
+    private record SequenceTable(Coverage coverage, int[][] sequences) {
+        /// Returns the sequence for `glyphId`, or `null`.
+        private int @Nullable [] sequence(int glyphId) {
+            int index = coverage.indexOf(glyphId);
+            if (index < 0 || index >= sequences.length) {
+                return null;
+            }
+            return sequences[index];
+        }
+    }
+
+    /// Stores one type-2 multiple substitution.
+    private static final class MultipleSubst {
+        /// Coverage-indexed sequences.
+        private final SequenceTable table;
+
+        /// Creates a multiple substitution.
+        ///
+        /// @param table the sequences
+        private MultipleSubst(SequenceTable table) {
+            this.table = table;
+        }
+
+        /// Returns the substitute sequence, or `null`.
+        ///
+        /// @param glyphId the input
+        /// @return the sequence
+        private int @Nullable [] apply(int glyphId) {
+            return table.sequence(glyphId);
+        }
+    }
+
+    /// Stores one type-3 alternate substitution.
+    private static final class AlternateSubst {
+        /// Coverage-indexed alternate sets.
+        private final SequenceTable table;
+
+        /// Creates an alternate substitution.
+        ///
+        /// @param table the alternate sets
+        private AlternateSubst(SequenceTable table) {
+            this.table = table;
+        }
+
+        /// Returns the first alternate, or `glyphId`.
+        ///
+        /// @param glyphId the input
+        /// @return the alternate
+        private int apply(int glyphId) {
+            int @Nullable [] set = table.sequence(glyphId);
+            if (set == null || set.length == 0) {
+                return glyphId;
+            }
+            return set[0];
+        }
+    }
+
+    /// One type-5 two-glyph substitution.
+    ///
+    /// @param current the first input glyph
+    /// @param next the second input glyph
+    /// @param substitute the replacement for `current`
+    /// @param ignoreMarks whether the lookup skips every GDEF mark
+    /// @param attachType the `MarkAttachmentType` class, or `0`
+    /// @param lookupFlag the full lookup flag word
+    /// @param markSet the `UseMarkFilteringSet` index, or `0`
+    private record ContextRule(
+            int current,
+            int next,
+            int substitute,
+            boolean ignoreMarks,
+            int attachType,
+            int lookupFlag,
+            int markSet
+    ) {
+    }
+
+    /// One type-6 one-lookahead substitution.
+    ///
+    /// @param current the first input glyph
+    /// @param next the second input glyph
+    /// @param lookahead the first lookahead glyph
+    /// @param substitute the replacement for `current`
+    /// @param ignoreMarks whether the lookup skips every GDEF mark
+    /// @param attachType the `MarkAttachmentType` class, or `0`
+    /// @param lookupFlag the full lookup flag word
+    /// @param markSet the `UseMarkFilteringSet` index, or `0`
+    /// @param backtrack the nearest required preceding glyph, or `0` when unused
+    /// @param backtrackFar the next required preceding glyph, or `0` when unused
+    /// @param backtrackFarther the farthest required preceding glyph, or `0` when unused
+    private record ChainRule(
+            int current,
+            int next,
+            int lookahead,
+            int substitute,
+            boolean ignoreMarks,
+            int attachType,
+            int lookupFlag,
+            int markSet,
+            int backtrack,
+            int backtrackFar,
+            int backtrackFarther
+    ) {
+    }
+
+    /// One type-8 reverse-chain substitution.
+    ///
+    /// @param current the input glyph
+    /// @param lookahead the following glyph
+    /// @param substitute the replacement for `current`
+    /// @param lookupFlag the full lookup flag word
+    /// @param markSet the `UseMarkFilteringSet` index, or `0`
+    /// @param backtrack the nearest required preceding glyph, or `0` when unused
+    /// @param backtrackFar the next required preceding glyph, or `0` when unused
+    /// @param backtrackFarther the farthest required preceding glyph, or `0` when unused
+    private record ReverseRule(
+            int current,
+            int lookahead,
+            int substitute,
+            int lookupFlag,
+            int markSet,
+            int backtrack,
+            int backtrackFar,
+            int backtrackFarther
+    ) {
+    }
+
+    /// Stores one type-4 ligature substitution.
+    private static final class LigatureSubst {
+        /// Coverage of first glyphs.
+        private final Coverage coverage;
+
+        /// Ligature sets in coverage order.
+        private final Ligature[][] sets;
+
+        /// Full lookup flag word used by [`GdefTable#skip(int, int, int)`].
+        private final int lookupFlag;
+
+        /// `UseMarkFilteringSet` index, or `0`.
+        private final int markSet;
+
+        /// Creates a ligature substitution.
+        ///
+        /// @param coverage the first-glyph coverage
+        /// @param sets the ligature sets
+        /// @param lookupFlag the lookup flag word
+        /// @param markSet the mark-filter set index
+        private LigatureSubst(Coverage coverage, Ligature[][] sets, int lookupFlag, int markSet) {
+            this.coverage = coverage;
+            this.sets = sets;
+            this.lookupFlag = lookupFlag;
+            this.markSet = markSet;
+        }
+
+        /// Applies the first matching ligature in table order.
+        ///
+        /// @param glyphIds the mapped glyphs
+        /// @param start the first glyph index
+        /// @param remaining the available length
+        /// @param gdef the GDEF classes
+        /// @return the match, or `null`
+        private @Nullable GlyphLigature apply(int[] glyphIds, int start, int remaining, GdefTable gdef) {
+            int coverageIndex = coverage.indexOf(glyphIds[start]);
+            if (coverageIndex < 0 || coverageIndex >= sets.length) {
+                return null;
+            }
+            Ligature[] candidates = sets[coverageIndex];
+            for (Ligature ligature : candidates) {
+                @Nullable GlyphLigature match = match(ligature, glyphIds, start, remaining, gdef);
+                if (match != null) {
+                    return match;
+                }
+            }
+            return null;
+        }
+
+        /// Matches one ligature, optionally skipping marks.
+        private @Nullable GlyphLigature match(
+                Ligature ligature,
+                int[] glyphIds,
+                int start,
+                int remaining,
+                GdefTable gdef
+        ) {
+            int cursor = 1;
+            for (int component : ligature.rest) {
+                while (cursor < remaining && gdef.skip(glyphIds[start + cursor], lookupFlag, markSet)) {
+                    cursor++;
+                }
+                if (cursor >= remaining || glyphIds[start + cursor] != component) {
+                    return null;
+                }
+                cursor++;
+            }
+            return new GlyphLigature(ligature.glyph, cursor);
+        }
+
+        /// Returns whether this lookup skips `glyphId`.
+        private boolean skip(int glyphId, GdefTable gdef) {
+            return gdef.skip(glyphId, lookupFlag, markSet);
+        }
+    }
+
+    /// Stores one ligature rule.
+    ///
+    /// @param glyph the substitute glyph
+    /// @param rest the remaining component glyph ids
+    private record Ligature(int glyph, int[] rest) {
     }
 
     /// Stores one type-1 substitution.
@@ -298,6 +1983,47 @@ final class GsubSubstitutions {
             for (int index = 0; index < starts.length; index++) {
                 if (glyphId >= starts[index] && glyphId <= ends[index]) {
                     return startIndices[index] + (glyphId - starts[index]);
+                }
+            }
+            return -1;
+        }
+
+        /// Returns the number of covered glyphs.
+        ///
+        /// @return the coverage length
+        private int size() {
+            if (glyphs != null) {
+                return glyphs.length;
+            }
+            if (starts == null || ends == null || startIndices == null) {
+                return 0;
+            }
+            int max = 0;
+            for (int index = 0; index < starts.length; index++) {
+                int last = startIndices[index] + (ends[index] - starts[index]) + 1;
+                if (last > max) {
+                    max = last;
+                }
+            }
+            return max;
+        }
+
+        /// Returns the glyph at a coverage index, or `-1`.
+        ///
+        /// @param coverageIndex the coverage index
+        /// @return the glyph id
+        private int glyphAt(int coverageIndex) {
+            if (glyphs != null) {
+                return coverageIndex >= 0 && coverageIndex < glyphs.length ? glyphs[coverageIndex] : -1;
+            }
+            if (starts == null || ends == null || startIndices == null) {
+                return -1;
+            }
+            for (int index = 0; index < starts.length; index++) {
+                int first = startIndices[index];
+                int last = first + (ends[index] - starts[index]);
+                if (coverageIndex >= first && coverageIndex <= last) {
+                    return starts[index] + (coverageIndex - first);
                 }
             }
             return -1;

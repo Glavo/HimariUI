@@ -4,7 +4,9 @@ import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// Verifies bounded ICC v2 matrix/TRC parsing and D50-to-D65 conversion.
 @NotNullByDefault
@@ -28,6 +30,99 @@ final class IccProfileTest {
     @Test
     void rejectsTruncatedProfile() {
         assertThrows(IllegalArgumentException.class, () -> IccProfile.parse(new byte[64]));
+    }
+
+    /// Uses the AToB0 `mft2` CLUT instead of the matrix/TRC path.
+    @Test
+    void atoB0ClutOverridesMatrixPath() {
+        IccProfile matrix = IccProfile.parse(minimalSrgbMatrixProfile());
+        IccProfile lut = IccProfile.parse(matrixPlusA2b0());
+        assertEquals(null, matrix.clut());
+        assertNotNull(lut.clut());
+        assertEquals(2, lut.clut().grid());
+        Color matrixRed = matrix.toExtendedLinear(1.0f, 0.0f, 0.0f, 1.0f);
+        Color lutRed = lut.toExtendedLinear(1.0f, 0.0f, 0.0f, 1.0f);
+        assertTrue(Math.abs(matrixRed.red() - lutRed.red()) > 0.05f);
+        float[] xyz = lut.clut().transform(1.0f, 0.0f, 0.0f);
+        assertEquals(0.2f, xyz[0], 0.001f);
+        assertEquals(0.0f, xyz[1], 0.001f);
+        assertEquals(0.0f, xyz[2], 0.001f);
+    }
+
+    /// Builds the matrix profile plus a 2³ `mft2` AToB0 tag.
+    private static byte[] matrixPlusA2b0() {
+        byte[] base = minimalSrgbMatrixProfile();
+        int grid = 2;
+        int inputTable = 256 * 3;
+        int clutValues = grid * grid * grid * 3;
+        int outputTable = 256 * 3;
+        int mft2Size = 48 + (inputTable + clutValues + outputTable) * 2;
+        int tagCount = 7;
+        int table = 132 + tagCount * 12;
+        int xyzSize = 20;
+        int curveSize = 12;
+        int size = table + 3 * xyzSize + 3 * curveSize + mft2Size;
+        byte[] bytes = new byte[size];
+        System.arraycopy(base, 0, bytes, 0, 128);
+        putU32(bytes, 0, size);
+        putU32(bytes, 128, tagCount);
+        int redXyz = table;
+        int greenXyz = redXyz + xyzSize;
+        int blueXyz = greenXyz + xyzSize;
+        int redTrc = blueXyz + xyzSize;
+        int greenTrc = redTrc + curveSize;
+        int blueTrc = greenTrc + curveSize;
+        int a2b0 = blueTrc + curveSize;
+        putTag(bytes, 0, 0x7258_595A, redXyz, xyzSize);
+        putTag(bytes, 1, 0x6758_595A, greenXyz, xyzSize);
+        putTag(bytes, 2, 0x6258_595A, blueXyz, xyzSize);
+        putTag(bytes, 3, 0x7254_5243, redTrc, curveSize);
+        putTag(bytes, 4, 0x6754_5243, greenTrc, curveSize);
+        putTag(bytes, 5, 0x6254_5243, blueTrc, curveSize);
+        putTag(bytes, 6, 0x4132_4230, a2b0, mft2Size);
+        putXyz(bytes, redXyz, 0.4360657f, 0.2224884f, 0.0139160f);
+        putXyz(bytes, greenXyz, 0.3851477f, 0.7168732f, 0.0971045f);
+        putXyz(bytes, blueXyz, 0.1430664f, 0.0606084f, 0.7141733f);
+        putIdentityCurve(bytes, redTrc);
+        putIdentityCurve(bytes, greenTrc);
+        putIdentityCurve(bytes, blueTrc);
+        putSignature(bytes, a2b0, "mft2");
+        bytes[a2b0 + 8] = 3;
+        bytes[a2b0 + 9] = 3;
+        bytes[a2b0 + 10] = (byte) grid;
+        int cursor = a2b0 + 48;
+        for (int index = 0; index < 256; index++) {
+            int encoded = index * 257;
+            for (int channel = 0; channel < 3; channel++) {
+                putU16(bytes, cursor, encoded);
+                cursor += 2;
+            }
+        }
+        for (int red = 0; red < grid; red++) {
+            for (int green = 0; green < grid; green++) {
+                for (int blue = 0; blue < grid; blue++) {
+                    boolean uniqueRed = red == 1 && green == 0 && blue == 0;
+                    putU16(bytes, cursor, uniqueRed ? 13107 : 0);
+                    putU16(bytes, cursor + 2, 0);
+                    putU16(bytes, cursor + 4, 0);
+                    cursor += 6;
+                }
+            }
+        }
+        for (int index = 0; index < 256; index++) {
+            int encoded = index * 257;
+            for (int channel = 0; channel < 3; channel++) {
+                putU16(bytes, cursor, encoded);
+                cursor += 2;
+            }
+        }
+        return bytes;
+    }
+
+    /// Writes a big-endian unsigned 16-bit integer.
+    private static void putU16(byte[] bytes, int offset, int value) {
+        bytes[offset] = (byte) (value >>> 8);
+        bytes[offset + 1] = (byte) value;
     }
 
     /// Builds a compact ICC v2 RGB matrix/TRC profile.

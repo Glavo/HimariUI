@@ -42,16 +42,32 @@ public final class GlyphAtlas {
     /// Height of the current shelf, including padding.
     private int shelfHeight;
 
-    /// Creates an empty atlas.
+    /// Maximum interned glyphs, including empty masks.
+    private final int maxGlyphs;
+
+    /// Creates an empty atlas with no occupancy budget.
     ///
     /// @param width the positive sheet width
     /// @param height the positive sheet height
     public GlyphAtlas(int width, int height) {
+        this(width, height, Integer.MAX_VALUE);
+    }
+
+    /// Creates an empty atlas that rejects intern beyond `maxGlyphs`.
+    ///
+    /// @param width the positive sheet width
+    /// @param height the positive sheet height
+    /// @param maxGlyphs the positive occupancy budget
+    public GlyphAtlas(int width, int height, int maxGlyphs) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("Atlas extents must be positive");
         }
+        if (maxGlyphs <= 0) {
+            throw new IllegalArgumentException("Atlas glyph budget must be positive");
+        }
         this.width = width;
         this.height = height;
+        this.maxGlyphs = maxGlyphs;
         this.coverage = new byte[Math.multiplyExact(width, height)];
         this.entries = new HashMap<>();
     }
@@ -75,6 +91,13 @@ public final class GlyphAtlas {
     /// @return the nonnegative occupancy
     public int glyphCount() {
         return entries.size();
+    }
+
+    /// Returns the occupancy budget.
+    ///
+    /// @return the positive maximum interned glyph count
+    public int maxGlyphs() {
+        return maxGlyphs;
     }
 
     /// Returns a copy of the packed sheet.
@@ -110,6 +133,9 @@ public final class GlyphAtlas {
         @Nullable AtlasGlyph existing = entries.get(key);
         if (existing != null) {
             return existing;
+        }
+        if (entries.size() >= maxGlyphs) {
+            return null;
         }
         GlyphMask mask = GlyphRasterizer.rasterize(font, glyphId, pixelHeight);
         AtlasGlyph packed = pack(mask);

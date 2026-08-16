@@ -2,6 +2,8 @@ package org.glavo.himari.text;
 
 import org.jetbrains.annotations.NotNullByDefault;
 
+import java.util.Objects;
+
 /// Maps Arabic letters onto Unicode Presentation Forms-B after joining analysis.
 ///
 /// The table covers `U+0621`–`U+064A`. Letters without a requested form, tatweel, and unmapped
@@ -79,5 +81,44 @@ public final class ArabicPresentation {
         starts[0x0649 - 0x0621] = 0xFEEF;
         starts[0x064A - 0x0621] = 0xFEF1;
         return starts;
+    }
+
+    /// Returns whether `codePoint` is Arabic LAM.
+    ///
+    /// @param codePoint the code point
+    /// @return whether the code point is `U+0644`
+    public static boolean isLam(int codePoint) {
+        return codePoint == 0x0644;
+    }
+
+    /// Returns whether `codePoint` is an alef that forms a lam-alef ligature.
+    ///
+    /// @param codePoint the code point
+    /// @return whether the code point is madda, hamza-above, hamza-below, or plain alef
+    public static boolean isAlef(int codePoint) {
+        return codePoint == 0x0622 || codePoint == 0x0623 || codePoint == 0x0625 || codePoint == 0x0627;
+    }
+
+    /// Returns the Presentation Forms-B lam-alef for `alef` after joining analysis of LAM.
+    ///
+    /// Isolated and initial LAM produce the isolated ligature. Medial and final LAM produce the
+    /// final ligature. `NONE` and unmapped alef variants return `0`.
+    ///
+    /// @param alef the alef variant
+    /// @param lamForm the joining form of the preceding LAM
+    /// @return the ligature code point, or `0`
+    public static int lamAlef(int alef, ArabicForm lamForm) {
+        Objects.requireNonNull(lamForm, "lamForm");
+        if (lamForm == ArabicForm.NONE) {
+            return 0;
+        }
+        boolean isolated = lamForm == ArabicForm.ISOLATED || lamForm == ArabicForm.INITIAL;
+        return switch (alef) {
+            case 0x0622 -> isolated ? 0xFEF5 : 0xFEF6;
+            case 0x0623 -> isolated ? 0xFEF7 : 0xFEF8;
+            case 0x0625 -> isolated ? 0xFEF9 : 0xFEFA;
+            case 0x0627 -> isolated ? 0xFEFB : 0xFEFC;
+            default -> 0;
+        };
     }
 }

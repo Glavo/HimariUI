@@ -110,6 +110,14 @@ public final class WindowsWindow implements PlatformWindow {
         return copy;
     }
 
+    /// Queries generated `GetPointerType` for `pointerId`.
+    ///
+    /// @param pointerId the pointer identity
+    /// @return the type, or `0` when the query fails
+    public int queryPointerType(int pointerId) {
+        return nativeWindow.queryPointerType(pointerId);
+    }
+
     /// Returns key events delivered through WndProc since the last drain.
     ///
     /// @return the events
@@ -214,12 +222,46 @@ public final class WindowsWindow implements PlatformWindow {
     /// @param x the client x
     /// @param y the client y
     public void postPointer(org.glavo.himari.layout.input.PointerEventType type, int x, int y) {
-        int message = switch (type) {
-            case MOVE -> 0x0200;
-            case DOWN -> 0x0201;
-            case UP -> 0x0202;
-        };
-        nativeWindow.postMessage(message, 0L, WindowsNativeWindow.packPointer(x, y));
+        postPointer(type, x, y, org.glavo.himari.layout.input.PointerDeviceKind.MOUSE);
+    }
+
+    /// Posts a pointer sequence through the production WndProc.
+    ///
+    /// Mouse devices use posted `WM_MOUSE*`. Touch and pen devices send `WM_POINTER*`
+    /// synchronously because `PostMessageW` rejects those identifiers. `WM_POINTER*` is classified
+    /// with generated `GetPointerType`; a failed query stays
+    /// [`org.glavo.himari.layout.input.PointerDeviceKind#TOUCH`].
+    ///
+    /// @param type the pointer kind
+    /// @param x the client x
+    /// @param y the client y
+    /// @param device the physical pointer
+    public void postPointer(
+            org.glavo.himari.layout.input.PointerEventType type,
+            int x,
+            int y,
+            org.glavo.himari.layout.input.PointerDeviceKind device
+    ) {
+        Objects.requireNonNull(device, "device");
+        long packed = WindowsNativeWindow.packPointer(x, y);
+        switch (device) {
+            case MOUSE -> {
+                int message = switch (type) {
+                    case MOVE -> 0x0200;
+                    case DOWN -> 0x0201;
+                    case UP -> 0x0202;
+                };
+                nativeWindow.postMessage(message, 0L, packed);
+            }
+            case TOUCH, PEN -> {
+                int message = switch (type) {
+                    case MOVE -> 0x0245;
+                    case DOWN -> 0x0246;
+                    case UP -> 0x0247;
+                };
+                nativeWindow.sendMessage(message, 0L, packed);
+            }
+        }
     }
 
     /// Posts a virtual-key event through the production WndProc.

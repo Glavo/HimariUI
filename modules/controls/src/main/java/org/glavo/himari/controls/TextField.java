@@ -16,14 +16,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/// Creates an unstyled single-line editor that accepts injected IME composition.
+/// Creates an unstyled single-line editor that stores committed text in a [`GapBuffer`].
 @NotNullByDefault
 public final class TextField {
     /// Default field size.
     private static final Size SIZE = new Size(160.0f, 24.0f);
 
-    /// Committed text.
-    private String text;
+    /// Committed gap-buffer storage.
+    private final GapBuffer committed;
 
     /// Live composition, or `null` when idle.
     private @Nullable String composition;
@@ -45,14 +45,21 @@ public final class TextField {
 
     /// Creates an empty field.
     public TextField() {
-        this.text = "";
+        this.committed = new GapBuffer();
+    }
+
+    /// Returns the committed gap buffer.
+    ///
+    /// @return the storage
+    public GapBuffer committed() {
+        return committed;
     }
 
     /// Returns the committed text.
     ///
     /// @return the text
     public String text() {
-        return text;
+        return committed.toString();
     }
 
     /// Returns the live composition, or `null`.
@@ -66,6 +73,7 @@ public final class TextField {
     ///
     /// @return the displayed text
     public String displayedText() {
+        String text = committed.toString();
         return composition == null ? text : text + composition;
     }
 
@@ -120,12 +128,12 @@ public final class TextField {
         if (composition != null) {
             throw new IllegalStateException("Cannot replace committed text during composition");
         }
-        if (start < 0 || end < start || end > text.length()) {
+        if (start < 0 || end < start || end > committed.length()) {
             throw new IllegalArgumentException("Range must lie within committed text");
         }
-        undo.add(text);
+        undo.add(committed.toString());
         redo.clear();
-        text = text.substring(0, start) + replacement + text.substring(end);
+        committed.replace(start, end, replacement);
         selectionStart = start + replacement.length();
         selectionEnd = selectionStart;
     }
@@ -135,7 +143,7 @@ public final class TextField {
     /// @param value the composition
     public void updateComposition(String value) {
         this.composition = Objects.requireNonNull(value, "value");
-        selectionStart = text.length();
+        selectionStart = committed.length();
         selectionEnd = displayedText().length();
     }
 
@@ -147,13 +155,13 @@ public final class TextField {
         if (pending == null) {
             return null;
         }
-        undo.add(text);
+        undo.add(committed.toString());
         redo.clear();
-        text = text + pending;
+        committed.replace(committed.length(), committed.length(), pending);
         composition = null;
         rejected = null;
-        selectionStart = text.length();
-        selectionEnd = text.length();
+        selectionStart = committed.length();
+        selectionEnd = committed.length();
         return pending;
     }
 
@@ -167,8 +175,8 @@ public final class TextField {
         }
         composition = null;
         rejected = pending;
-        selectionStart = text.length();
-        selectionEnd = text.length();
+        selectionStart = committed.length();
+        selectionEnd = committed.length();
         return pending;
     }
 
@@ -179,11 +187,11 @@ public final class TextField {
         if (undo.isEmpty()) {
             return false;
         }
-        redo.add(text);
-        text = undo.removeLast();
+        redo.add(committed.toString());
+        committed.assign(undo.removeLast());
         composition = null;
-        selectionStart = text.length();
-        selectionEnd = text.length();
+        selectionStart = committed.length();
+        selectionEnd = committed.length();
         return true;
     }
 
@@ -194,19 +202,19 @@ public final class TextField {
         if (redo.isEmpty()) {
             return false;
         }
-        undo.add(text);
-        text = redo.removeLast();
+        undo.add(committed.toString());
+        committed.assign(redo.removeLast());
         composition = null;
-        selectionStart = text.length();
-        selectionEnd = text.length();
+        selectionStart = committed.length();
+        selectionEnd = committed.length();
         return true;
     }
 
     /// Cancels the live composition.
     public void cancelComposition() {
         composition = null;
-        selectionStart = text.length();
-        selectionEnd = text.length();
+        selectionStart = committed.length();
+        selectionEnd = committed.length();
     }
 
     /// Applies one IME session snapshot without letting the session write this editor.
@@ -230,12 +238,12 @@ public final class TextField {
         if (composition != null) {
             composition = null;
         }
-        if (!surrounding.equals(text)) {
-            undo.add(text);
+        if (!surrounding.equals(committed.toString())) {
+            undo.add(committed.toString());
             redo.clear();
-            text = surrounding;
+            committed.assign(surrounding);
         }
-        int caret = Math.min(Math.max(0, session.caret()), text.length());
+        int caret = Math.min(Math.max(0, session.caret()), committed.length());
         selectionStart = caret;
         selectionEnd = caret;
     }
@@ -260,7 +268,7 @@ public final class TextField {
                 Set.of(SemanticsAction.ACTIVATE),
                 () -> { }
         );
-        int start = composition == null ? selectionStart() : text.length();
+        int start = composition == null ? selectionStart() : committed.length();
         int end = composition == null ? selectionEnd() : displayed.length();
         int caret = composition == null ? selectionEnd : displayed.length();
         node.setTextRange(new SemanticsTextRange(start, end, caret));

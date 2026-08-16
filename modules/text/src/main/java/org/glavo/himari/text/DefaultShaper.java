@@ -1,5 +1,6 @@
 package org.glavo.himari.text;
 
+import org.glavo.himari.font.GlyphLigature;
 import org.glavo.himari.font.MarkPlacement;
 import org.glavo.himari.font.SfntFont;
 import org.jetbrains.annotations.NotNullByDefault;
@@ -15,12 +16,18 @@ import java.util.Objects;
 ///
 /// Latin, Greek, Cyrillic, Han, and Kana use one-to-one `cmap` mapping. Arabic joining letters
 /// apply GSUB `isol`/`init`/`medi`/`fina` when the font lists those features, otherwise they
-/// select Presentation Forms-B when the font maps those forms. Hebrew letter-plus-mark pairs
-/// compose onto Presentation Forms-A when the font maps the composed form. Hangul
-/// choseong/jungseong/jongseong sequences compose onto syllables when the font maps the syllable.
+/// select Presentation Forms-B when the font maps those forms. LAM plus an alef variant compose
+/// onto Presentation Forms-B lam-alef when the font maps the ligature; transparent marks between
+/// LAM and alef stay in the LAM cluster. Hebrew letter-plus-mark pairs compose onto Presentation
+/// Forms-A when the font maps the composed form. Hangul choseong/jungseong/jongseong sequences,
+/// including Hangul Compatibility Jamo, compose onto syllables when the font maps the syllable.
 /// Thai and Lao decompose SARA AM and reorder Nikhahit over above-base marks; left vowels stay
-/// in Unicode visual order. Consecutive pairs then receive GPOS type-2 or format-0 `kern`
-/// X-advance adjustments. Marks covered by GPOS type 4 attach to the preceding base.
+/// in Unicode visual order. The glyph stream then applies GSUB type-2 `ccmp` decompositions and
+/// type-4 `rlig`/`liga` ligatures when the font lists those lookups. GSUB `calt` then applies
+/// type-5 two-glyph context and type-6 one-lookahead chain substitutions. Consecutive pairs then
+/// receive GPOS type-2 or format-0 `kern` X-advance adjustments, plus `IgnoreMarks` and
+/// `MarkAttachmentType` pair and chain lookups. Marks covered by GPOS type 4 attach to the
+/// preceding base.
 /// U+00AD is emitted with a zero advance so unused soft hyphens do not occupy the line.
 /// The shaper does not write editor state and does not reorder RTL runs.
 @NotNullByDefault
@@ -69,8 +76,15 @@ public final class DefaultShaper {
             cluster++;
             index += Character.charCount(codePoint);
         }
-        applyPairs(font, glyphs, count);
-        applyMarks(font, glyphs, count);
+        glyphs = applyDecompositions(font, glyphs, count);
+        int simpleCount = applyLigatures(font, glyphs, glyphs.length);
+        applyContext(font, glyphs, simpleCount);
+        applyReverse(font, glyphs, simpleCount);
+        applyPairs(font, glyphs, simpleCount);
+        applyMarks(font, glyphs, simpleCount);
+        if (simpleCount != count) {
+            glyphs = Arrays.copyOf(glyphs, simpleCount);
+        }
         return Collections.unmodifiableList(Arrays.asList(glyphs));
     }
 
@@ -105,17 +119,29 @@ public final class DefaultShaper {
             int mapped = codePoint;
             int consumed = 1;
             int cluster = clusters[index];
-            if (index + 1 < count && HangulSyllable.isLead(codePoint) && HangulSyllable.isVowel(points[index + 1])) {
+            int lead = HangulSyllable.asLead(codePoint);
+            int vowel = index + 1 < count ? HangulSyllable.asVowel(points[index + 1]) : 0;
+            if (lead != 0 && vowel != 0) {
                 int trail = 0;
                 int hangulConsumed = 2;
-                if (index + 2 < count && HangulSyllable.isTrail(points[index + 2])) {
-                    trail = points[index + 2];
-                    hangulConsumed = 3;
+                if (index + 2 < count) {
+                    int mappedTrail = HangulSyllable.asTrail(points[index + 2]);
+                    if (mappedTrail != 0) {
+                        trail = mappedTrail;
+                        hangulConsumed = 3;
+                    }
                 }
-                int syllable = HangulSyllable.compose(codePoint, points[index + 1], trail);
+                int syllable = HangulSyllable.compose(lead, vowel, trail);
                 if (syllable != 0 && font.glyphId(syllable) != 0) {
                     mapped = syllable;
                     consumed = hangulConsumed;
+                }
+            }
+            if (consumed == 1 && index + 2 < count) {
+                int triple = HebrewPresentation.compose(codePoint, points[index + 1], points[index + 2]);
+                if (triple != 0 && font.glyphId(triple) != 0) {
+                    mapped = triple;
+                    consumed = 3;
                 }
             }
             if (consumed == 1 && index + 1 < count) {
@@ -123,6 +149,37 @@ public final class DefaultShaper {
                 if (composed != 0 && font.glyphId(composed) != 0) {
                     mapped = composed;
                     consumed = 2;
+                }
+            }
+            if (consumed == 1 && ArabicPresentation.isLam(codePoint)) {
+                int alefIndex = index + 1;
+                while (alefIndex < count && ArabicJoining.isTransparent(points[alefIndex])) {
+                    alefIndex++;
+                }
+                if (alefIndex < count && ArabicPresentation.isAlef(points[alefIndex])) {
+                    int ligature = ArabicPresentation.lamAlef(points[alefIndex], forms[index]);
+                    if (ligature != 0 && font.glyphId(ligature) != 0) {
+                        int ligatureGlyph = font.glyphId(ligature);
+                        glyphs[written++] = new ShapedGlyph(
+                                ligature,
+                                ligatureGlyph,
+                                cluster,
+                                advanceOf(font, ligature, ligatureGlyph)
+                        );
+                        lastLetterCluster = cluster;
+                        for (int mark = index + 1; mark < alefIndex; mark++) {
+                            int markPoint = points[mark];
+                            int markGlyph = font.glyphId(markPoint);
+                            glyphs[written++] = new ShapedGlyph(
+                                    markPoint,
+                                    markGlyph,
+                                    lastLetterCluster,
+                                    advanceOf(font, markPoint, markGlyph)
+                            );
+                        }
+                        index = alefIndex + 1;
+                        continue;
+                    }
                 }
             }
             int glyphId;
@@ -155,9 +212,13 @@ public final class DefaultShaper {
             written++;
             index += consumed;
         }
-        if (written != count) {
+        glyphs = applyDecompositions(font, glyphs, written);
+        written = applyLigatures(font, glyphs, glyphs.length);
+        if (written != glyphs.length) {
             glyphs = Arrays.copyOf(glyphs, written);
         }
+        applyContext(font, glyphs, written);
+        applyReverse(font, glyphs, written);
         applyPairs(font, glyphs, written);
         applyMarks(font, glyphs, written);
         return Collections.unmodifiableList(Arrays.asList(glyphs));
@@ -177,10 +238,173 @@ public final class DefaultShaper {
         return font.metrics(glyphId).advanceWidth();
     }
 
+    /// Collapses GSUB type-4 `rlig` then `liga` matches in place.
+    ///
+    /// @param font the face
+    /// @param glyphs the mapped glyphs
+    /// @param count the used length
+    /// @return the used length after ligatures
+    private static int applyLigatures(SfntFont font, ShapedGlyph[] glyphs, int count) {
+        if (count < 2) {
+            return count;
+        }
+        int[] ids = new int[count];
+        for (int index = 0; index < count; index++) {
+            ids[index] = glyphs[index].glyphId();
+        }
+        int written = 0;
+        int index = 0;
+        while (index < count) {
+            int remaining = count - index;
+            @Nullable GlyphLigature match = font.ligature(ids, index, remaining, SfntFont.TAG_RLIG);
+            if (match == null) {
+                match = font.ligature(ids, index, remaining, SfntFont.TAG_LIGA);
+            }
+            if (match == null) {
+                glyphs[written++] = glyphs[index++];
+                continue;
+            }
+            ShapedGlyph first = glyphs[index];
+            int ligatureId = match.glyphId();
+            glyphs[written++] = new ShapedGlyph(
+                    first.codePoint(),
+                    ligatureId,
+                    first.cluster(),
+                    advanceOf(font, first.codePoint(), ligatureId),
+                    first.xOffset(),
+                    first.yOffset(),
+                    first.fontIndex()
+            );
+            index += match.consumed();
+        }
+        return written;
+    }
+
+    /// Applies GSUB type-2 `ccmp` sequences, expanding one glyph into one or more glyphs.
+    private static ShapedGlyph[] applyDecompositions(SfntFont font, ShapedGlyph[] glyphs, int count) {
+        int extra = 0;
+        int[][] sequences = null;
+        for (int index = 0; index < count; index++) {
+            int @Nullable [] sequence = font.decompose(glyphs[index].glyphId(), SfntFont.TAG_CCMP);
+            if (sequence == null || sequence.length == 0) {
+                continue;
+            }
+            if (sequences == null) {
+                sequences = new int[count][];
+            }
+            sequences[index] = sequence;
+            extra += sequence.length - 1;
+        }
+        if (sequences == null) {
+            return count == glyphs.length ? glyphs : Arrays.copyOf(glyphs, count);
+        }
+        ShapedGlyph[] expanded = new ShapedGlyph[count + extra];
+        int written = 0;
+        for (int index = 0; index < count; index++) {
+            int @Nullable [] sequence = sequences[index];
+            ShapedGlyph glyph = glyphs[index];
+            if (sequence == null) {
+                expanded[written++] = glyph;
+                continue;
+            }
+            for (int glyphId : sequence) {
+                expanded[written++] = new ShapedGlyph(
+                        glyph.codePoint(),
+                        glyphId,
+                        glyph.cluster(),
+                        advanceOf(font, glyph.codePoint(), glyphId),
+                        glyph.xOffset(),
+                        glyph.yOffset(),
+                        glyph.fontIndex()
+                );
+            }
+        }
+        return expanded;
+    }
+
+    /// Applies GSUB type-8 reverse-chain substitutions from the end of the run.
+    private static void applyReverse(SfntFont font, ShapedGlyph[] glyphs, int count) {
+        int[] glyphIds = new int[count];
+        for (int index = 0; index < count; index++) {
+            glyphIds[index] = glyphs[index].glyphId();
+        }
+        for (int index = count - 1; index >= 0; index--) {
+            if (index + 1 >= count) {
+                continue;
+            }
+            int current = glyphIds[index];
+            int nextId = font.reverseSubstitute(glyphIds, index, count - index, SfntFont.TAG_CALT);
+            if (nextId == current) {
+                continue;
+            }
+            glyphIds[index] = nextId;
+            ShapedGlyph glyph = glyphs[index];
+            glyphs[index] = new ShapedGlyph(
+                    glyph.codePoint(),
+                    nextId,
+                    glyph.cluster(),
+                    advanceOf(font, glyph.codePoint(), nextId),
+                    glyph.xOffset(),
+                    glyph.yOffset(),
+                    glyph.fontIndex()
+            );
+        }
+    }
+
+    /// Applies GSUB `calt` type-5 and type-6 substitutions in place.
+    private static void applyContext(SfntFont font, ShapedGlyph[] glyphs, int count) {
+        int[] glyphIds = new int[count];
+        for (int index = 0; index < count; index++) {
+            glyphIds[index] = glyphs[index].glyphId();
+        }
+        for (int index = 0; index < count; index++) {
+            int current = glyphIds[index];
+            int remaining = count - index;
+            int nextId = remaining > 1
+                    ? font.contextSubstitute(glyphIds, index, remaining, SfntFont.TAG_CALT)
+                    : current;
+            if (remaining > 1) {
+                int chained = font.chainSubstitute(glyphIds, index, remaining, SfntFont.TAG_CALT);
+                if (chained != current) {
+                    nextId = chained;
+                }
+            }
+            if (nextId == current) {
+                continue;
+            }
+            glyphIds[index] = nextId;
+            ShapedGlyph glyph = glyphs[index];
+            glyphs[index] = new ShapedGlyph(
+                    glyph.codePoint(),
+                    nextId,
+                    glyph.cluster(),
+                    advanceOf(font, glyph.codePoint(), nextId),
+                    glyph.xOffset(),
+                    glyph.yOffset(),
+                    glyph.fontIndex()
+            );
+        }
+    }
+
     /// Applies GPOS/`kern` pair X-advance deltas in place and clamps each advance to be nonnegative.
+    ///
+    /// Adjacent, `IgnoreMarks`, `MarkAttachmentType`, `IgnoreBaseGlyphs`, `IgnoreLigatures`, and
+    /// `UseMarkFilteringSet` lookups all apply through [`SfntFont#pairAdjustment(int[], int, int)`]
+    /// and [`SfntFont#chainAdjustment(int[], int, int)`].
     private static void applyPairs(SfntFont font, ShapedGlyph[] glyphs, int count) {
-        for (int index = 0; index < count - 1; index++) {
-            int delta = font.pairAdjustment(glyphs[index].glyphId(), glyphs[index + 1].glyphId());
+        int[] glyphIds = new int[count];
+        for (int index = 0; index < count; index++) {
+            glyphIds[index] = glyphs[index].glyphId();
+        }
+        for (int index = 0; index < count; index++) {
+            int remaining = count - index;
+            int delta = font.singleAdjustment(glyphIds[index]);
+            if (remaining > 1) {
+                delta += font.pairAdjustment(glyphIds, index, remaining);
+            }
+            if (remaining > 2) {
+                delta += font.chainAdjustment(glyphIds, index, remaining);
+            }
             if (delta == 0) {
                 continue;
             }
@@ -201,16 +425,19 @@ public final class DefaultShaper {
         }
     }
 
-    /// Attaches GPOS marks to the preceding base glyph.
+    /// Attaches GPOS marks to the preceding mark, then to the preceding base.
     private static void applyMarks(SfntFont font, ShapedGlyph[] glyphs, int count) {
         int baseIndex = -1;
         for (int index = 0; index < count; index++) {
             int glyphId = glyphs[index].glyphId();
             if (font.isMark(glyphId)) {
-                if (baseIndex < 0) {
-                    continue;
+                @Nullable MarkPlacement placement = null;
+                if (index > 0) {
+                    placement = font.markPlacement(glyphId, glyphs[index - 1].glyphId());
                 }
-                @Nullable MarkPlacement placement = font.markPlacement(glyphId, glyphs[baseIndex].glyphId());
+                if (placement == null && baseIndex >= 0) {
+                    placement = font.markPlacement(glyphId, glyphs[baseIndex].glyphId());
+                }
                 if (placement == null) {
                     continue;
                 }
@@ -248,6 +475,7 @@ public final class DefaultShaper {
             int codePoint = text.codePointAt(index);
             if (ArabicJoining.isArabicLetter(codePoint)
                     || HebrewPresentation.isLetter(codePoint)
+                    || codePoint == 0x05B9
                     || HangulSyllable.isJamo(codePoint)
                     || ThaiLao.isThaiOrLao(codePoint)
                     || ArabicJoining.isTransparent(codePoint)

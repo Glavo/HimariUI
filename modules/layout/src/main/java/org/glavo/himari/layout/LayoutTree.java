@@ -203,7 +203,10 @@ public final class LayoutTree {
                 node.selected(),
                 node.rangeValue(),
                 node.liveRegion(),
-                node.textRange()
+                node.textRange(),
+                node.grid(),
+                node.scroll(),
+                node.gridItem()
         ));
         for (LayoutNode child : node.children()) {
             collectSemantics(child, nodes);

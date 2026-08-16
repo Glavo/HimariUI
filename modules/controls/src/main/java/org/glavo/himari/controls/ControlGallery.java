@@ -31,17 +31,35 @@ public final class ControlGallery {
     /// Button used by the gallery.
     private final Button button;
 
+    /// Icon button used by the gallery.
+    private final IconButton iconButton;
+
+    /// Checkbox used by the gallery.
+    private final Checkbox checkbox;
+
+    /// Radio group used by the gallery.
+    private final Radio radio;
+
     /// Toggle used by the gallery.
     private final Toggle toggle;
 
     /// Slider used by the gallery.
     private final Slider slider;
 
+    /// Scrollbar used by the gallery.
+    private final Scrollbar scrollbar;
+
+    /// Progress indicator used by the gallery.
+    private final Progress progress;
+
     /// Scroll viewport used by the gallery.
     private final ScrollViewport scroll;
 
     /// Lazy list used by the gallery.
     private final LazyList list;
+
+    /// Virtualized table used by the gallery.
+    private final LazyTable table;
 
     /// Text field used by the gallery.
     private final TextField field;
@@ -64,6 +82,15 @@ public final class ControlGallery {
     /// Tooltip used by the gallery.
     private final Tooltip tooltip;
 
+    /// Tabs used by the gallery.
+    private final Tabs tabs;
+
+    /// Split pane used by the gallery.
+    private final SplitPane split;
+
+    /// Tree used by the gallery.
+    private final Tree tree;
+
     /// Theme tokens used by the gallery.
     private ThemeTokens theme;
 
@@ -79,10 +106,22 @@ public final class ControlGallery {
     /// Creates a gallery with default initial values.
     public ControlGallery() {
         this.button = new Button("Increment", externalClicks::incrementAndGet);
+        this.iconButton = new IconButton("plus", () -> { });
+        this.checkbox = new Checkbox("Agree");
+        this.radio = new Radio(List.of("A", "B"));
         this.toggle = new Toggle("Muted");
         this.slider = new Slider("Volume", 0.0f, 10.0f, 1.0f, 3.0f);
+        this.scrollbar = new Scrollbar("Thumb", 0.0f, 100.0f, 10.0f, 20.0f);
+        this.progress = new Progress("Load", 0.0f, 1.0f, 0.25f);
         this.scroll = new ScrollViewport(16.0f);
         this.list = new LazyList(20, 4);
+        this.table = new LazyTable(2, 1);
+        this.table.addRow("r0", 20.0f);
+        this.table.addRow("r1", 20.0f);
+        this.table.addRow("r2", 24.0f);
+        this.table.addRow("r3", 20.0f);
+        this.table.addRow("r4", 20.0f);
+        this.table.setViewport(0.0f, 40.0f);
         this.field = new TextField();
         this.area = new TextArea();
         this.status = new LiveStatus("Ready");
@@ -90,6 +129,12 @@ public final class ControlGallery {
         this.menu = new Menu("File", List.of(new Button("Open", () -> { })));
         this.dialog = new Dialog("Confirm");
         this.tooltip = new Tooltip("Hint");
+        this.tabs = new Tabs(List.of("One", "Two"));
+        this.split = new SplitPane(0.4f);
+        this.tree = new Tree(List.of(
+                new Tree.Item("root", "Root", 0, true),
+                new Tree.Item("child", "Child", 1, false)
+        ));
         this.theme = ThemeTokens.standard();
     }
 
@@ -98,6 +143,27 @@ public final class ControlGallery {
     /// @return the button
     public Button button() {
         return button;
+    }
+
+    /// Returns the icon button.
+    ///
+    /// @return the icon button
+    public IconButton iconButton() {
+        return iconButton;
+    }
+
+    /// Returns the checkbox.
+    ///
+    /// @return the checkbox
+    public Checkbox checkbox() {
+        return checkbox;
+    }
+
+    /// Returns the radio group.
+    ///
+    /// @return the radio group
+    public Radio radio() {
+        return radio;
     }
 
     /// Returns the toggle.
@@ -114,6 +180,20 @@ public final class ControlGallery {
         return slider;
     }
 
+    /// Returns the scrollbar.
+    ///
+    /// @return the scrollbar
+    public Scrollbar scrollbar() {
+        return scrollbar;
+    }
+
+    /// Returns the progress indicator.
+    ///
+    /// @return the progress
+    public Progress progress() {
+        return progress;
+    }
+
     /// Returns the scroll viewport.
     ///
     /// @return the viewport
@@ -126,6 +206,13 @@ public final class ControlGallery {
     /// @return the list
     public LazyList list() {
         return list;
+    }
+
+    /// Returns the virtualized table.
+    ///
+    /// @return the table
+    public LazyTable table() {
+        return table;
     }
 
     /// Returns the text field.
@@ -175,6 +262,27 @@ public final class ControlGallery {
     /// @return the tooltip
     public Tooltip tooltip() {
         return tooltip;
+    }
+
+    /// Returns the tabs.
+    ///
+    /// @return the tabs
+    public Tabs tabs() {
+        return tabs;
+    }
+
+    /// Returns the split pane.
+    ///
+    /// @return the split
+    public SplitPane split() {
+        return split;
+    }
+
+    /// Returns the tree.
+    ///
+    /// @return the tree
+    public Tree tree() {
+        return tree;
     }
 
     /// Returns the theme tokens.
@@ -254,17 +362,26 @@ public final class ControlGallery {
                 modifiers,
                 BootstrapLabel.create(factory, "title", "Controls"),
                 button.create(factory, "button"),
+                iconButton.create(factory, "icon-button"),
+                checkbox.create(factory, "checkbox"),
+                radio.create(factory, "radio"),
                 toggle.create(factory, "toggle"),
                 slider.create(factory, "slider"),
+                scrollbar.create(factory, "scrollbar"),
+                progress.create(factory, "progress"),
                 scroll.create(factory, "scroll", tallContent),
                 list.create(factory, "list"),
+                table.create(factory, "table"),
                 field.create(factory, "field"),
                 area.create(factory, "area"),
                 status.create(factory, "status"),
                 popup.create(factory, "popup"),
                 menu.create(factory, "menu"),
                 dialog.create(factory, "dialog"),
-                tooltip.create(factory, "tooltip")
+                tooltip.create(factory, "tooltip"),
+                tabs.create(factory, "tabs"),
+                split.create(factory, "split"),
+                this.tree.create(factory, "tree")
         );
     }
 

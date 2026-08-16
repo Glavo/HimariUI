@@ -97,6 +97,47 @@ final class ControlGalleryTest {
         assertEquals(1, gallery.list().firstVisible());
     }
 
+    /// Publishes progress range semantics without increment actions.
+    @Test
+    void publishesProgressRange() {
+        LayoutTree tree = new LayoutTree();
+        ControlGallery gallery = new ControlGallery();
+        tree.setRoot(gallery.create(tree));
+        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.place();
+        assertEquals(0.25f, gallery.progress().value());
+        SemanticsNode progress = first(tree, SemanticsRole.PROGRESS);
+        assertEquals(0.25, progress.rangeValue(), 1.0e-6);
+        gallery.progress().setValue(0.8f);
+        assertEquals(0.8f, gallery.progress().value());
+        assertEquals(0.8f, first(tree, SemanticsRole.PROGRESS).rangeValue(), 1.0e-6);
+    }
+
+    /// Exposes labels for unmounted lazy-list items.
+    @Test
+    void listsUnmountedLazyListLabels() {
+        ControlGallery gallery = new ControlGallery();
+        assertEquals(20, gallery.list().logicalLabels().size());
+        assertEquals(16, gallery.list().unmountedLabels().size());
+        assertEquals("Item 4", gallery.list().unmountedLabels().getFirst());
+        assertEquals("Item 19", gallery.list().unmountedLabels().getLast());
+    }
+
+    /// Materializes the gallery table through shipped TABLE semantics.
+    @Test
+    void materializesGalleryTable() {
+        LayoutTree tree = new LayoutTree();
+        ControlGallery gallery = new ControlGallery();
+        tree.setRoot(gallery.create(tree));
+        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.place();
+        assertEquals("r0", gallery.table().firstMaterializedKey());
+        SemanticsNode table = first(tree, SemanticsRole.TABLE);
+        assertTrue(table.bounds().height() > 0.0f);
+        gallery.table().insertRow(0, "r-new", 20.0f);
+        assertEquals("r0", gallery.table().firstMaterializedKey());
+    }
+
     /// Commits IME composition into the text field.
     @Test
     void commitsTextFieldComposition() {
