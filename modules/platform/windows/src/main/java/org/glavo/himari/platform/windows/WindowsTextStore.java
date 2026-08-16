@@ -396,6 +396,59 @@ public final class WindowsTextStore implements AutoCloseable {
         throwContained();
     }
 
+    /// Invokes `ITextStoreACP::GetSelection` through the generated vtable.
+    ///
+    /// @return the first ACP selection, or a collapsed `[0, 0]` when none was fetched
+    public Selection invokeGetSelection() {
+        requireOpen();
+        MemorySegment record = arena.allocate(Win32Layouts.TS_SELECTION_ACP);
+        record.fill((byte) 0);
+        MemorySegment fetched = arena.allocate(ValueLayout.JAVA_INT);
+        fetched.set(ValueLayout.JAVA_INT, 0L, 0);
+        int hr = Win32FfmBindings.invokeItextStoreGetSelectionPointer(
+                vtable.getAtIndex(ValueLayout.ADDRESS, 8L),
+                object,
+                0,
+                1,
+                record,
+                fetched
+        );
+        if (hr < 0) {
+            throw new IllegalStateException("ITextStoreACP::GetSelection failed with HRESULT " + hr);
+        }
+        throwContained();
+        if (fetched.get(ValueLayout.JAVA_INT, 0L) == 0) {
+            return new Selection(0, 0);
+        }
+        return new Selection(
+                record.get(ValueLayout.JAVA_INT, Win32Layouts.TS_SELECTION_ACP_ACP_START_OFFSET),
+                record.get(ValueLayout.JAVA_INT, Win32Layouts.TS_SELECTION_ACP_ACP_END_OFFSET)
+        );
+    }
+
+    /// Invokes `ITextStoreACP::SetSelection` through the generated vtable.
+    ///
+    /// Only the start ACP is applied; the session caret becomes that offset.
+    ///
+    /// @param start the ACP caret
+    public void invokeSetSelection(int start) {
+        requireOpen();
+        MemorySegment record = arena.allocate(Win32Layouts.TS_SELECTION_ACP);
+        record.fill((byte) 0);
+        record.set(ValueLayout.JAVA_INT, Win32Layouts.TS_SELECTION_ACP_ACP_START_OFFSET, start);
+        record.set(ValueLayout.JAVA_INT, Win32Layouts.TS_SELECTION_ACP_ACP_END_OFFSET, start);
+        int hr = Win32FfmBindings.invokeItextStoreSetSelectionPointer(
+                vtable.getAtIndex(ValueLayout.ADDRESS, 9L),
+                object,
+                1,
+                record
+        );
+        if (hr < 0) {
+            throw new IllegalStateException("ITextStoreACP::SetSelection failed with HRESULT " + hr);
+        }
+        throwContained();
+    }
+
     /// Releases this owner's COM reference.
     @Override
     public void close() {
@@ -875,6 +928,16 @@ public final class WindowsTextStore implements AutoCloseable {
     public record ScreenExtent(int left, int top, int right, int bottom) {
         /// Accepts any integer rectangle reported by the store.
         public ScreenExtent {
+        }
+    }
+
+    /// ACP selection returned by `ITextStoreACP::GetSelection`.
+    ///
+    /// @param start the inclusive start ACP
+    /// @param end the exclusive end ACP
+    public record Selection(int start, int end) {
+        /// Accepts any ACP pair reported by the store.
+        public Selection {
         }
     }
 

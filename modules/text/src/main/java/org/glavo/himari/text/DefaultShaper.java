@@ -21,6 +21,7 @@ import java.util.Objects;
 /// Thai and Lao decompose SARA AM and reorder Nikhahit over above-base marks; left vowels stay
 /// in Unicode visual order. Consecutive pairs then receive GPOS type-2 or format-0 `kern`
 /// X-advance adjustments. Marks covered by GPOS type 4 attach to the preceding base.
+/// U+00AD is emitted with a zero advance so unused soft hyphens do not occupy the line.
 /// The shaper does not write editor state and does not reorder RTL runs.
 @NotNullByDefault
 public final class DefaultShaper {
@@ -63,7 +64,7 @@ public final class DefaultShaper {
                     codePoint,
                     glyphId,
                     cluster,
-                    font.metrics(glyphId).advanceWidth()
+                    advanceOf(font, codePoint, glyphId)
             );
             cluster++;
             index += Character.charCount(codePoint);
@@ -149,7 +150,7 @@ public final class DefaultShaper {
                     mapped,
                     glyphId,
                     cluster,
-                    font.metrics(glyphId).advanceWidth()
+                    advanceOf(font, mapped, glyphId)
             );
             written++;
             index += consumed;
@@ -160,6 +161,20 @@ public final class DefaultShaper {
         applyPairs(font, glyphs, written);
         applyMarks(font, glyphs, written);
         return Collections.unmodifiableList(Arrays.asList(glyphs));
+    }
+
+    /// Returns the layout advance, forcing U+00AD to zero so an unused soft hyphen does not take
+    /// space.
+    ///
+    /// @param font the face
+    /// @param codePoint the mapped code point
+    /// @param glyphId the mapped glyph
+    /// @return the nonnegative advance
+    private static int advanceOf(SfntFont font, int codePoint, int glyphId) {
+        if (codePoint == 0x00AD || BidiOrder.isControl(codePoint)) {
+            return 0;
+        }
+        return font.metrics(glyphId).advanceWidth();
     }
 
     /// Applies GPOS/`kern` pair X-advance deltas in place and clamps each advance to be nonnegative.

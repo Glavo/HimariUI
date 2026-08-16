@@ -1,13 +1,18 @@
 package org.glavo.himari.text;
 
+import org.glavo.himari.font.FontDirectories;
 import org.glavo.himari.font.SfntFont;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 /// Resolves application fonts in listed order and segments text into fallback runs.
 ///
@@ -17,10 +22,29 @@ import java.util.Objects;
 /// not start a new face. A code point that no face covers stays on the primary face as `.notdef`;
 /// the resolver does not retry a face already considered for that code point.
 ///
-/// Layout units after [`FallbackShaper`] are the primary face's units per em. This collection does
-/// not enumerate system fonts.
+/// Layout units after [`FallbackShaper`] are the primary face's units per em. [`#withHostCatalog`]
+/// appends readable faces from the host font directory; a collection built only from explicit
+/// faces does not enumerate system fonts.
 @NotNullByDefault
 public final class FontCollection {
+    /// Maximum extra faces opened from the host catalog.
+    private static final int HOST_CATALOG_LIMIT = 24;
+
+    /// Preferred Windows file names tried before a directory scan.
+    private static final String[] HOST_PREFERRED = {
+            "segoeui.ttf",
+            "arial.ttf",
+            "tahoma.ttf",
+            "times.ttf",
+            "cour.ttf",
+            "calibri.ttf",
+            "georgia.ttf",
+            "Deng.ttf",
+            "malgun.ttf",
+            "simhei.ttf",
+            "msyh.ttf"
+    };
+
     /// Ordered faces; index `0` is primary.
     private final SfntFont[] fonts;
 
@@ -37,6 +61,50 @@ public final class FontCollection {
             faces[index + 1] = Objects.requireNonNull(fallbacks[index], "fallback");
         }
         this.fonts = faces;
+    }
+
+    /// Creates a collection whose later faces are readable fonts from the host catalog.
+    ///
+    /// On Windows this opens preferred names under `%WINDIR%\\Fonts`, then other single-face
+    /// SFNT files until 24 extra faces are loaded. A missing catalog
+    /// directory yields `primary` alone. TrueType collections are skipped.
+    ///
+    /// @param primary the first face tried for every code point
+    /// @return the collection
+    public static FontCollection withHostCatalog(SfntFont primary) {
+        Objects.requireNonNull(primary, "primary");
+        @Nullable Path directory = FontDirectories.windowsFonts();
+        if (directory == null) {
+            return new FontCollection(primary);
+        }
+        ArrayList<SfntFont> extra = new ArrayList<>();
+        HashSet<String> opened = new HashSet<>();
+        for (int index = 0; index < HOST_PREFERRED.length; index++) {
+            addHostFace(directory.resolve(HOST_PREFERRED[index]), extra, opened);
+        }
+        List<Path> files = FontDirectories.listSfnt(directory);
+        for (int index = 0; index < files.size() && extra.size() < HOST_CATALOG_LIMIT; index++) {
+            addHostFace(files.get(index), extra, opened);
+        }
+        if (extra.isEmpty()) {
+            return new FontCollection(primary);
+        }
+        return new FontCollection(primary, extra.toArray(SfntFont[]::new));
+    }
+
+    /// Opens `path` into `extra` when it is a new readable single-face SFNT.
+    private static void addHostFace(Path path, List<SfntFont> extra, Set<String> opened) {
+        if (extra.size() >= HOST_CATALOG_LIMIT) {
+            return;
+        }
+        String key = path.getFileName().toString().toLowerCase(Locale.ROOT);
+        if (!opened.add(key)) {
+            return;
+        }
+        @Nullable SfntFont font = FontDirectories.tryOpen(path);
+        if (font != null) {
+            extra.add(font);
+        }
     }
 
     /// Returns the primary face.

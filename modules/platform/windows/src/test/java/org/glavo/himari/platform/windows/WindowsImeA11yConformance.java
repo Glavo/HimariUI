@@ -169,8 +169,12 @@ public final class WindowsImeA11yConformance {
                 tsfAvailable = tsf.available() && tsf.activate();
                 if (tsfAvailable) {
                     store.invokeSetText(0, 5, "nihao");
+                    store.invokeSetSelection(3);
+                    WindowsTextStore.Selection selection = store.invokeGetSelection();
                     textStoreLock = store.invokeRequestLock(WindowsTextStore.TS_LF_READWRITE) == 0
-                            && "nihao".equals(store.invokeGetText(0, -1));
+                            && "nihao".equals(store.invokeGetText(0, -1))
+                            && selection.start() == 3
+                            && selection.end() == 3;
                     WindowsTextStore.ScreenExtent extent = store.invokeGetScreenExt();
                     textStoreGeometry = store.invokeGetAcpFromPoint(4, 8) == 0
                             && store.invokeGetAcpFromPoint(20, 8) == 5

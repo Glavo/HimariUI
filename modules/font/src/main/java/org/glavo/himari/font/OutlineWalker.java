@@ -9,7 +9,8 @@ import java.util.Objects;
 ///
 /// Implied on-curve midpoints between consecutive off-curve points use untruncated averages.
 /// Composite glyphs apply XY offsets and optional F2DOT14 scales. Hint instructions are skipped.
-/// Recursion deeper than [`#MAX_COMPONENT_DEPTH`] is rejected.
+/// Recursion deeper than [`#MAX_COMPONENT_DEPTH`] is rejected. Simple glyphs apply [`GvarTable`]
+/// contour deltas at the supplied normalized instance before emission.
 @NotNullByDefault
 final class OutlineWalker {
     /// On-curve point flag.
@@ -73,9 +74,11 @@ final class OutlineWalker {
     /// @param glyphId the glyph identity
     /// @param pen the destination
     /// @param depth the current composite depth, `0` at the root
-    static void walk(SfntFont font, int glyphId, OutlinePen pen, int depth) {
+    /// @param normalized normalized `gvar` coordinates, empty at the default instance
+    static void walk(SfntFont font, int glyphId, OutlinePen pen, int depth, float[] normalized) {
         Objects.requireNonNull(font, "font");
         Objects.requireNonNull(pen, "pen");
+        Objects.requireNonNull(normalized, "normalized");
         if (depth > MAX_COMPONENT_DEPTH) {
             throw new IllegalArgumentException("glyf composite depth exceeds " + MAX_COMPONENT_DEPTH);
         }
@@ -92,16 +95,23 @@ final class OutlineWalker {
         glyf.getShort();
         glyf.getShort();
         if (contours > 0) {
-            walkSimple(glyf, contours, pen);
+            walkSimple(font, glyphId, glyf, contours, pen, normalized);
             return;
         }
         if (contours < 0) {
-            walkComposite(font, glyf, pen, depth);
+            walkComposite(font, glyf, pen, depth, normalized);
         }
     }
 
-    /// Emits one simple glyph.
-    private static void walkSimple(ByteBuffer glyf, int contours, OutlinePen pen) {
+    /// Emits one simple glyph after applying `gvar` contour deltas.
+    private static void walkSimple(
+            SfntFont font,
+            int glyphId,
+            ByteBuffer glyf,
+            int contours,
+            OutlinePen pen,
+            float[] normalized
+    ) {
         if (glyf.remaining() < contours * 2 + 2) {
             throw new IllegalArgumentException("glyf end points are truncated");
         }
@@ -126,6 +136,7 @@ final class OutlineWalker {
         float[] ys = new float[pointCount];
         readCoordinates(glyf, flags, xs, true);
         readCoordinates(glyf, flags, ys, false);
+        font.applyGvar(glyphId, xs, ys, normalized);
         int start = 0;
         for (int contour = 0; contour < contours; contour++) {
             emitContour(xs, ys, flags, start, endPts[contour], pen);
@@ -249,7 +260,13 @@ final class OutlineWalker {
     }
 
     /// Expands one composite glyph.
-    private static void walkComposite(SfntFont font, ByteBuffer glyf, OutlinePen pen, int depth) {
+    private static void walkComposite(
+            SfntFont font,
+            ByteBuffer glyf,
+            OutlinePen pen,
+            int depth,
+            float[] normalized
+    ) {
         boolean more = true;
         int flags = 0;
         while (more) {
@@ -304,7 +321,7 @@ final class OutlineWalker {
             OutlinePen childPen = identity(xx, xy, yx, yy, dx, dy)
                     ? pen
                     : new TransformPen(pen, xx, xy, yx, yy, dx, dy);
-            walk(font, child, childPen, depth + 1);
+            walk(font, child, childPen, depth + 1, normalized);
             more = (flags & MORE_COMPONENTS) != 0;
         }
         if ((flags & WE_HAVE_INSTRUCTIONS) != 0) {

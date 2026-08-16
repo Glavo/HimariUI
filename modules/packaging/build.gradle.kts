@@ -30,11 +30,27 @@ val jlinkModules = listOf(
     project(":modules:text"),
 )
 
+val counterModules = listOf(
+    project(":modules:samples:counter"),
+    project(":modules:font"),
+    project(":modules:graphics"),
+    project(":modules:layout"),
+    project(":modules:platform-api"),
+    project(":modules:platform-headless"),
+    project(":modules:render-software"),
+    project(":modules:runtime"),
+    project(":modules:state"),
+    project(":modules:text"),
+)
+
 val conformance = tasks.register<JavaExec>("conformance") {
     group = "verification"
     description = "Runs the M11 BOM, SBOM, NOTICE, Native Image registry, and jlink profile."
     dependsOn("testClasses", "test", "pureJavaGuard")
     jlinkModules.forEach { module ->
+        dependsOn(module.tasks.named("jar"))
+    }
+    counterModules.forEach { module ->
         dependsOn(module.tasks.named("jar"))
     }
     classpath = sourceSets.named("test").get().runtimeClasspath
@@ -45,6 +61,7 @@ val conformance = tasks.register<JavaExec>("conformance") {
         conformanceDirectory.map { it.file("sbom.json") },
         conformanceDirectory.map { it.file("notice.txt") },
         conformanceDirectory.map { it.file("native-image-registry.json") },
+        conformanceDirectory.map { it.file("native-image-probe.json") },
         conformanceDirectory.map { it.file("jlink-recipe.json") },
         conformanceDirectory.map { it.file("jlink-image.json") },
         conformanceDirectory.map { it.file("diagnostics.json") },
@@ -55,10 +72,15 @@ val conformance = tasks.register<JavaExec>("conformance") {
         jlinkModules.forEach { module ->
             modulePath.add(module.tasks.named<Jar>("jar").get().archiveFile.get().asFile.absolutePath)
         }
+        val counterClassPath = ArrayList<String>()
+        counterModules.forEach { module ->
+            counterClassPath.add(module.tasks.named<Jar>("jar").get().archiveFile.get().asFile.absolutePath)
+        }
         setArgs(listOf(
             conformanceDirectory.get().asFile.absolutePath,
             modulePath.joinToString(File.pathSeparator),
             imageDirectory.get().asFile.absolutePath,
+            counterClassPath.joinToString(File.pathSeparator),
         ))
     }
 }

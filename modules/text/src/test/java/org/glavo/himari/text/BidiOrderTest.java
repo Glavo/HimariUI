@@ -50,4 +50,24 @@ final class BidiOrderTest {
                 BidiOrder.levels("ab אב cd")
         );
     }
+
+    /// An RTL isolate makes a leading neutral take RTL (N2) and is omitted from visual order.
+    @Test
+    void rtlIsolateFlipsLeadingNeutralAndStripsControls() {
+        assertEquals(".ab", BidiOrder.visual(".ab"));
+        assertEquals("ab.", BidiOrder.visual("\u2067.ab\u2069"));
+        assertEquals("abבאcd", BidiOrder.visual("ab\u2067\u05D0\u05D1\u2069cd"));
+        assertEquals("ab.", BidiOrder.visual("\u202B.ab\u202C"));
+        assertEquals(".ab", BidiOrder.visual("\u2068.ab\u2069"));
+    }
+
+    /// Reverses RTL slots of an index array using decoded code-point levels.
+    @Test
+    void reordersIndexArrayForRtlRuns() {
+        int[] points = {'a', 'b', 0x05D0, 0x05D1, 'c'};
+        int[] levels = BidiOrder.levels(points);
+        int[] order = {0, 1, 2, 3, 4};
+        BidiOrder.reorderRtlRuns(order, levels);
+        assertArrayEquals(new int[] {0, 1, 3, 2, 4}, order);
+    }
 }

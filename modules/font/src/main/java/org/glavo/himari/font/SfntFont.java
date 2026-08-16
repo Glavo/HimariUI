@@ -10,11 +10,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 /// Reads a checked SFNT directory, `cmap` format 4/12, `hmtx`, TrueType `loca`/`glyf` or
-/// CFF/CFF2 Type 2 outlines, optional GSUB, and GPOS/`kern`.
+/// CFF/CFF2 Type 2 outlines, optional GSUB, GPOS/`kern`, COLR v0/CPAL, `fvar`, `avar`, `gvar`,
+/// `HVAR`, `sbix`, CBLC/CBDT, and EBLC/EBDT.
 ///
 /// The font file is retained as a read-only [MemorySegment] so the same view can back a heap array
 /// or a later mapped file. Sequential table decoding uses [ByteBuffer] cursors over those slices.
@@ -70,6 +72,33 @@ public final class SfntFont {
 
     /// GPOS type-2 and format-0 `kern` pair adjustments, or empty when both tables are absent.
     private final GposPositioning gpos;
+
+    /// COLR v0 layers and CPAL palettes, empty when either table is absent.
+    private final ColrCpal colr;
+
+    /// `fvar` axes, empty when the table is absent.
+    private final FvarTable fvar;
+
+    /// `gvar` tuple deltas, empty when the table is absent.
+    private final GvarTable gvar;
+
+    /// `avar` axis maps, empty when the table is absent.
+    private final AvarTable avar;
+
+    /// `HVAR` advance deltas, empty when the table is absent.
+    private final HvarTable hvar;
+
+    /// First `sbix` strike, empty when the table is absent.
+    private final SbixTable sbix;
+
+    /// First CBLC/CBDT format-1 strike, empty when the tables are absent.
+    private final CbdtCblc cbdt;
+
+    /// First EBLC/EBDT format-1 strike, empty when the tables are absent.
+    private final CbdtCblc ebdt;
+
+    /// Shared empty normalized instance used for the default outline.
+    private static final float[] DEFAULT_NORMALIZED = new float[0];
 
     /// Creates a font from heap SFNT bytes.
     ///
@@ -147,6 +176,14 @@ public final class SfntFont {
         }
         this.gsub = GsubSubstitutions.parse(findTable("GSUB"));
         this.gpos = GposPositioning.parse(findTable("GPOS"), findTable("kern"));
+        this.colr = ColrCpal.parse(findTable("COLR"), findTable("CPAL"));
+        this.fvar = FvarTable.parse(findTable("fvar"));
+        this.gvar = GvarTable.parse(findTable("gvar"), glyphCount);
+        this.avar = AvarTable.parse(findTable("avar"), fvar.axes().size());
+        this.hvar = HvarTable.parse(findTable("HVAR"), fvar.axes().size());
+        this.sbix = SbixTable.parse(findTable("sbix"), glyphCount);
+        this.cbdt = CbdtCblc.parse(findTable("CBLC"), findTable("CBDT"), CbdtCblc.TAG_CBDT);
+        this.ebdt = CbdtCblc.parse(findTable("EBLC"), findTable("EBDT"), CbdtCblc.TAG_EBDT);
     }
 
     /// Returns the retained font file.
@@ -220,15 +257,38 @@ public final class SfntFont {
         return 0;
     }
 
-    /// Returns horizontal metrics for a glyph.
+    /// Returns horizontal metrics for a glyph at the default instance.
     ///
     /// @param glyphId the glyph id
     /// @return the metrics
     public GlyphMetrics metrics(int glyphId) {
+        return metrics(glyphId, defaultVariation());
+    }
+
+    /// Returns horizontal metrics for a glyph at `axisValues`.
+    ///
+    /// Design-space coordinates follow [`#variationAxes()`] order and are remapped by `avar`
+    /// before `gvar` and `HVAR`. A simple `gvar` glyph adds phantom deltas; `HVAR` then adds
+    /// its advance delta. A negative varied advance is clamped to `0`.
+    ///
+    /// @param glyphId the glyph id
+    /// @param axisValues design-space coordinates, one per axis
+    /// @return the metrics
+    public GlyphMetrics metrics(int glyphId, float[] axisValues) {
+        Objects.requireNonNull(axisValues, "axisValues");
         if (glyphId < 0 || glyphId >= advances.length) {
             throw new IllegalArgumentException("Unknown glyph " + glyphId);
         }
-        return new GlyphMetrics(glyphId, advances[glyphId], 0);
+        float[] normalized = instanceCoords(axisValues);
+        int pointCount = simplePointCount(glyphId);
+        int advance = advances[glyphId]
+                + gvar.advanceDelta(glyphId, pointCount, normalized)
+                + hvar.advanceDelta(glyphId, normalized);
+        if (advance < 0) {
+            advance = 0;
+        }
+        int lsb = gvar.leftSideBearingDelta(glyphId, pointCount, normalized);
+        return new GlyphMetrics(glyphId, advance, lsb);
     }
 
     /// Returns whether this face stores TrueType `glyf` outlines.
@@ -245,20 +305,83 @@ public final class SfntFont {
         return cff != null && cff.isCff2();
     }
 
-    /// Walks the outline for `glyphId` into `pen`.
+    /// Walks the default-instance outline for `glyphId` into `pen`.
     ///
     /// Empty glyphs emit no commands. TrueType simple contours include implied on-curve midpoints
     /// as untruncated averages, and composites expand up to 16 nested components. CFF/CFF2 glyphs
     /// emit Type 2 lines and cubics; hints are skipped. Coordinates are font units with y upward.
+    /// The default instance applies no `gvar` deltas.
     ///
     /// @param glyphId the glyph identity
     /// @param pen the destination
     public void outline(int glyphId, OutlinePen pen) {
+        outlineNormalized(glyphId, pen, DEFAULT_NORMALIZED);
+    }
+
+    /// Walks the outline for `glyphId` at design-space `axisValues`.
+    ///
+    /// Coordinates follow [`#variationAxes()`] order, are clamped to each axis min/max, and are
+    /// normalized then remapped by `avar` before `gvar` interpolation. A shorter array uses the
+    /// default for missing axes.
+    /// Extra values are ignored. CFF/CFF2 faces ignore `axisValues` because this subset has no
+    /// CFF2 variation store.
+    ///
+    /// @param glyphId the glyph identity
+    /// @param pen the destination
+    /// @param axisValues design-space coordinates, one per axis
+    public void outline(int glyphId, OutlinePen pen, float[] axisValues) {
+        Objects.requireNonNull(axisValues, "axisValues");
+        outlineNormalized(glyphId, pen, instanceCoords(axisValues));
+    }
+
+    /// Normalizes design-space coordinates and applies `avar`.
+    private float[] instanceCoords(float[] axisValues) {
+        return avar.map(fvar.normalize(axisValues));
+    }
+
+    /// Walks a TrueType or CFF outline after axis normalization.
+    private void outlineNormalized(int glyphId, OutlinePen pen, float[] normalized) {
         if (cff != null) {
             cff.outline(glyphId, pen);
             return;
         }
-        OutlineWalker.walk(this, glyphId, pen, 0);
+        OutlineWalker.walk(this, glyphId, pen, 0, normalized);
+    }
+
+    /// Applies `gvar` contour deltas at `normalized` to a simple glyph's point arrays.
+    ///
+    /// @param glyphId the glyph
+    /// @param xs contour x coordinates
+    /// @param ys contour y coordinates
+    /// @param normalized normalized axis coordinates
+    void applyGvar(int glyphId, float[] xs, float[] ys, float[] normalized) {
+        gvar.apply(glyphId, xs, ys, normalized);
+    }
+
+    /// Returns the simple-glyph point count used to locate `gvar` phantoms.
+    ///
+    /// Empty, composite, and CFF glyphs return `0`.
+    ///
+    /// @param glyphId the glyph
+    /// @return the contour point count
+    private int simplePointCount(int glyphId) {
+        if (cff != null || loca.length == 0) {
+            return 0;
+        }
+        ByteBuffer glyf = glyf(glyphId);
+        if (glyf.remaining() < 2) {
+            return 0;
+        }
+        short contours = glyf.getShort();
+        if (contours <= 0 || glyf.remaining() < 8 + contours * 2) {
+            return 0;
+        }
+        glyf.position(glyf.position() + 8);
+        int last = -1;
+        for (int index = 0; index < contours; index++) {
+            last = Short.toUnsignedInt(glyf.getShort());
+        }
+        return last + 1;
     }
 
     /// Applies GSUB single substitutions listed by `featureTag`.
@@ -298,6 +421,70 @@ public final class SfntFont {
     /// @return the placement, or `null` when uncovered
     public @Nullable MarkPlacement markPlacement(int markGlyph, int baseGlyph) {
         return gpos.markPlacement(markGlyph, baseGlyph);
+    }
+
+    /// Returns COLR v0 layers for `glyphId` from palette `0`.
+    ///
+    /// @param glyphId the base glyph
+    /// @return the layers, empty when the glyph is not a color base
+    public @Unmodifiable List<ColorLayer> colorLayers(int glyphId) {
+        return colorLayers(glyphId, 0);
+    }
+
+    /// Returns COLR v0 layers for `glyphId` from `palette`.
+    ///
+    /// @param glyphId the base glyph
+    /// @param palette the CPAL palette index
+    /// @return the layers, empty when the glyph is not a color base
+    public @Unmodifiable List<ColorLayer> colorLayers(int glyphId, int palette) {
+        return colr.layers(glyphId, palette);
+    }
+
+    /// Returns one CPAL color, or `null` for the foreground sentinel.
+    ///
+    /// @param palette the palette index
+    /// @param entry the entry, or [`PaletteColor#FOREGROUND`]
+    /// @return the color
+    public @Nullable PaletteColor paletteColor(int palette, int entry) {
+        return colr.colorAt(palette, entry);
+    }
+
+    /// Returns the `fvar` axes in file order.
+    ///
+    /// @return the axes, empty when `fvar` is absent
+    public @Unmodifiable List<VariationAxis> variationAxes() {
+        return fvar.axes();
+    }
+
+    /// Returns the default variation instance, one coordinate per axis.
+    ///
+    /// @return the default coordinates
+    public float @Unmodifiable [] defaultVariation() {
+        return fvar.defaultInstance();
+    }
+
+    /// Returns the first `sbix` strike for `glyphId`.
+    ///
+    /// @param glyphId the glyph
+    /// @return the bitmap, or `null` when the slot is empty or `sbix` is absent
+    public @Nullable EmbeddedBitmap embeddedBitmap(int glyphId) {
+        return sbix.glyph(glyphId);
+    }
+
+    /// Returns the first CBLC/CBDT format-1 strike for `glyphId`.
+    ///
+    /// @param glyphId the glyph
+    /// @return the bitmap, or `null` when the slot is empty or the tables are absent
+    public @Nullable EmbeddedBitmap colorBitmap(int glyphId) {
+        return cbdt.glyph(glyphId);
+    }
+
+    /// Returns the first EBLC/EBDT format-1 strike for `glyphId`.
+    ///
+    /// @param glyphId the glyph
+    /// @return the bitmap, or `null` when the slot is empty or the tables are absent
+    public @Nullable EmbeddedBitmap grayscaleBitmap(int glyphId) {
+        return ebdt.glyph(glyphId);
     }
 
     /// Returns a big-endian glyf cursor, empty for a space or `.notdef` with no outline.

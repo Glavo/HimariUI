@@ -11,5 +11,8 @@ tasks.register<JavaExec>("conformance") {
     classpath = sourceSets.named("test").get().runtimeClasspath
     mainClass.set("org.glavo.himari.font.FontConformance")
     args(output.get().asFile.absolutePath)
-    outputs.file(output.map { it.file("results.json") })
+    outputs.files(
+        output.map { it.file("results.json") },
+        output.map { it.file("leftovers.json") },
+    )
 }

@@ -18,11 +18,13 @@ public final class PackagingConformance {
 
     /// Writes BOM, SBOM, NOTICE, Native Image registry, and jlink artifacts.
     ///
-    /// @param arguments output directory, optional module-path, optional image directory
+    /// @param arguments output directory, optional module-path and image directory, optional Counter classpath
     /// @throws Exception if the profile fails
     public static void main(String[] arguments) throws Exception {
-        if (arguments.length != 1 && arguments.length != 3) {
-            throw new IllegalArgumentException("Expected output directory or output, module-path, and image directory");
+        if (arguments.length != 1 && arguments.length != 3 && arguments.length != 4) {
+            throw new IllegalArgumentException(
+                    "Expected output directory; or output, module-path, and image directory; or those plus Counter classpath"
+            );
         }
         String bom = PackagingManifest.bomJson();
         String sbom = PackagingManifest.sbomJson();
@@ -39,7 +41,7 @@ public final class PackagingConformance {
         Files.createDirectories(output);
         JlinkRecipe recipe;
         JlinkImage.Result image;
-        if (arguments.length == 3) {
+        if (arguments.length >= 3) {
             ArrayList<String> modulePath = new ArrayList<>();
             for (String entry : arguments[1].split(java.util.regex.Pattern.quote(File.pathSeparator))) {
                 if (!entry.isBlank()) {
@@ -69,6 +71,19 @@ public final class PackagingConformance {
         Files.writeString(output.resolve("bom.json"), bom, StandardCharsets.UTF_8);
         Files.writeString(output.resolve("sbom.json"), sbom, StandardCharsets.UTF_8);
         Files.writeString(output.resolve("notice.txt"), notice, StandardCharsets.UTF_8);
+        ArrayList<String> counterClassPath = new ArrayList<>();
+        if (arguments.length == 4) {
+            for (String entry : arguments[3].split(java.util.regex.Pattern.quote(File.pathSeparator))) {
+                if (!entry.isBlank()) {
+                    counterClassPath.add(entry);
+                }
+            }
+        }
+        NativeImageProbe.Result nativeImage = NativeImageProbe.probe(
+                output.resolve("native-image-counter"),
+                List.copyOf(counterClassPath)
+        );
+        Files.writeString(output.resolve("native-image-probe.json"), nativeImage.toJson(), StandardCharsets.UTF_8);
         Files.writeString(output.resolve("native-image-registry.json"), registry, StandardCharsets.UTF_8);
         Files.writeString(output.resolve("jlink-recipe.json"), recipe.toJson(), StandardCharsets.UTF_8);
         Files.writeString(output.resolve("jlink-image.json"), image.toJson(), StandardCharsets.UTF_8);
@@ -82,9 +97,18 @@ public final class PackagingConformance {
                           "status": "passed",
                           "moduleCount": %d,
                           "nativePayload": false,
-                          "jlinkBuiltImage": %s
+                          "jlinkBuiltImage": %s,
+                          "nativeImageBuiltImage": %s,
+                          "nativeImageEnvironmentBlocked": %s,
+                          "nativeImageReferencedCounter": %s
                         }
-                        """.formatted(PackagingManifest.modules().size(), image.builtImage()),
+                        """.formatted(
+                                PackagingManifest.modules().size(),
+                                image.builtImage(),
+                                nativeImage.builtImage(),
+                                nativeImage.environmentBlocked(),
+                                NativeImageProbe.referencesCounter(counterClassPath)
+                        ),
                 StandardCharsets.UTF_8
         );
     }

@@ -457,6 +457,11 @@ final class WindowsPlatformTest {
                 store.invokeSetText(0, 5, "nihao");
                 assertEquals("nihao", store.invokeGetText(0, -1));
                 assertEquals("nihao", window.ime().surroundingText());
+                store.invokeSetSelection(2);
+                WindowsTextStore.Selection selection = store.invokeGetSelection();
+                assertEquals(2, selection.start());
+                assertEquals(2, selection.end());
+                assertEquals(2, window.ime().compositionStart());
                 assertEquals(0, store.invokeGetAcpFromPoint(6, 10));
                 assertEquals(5, store.invokeGetAcpFromPoint(26, 10));
                 WindowsTextStore.ScreenExtent extent = store.invokeGetScreenExt();

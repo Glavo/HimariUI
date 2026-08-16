@@ -109,6 +109,25 @@ final class FontCollectionTest {
         assertEquals(0, FallbackShaper.scale(0, 8, 16));
     }
 
+    /// Loads readable Windows catalog faces behind the sample primary.
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    void hostCatalogAppendsSystemFaces() {
+        FontCollection fonts = FontCollection.withHostCatalog(BitmapSfntFont.create());
+        assertTrue(fonts.size() >= 1);
+        assertSame(fonts.primary(), fonts.covering('A'));
+        @Nullable SfntFont han = fonts.covering(0x4E00);
+        if (han == null) {
+            return;
+        }
+        assertTrue(han != fonts.primary());
+        List<ShapedGlyph> glyphs = FallbackShaper.shape(fonts, "A\u4E00");
+        assertEquals(2, glyphs.size());
+        assertEquals(fonts.primary().glyphId('A'), glyphs.get(0).glyphId());
+        assertTrue(glyphs.get(1).glyphId() > 0);
+        assertTrue(glyphs.get(1).fontIndex() > 0);
+    }
+
     /// Falls back from the sample Latin face onto a discovered Windows font for U+4E00.
     @Test
     @EnabledOnOs(OS.WINDOWS)
