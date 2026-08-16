@@ -5,6 +5,7 @@ dependencies {
     implementation(project(":modules:font"))
     implementation(project(":modules:graphics"))
     implementation(project(":modules:layout"))
+    implementation(project(":modules:platform-headless"))
     implementation(project(":modules:render-software"))
     implementation(project(":modules:runtime"))
     implementation(project(":modules:text"))
@@ -21,4 +22,8 @@ tasks.register<JavaExec>("v0Sample") {
     mainClass.set("org.glavo.himari.samples.counter.V0CounterApp")
     args(sampleDirectory.get().asFile.absolutePath)
     outputs.dir(sampleDirectory)
+}
+
+tasks.named("check") {
+    dependsOn("v0Sample")
 }

@@ -12,12 +12,22 @@ import org.glavo.himari.layout.Constraints;
 import org.glavo.himari.layout.LayoutRect;
 import org.glavo.himari.layout.LayoutTree;
 import org.glavo.himari.layout.bootstrap.BootstrapCounterPane;
+import org.glavo.himari.layout.input.KeyEvent;
+import org.glavo.himari.layout.input.KeyEventType;
+import org.glavo.himari.layout.input.LogicalKey;
 import org.glavo.himari.layout.input.PointerEvent;
 import org.glavo.himari.layout.input.PointerEventType;
 import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsNode;
+import org.glavo.himari.platform.headless.HeadlessEventLoop;
 import org.glavo.himari.render.software.SoftwareSurface;
+import org.glavo.himari.runtime.animation.AnimatedScalar;
 import org.glavo.himari.runtime.animation.AnimationPhaseImpact;
+import org.glavo.himari.runtime.animation.AnimationRegistry;
+import org.glavo.himari.runtime.animation.AnimationReplacementPolicy;
+import org.glavo.himari.runtime.animation.AnimationTransaction;
+import org.glavo.himari.runtime.animation.ScalarAnimationAdapter;
+import org.glavo.himari.runtime.animation.TweenSpec;
 import org.glavo.himari.runtime.structure.StructuralRuntime;
 import org.glavo.himari.state.IntState;
 import org.glavo.himari.state.StateDomain;
@@ -76,7 +86,9 @@ public final class V0CounterApp {
         }
         StateDomain domain = new StateDomain();
         IntState count = domain.intState(0);
-        try (StructuralRuntime runtime = new StructuralRuntime(domain, scope -> scope.mount(
+        try (HeadlessEventLoop eventLoop = new HeadlessEventLoop();
+             AnimationRegistry registry = new AnimationRegistry(eventLoop);
+             StructuralRuntime runtime = new StructuralRuntime(domain, scope -> scope.mount(
                 "label",
                 element -> element.bind(
                         "text",
@@ -94,12 +106,52 @@ public final class V0CounterApp {
             layout.place();
             SemanticsNode button = layout.semantics().nodeWith(SemanticsAction.ACTIVATE);
             LayoutRect bounds = button.bounds();
+            boolean keyboardObserved = false;
             for (int index = 0; index < activations; index++) {
-                layout.dispatch(new PointerEvent(PointerEventType.DOWN, bounds.x() + 2.0f, bounds.y() + 2.0f));
-                layout.dispatch(new PointerEvent(PointerEventType.UP, bounds.x() + 2.0f, bounds.y() + 2.0f));
+                if (index == 0 || activations == 1) {
+                    layout.dispatch(new PointerEvent(PointerEventType.DOWN, bounds.x() + 2.0f, bounds.y() + 2.0f));
+                    layout.dispatch(new PointerEvent(PointerEventType.UP, bounds.x() + 2.0f, bounds.y() + 2.0f));
+                } else {
+                    layout.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ENTER));
+                    keyboardObserved = true;
+                }
                 count.set(clicks.get());
                 runtime.update();
                 runtime.applyMountedProperties();
+            }
+            AnimatedScalar highlight = registry.createScalar(
+                    "highlight",
+                    0.0,
+                    ScalarAnimationAdapter.UNIT_INTERVAL,
+                    AnimationPhaseImpact.COMPOSITE
+            );
+            long epochBeforeMotion = domain.epoch();
+            registry.commit(
+                    AnimationTransaction.standard(
+                            1L,
+                            1L,
+                            1L,
+                            TweenSpec.linear(1_000_000_000L),
+                            AnimationReplacementPolicy.PRESERVE_VELOCITY
+                    ),
+                    commit -> commit.setTarget(highlight, 1.0)
+            );
+            if (domain.epoch() != epochBeforeMotion) {
+                throw new IllegalStateException("Animation commit wrote application state");
+            }
+            double modelTarget = highlight.modelTarget();
+            double startPresentation = highlight.presentationValue();
+            eventLoop.clock().advanceBy(500_000_000L);
+            registry.sample();
+            double midPresentation = highlight.presentationValue();
+            eventLoop.clock().advanceBy(500_000_000L);
+            registry.sample();
+            double finalPresentation = highlight.presentationValue();
+            if (modelTarget != 1.0 || startPresentation != 0.0 || midPresentation <= startPresentation
+                    || midPresentation >= modelTarget || finalPresentation != modelTarget) {
+                throw new IllegalStateException(
+                        "Model/presentation did not separate on the Headless manual clock"
+                );
             }
             String label = String.valueOf(runtime.mounts().snapshot().elements().getFirst().property("text").value());
             SfntFont font = BitmapSfntFont.create();
@@ -119,6 +171,10 @@ public final class V0CounterApp {
                     label,
                     layout.focus().focusedId() != null,
                     button.actions().contains(SemanticsAction.ACTIVATE),
+                    keyboardObserved,
+                    modelTarget,
+                    midPresentation,
+                    finalPresentation,
                     surface.toSdrPng(),
                     floats(surface.extendedLinearPremultiplied()),
                     sceneJson
@@ -173,6 +229,10 @@ public final class V0CounterApp {
     /// @param label the mounted label
     /// @param focusObserved whether focus was assigned
     /// @param semanticsExposeActivate whether semantics expose ACTIVATE
+    /// @param keyboardObserved whether an injected Enter activated the button
+    /// @param animationModelTarget the committed highlight model target
+    /// @param animationMidPresentation the highlight presentation at 500 ms
+    /// @param animationFinalPresentation the highlight presentation after the tween
     /// @param png the SDR PNG
     /// @param extendedLinear the extended-linear capture
     /// @param sceneJson the canonical scene
@@ -182,6 +242,10 @@ public final class V0CounterApp {
             String label,
             boolean focusObserved,
             boolean semanticsExposeActivate,
+            boolean keyboardObserved,
+            double animationModelTarget,
+            double animationMidPresentation,
+            double animationFinalPresentation,
             MemorySegment png,
             MemorySegment extendedLinear,
             String sceneJson
@@ -198,6 +262,10 @@ public final class V0CounterApp {
                       "label": "%s",
                       "focusObserved": %s,
                       "semanticsExposeActivate": %s,
+                      "keyboardObserved": %s,
+                      "animationModelTarget": %s,
+                      "animationMidPresentation": %s,
+                      "animationFinalPresentation": %s,
                       "pngBytes": %d,
                       "extendedLinearBytes": %d,
                       "nativeLibraryLoaded": false
@@ -207,6 +275,10 @@ public final class V0CounterApp {
                     label,
                     focusObserved,
                     semanticsExposeActivate,
+                    keyboardObserved,
+                    animationModelTarget,
+                    animationMidPresentation,
+                    animationFinalPresentation,
                     png.byteSize(),
                     extendedLinear.byteSize()
             );

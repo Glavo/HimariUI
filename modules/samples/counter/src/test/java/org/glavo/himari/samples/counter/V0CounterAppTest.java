@@ -21,6 +21,11 @@ final class V0CounterAppTest {
         assertEquals("Count: 2", first.label());
         assertTrue(first.focusObserved());
         assertTrue(first.semanticsExposeActivate());
+        assertTrue(first.keyboardObserved());
+        assertEquals(1.0, first.animationModelTarget());
+        assertTrue(first.animationMidPresentation() > 0.0);
+        assertTrue(first.animationMidPresentation() < 1.0);
+        assertEquals(1.0, first.animationFinalPresentation());
         assertEquals((byte) 0x89, first.png().get(ValueLayout.JAVA_BYTE, 0L));
         assertEquals((byte) 0x50, first.png().get(ValueLayout.JAVA_BYTE, 1L));
         assertTrue(first.png().byteSize() > 64L);
