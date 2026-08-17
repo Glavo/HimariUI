@@ -11,7 +11,7 @@ import java.util.Arrays;
 ///
 /// Type-1 X-advance values are published through [`#singleAdjustment(int)`]. Type-7 Format-1
 /// two-glyph rules flatten into a pair map. Type-8 Format-1 rules with one lookahead glyph
-/// publish [`#chainAdjustment(int, int, int)`]. Type-8 rules may require up to nine preceding
+/// publish [`#chainAdjustment(int, int, int)`]. Type-8 rules may require up to forty preceding
 /// backtrack glyphs, matched by [`#chainAdjustment(int[], int, int)`]. Lookups with `IgnoreMarks` (`0x0008`) write
 /// [`#skipPairAdjustment(int, int)`] and [`#skipChainAdjustment(int, int, int)`]. Lookups with
 /// a non-zero `MarkAttachmentType` (`0xFF00`) write the attach maps. Other formats are skipped.
@@ -20,8 +20,8 @@ final class GposPositioning {
     /// Empty positioning.
     static final GposPositioning NONE = empty();
 
-    /// Shared empty nine-slot backtrack walk.
-    private static final int[] EMPTY_BACKS = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    /// Shared empty forty-slot backtrack walk.
+    private static final int[] EMPTY_BACKS = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     /// Packed `(left << 16) | right` keys, sorted.
     private final int[] keys;
@@ -55,6 +55,51 @@ final class GposPositioning {
 
     /// Ninth required preceding glyph for type-8 rules, or `0` when unused.
     private final int[] chainNinths;
+
+    /// Eleventh required preceding glyph for type-8 rules, or `0` when unused.
+    private final int[] chainElevenths;
+
+    /// Thirteenth required preceding glyph for type-8 rules, or `0` when unused.
+    private final int[] chainThirteenths;
+
+    /// Fifteenth required preceding glyph for type-8 rules, or `0` when unused.
+    private final int[] chainFifteenths;
+
+    /// Packed seventeenth and eighteenth required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainSeventeenths;
+
+    /// Packed nineteenth and twentieth required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainNineteenths;
+
+    /// Packed twenty-first and twenty-second required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainTwentyFirsts;
+
+    /// Packed twenty-third and twenty-fourth required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainTwentyThirds;
+
+    /// Packed twenty-fifth and twenty-sixth required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainTwentyFifths;
+
+    /// Packed twenty-seventh and twenty-eighth required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainTwentySevenths;
+
+    /// Packed twenty-ninth and thirtieth required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainTwentyNinths;
+
+    /// Packed thirty-first and thirty-second required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainThirtyFirsts;
+
+    /// Packed thirty-third and thirty-fourth required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainThirtyThirds;
+
+    /// Packed thirty-fifth and thirty-sixth required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainThirtyFifths;
+
+    /// Packed thirty-seventh and thirty-eighth required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainThirtySevenths;
+
+    /// Packed thirty-ninth and fortieth required preceding glyphs for type-8 rules, or `0` when unused.
+    private final int[] chainThirtyNinths;
 
     /// Packed `(mark << 16) | base` keys, sorted.
     private final int[] markKeys;
@@ -135,6 +180,11 @@ final class GposPositioning {
     /// @param chainFifths the fifth required preceding glyph, or `0`
     /// @param chainSevenths the seventh required preceding glyph, or `0`
     /// @param chainNinths the ninth required preceding glyph, or `0`
+    /// @param chainThirtyFirsts the packed thirty-first and thirty-second required preceding glyphs, or `0`
+    /// @param chainThirtyThirds the packed thirty-third and thirty-fourth required preceding glyphs, or `0`
+    /// @param chainThirtyFifths the packed thirty-fifth and thirty-sixth required preceding glyphs, or `0`
+    /// @param chainThirtySevenths the packed thirty-seventh and thirty-eighth required preceding glyphs, or `0`
+    /// @param chainThirtyNinths the packed thirty-ninth and fortieth required preceding glyphs, or `0`
     /// @param markKeys the mark/base keys
     /// @param markXs the mark X offsets
     /// @param markYs the mark Y offsets
@@ -169,6 +219,21 @@ final class GposPositioning {
             int[] chainFifths,
             int[] chainSevenths,
             int[] chainNinths,
+            int[] chainElevenths,
+            int[] chainThirteenths,
+            int[] chainFifteenths,
+            int[] chainSeventeenths,
+            int[] chainNineteenths,
+            int[] chainTwentyFirsts,
+            int[] chainTwentyThirds,
+            int[] chainTwentyFifths,
+            int[] chainTwentySevenths,
+            int[] chainTwentyNinths,
+            int[] chainThirtyFirsts,
+            int[] chainThirtyThirds,
+            int[] chainThirtyFifths,
+            int[] chainThirtySevenths,
+            int[] chainThirtyNinths,
             int[] markKeys,
             short[] markXs,
             short[] markYs,
@@ -203,6 +268,21 @@ final class GposPositioning {
         this.chainFifths = chainFifths;
         this.chainSevenths = chainSevenths;
         this.chainNinths = chainNinths;
+        this.chainElevenths = chainElevenths;
+        this.chainThirteenths = chainThirteenths;
+        this.chainFifteenths = chainFifteenths;
+        this.chainSeventeenths = chainSeventeenths;
+        this.chainNineteenths = chainNineteenths;
+        this.chainTwentyFirsts = chainTwentyFirsts;
+        this.chainTwentyThirds = chainTwentyThirds;
+        this.chainTwentyFifths = chainTwentyFifths;
+        this.chainTwentySevenths = chainTwentySevenths;
+        this.chainTwentyNinths = chainTwentyNinths;
+        this.chainThirtyFirsts = chainThirtyFirsts;
+        this.chainThirtyThirds = chainThirtyThirds;
+        this.chainThirtyFifths = chainThirtyFifths;
+        this.chainThirtySevenths = chainThirtySevenths;
+        this.chainThirtyNinths = chainThirtyNinths;
         this.markKeys = markKeys;
         this.markXs = markXs;
         this.markYs = markYs;
@@ -233,7 +313,7 @@ final class GposPositioning {
         short[] shorts = new short[0];
         long[] longs = new long[0];
         return new GposPositioning(
-                ints, shorts, ints, shorts, ints, ints, shorts, longs, ints, ints, ints, ints, shorts, shorts, ints,
+                ints, shorts, ints, shorts, ints, ints, shorts, longs, ints, ints, ints, ints, ints, ints, ints, ints, ints, ints, ints, ints, ints, ints, ints, ints, ints, ints, ints, shorts, shorts, ints,
                 ints, shorts, ints, ints, shorts, longs, ints, shorts, ints, ints, ints, shorts, ints, longs, ints,
                 GdefTable.NONE,
                 new FlaggedPair[0],
@@ -267,7 +347,7 @@ final class GposPositioning {
     /// @return the signed delta, or `0`
     int chainAdjustment(int current, int next, int lookahead) {
         return chainDelta(
-                chainPairs, chainLooks, chainDeltas, chainBacks, chainFifths, chainSevenths, chainNinths,
+                chainPairs, chainLooks, chainDeltas, chainBacks, chainFifths, chainSevenths, chainNinths, chainElevenths, chainThirteenths, chainFifteenths, chainSeventeenths, chainNineteenths, chainTwentyFirsts, chainTwentyThirds, chainTwentyFifths, chainTwentySevenths, chainTwentyNinths, chainThirtyFirsts, chainThirtyThirds, chainThirtyFifths, chainThirtySevenths, chainThirtyNinths,
                 current, next, lookahead, EMPTY_BACKS
         );
     }
@@ -293,6 +373,21 @@ final class GposPositioning {
                 skipChainLooks,
                 skipChainDeltas,
                 skipChainBacks,
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
+                new int[0],
                 new int[0],
                 new int[0],
                 new int[0],
@@ -404,7 +499,7 @@ final class GposPositioning {
             if (attachChainPairs[index] == key
                     && attachChainLooks[index] == lookahead
                     && attachChainTypes[index] == attachType
-                    && backMatches(attachChainBacks[index], 0, 0, 0, 0, 0, backNear, backMid, backFar, backFarther, 0, 0, 0, 0, 0)) {
+                    && backMatches(attachChainBacks[index], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, backNear, backMid, backFar, backFarther, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
                 return attachChainDeltas[index];
             }
         }
@@ -474,6 +569,21 @@ final class GposPositioning {
                 chainFifths,
                 chainSevenths,
                 chainNinths,
+                chainElevenths,
+                chainThirteenths,
+                chainFifteenths,
+                chainSeventeenths,
+                chainNineteenths,
+                chainTwentyFirsts,
+                chainTwentyThirds,
+                chainTwentyFifths,
+                chainTwentySevenths,
+                chainTwentyNinths,
+                chainThirtyFirsts,
+                chainThirtyThirds,
+                chainThirtyFifths,
+                chainThirtySevenths,
+                chainThirtyNinths,
                 current,
                 glyphIds[start + 1],
                 glyphIds[start + 2],
@@ -489,6 +599,21 @@ final class GposPositioning {
                     skipChainLooks,
                     skipChainDeltas,
                     skipChainBacks,
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
                     new int[0],
                     new int[0],
                     new int[0],
@@ -567,6 +692,21 @@ final class GposPositioning {
             int[] fifths,
             int[] sevenths,
             int[] ninths,
+            int[] elevenths,
+            int[] thirteenths,
+            int[] fifteenths,
+            int[] seventeenths,
+            int[] nineteenths,
+            int[] twentyFirsts,
+            int[] twentyThirds,
+            int[] twentyFifths,
+            int[] twentySevenths,
+            int[] twentyNinths,
+            int[] thirtyFirsts,
+            int[] thirtyThirds,
+            int[] thirtyFifths,
+            int[] thirtySevenths,
+            int[] thirtyNinths,
             int current,
             int next,
             int lookahead,
@@ -585,6 +725,37 @@ final class GposPositioning {
         int seventh = walked.length > 6 ? walked[6] : 0;
         int eighth = walked.length > 7 ? walked[7] : 0;
         int ninth = walked.length > 8 ? walked[8] : 0;
+        int tenth = walked.length > 9 ? walked[9] : 0;
+        int eleventh = walked.length > 10 ? walked[10] : 0;
+        int twelfth = walked.length > 11 ? walked[11] : 0;
+        int thirteenth = walked.length > 12 ? walked[12] : 0;
+        int fourteenth = walked.length > 13 ? walked[13] : 0;
+        int fifteenth = walked.length > 14 ? walked[14] : 0;
+        int sixteenth = walked.length > 15 ? walked[15] : 0;
+        int seventeenth = walked.length > 16 ? walked[16] : 0;
+        int eighteenth = walked.length > 17 ? walked[17] : 0;
+        int nineteenth = walked.length > 18 ? walked[18] : 0;
+        int twentieth = walked.length > 19 ? walked[19] : 0;
+        int twentyFirst = walked.length > 20 ? walked[20] : 0;
+        int twentySecond = walked.length > 21 ? walked[21] : 0;
+        int twentyThird = walked.length > 22 ? walked[22] : 0;
+        int twentyFourth = walked.length > 23 ? walked[23] : 0;
+        int twentyFifth = walked.length > 24 ? walked[24] : 0;
+        int twentySixth = walked.length > 25 ? walked[25] : 0;
+        int twentySeventh = walked.length > 26 ? walked[26] : 0;
+        int twentyEighth = walked.length > 27 ? walked[27] : 0;
+        int twentyNinth = walked.length > 28 ? walked[28] : 0;
+        int thirtieth = walked.length > 29 ? walked[29] : 0;
+        int thirtyFirst = walked.length > 30 ? walked[30] : 0;
+        int thirtySecond = walked.length > 31 ? walked[31] : 0;
+        int thirtyThird = walked.length > 32 ? walked[32] : 0;
+        int thirtyFourth = walked.length > 33 ? walked[33] : 0;
+        int thirtyFifth = walked.length > 34 ? walked[34] : 0;
+        int thirtySixth = walked.length > 35 ? walked[35] : 0;
+        int thirtySeventh = walked.length > 36 ? walked[36] : 0;
+        int thirtyEighth = walked.length > 37 ? walked[37] : 0;
+        int thirtyNinth = walked.length > 38 ? walked[38] : 0;
+        int fortieth = walked.length > 39 ? walked[39] : 0;
         for (int index = 0; index < pairs.length; index++) {
             int packedTail = index < fifths.length ? fifths[index] : 0;
             int requiredFifth = packedTail & 0xFFFF;
@@ -592,7 +763,54 @@ final class GposPositioning {
             int packedFar = index < sevenths.length ? sevenths[index] : 0;
             int requiredSeventh = packedFar & 0xFFFF;
             int requiredEighth = (packedFar >>> 16) & 0xFFFF;
-            int requiredNinth = index < ninths.length ? ninths[index] : 0;
+            int packedNinth = index < ninths.length ? ninths[index] : 0;
+            int requiredNinth = packedNinth & 0xFFFF;
+            int requiredTenth = (packedNinth >>> 16) & 0xFFFF;
+            int packedEleventh = index < elevenths.length ? elevenths[index] : 0;
+            int requiredEleventh = packedEleventh & 0xFFFF;
+            int requiredTwelfth = (packedEleventh >>> 16) & 0xFFFF;
+            int packedThirteenth = index < thirteenths.length ? thirteenths[index] : 0;
+            int requiredThirteenth = packedThirteenth & 0xFFFF;
+            int requiredFourteenth = (packedThirteenth >>> 16) & 0xFFFF;
+            int packedFifteenth = index < fifteenths.length ? fifteenths[index] : 0;
+            int requiredFifteenth = packedFifteenth & 0xFFFF;
+            int requiredSixteenth = (packedFifteenth >>> 16) & 0xFFFF;
+            int packedSeventeenth = index < seventeenths.length ? seventeenths[index] : 0;
+            int requiredSeventeenth = packedSeventeenth & 0xFFFF;
+            int requiredEighteenth = (packedSeventeenth >>> 16) & 0xFFFF;
+            int packedNineteenth = index < nineteenths.length ? nineteenths[index] : 0;
+            int requiredNineteenth = packedNineteenth & 0xFFFF;
+            int requiredTwentieth = (packedNineteenth >>> 16) & 0xFFFF;
+            int packedTwentyFirst = index < twentyFirsts.length ? twentyFirsts[index] : 0;
+            int requiredTwentyFirst = packedTwentyFirst & 0xFFFF;
+            int requiredTwentySecond = (packedTwentyFirst >>> 16) & 0xFFFF;
+            int packedTwentyThird = index < twentyThirds.length ? twentyThirds[index] : 0;
+            int requiredTwentyThird = packedTwentyThird & 0xFFFF;
+            int requiredTwentyFourth = (packedTwentyThird >>> 16) & 0xFFFF;
+            int packedTwentyFifth = index < twentyFifths.length ? twentyFifths[index] : 0;
+            int requiredTwentyFifth = packedTwentyFifth & 0xFFFF;
+            int requiredTwentySixth = (packedTwentyFifth >>> 16) & 0xFFFF;
+            int packedTwentySeventh = index < twentySevenths.length ? twentySevenths[index] : 0;
+            int requiredTwentySeventh = packedTwentySeventh & 0xFFFF;
+            int requiredTwentyEighth = (packedTwentySeventh >>> 16) & 0xFFFF;
+            int packedTwentyNinth = index < twentyNinths.length ? twentyNinths[index] : 0;
+            int requiredTwentyNinth = packedTwentyNinth & 0xFFFF;
+            int requiredThirtieth = (packedTwentyNinth >>> 16) & 0xFFFF;
+            int packedThirtyFirst = index < thirtyFirsts.length ? thirtyFirsts[index] : 0;
+            int requiredThirtyFirst = packedThirtyFirst & 0xFFFF;
+            int requiredThirtySecond = (packedThirtyFirst >>> 16) & 0xFFFF;
+            int packedThirtyThird = index < thirtyThirds.length ? thirtyThirds[index] : 0;
+            int requiredThirtyThird = packedThirtyThird & 0xFFFF;
+            int requiredThirtyFourth = (packedThirtyThird >>> 16) & 0xFFFF;
+            int packedThirtyFifth = index < thirtyFifths.length ? thirtyFifths[index] : 0;
+            int requiredThirtyFifth = packedThirtyFifth & 0xFFFF;
+            int requiredThirtySixth = (packedThirtyFifth >>> 16) & 0xFFFF;
+            int packedThirtySeventh = index < thirtySevenths.length ? thirtySevenths[index] : 0;
+            int requiredThirtySeventh = packedThirtySeventh & 0xFFFF;
+            int requiredThirtyEighth = (packedThirtySeventh >>> 16) & 0xFFFF;
+            int packedThirtyNinth = index < thirtyNinths.length ? thirtyNinths[index] : 0;
+            int requiredThirtyNinth = packedThirtyNinth & 0xFFFF;
+            int requiredFortieth = (packedThirtyNinth >>> 16) & 0xFFFF;
             if (pairs[index] == key
                     && looks[index] == lookahead
                     && backMatches(
@@ -602,6 +820,37 @@ final class GposPositioning {
                             requiredSeventh,
                             requiredEighth,
                             requiredNinth,
+                            requiredTenth,
+                            requiredEleventh,
+                            requiredTwelfth,
+                            requiredThirteenth,
+                            requiredFourteenth,
+                            requiredFifteenth,
+                            requiredSixteenth,
+                            requiredSeventeenth,
+                            requiredEighteenth,
+                            requiredNineteenth,
+                            requiredTwentieth,
+                            requiredTwentyFirst,
+                            requiredTwentySecond,
+                            requiredTwentyThird,
+                            requiredTwentyFourth,
+                            requiredTwentyFifth,
+                            requiredTwentySixth,
+                            requiredTwentySeventh,
+                            requiredTwentyEighth,
+                            requiredTwentyNinth,
+                            requiredThirtieth,
+                            requiredThirtyFirst,
+                            requiredThirtySecond,
+                            requiredThirtyThird,
+                            requiredThirtyFourth,
+                            requiredThirtyFifth,
+                            requiredThirtySixth,
+                            requiredThirtySeventh,
+                            requiredThirtyEighth,
+                            requiredThirtyNinth,
+                            requiredFortieth,
                             near,
                             mid,
                             far,
@@ -610,7 +859,38 @@ final class GposPositioning {
                             sixth,
                             seventh,
                             eighth,
-                            ninth)) {
+                            ninth,
+                            tenth,
+                            eleventh,
+                            twelfth,
+                            thirteenth,
+                            fourteenth,
+                            fifteenth,
+                            sixteenth,
+                            seventeenth,
+                            eighteenth,
+                            nineteenth,
+                            twentieth,
+                            twentyFirst,
+                            twentySecond,
+                            twentyThird,
+                            twentyFourth,
+                            twentyFifth,
+                            twentySixth,
+                            twentySeventh,
+                            twentyEighth,
+                            twentyNinth,
+                            thirtieth,
+                            thirtyFirst,
+                            thirtySecond,
+                            thirtyThird,
+                            thirtyFourth,
+                            thirtyFifth,
+                            thirtySixth,
+                            thirtySeventh,
+                            thirtyEighth,
+                            thirtyNinth,
+                            fortieth)) {
                 return deltas[index];
             }
         }
@@ -636,7 +916,7 @@ final class GposPositioning {
         if (count > max) {
             return null;
         }
-        int[] ids = new int[9];
+        int[] ids = new int[40];
         for (int index = 0; index < count; index++) {
             if (buffer.remaining() < 2) {
                 return null;
@@ -654,6 +934,37 @@ final class GposPositioning {
             int requiredSeventh,
             int requiredEighth,
             int requiredNinth,
+            int requiredTenth,
+            int requiredEleventh,
+            int requiredTwelfth,
+            int requiredThirteenth,
+            int requiredFourteenth,
+            int requiredFifteenth,
+            int requiredSixteenth,
+            int requiredSeventeenth,
+            int requiredEighteenth,
+            int requiredNineteenth,
+            int requiredTwentieth,
+            int requiredTwentyFirst,
+            int requiredTwentySecond,
+            int requiredTwentyThird,
+            int requiredTwentyFourth,
+            int requiredTwentyFifth,
+            int requiredTwentySixth,
+            int requiredTwentySeventh,
+            int requiredTwentyEighth,
+            int requiredTwentyNinth,
+            int requiredThirtieth,
+            int requiredThirtyFirst,
+            int requiredThirtySecond,
+            int requiredThirtyThird,
+            int requiredThirtyFourth,
+            int requiredThirtyFifth,
+            int requiredThirtySixth,
+            int requiredThirtySeventh,
+            int requiredThirtyEighth,
+            int requiredThirtyNinth,
+            int requiredFortieth,
             int backNear,
             int backMid,
             int backFar,
@@ -662,7 +973,38 @@ final class GposPositioning {
             int backSixth,
             int backSeventh,
             int backEighth,
-            int backNinth
+            int backNinth,
+            int backTenth,
+            int backEleventh,
+            int backTwelfth,
+            int backThirteenth,
+            int backFourteenth,
+            int backFifteenth,
+            int backSixteenth,
+            int backSeventeenth,
+            int backEighteenth,
+            int backNineteenth,
+            int backTwentieth,
+            int backTwentyFirst,
+            int backTwentySecond,
+            int backTwentyThird,
+            int backTwentyFourth,
+            int backTwentyFifth,
+            int backTwentySixth,
+            int backTwentySeventh,
+            int backTwentyEighth,
+            int backTwentyNinth,
+            int backThirtieth,
+            int backThirtyFirst,
+            int backThirtySecond,
+            int backThirtyThird,
+            int backThirtyFourth,
+            int backThirtyFifth,
+            int backThirtySixth,
+            int backThirtySeventh,
+            int backThirtyEighth,
+            int backThirtyNinth,
+            int backFortieth
     ) {
         int requiredNear = (int) (packed & 0xFFFFL);
         int requiredMid = (int) ((packed >>> 16) & 0xFFFFL);
@@ -692,16 +1034,109 @@ final class GposPositioning {
         if (requiredEighth != 0 && requiredEighth != backEighth) {
             return false;
         }
-        return requiredNinth == 0 || requiredNinth == backNinth;
+        if (requiredNinth != 0 && requiredNinth != backNinth) {
+            return false;
+        }
+        if (requiredTenth != 0 && requiredTenth != backTenth) {
+            return false;
+        }
+        if (requiredEleventh != 0 && requiredEleventh != backEleventh) {
+            return false;
+        }
+        if (requiredTwelfth != 0 && requiredTwelfth != backTwelfth) {
+            return false;
+        }
+        if (requiredThirteenth != 0 && requiredThirteenth != backThirteenth) {
+            return false;
+        }
+        if (requiredFourteenth != 0 && requiredFourteenth != backFourteenth) {
+            return false;
+        }
+        if (requiredFifteenth != 0 && requiredFifteenth != backFifteenth) {
+            return false;
+        }
+        if (requiredSixteenth != 0 && requiredSixteenth != backSixteenth) {
+            return false;
+        }
+        if (requiredSeventeenth != 0 && requiredSeventeenth != backSeventeenth) {
+            return false;
+        }
+        if (requiredEighteenth != 0 && requiredEighteenth != backEighteenth) {
+            return false;
+        }
+        if (requiredNineteenth != 0 && requiredNineteenth != backNineteenth) {
+            return false;
+        }
+        if (requiredTwentieth != 0 && requiredTwentieth != backTwentieth) {
+            return false;
+        }
+        if (requiredTwentyFirst != 0 && requiredTwentyFirst != backTwentyFirst) {
+            return false;
+        }
+        if (requiredTwentySecond != 0 && requiredTwentySecond != backTwentySecond) {
+            return false;
+        }
+        if (requiredTwentyThird != 0 && requiredTwentyThird != backTwentyThird) {
+            return false;
+        }
+        if (requiredTwentyFourth != 0 && requiredTwentyFourth != backTwentyFourth) {
+            return false;
+        }
+        if (requiredTwentyFifth != 0 && requiredTwentyFifth != backTwentyFifth) {
+            return false;
+        }
+        if (requiredTwentySixth != 0 && requiredTwentySixth != backTwentySixth) {
+            return false;
+        }
+        if (requiredTwentySeventh != 0 && requiredTwentySeventh != backTwentySeventh) {
+            return false;
+        }
+        if (requiredTwentyEighth != 0 && requiredTwentyEighth != backTwentyEighth) {
+            return false;
+        }
+        if (requiredTwentyNinth != 0 && requiredTwentyNinth != backTwentyNinth) {
+            return false;
+        }
+        if (requiredThirtieth != 0 && requiredThirtieth != backThirtieth) {
+            return false;
+        }
+        if (requiredThirtyFirst != 0 && requiredThirtyFirst != backThirtyFirst) {
+            return false;
+        }
+        if (requiredThirtySecond != 0 && requiredThirtySecond != backThirtySecond) {
+            return false;
+        }
+        if (requiredThirtyThird != 0 && requiredThirtyThird != backThirtyThird) {
+            return false;
+        }
+        if (requiredThirtyFourth != 0 && requiredThirtyFourth != backThirtyFourth) {
+            return false;
+        }
+        if (requiredThirtyFifth != 0 && requiredThirtyFifth != backThirtyFifth) {
+            return false;
+        }
+        if (requiredThirtySixth != 0 && requiredThirtySixth != backThirtySixth) {
+            return false;
+        }
+        if (requiredThirtySeventh != 0 && requiredThirtySeventh != backThirtySeventh) {
+            return false;
+        }
+        if (requiredThirtyEighth != 0 && requiredThirtyEighth != backThirtyEighth) {
+            return false;
+        }
+        if (requiredThirtyNinth != 0 && requiredThirtyNinth != backThirtyNinth) {
+            return false;
+        }
+        return requiredFortieth == 0 || requiredFortieth == backFortieth;
     }
 
-    /// Walks at most nine kept preceding glyphs under `lookupFlag`.
+    /// Walks at most forty kept preceding glyphs under `lookupFlag`.
     ///
-    /// @return `{near, mid, far, farther, fifth, sixth, seventh, eighth, ninth}`, using `0` when a slot is missing
+    /// @return `{near, mid, far, farther, fifth, sixth, seventh, eighth, ninth, tenth, eleventh, twelfth, thirteenth, fourteenth, fifteenth, sixteenth, seventeenth, eighteenth, nineteenth, twentieth, twenty-first, twenty-second, twenty-third, twenty-fourth, twenty-fifth, twenty-sixth, twenty-seventh, twenty-eighth, twenty-ninth, thirtieth, thirty-first, thirty-second, thirty-third, thirty-fourth, thirty-fifth, thirty-sixth, thirty-seventh, thirty-eighth, thirty-ninth, fortieth}`, using `0` when a slot is missing
     private int[] keptBacks(int[] glyphIds, int start, int lookupFlag, int markSet) {
-        int[] ids = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] ids = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         int cursor = start - 1;
-        for (int slot = 0; slot < 9; slot++) {
+        for (int slot = 0; slot < 40; slot++) {
             int index = gdef.prevKeptIndex(glyphIds, cursor, lookupFlag, markSet);
             if (index < 0) {
                 break;
@@ -1373,7 +1808,7 @@ final class GposPositioning {
             }
             saved = buffer.position();
             buffer.position(rule);
-            int @Nullable [] backs = readBacktrackIds(buffer, 9);
+            int @Nullable [] backs = readBacktrackIds(buffer, 40);
             if (backs == null) {
                 buffer.position(saved);
                 continue;
@@ -1403,7 +1838,7 @@ final class GposPositioning {
             }
             int delta = lookupXAdvance(buffer, lookupOffsets[lookupIndex]);
             if (delta != 0) {
-                chains.put(first, second, lookahead, (short) delta, backs[0], backs[1], backs[2], backs[3], backs[4], backs[5], backs[6], backs[7], backs[8]);
+                chains.put(first, second, lookahead, (short) delta, backs[0], backs[1], backs[2], backs[3], backs[4], backs[5], backs[6], backs[7], backs[8], backs[9], backs[10], backs[11], backs[12], backs[13], backs[14], backs[15], backs[16], backs[17], backs[18], backs[19], backs[20], backs[21], backs[22], backs[23], backs[24], backs[25], backs[26], backs[27], backs[28], backs[29], backs[30], backs[31], backs[32], backs[33], backs[34], backs[35], backs[36], backs[37], backs[38], backs[39]);
             }
         }
     }
@@ -1482,7 +1917,7 @@ final class GposPositioning {
             }
             saved = buffer.position();
             buffer.position(rule);
-            int @Nullable [] backClassesIds = readBacktrackIds(buffer, 9);
+            int @Nullable [] backClassesIds = readBacktrackIds(buffer, 40);
             if (backClassesIds == null) {
                 buffer.position(saved);
                 continue;
@@ -1545,6 +1980,37 @@ final class GposPositioning {
                                                         sixth,
                                                         seventh,
                                                         eighth,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
                                                         0
                                                 );
                                             }
@@ -1579,7 +2045,7 @@ final class GposPositioning {
         int sixthCoverage = 0;
         int seventhCoverage = 0;
         int eighthCoverage = 0;
-        if (backtrackCount > 9) {
+        if (backtrackCount > 40) {
             return;
         }
         if (backtrackCount >= 1) {
@@ -1630,7 +2096,193 @@ final class GposPositioning {
             }
             eighthCoverage = offset + Short.toUnsignedInt(buffer.getShort());
         }
-        if (backtrackCount == 9) {
+        if (backtrackCount >= 9) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount >= 10) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount >= 11) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 12) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 13) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 14) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 15) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 16) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 17) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 18) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 19) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 20) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 21) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 22) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 23) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 24) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 25) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 26) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 27) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 28) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 29) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 30) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 31) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 32) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 33) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 34) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 35) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 36) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 37) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 38) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 39) {
+            if (buffer.remaining() < 2) {
+                return;
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 40) {
             if (buffer.remaining() < 2) {
                 return;
             }
@@ -1704,6 +2356,37 @@ final class GposPositioning {
                                                         sixth,
                                                         seventh,
                                                         eighth,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
                                                         0
                                                 );
                                             }
@@ -2440,6 +3123,51 @@ final class GposPositioning {
         /// Ninth required preceding glyph, or `0`.
         private int[] ninths = new int[8];
 
+        /// Eleventh required preceding glyph, or `0`.
+        private int[] elevenths = new int[8];
+
+        /// Thirteenth required preceding glyph, or `0`.
+        private int[] thirteenths = new int[8];
+
+        /// Fifteenth required preceding glyph, or `0`.
+        private int[] fifteenths = new int[8];
+
+        /// Seventeenth required preceding glyph, or `0`.
+        private int[] seventeenths = new int[8];
+
+        /// Nineteenth required preceding glyph, or `0`.
+        private int[] nineteenths = new int[8];
+
+        /// Twenty-first required preceding glyph, or `0`.
+        private int[] twentyFirsts = new int[8];
+
+        /// Twenty-third required preceding glyph, or `0`.
+        private int[] twentyThirds = new int[8];
+
+        /// Twenty-fifth required preceding glyph, or `0`.
+        private int[] twentyFifths = new int[8];
+
+        /// Twenty-seventh required preceding glyph, or `0`.
+        private int[] twentySevenths = new int[8];
+
+        /// Twenty-ninth required preceding glyph, or `0`.
+        private int[] twentyNinths = new int[8];
+
+        /// Thirty-first required preceding glyph, or `0`.
+        private int[] thirtyFirsts = new int[8];
+
+        /// Thirty-third required preceding glyph, or `0`.
+        private int[] thirtyThirds = new int[8];
+
+        /// Thirty-fifth required preceding glyph, or `0`.
+        private int[] thirtyFifths = new int[8];
+
+        /// Thirty-seventh required preceding glyph, or `0`.
+        private int[] thirtySevenths = new int[8];
+
+        /// Thirty-ninth required preceding glyph, or `0`.
+        private int[] thirtyNinths = new int[8];
+
         /// Count.
         private int count;
 
@@ -2457,11 +3185,58 @@ final class GposPositioning {
                 int backSixth,
                 int backSeventh,
                 int backEighth,
-                int backNinth
+                int backNinth,
+                int backTenth,
+                int backEleventh,
+                int backTwelfth,
+                int backThirteenth,
+                int backFourteenth,
+                int backFifteenth,
+                int backSixteenth,
+                int backSeventeenth,
+                int backEighteenth,
+                int backNineteenth,
+                int backTwentieth,
+                int backTwentyFirst,
+                int backTwentySecond,
+                int backTwentyThird,
+                int backTwentyFourth,
+                int backTwentyFifth,
+                int backTwentySixth,
+                int backTwentySeventh,
+                int backTwentyEighth,
+                int backTwentyNinth,
+                int backThirtieth,
+                int backThirtyFirst,
+                int backThirtySecond,
+                int backThirtyThird,
+                int backThirtyFourth,
+                int backThirtyFifth,
+                int backThirtySixth,
+                int backThirtySeventh,
+                int backThirtyEighth,
+                int backThirtyNinth,
+                int backFortieth
         ) {
             long packed = packBack(backNear, backMid, backFar, backFarther);
             int packedTail = (backFifth & 0xFFFF) | ((backSixth & 0xFFFF) << 16);
             int packedFar = (backSeventh & 0xFFFF) | ((backEighth & 0xFFFF) << 16);
+            int packedNinth = (backNinth & 0xFFFF) | ((backTenth & 0xFFFF) << 16);
+            int packedEleventh = (backEleventh & 0xFFFF) | ((backTwelfth & 0xFFFF) << 16);
+            int packedThirteenth = (backThirteenth & 0xFFFF) | ((backFourteenth & 0xFFFF) << 16);
+            int packedFifteenth = (backFifteenth & 0xFFFF) | ((backSixteenth & 0xFFFF) << 16);
+            int packedSeventeenth = (backSeventeenth & 0xFFFF) | ((backEighteenth & 0xFFFF) << 16);
+            int packedNineteenth = (backNineteenth & 0xFFFF) | ((backTwentieth & 0xFFFF) << 16);
+            int packedTwentyFirst = (backTwentyFirst & 0xFFFF) | ((backTwentySecond & 0xFFFF) << 16);
+            int packedTwentyThird = (backTwentyThird & 0xFFFF) | ((backTwentyFourth & 0xFFFF) << 16);
+            int packedTwentyFifth = (backTwentyFifth & 0xFFFF) | ((backTwentySixth & 0xFFFF) << 16);
+            int packedTwentySeventh = (backTwentySeventh & 0xFFFF) | ((backTwentyEighth & 0xFFFF) << 16);
+            int packedTwentyNinth = (backTwentyNinth & 0xFFFF) | ((backThirtieth & 0xFFFF) << 16);
+            int packedThirtyFirst = (backThirtyFirst & 0xFFFF) | ((backThirtySecond & 0xFFFF) << 16);
+            int packedThirtyThird = (backThirtyThird & 0xFFFF) | ((backThirtyFourth & 0xFFFF) << 16);
+            int packedThirtyFifth = (backThirtyFifth & 0xFFFF) | ((backThirtySixth & 0xFFFF) << 16);
+            int packedThirtySeventh = (backThirtySeventh & 0xFFFF) | ((backThirtyEighth & 0xFFFF) << 16);
+            int packedThirtyNinth = (backThirtyNinth & 0xFFFF) | ((backFortieth & 0xFFFF) << 16);
             int key = (current << 16) | (next & 0xFFFF);
             for (int index = 0; index < count; index++) {
                 if (pairs[index] == key
@@ -2469,7 +3244,22 @@ final class GposPositioning {
                         && backs[index] == packed
                         && fifths[index] == packedTail
                         && sevenths[index] == packedFar
-                        && ninths[index] == backNinth) {
+                        && ninths[index] == packedNinth
+                        && elevenths[index] == packedEleventh
+                        && thirteenths[index] == packedThirteenth
+                        && fifteenths[index] == packedFifteenth
+                        && seventeenths[index] == packedSeventeenth
+                        && nineteenths[index] == packedNineteenth
+                        && twentyFirsts[index] == packedTwentyFirst
+                        && twentyThirds[index] == packedTwentyThird
+                        && twentyFifths[index] == packedTwentyFifth
+                        && twentySevenths[index] == packedTwentySeventh
+                        && twentyNinths[index] == packedTwentyNinth
+                        && thirtyFirsts[index] == packedThirtyFirst
+                        && thirtyThirds[index] == packedThirtyThird
+                        && thirtyFifths[index] == packedThirtyFifth
+                        && thirtySevenths[index] == packedThirtySeventh
+                        && thirtyNinths[index] == packedThirtyNinth) {
                     return;
                 }
             }
@@ -2481,6 +3271,21 @@ final class GposPositioning {
                 fifths = Arrays.copyOf(fifths, fifths.length * 2);
                 sevenths = Arrays.copyOf(sevenths, sevenths.length * 2);
                 ninths = Arrays.copyOf(ninths, ninths.length * 2);
+                elevenths = Arrays.copyOf(elevenths, elevenths.length * 2);
+                thirteenths = Arrays.copyOf(thirteenths, thirteenths.length * 2);
+                fifteenths = Arrays.copyOf(fifteenths, fifteenths.length * 2);
+                seventeenths = Arrays.copyOf(seventeenths, seventeenths.length * 2);
+                nineteenths = Arrays.copyOf(nineteenths, nineteenths.length * 2);
+                twentyFirsts = Arrays.copyOf(twentyFirsts, twentyFirsts.length * 2);
+                twentyThirds = Arrays.copyOf(twentyThirds, twentyThirds.length * 2);
+                twentyFifths = Arrays.copyOf(twentyFifths, twentyFifths.length * 2);
+                twentySevenths = Arrays.copyOf(twentySevenths, twentySevenths.length * 2);
+                twentyNinths = Arrays.copyOf(twentyNinths, twentyNinths.length * 2);
+                thirtyFirsts = Arrays.copyOf(thirtyFirsts, thirtyFirsts.length * 2);
+                thirtyThirds = Arrays.copyOf(thirtyThirds, thirtyThirds.length * 2);
+                thirtyFifths = Arrays.copyOf(thirtyFifths, thirtyFifths.length * 2);
+                thirtySevenths = Arrays.copyOf(thirtySevenths, thirtySevenths.length * 2);
+                thirtyNinths = Arrays.copyOf(thirtyNinths, thirtyNinths.length * 2);
             }
             pairs[count] = key;
             looks[count] = lookahead;
@@ -2488,7 +3293,22 @@ final class GposPositioning {
             backs[count] = packed;
             fifths[count] = packedTail;
             sevenths[count] = packedFar;
-            ninths[count] = backNinth;
+            ninths[count] = packedNinth;
+            elevenths[count] = packedEleventh;
+            thirteenths[count] = packedThirteenth;
+            fifteenths[count] = packedFifteenth;
+            seventeenths[count] = packedSeventeenth;
+            nineteenths[count] = packedNineteenth;
+            twentyFirsts[count] = packedTwentyFirst;
+            twentyThirds[count] = packedTwentyThird;
+            twentyFifths[count] = packedTwentyFifth;
+            twentySevenths[count] = packedTwentySeventh;
+            twentyNinths[count] = packedTwentyNinth;
+            thirtyFirsts[count] = packedThirtyFirst;
+            thirtyThirds[count] = packedThirtyThird;
+            thirtyFifths[count] = packedThirtyFifth;
+            thirtySevenths[count] = packedThirtySeventh;
+            thirtyNinths[count] = packedThirtyNinth;
             count++;
         }
     }
@@ -2731,6 +3551,21 @@ final class GposPositioning {
         int[] chainFifths = Arrays.copyOf(chains.fifths, chains.count);
         int[] chainSevenths = Arrays.copyOf(chains.sevenths, chains.count);
         int[] chainNinths = Arrays.copyOf(chains.ninths, chains.count);
+        int[] chainElevenths = Arrays.copyOf(chains.elevenths, chains.count);
+        int[] chainThirteenths = Arrays.copyOf(chains.thirteenths, chains.count);
+        int[] chainFifteenths = Arrays.copyOf(chains.fifteenths, chains.count);
+        int[] chainSeventeenths = Arrays.copyOf(chains.seventeenths, chains.count);
+        int[] chainNineteenths = Arrays.copyOf(chains.nineteenths, chains.count);
+        int[] chainTwentyFirsts = Arrays.copyOf(chains.twentyFirsts, chains.count);
+        int[] chainTwentyThirds = Arrays.copyOf(chains.twentyThirds, chains.count);
+        int[] chainTwentyFifths = Arrays.copyOf(chains.twentyFifths, chains.count);
+        int[] chainTwentySevenths = Arrays.copyOf(chains.twentySevenths, chains.count);
+        int[] chainTwentyNinths = Arrays.copyOf(chains.twentyNinths, chains.count);
+        int[] chainThirtyFirsts = Arrays.copyOf(chains.thirtyFirsts, chains.count);
+        int[] chainThirtyThirds = Arrays.copyOf(chains.thirtyThirds, chains.count);
+        int[] chainThirtyFifths = Arrays.copyOf(chains.thirtyFifths, chains.count);
+        int[] chainThirtySevenths = Arrays.copyOf(chains.thirtySevenths, chains.count);
+        int[] chainThirtyNinths = Arrays.copyOf(chains.thirtyNinths, chains.count);
         int[] skipOrder = sortOrder(skipPairs.keys, skipPairs.count);
         int[] sortedSkipKeys = new int[skipPairs.count];
         short[] sortedSkipDeltas = new short[skipPairs.count];
@@ -2777,6 +3612,21 @@ final class GposPositioning {
                 chainFifths,
                 chainSevenths,
                 chainNinths,
+                chainElevenths,
+                chainThirteenths,
+                chainFifteenths,
+                chainSeventeenths,
+                chainNineteenths,
+                chainTwentyFirsts,
+                chainTwentyThirds,
+                chainTwentyFifths,
+                chainTwentySevenths,
+                chainTwentyNinths,
+                chainThirtyFirsts,
+                chainThirtyThirds,
+                chainThirtyFifths,
+                chainThirtySevenths,
+                chainThirtyNinths,
                 sortedMarkKeys,
                 sortedXs,
                 sortedYs,

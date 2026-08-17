@@ -36,6 +36,10 @@ final class DesktopLaunchTest {
         assertTrue(result.d3d12Presented());
         assertTrue(result.popupHosted());
         assertFalse(result.messageLoopRan());
+        assertEquals(0, result.deviceRemovedReason());
+        assertEquals(2, result.sleepEvents());
+        assertEquals(2, result.wakeEvents());
+        assertTrue(result.presentedAfterWake() >= 120);
         assertEquals("environment-blocked", result.waylandStatus());
         assertTrue(result.macosStatus().equals("environment-blocked") || result.macosStatus().equals("resolved"));
         assertEquals("environment-blocked", result.metalStatus());

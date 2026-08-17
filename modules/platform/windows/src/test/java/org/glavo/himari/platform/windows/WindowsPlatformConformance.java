@@ -78,11 +78,25 @@ public final class WindowsPlatformConformance {
                 throw new IllegalStateException("Windows display DPI or metrics were not queried");
             }
             first.postPointer(PointerEventType.DOWN, 8, 8);
-            first.postPointer(PointerEventType.UP, 8, 8);
             platform.pump();
-            pointerCount = first.takePointerEvents().size();
-            if (pointerCount < 2) {
-                throw new IllegalStateException("WndProc did not deliver posted pointer events");
+            if (!first.captured()) {
+                throw new IllegalStateException("SetCapture did not report this HWND after WM_LBUTTONDOWN");
+            }
+            first.postPointer(PointerEventType.UP, 8, 8);
+            first.postWheel(8, 8, 1);
+            platform.pump();
+            if (first.captured()) {
+                throw new IllegalStateException("ReleaseCapture did not drop capture after WM_LBUTTONUP");
+            }
+            if (!first.setSystemCursor(WindowsNativeWindow.IDC_ARROW)) {
+                throw new IllegalStateException("LoadCursorW/SetCursor failed for IDC_ARROW");
+            }
+            java.util.List<org.glavo.himari.layout.input.PointerEvent> delivered = first.takePointerEvents();
+            pointerCount = delivered.size();
+            if (pointerCount < 3
+                    || delivered.get(2).type() != PointerEventType.WHEEL
+                    || delivered.get(2).wheelDelta() != 1.0f) {
+                throw new IllegalStateException("WndProc did not deliver posted pointer and wheel events");
             }
             byte[] rgba = new byte[16 * 8 * 4];
             for (int pixel = 0; pixel < rgba.length; pixel += 4) {

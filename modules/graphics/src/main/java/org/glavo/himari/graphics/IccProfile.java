@@ -14,7 +14,8 @@ import java.util.Objects;
 /// Parses a bounded ICC v2/v4 matrix/TRC RGB profile and converts samples to extended-linear sRGB.
 ///
 /// Profiles are treated as untrusted input. The parser accepts RGB-to-XYZ matrix profiles with
-/// `curv` or type-0 `para` tone curves and rejects larger or malformed tables.
+/// `curv` or parametric `para` tone curves (function types 0–4) and rejects larger or malformed
+/// tables.
 ///
 /// @param size the declared profile size in bytes
 /// @param version the packed ICC version word
@@ -39,6 +40,9 @@ import java.util.Objects;
 /// @param clut the optional AToB0 `mft2` CLUT, or `null` when unused
 /// @param clutAToB1 the optional AToB1 `mft2` CLUT, or `null` when unused
 /// @param clutBToA0 the optional BToA0 `mft2` CLUT, or `null` when unused
+/// @param clutBToA1 the optional BToA1 `mft2` CLUT, or `null` when unused
+/// @param clutAToB2 the optional AToB2 `mft2` CLUT, or `null` when unused
+/// @param clutBToA2 the optional BToA2 `mft2` CLUT, or `null` when unused
 @NotNullByDefault
 public record IccProfile(
         int size,
@@ -63,7 +67,10 @@ public record IccProfile(
         String sha256,
         @Nullable IccClut clut,
         @Nullable IccClut clutAToB1,
-        @Nullable IccClut clutBToA0
+        @Nullable IccClut clutBToA0,
+        @Nullable IccClut clutBToA1,
+        @Nullable IccClut clutAToB2,
+        @Nullable IccClut clutBToA2
 ) {
     /// Maximum accepted profile size.
     public static final int MAX_PROFILE_BYTES = 1_048_576;
@@ -109,6 +116,15 @@ public record IccProfile(
 
     /// Tag `'B2A0'`.
     private static final int TAG_B2A0 = 0x4232_4130;
+
+    /// Tag `'B2A1'`.
+    private static final int TAG_B2A1 = 0x4232_4131;
+
+    /// Tag `'A2B2'`.
+    private static final int TAG_A2B2 = 0x4132_4232;
+
+    /// Tag `'B2A2'`.
+    private static final int TAG_B2A2 = 0x4232_4132;
 
     /// Type `'XYZ '`.
     private static final int TYPE_XYZ = 0x5859_5A20;
@@ -199,14 +215,18 @@ public record IccProfile(
                 sha256(bytes),
                 readClut(bytes, tagCount, TAG_A2B0),
                 readClut(bytes, tagCount, TAG_A2B1),
-                readClut(bytes, tagCount, TAG_B2A0)
+                readClut(bytes, tagCount, TAG_B2A0),
+                readClut(bytes, tagCount, TAG_B2A1),
+                readClut(bytes, tagCount, TAG_A2B2),
+                readClut(bytes, tagCount, TAG_B2A2)
         );
     }
 
     /// Converts one RGB sample through this profile into extended-linear sRGB.
     ///
     /// When [`#clut()`] is present, the AToB0 `mft2` table is used. Otherwise [`#clutAToB1()`]
-    /// is used when present. Otherwise the matrix/TRC path is used. PCS XYZ is chromatically
+    /// is used when present. Otherwise [`#clutAToB2()`] is used when present. Otherwise the
+    /// matrix/TRC path is used. PCS XYZ is chromatically
     /// adapted from the header illuminant to D65 when the illuminant is not already D65-like.
     /// The result is not clamped.
     ///
@@ -225,7 +245,7 @@ public record IccProfile(
         float x;
         float y;
         float z;
-        IccClut forward = clut != null ? clut : clutAToB1;
+        IccClut forward = clut != null ? clut : clutAToB1 != null ? clutAToB1 : clutAToB2;
         if (forward != null) {
             float[] xyz = forward.transform(red, green, blue);
             x = xyz[0];
@@ -251,7 +271,9 @@ public record IccProfile(
     /// Converts one extended-linear color into encoded device RGB through this profile.
     ///
     /// When [`#clutBToA0()`] is present, that `mft2` table is used with PCS XYZ as the three
-    /// inputs. Otherwise the inverse matrix/TRC path is used. D65 working XYZ is adapted to the
+    /// inputs. Otherwise [`#clutBToA1()`] is used when present. Otherwise [`#clutBToA2()`] is
+    /// used when present. Otherwise the inverse
+    /// matrix/TRC path is used. D65 working XYZ is adapted to the
     /// header illuminant when that illuminant is not already D65-like. Encoded components are
     /// clamped to `[0, 1]`.
     ///
@@ -273,8 +295,9 @@ public record IccProfile(
         float red;
         float green;
         float blue;
-        if (clutBToA0 != null) {
-            float[] rgb = clutBToA0.transform(x, y, z);
+        IccClut inverseClut = clutBToA0 != null ? clutBToA0 : clutBToA1 != null ? clutBToA1 : clutBToA2;
+        if (inverseClut != null) {
+            float[] rgb = inverseClut.transform(x, y, z);
             red = rgb[0];
             green = rgb[1];
             blue = rgb[2];
@@ -319,19 +342,40 @@ public record IccProfile(
 
     /// One tone-reproduction curve.
     ///
-    /// An empty table with `gamma == 1` is the identity. An empty table with another gamma is
-    /// `encoded^gamma`. A non-empty table is linearly interpolated in `[0, 1]`.
+    /// An empty table with `gamma == 1` and `paraFunction == 0` is the identity. An empty table
+    /// with another gamma is `encoded^gamma`. A non-empty table is linearly interpolated in
+    /// `[0, 1]`. `paraFunction` 1–4 apply the ICC parametric functions.
     ///
     /// @param gamma the power-law exponent when the table is empty
     /// @param table the normalized curve samples, or an empty array
+    /// @param paraFunction `0` for the gamma/table path, or ICC para type `1`–`4`
+    /// @param a parametric `a`
+    /// @param b parametric `b`
+    /// @param c parametric `c`
+    /// @param d parametric `d`
+    /// @param e parametric `e`
+    /// @param f parametric `f`
     @NotNullByDefault
-    public record Curve(float gamma, float @Unmodifiable [] table) {
+    public record Curve(
+            float gamma,
+            float @Unmodifiable [] table,
+            int paraFunction,
+            float a,
+            float b,
+            float c,
+            float d,
+            float e,
+            float f
+    ) {
         /// Validates the curve.
         public Curve {
             Objects.requireNonNull(table, "table");
             table = Arrays.copyOf(table, table.length);
             if (!Float.isFinite(gamma) || gamma <= 0.0f) {
                 throw new IllegalArgumentException("ICC curve gamma must be finite and positive");
+            }
+            if (paraFunction < 0 || paraFunction > 4) {
+                throw new IllegalArgumentException("ICC para function must be 0 through 4");
             }
             if (table.length > MAX_CURVE_ENTRIES) {
                 throw new IllegalArgumentException("ICC curve table exceeds the accepted bound");
@@ -343,12 +387,23 @@ public record IccProfile(
             }
         }
 
+        /// Creates a gamma or sampled curve.
+        ///
+        /// @param gamma the power-law exponent
+        /// @param table the samples, or empty
+        public Curve(float gamma, float[] table) {
+            this(gamma, table, 0, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        }
+
         /// Applies the curve to one encoded component.
         ///
         /// @param encoded the encoded component
         /// @return the linearized component
         public float decode(float encoded) {
             float unit = Math.clamp(encoded, 0.0f, 1.0f);
+            if (paraFunction > 0) {
+                return decodePara(unit);
+            }
             if (table.length == 0) {
                 if (gamma == 1.0f) {
                     return unit;
@@ -370,6 +425,9 @@ public record IccProfile(
         /// @return the encoded component
         public float encode(float linear) {
             float unit = Math.clamp(linear, 0.0f, 1.0f);
+            if (paraFunction > 0) {
+                return encodePara(unit);
+            }
             if (table.length == 0) {
                 if (gamma == 1.0f) {
                     return unit;
@@ -396,6 +454,49 @@ public record IccProfile(
             float span = table[index + 1] - table[index];
             float fraction = span == 0.0f ? 0.0f : (unit - table[index]) / span;
             return (index + fraction) / (table.length - 1);
+        }
+
+        /// Applies ICC parametric function types 1–4.
+        private float decodePara(float x) {
+            return switch (paraFunction) {
+                case 1 -> powNonNeg(Math.fma(a, x, b), gamma);
+                case 2 -> x >= threshold() ? powNonNeg(Math.fma(a, x, b), gamma) + c : c;
+                case 3 -> x >= d ? powNonNeg(Math.fma(a, x, b), gamma) : c * x;
+                case 4 -> x >= d ? powNonNeg(Math.fma(a, x, b), gamma) + e : Math.fma(c, x, f);
+                default -> x;
+            };
+        }
+
+        /// Inverts ICC parametric function types 1–4 where the branch is unique.
+        private float encodePara(float y) {
+            return switch (paraFunction) {
+                case 1 -> invertPower(y);
+                case 2 -> y <= c ? 0.0f : invertPower(y - c);
+                case 3 -> y >= powNonNeg(Math.fma(a, d, b), gamma) ? invertPower(y) : (c == 0.0f ? 0.0f : y / c);
+                case 4 -> y >= powNonNeg(Math.fma(a, d, b), gamma) + e
+                        ? invertPower(y - e)
+                        : (c == 0.0f ? 0.0f : (y - f) / c);
+                default -> y;
+            };
+        }
+
+        /// Returns `-b/a` for type 2, or `0` when `a` is zero.
+        private float threshold() {
+            return a == 0.0f ? 0.0f : -b / a;
+        }
+
+        /// Inverts `Y = (aX + b)^g` for `X`.
+        private float invertPower(float y) {
+            if (a == 0.0f) {
+                return 0.0f;
+            }
+            float root = (float) Math.pow(Math.max(y, 0.0f), 1.0 / gamma);
+            return (root - b) / a;
+        }
+
+        /// Returns `max(base, 0)^exponent`.
+        private static float powNonNeg(float base, float exponent) {
+            return (float) Math.pow(Math.max(base, 0.0f), exponent);
         }
     }
 
@@ -445,7 +546,7 @@ public record IccProfile(
         return new float[] {s15(bytes, offset + 8), s15(bytes, offset + 12), s15(bytes, offset + 16)};
     }
 
-    /// Reads one `curv` or type-0 `para` tag.
+    /// Reads one `curv` or parametric `para` tag.
     private static Curve readCurve(byte[] bytes, int offset) {
         if (offset > bytes.length - 12) {
             throw new IllegalArgumentException("ICC curve tag is truncated");
@@ -480,10 +581,29 @@ public record IccProfile(
                 throw new IllegalArgumentException("ICC para tag is truncated");
             }
             int function = u16(bytes, offset + 8);
-            if (function != 0) {
-                throw new IllegalArgumentException("Only parametric ICC curve type 0 is accepted");
+            int params = switch (function) {
+                case 0 -> 1;
+                case 1 -> 3;
+                case 2 -> 4;
+                case 3 -> 5;
+                case 4 -> 7;
+                default -> throw new IllegalArgumentException("ICC para function must be 0 through 4");
+            };
+            int required = 12 + params * 4;
+            if (offset > bytes.length - required) {
+                throw new IllegalArgumentException("ICC para tag is truncated");
             }
-            return new Curve(s15(bytes, offset + 12), new float[0]);
+            float g = s15(bytes, offset + 12);
+            if (function == 0) {
+                return new Curve(g, new float[0]);
+            }
+            float a = params > 1 ? s15(bytes, offset + 16) : 1.0f;
+            float b = params > 2 ? s15(bytes, offset + 20) : 0.0f;
+            float c = params > 3 ? s15(bytes, offset + 24) : 0.0f;
+            float d = params > 4 ? s15(bytes, offset + 28) : 0.0f;
+            float e = params > 5 ? s15(bytes, offset + 32) : 0.0f;
+            float f = params > 6 ? s15(bytes, offset + 36) : 0.0f;
+            return new Curve(g, new float[0], function, a, b, c, d, e, f);
         }
         throw new IllegalArgumentException("ICC tone curve type is not accepted");
     }

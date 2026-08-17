@@ -95,6 +95,10 @@ public final class DesktopLaunch {
         boolean d3d12Presented = false;
         boolean popupHosted = false;
         boolean messageLoopRan = false;
+        int deviceRemovedReason = 0;
+        int sleepEvents = 0;
+        int wakeEvents = 0;
+        int presentedAfterWake = 0;
         String inspectorJson;
         String label;
         MemorySegment png;
@@ -177,6 +181,41 @@ public final class DesktopLaunch {
                     presentedScanlines += primary.presentSdrRgba(rgba, WIDTH, HEIGHT);
                     presentedScanlines += secondary.presentSdrRgba(rgba, WIDTH, HEIGHT);
                     d3d12Presented = presentD3d12(primary.nativeHandle(), rgba, WIDTH, HEIGHT);
+                    @Nullable D3d12Device soakDevice = D3d12Device.tryOpen();
+                    if (soakDevice != null) {
+                        try (soakDevice) {
+                            deviceRemovedReason = soakDevice.deviceRemovedReason();
+                        }
+                    }
+                    primary.sendMessage(
+                            WindowsWindow.WM_POWERBROADCAST,
+                            WindowsWindow.PBT_APMSUSPEND,
+                            0L
+                    );
+                    secondary.sendMessage(
+                            WindowsWindow.WM_POWERBROADCAST,
+                            WindowsWindow.PBT_APMSUSPEND,
+                            0L
+                    );
+                    primary.sendMessage(
+                            WindowsWindow.WM_POWERBROADCAST,
+                            WindowsWindow.PBT_APMRESUMESUSPEND,
+                            0L
+                    );
+                    secondary.sendMessage(
+                            WindowsWindow.WM_POWERBROADCAST,
+                            WindowsWindow.PBT_APMRESUMESUSPEND,
+                            0L
+                    );
+                    platform.pump();
+                    sleepEvents = primary.sleepEvents() + secondary.sleepEvents();
+                    wakeEvents = primary.wakeEvents() + secondary.wakeEvents();
+                    presentedAfterWake += primary.presentSdrRgba(rgba, WIDTH, HEIGHT);
+                    presentedAfterWake += secondary.presentSdrRgba(rgba, WIDTH, HEIGHT);
+                    presentedScanlines += presentedAfterWake;
+                    if (deviceRemovedReason == 0) {
+                        d3d12Presented = presentD3d12(primary.nativeHandle(), rgba, WIDTH, HEIGHT) && d3d12Presented;
+                    }
                     platform.pump();
                     if (!new SceneEnvelope(SceneEnvelope.CURRENT_SCHEMA, WIDTH, HEIGHT, displayList)
                             .toCanonicalJson()
@@ -245,7 +284,11 @@ public final class DesktopLaunch {
                 wayland.status(),
                 macos.status(),
                 metal.status(),
-                objc.status()
+                objc.status(),
+                deviceRemovedReason,
+                sleepEvents,
+                wakeEvents,
+                presentedAfterWake
         );
         if (output != null) {
             Files.createDirectories(output);

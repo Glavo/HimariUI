@@ -32,6 +32,14 @@ final class D3d12DeviceTest {
         device.close();
     }
 
+    /// Reads `GetDeviceRemovedReason` on a healthy adapter.
+    @Test
+    void healthyDeviceReportsNoRemoval() {
+        try (D3d12Device device = D3d12Device.open()) {
+            assertEquals(0, device.deviceRemovedReason());
+        }
+    }
+
     /// Creates a device and confirms the truthful SDR capability snapshot.
     @Test
     void queriesSdrRenderTargetSupport() {

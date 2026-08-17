@@ -50,6 +50,36 @@ public final class GestureConformance {
         if (!hold.longPressAccepted()) {
             throw new IllegalStateException("Long press did not win a stationary hold");
         }
+        GestureArena doubleTap = new GestureArena();
+        doubleTap.dispatch(new PointerEvent(PointerEventType.DOWN, 8.0f, 8.0f), 0L);
+        doubleTap.dispatch(new PointerEvent(PointerEventType.UP, 8.0f, 8.0f), 40_000_000L);
+        doubleTap.dispatch(new PointerEvent(PointerEventType.DOWN, 8.0f, 8.0f), 80_000_000L);
+        doubleTap.dispatch(new PointerEvent(PointerEventType.UP, 8.0f, 8.0f), 120_000_000L);
+        if (!doubleTap.doubleTapAccepted()) {
+            throw new IllegalStateException("Double tap did not win two short presses");
+        }
+        GestureArena scroll = new GestureArena();
+        scroll.dispatch(
+                new PointerEvent(PointerEventType.WHEEL, 0.0f, 0.0f, org.glavo.himari.layout.input.PointerDeviceKind.MOUSE, 1.0f),
+                0L
+        );
+        if (!scroll.scrollAccepted() || scroll.lastScrollDelta() != 1.0f) {
+            throw new IllegalStateException("Scroll did not win a wheel notch");
+        }
+        GestureArena scale = new GestureArena();
+        scale.dispatch(new PointerEvent(PointerEventType.DOWN, 0.0f, 0.0f, org.glavo.himari.layout.input.PointerDeviceKind.TOUCH, 0.0f, 1), 0L);
+        scale.dispatch(new PointerEvent(PointerEventType.DOWN, 100.0f, 0.0f, org.glavo.himari.layout.input.PointerDeviceKind.TOUCH, 0.0f, 2), 1L);
+        scale.dispatch(new PointerEvent(PointerEventType.MOVE, 130.0f, 0.0f, org.glavo.himari.layout.input.PointerDeviceKind.TOUCH, 0.0f, 2), 16_000_000L);
+        if (!scale.scaleAccepted() || Math.abs(scale.scale() - 1.3f) > 0.001f) {
+            throw new IllegalStateException("Scale did not win a pinch");
+        }
+        GestureArena rotation = new GestureArena();
+        rotation.dispatch(new PointerEvent(PointerEventType.DOWN, 0.0f, 0.0f, org.glavo.himari.layout.input.PointerDeviceKind.TOUCH, 0.0f, 1), 0L);
+        rotation.dispatch(new PointerEvent(PointerEventType.DOWN, 100.0f, 0.0f, org.glavo.himari.layout.input.PointerDeviceKind.TOUCH, 0.0f, 2), 1L);
+        rotation.dispatch(new PointerEvent(PointerEventType.MOVE, 0.0f, 100.0f, org.glavo.himari.layout.input.PointerDeviceKind.TOUCH, 0.0f, 2), 16_000_000L);
+        if (!rotation.rotationAccepted() || Math.abs(rotation.rotation() - Math.PI / 2.0) > 0.01) {
+            throw new IllegalStateException("Rotation did not win a twist");
+        }
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);
         Files.writeString(
@@ -63,7 +93,11 @@ public final class GestureConformance {
                           "dragAccepted": true,
                           "dragTranslationY": %s,
                           "dragVelocityY": %s,
-                          "longPressAccepted": true
+                          "longPressAccepted": true,
+                          "doubleTapAccepted": true,
+                          "scrollAccepted": true,
+                          "scaleAccepted": true,
+                          "rotationAccepted": true
                         }
                         """.formatted(drag.translationY(), drag.velocity().y()),
                 StandardCharsets.UTF_8

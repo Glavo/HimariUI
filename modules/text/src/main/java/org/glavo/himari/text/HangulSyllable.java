@@ -149,4 +149,31 @@ public final class HangulSyllable {
         }
         return SYLLABLE_BASE + ((lead - LEAD_BASE) * VOWEL_COUNT + (vowel - VOWEL_BASE)) * TRAIL_COUNT + trailer;
     }
+
+    /// Returns whether `codePoint` is a precomposed Hangul syllable.
+    ///
+    /// @param codePoint the code point
+    /// @return whether the code point is `U+AC00`–`U+D7A3`
+    public static boolean isSyllable(int codePoint) {
+        return codePoint >= SYLLABLE_BASE && codePoint <= 0xD7A3;
+    }
+
+    /// Decomposes a precomposed syllable into modern L/V, and T when present.
+    ///
+    /// @param syllable a code point in `U+AC00`–`U+D7A3`
+    /// @return `{L, V}` or `{L, V, T}`
+    public static int[] decompose(int syllable) {
+        if (!isSyllable(syllable)) {
+            throw new IllegalArgumentException("code point is not a Hangul syllable");
+        }
+        int sIndex = syllable - SYLLABLE_BASE;
+        int trail = sIndex % TRAIL_COUNT;
+        sIndex /= TRAIL_COUNT;
+        int vowel = sIndex % VOWEL_COUNT;
+        int lead = sIndex / VOWEL_COUNT;
+        if (trail == 0) {
+            return new int[] {LEAD_BASE + lead, VOWEL_BASE + vowel};
+        }
+        return new int[] {LEAD_BASE + lead, VOWEL_BASE + vowel, TRAIL_BASE + trail - 1};
+    }
 }

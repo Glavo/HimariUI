@@ -139,6 +139,21 @@ public final class LazyList {
         return new SemanticsScroll(percent, viewSize, true);
     }
 
+    /// Scrolls so `index` is the first visible item, clamped to the valid range.
+    ///
+    /// @param index the requested first-visible index
+    public void scrollTo(int index) {
+        int maximum = Math.max(0, itemCount - windowSize);
+        firstVisible = Math.min(maximum, Math.max(0, index));
+    }
+
+    /// Pages the window by `pages` windows of [windowSize] items.
+    ///
+    /// @param pages signed page count; negative pages backward
+    public void page(int pages) {
+        scrollTo(firstVisible + pages * windowSize);
+    }
+
     /// Moves the window by one item.
     ///
     /// @param delta `1` or `-1`

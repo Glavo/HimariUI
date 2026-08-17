@@ -64,6 +64,45 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// Left button up.
     private static final int WM_LBUTTONUP = 0x0202;
 
+    /// Right button down.
+    private static final int WM_RBUTTONDOWN = 0x0204;
+
+    /// Right button up.
+    private static final int WM_RBUTTONUP = 0x0205;
+
+    /// Middle button down.
+    private static final int WM_MBUTTONDOWN = 0x0207;
+
+    /// Middle button up.
+    private static final int WM_MBUTTONUP = 0x0208;
+
+    /// `VK_SHIFT`.
+    private static final int VK_SHIFT = 0x10;
+
+    /// `VK_CONTROL`.
+    private static final int VK_CONTROL = 0x11;
+
+    /// `VK_MENU` (Alt).
+    private static final int VK_MENU = 0x12;
+
+    /// Vertical mouse wheel.
+    private static final int WM_MOUSEWHEEL = 0x020A;
+
+    /// Horizontal mouse wheel.
+    private static final int WM_MOUSEHWHEEL = 0x020E;
+
+    /// Vertical pointer wheel.
+    private static final int WM_POINTERWHEEL = 0x0248;
+
+    /// Horizontal pointer wheel.
+    private static final int WM_POINTERHWHEEL = 0x0249;
+
+    /// `IDC_ARROW`.
+    public static final int IDC_ARROW = 32512;
+
+    /// `WHEEL_DELTA`.
+    public static final int WHEEL_DELTA = 120;
+
     /// `PT_TOUCH`.
     public static final int PT_TOUCH = 2;
 
@@ -105,6 +144,15 @@ public final class WindowsNativeWindow implements AutoCloseable {
 
     /// Timer.
     private static final int WM_TIMER = 0x0113;
+
+    /// `WM_POWERBROADCAST`.
+    static final int WM_POWERBROADCAST = 0x0218;
+
+    /// `PBT_APMSUSPEND`.
+    static final int PBT_APMSUSPEND = 0x0004;
+
+    /// `PBT_APMRESUMESUSPEND`.
+    static final int PBT_APMRESUMESUSPEND = 0x0007;
 
     /// Timer id used for modal-loop reentry.
     static final long MODAL_TIMER_ID = 0x484D5249L;
@@ -151,6 +199,15 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// UTF-16 code units received as `WM_CHAR` since the last drain.
     private final StringBuilder characters = new StringBuilder();
 
+    /// Whether `VK_SHIFT` is latched from `WM_KEYDOWN`/`WM_KEYUP`.
+    private boolean shiftDown;
+
+    /// Whether `VK_CONTROL` is latched from `WM_KEYDOWN`/`WM_KEYUP`.
+    private boolean ctrlDown;
+
+    /// Whether `VK_MENU` is latched from `WM_KEYDOWN`/`WM_KEYUP`.
+    private boolean altDown;
+
     /// Whether the class is registered.
     private boolean classRegistered;
 
@@ -171,6 +228,12 @@ public final class WindowsNativeWindow implements AutoCloseable {
 
     /// Whether a move/resize modal loop is active.
     private boolean modalLoopActive;
+
+    /// Number of `PBT_APMSUSPEND` deliveries observed through WndProc.
+    private int sleepEvents;
+
+    /// Number of resume power broadcasts observed through WndProc.
+    private int wakeEvents;
 
     /// Number of modal-loop timer ticks delivered through WndProc.
     private int modalTimerTicks;
@@ -348,6 +411,20 @@ public final class WindowsNativeWindow implements AutoCloseable {
         return modalTimerTicks;
     }
 
+    /// Returns observed `PBT_APMSUSPEND` deliveries.
+    ///
+    /// @return the sleep count
+    public int sleepEvents() {
+        return sleepEvents;
+    }
+
+    /// Returns observed `PBT_APMRESUMESUSPEND` deliveries.
+    ///
+    /// @return the wake count
+    public int wakeEvents() {
+        return wakeEvents;
+    }
+
     /// Sends one message synchronously through the production WndProc.
     ///
     /// @param message the Win32 message identifier
@@ -402,6 +479,51 @@ public final class WindowsNativeWindow implements AutoCloseable {
         };
     }
 
+    /// Loads a system cursor and installs it with generated `LoadCursorW` / `SetCursor`.
+    ///
+    /// @param cursorId a `MAKEINTRESOURCE` identifier such as [`#IDC_ARROW`]
+    /// @return whether both calls returned a non-null handle
+    public boolean setSystemCursor(int cursorId) {
+        requireOpen();
+        if (cursorId <= 0 || cursorId > 0xFFFF) {
+            throw new IllegalArgumentException("cursorId must be a 16-bit resource identifier");
+        }
+        Win32FfmBindings.LoadCursorWResult loaded = bindings.loadCursorW(
+                MemorySegment.NULL,
+                MemorySegment.ofAddress(cursorId)
+        );
+        if (loaded.value().address() == 0L) {
+            return false;
+        }
+        MemorySegment previous = bindings.setCursor(loaded.value());
+        return previous.address() != 0L || loaded.value().address() != 0L;
+    }
+
+    /// Returns whether generated `GetCapture` reports this HWND.
+    ///
+    /// @return whether this window owns mouse capture
+    public boolean captured() {
+        requireOpen();
+        return bindings.getCapture().address() == window.address();
+    }
+
+    /// Builds one wheel event from `wParam`/`lParam`.
+    ///
+    /// @param wParam the message `wParam`
+    /// @param lParam the message `lParam`
+    /// @param device the physical pointer
+    /// @return the event
+    private static PointerEvent wheelEvent(long wParam, long lParam, PointerDeviceKind device) {
+        short delta = (short) ((wParam >>> 16) & 0xFFFFL);
+        return new PointerEvent(
+                PointerEventType.WHEEL,
+                lowWord(lParam),
+                highWord(lParam),
+                device,
+                delta / (float) WHEEL_DELTA
+        );
+    }
+
     /// Queries `GetPointerType` for `pointerId`.
     ///
     /// @param pointerId the pointer identity from `wParam`
@@ -416,6 +538,74 @@ public final class WindowsNativeWindow implements AutoCloseable {
         return typeOut.get(ValueLayout.JAVA_INT, 0);
     }
 
+    /// `PEN_MASK_PRESSURE`.
+    public static final int PEN_MASK_PRESSURE = 0x00000001;
+
+    /// `PEN_MASK_TILT_X`.
+    public static final int PEN_MASK_TILT_X = 0x00000004;
+
+    /// `PEN_MASK_TILT_Y`.
+    public static final int PEN_MASK_TILT_Y = 0x00000008;
+
+    /// Maximum Win32 pen pressure.
+    public static final int PEN_MAX_PRESSURE = 1024;
+
+    /// Stores decoded pen axes from [`#queryPenInfo(int)`].
+    ///
+    /// @param pressure normalized pressure in `[0, 1]`
+    /// @param tiltX tilt from the YZ plane in degrees
+    /// @param tiltY tilt from the XZ plane in degrees
+    public record PenAxes(float pressure, float tiltX, float tiltY) {
+    }
+
+    /// Queries generated `GetPointerPenInfo` for `pointerId`.
+    ///
+    /// A failed query returns zeroed axes. That is the host path when no pen contact exists.
+    ///
+    /// @param pointerId the pointer identity
+    /// @return the axes
+    public PenAxes queryPenInfo(int pointerId) {
+        requireOpen();
+        MemorySegment info = arena.allocate(Win32Layouts.POINTER_PEN_INFO);
+        info.fill((byte) 0);
+        Win32FfmBindings.GetPointerPenInfoResult result = bindings.getPointerPenInfo(pointerId, info);
+        if (result.value() == 0) {
+            return new PenAxes(0.0f, 0.0f, 0.0f);
+        }
+        return decodePenInfo(info);
+    }
+
+    /// Reads pressure and tilt from a `POINTER_PEN_INFO` record.
+    ///
+    /// @param info the packed structure
+    /// @return the axes
+    public static PenAxes decodePenInfo(MemorySegment info) {
+        Objects.requireNonNull(info, "info");
+        int mask = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_PEN_INFO_PENMASK_OFFSET);
+        float pressure = 0.0f;
+        if ((mask & PEN_MASK_PRESSURE) != 0) {
+            int raw = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_PEN_INFO_PRESSURE_OFFSET);
+            pressure = Math.clamp(raw / (float) PEN_MAX_PRESSURE, 0.0f, 1.0f);
+        }
+        float tiltX = 0.0f;
+        if ((mask & PEN_MASK_TILT_X) != 0) {
+            tiltX = Math.clamp(
+                    info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_PEN_INFO_TILTX_OFFSET),
+                    -90.0f,
+                    90.0f
+            );
+        }
+        float tiltY = 0.0f;
+        if ((mask & PEN_MASK_TILT_Y) != 0) {
+            tiltY = Math.clamp(
+                    info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_PEN_INFO_TILTY_OFFSET),
+                    -90.0f,
+                    90.0f
+            );
+        }
+        return new PenAxes(pressure, tiltX, tiltY);
+    }
+
     /// Resolves the device for one `WM_POINTER*` `wParam`.
     private PointerDeviceKind pointerDevice(long wParam) {
         int type = queryPointerType(lowWord(wParam));
@@ -423,6 +613,37 @@ public final class WindowsNativeWindow implements AutoCloseable {
             return PointerDeviceKind.TOUCH;
         }
         return deviceKindFromPointerType(type);
+    }
+
+    /// Builds one `WM_POINTER*` event, including pen axes when the contact is a stylus.
+    ///
+    /// @param type the normalized type
+    /// @param wParam the message `wParam`
+    /// @param lParam the message `lParam`
+    /// @return the event
+    private PointerEvent pointerMessage(PointerEventType type, long wParam, long lParam) {
+        PointerDeviceKind device = pointerDevice(wParam);
+        int pointerId = lowWord(wParam);
+        float pressure = 0.0f;
+        float tiltX = 0.0f;
+        float tiltY = 0.0f;
+        if (device == PointerDeviceKind.PEN) {
+            PenAxes axes = queryPenInfo(pointerId);
+            pressure = axes.pressure();
+            tiltX = axes.tiltX();
+            tiltY = axes.tiltY();
+        }
+        return new PointerEvent(
+                type,
+                lowWord(lParam),
+                highWord(lParam),
+                device,
+                0.0f,
+                pointerId,
+                pressure,
+                tiltX,
+                tiltY
+        );
     }
 
     /// Posts one message to this HWND so the production WndProc delivers it.
@@ -576,6 +797,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 yield 0L;
             }
             case WM_LBUTTONDOWN -> {
+                bindings.setCapture(window);
                 pointerEvents.add(new PointerEvent(
                         PointerEventType.DOWN,
                         lowWord(lParam),
@@ -585,6 +807,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 yield 0L;
             }
             case WM_LBUTTONUP -> {
+                bindings.releaseCapture();
                 pointerEvents.add(new PointerEvent(
                         PointerEventType.UP,
                         lowWord(lParam),
@@ -593,44 +816,77 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 ));
                 yield 0L;
             }
-            case WM_POINTERUPDATE -> {
+            case WM_RBUTTONDOWN -> {
                 pointerEvents.add(new PointerEvent(
-                        PointerEventType.MOVE,
+                        PointerEventType.SECONDARY_DOWN,
                         lowWord(lParam),
                         highWord(lParam),
-                        pointerDevice(wParam)
+                        PointerDeviceKind.MOUSE
                 ));
+                yield 0L;
+            }
+            case WM_RBUTTONUP -> {
+                pointerEvents.add(new PointerEvent(
+                        PointerEventType.SECONDARY_UP,
+                        lowWord(lParam),
+                        highWord(lParam),
+                        PointerDeviceKind.MOUSE
+                ));
+                yield 0L;
+            }
+            case WM_MBUTTONDOWN -> {
+                pointerEvents.add(new PointerEvent(
+                        PointerEventType.MIDDLE_DOWN,
+                        lowWord(lParam),
+                        highWord(lParam),
+                        PointerDeviceKind.MOUSE
+                ));
+                yield 0L;
+            }
+            case WM_MBUTTONUP -> {
+                pointerEvents.add(new PointerEvent(
+                        PointerEventType.MIDDLE_UP,
+                        lowWord(lParam),
+                        highWord(lParam),
+                        PointerDeviceKind.MOUSE
+                ));
+                yield 0L;
+            }
+            case WM_MOUSEWHEEL, WM_MOUSEHWHEEL -> {
+                pointerEvents.add(wheelEvent(wParam, lParam, PointerDeviceKind.MOUSE));
+                yield 0L;
+            }
+            case WM_POINTERWHEEL, WM_POINTERHWHEEL -> {
+                pointerEvents.add(wheelEvent(wParam, lParam, pointerDevice(wParam)));
+                yield 0L;
+            }
+            case WM_POINTERUPDATE -> {
+                pointerEvents.add(pointerMessage(PointerEventType.MOVE, wParam, lParam));
                 yield 0L;
             }
             case WM_POINTERDOWN -> {
-                pointerEvents.add(new PointerEvent(
-                        PointerEventType.DOWN,
-                        lowWord(lParam),
-                        highWord(lParam),
-                        pointerDevice(wParam)
-                ));
+                pointerEvents.add(pointerMessage(PointerEventType.DOWN, wParam, lParam));
                 yield 0L;
             }
             case WM_POINTERUP -> {
-                pointerEvents.add(new PointerEvent(
-                        PointerEventType.UP,
-                        lowWord(lParam),
-                        highWord(lParam),
-                        pointerDevice(wParam)
-                ));
+                pointerEvents.add(pointerMessage(PointerEventType.UP, wParam, lParam));
                 yield 0L;
             }
             case WM_KEYDOWN -> {
-                @Nullable LogicalKey key = logicalKey((int) wParam);
+                int virtualKey = (int) wParam;
+                latchModifier(virtualKey, true);
+                @Nullable LogicalKey key = logicalKey(virtualKey);
                 if (key != null) {
-                    keyEvents.add(new KeyEvent(KeyEventType.DOWN, key));
+                    keyEvents.add(new KeyEvent(KeyEventType.DOWN, key, shiftDown, ctrlDown, altDown));
                 }
                 yield 0L;
             }
             case WM_KEYUP -> {
-                @Nullable LogicalKey key = logicalKey((int) wParam);
+                int virtualKey = (int) wParam;
+                latchModifier(virtualKey, false);
+                @Nullable LogicalKey key = logicalKey(virtualKey);
                 if (key != null) {
-                    keyEvents.add(new KeyEvent(KeyEventType.UP, key));
+                    keyEvents.add(new KeyEvent(KeyEventType.UP, key, shiftDown, ctrlDown, altDown));
                 }
                 yield 0L;
             }
@@ -655,6 +911,15 @@ public final class WindowsNativeWindow implements AutoCloseable {
                     lifecycle.modalTick();
                 }
                 yield 0L;
+            }
+            case WM_POWERBROADCAST -> {
+                int event = (int) wParam;
+                if (event == PBT_APMSUSPEND) {
+                    sleepEvents++;
+                } else if (event == PBT_APMRESUMESUSPEND) {
+                    wakeEvents++;
+                }
+                yield 1L;
             }
             default -> bindings.defWindowProcW(callbackWindow, message, wParam, lParam);
         };
@@ -745,20 +1010,40 @@ public final class WindowsNativeWindow implements AutoCloseable {
         );
     }
 
+    /// Latches Shift, Control, or Alt from a virtual-key code.
+    ///
+    /// @param virtualKey the `wParam` virtual-key code
+    /// @param down whether the key is pressed
+    private void latchModifier(int virtualKey, boolean down) {
+        if (virtualKey == VK_SHIFT) {
+            shiftDown = down;
+        } else if (virtualKey == VK_CONTROL) {
+            ctrlDown = down;
+        } else if (virtualKey == VK_MENU) {
+            altDown = down;
+        }
+    }
+
     /// Maps a virtual-key code onto the layout logical-key set.
     ///
     /// @param virtualKey the `wParam` virtual-key code
     /// @return the logical key, or `null` when the key is outside the first-stable set
     private static @Nullable LogicalKey logicalKey(int virtualKey) {
         return switch (virtualKey) {
+            case 0x08 -> LogicalKey.BACKSPACE;
             case 0x09 -> LogicalKey.TAB;
             case 0x1B -> LogicalKey.ESCAPE;
             case 0x0D -> LogicalKey.ENTER;
             case 0x20 -> LogicalKey.SPACE;
+            case 0x21 -> LogicalKey.PAGE_UP;
+            case 0x22 -> LogicalKey.PAGE_DOWN;
+            case 0x23 -> LogicalKey.END;
+            case 0x24 -> LogicalKey.HOME;
             case 0x25 -> LogicalKey.ARROW_LEFT;
             case 0x26 -> LogicalKey.ARROW_UP;
             case 0x27 -> LogicalKey.ARROW_RIGHT;
             case 0x28 -> LogicalKey.ARROW_DOWN;
+            case 0x2E -> LogicalKey.DELETE;
             default -> null;
         };
     }

@@ -1,5 +1,6 @@
 package org.glavo.himari.platform.windows;
 
+import org.glavo.himari.platform.api.CapabilityReport;
 import org.glavo.himari.layout.Alignment;
 import org.glavo.himari.layout.Constraints;
 import org.glavo.himari.layout.LayoutFactory;
@@ -7,6 +8,7 @@ import org.glavo.himari.layout.LayoutNode;
 import org.glavo.himari.layout.LayoutTree;
 import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.bootstrap.BootstrapCounterPane;
+import org.glavo.himari.layout.input.KeyEventType;
 import org.glavo.himari.layout.input.LogicalKey;
 import org.glavo.himari.layout.input.PointerDeviceKind;
 import org.glavo.himari.layout.input.PointerEvent;
@@ -92,6 +94,35 @@ final class WindowsPlatformTest {
                     .colorCapabilities().description().presentationModes()
                     .contains(org.glavo.himari.platform.api.PresentationMode.SDR));
             assertTrue(platform.displayTopology().displays().getFirst().physicalSize().width() > 0);
+            CapabilityReport report = CapabilityReport.from(platform);
+            assertEquals(org.glavo.himari.platform.api.PresentationMode.SDR, report.requested());
+            assertEquals(org.glavo.himari.platform.api.PresentationMode.SDR, report.effective());
+            assertEquals("application", report.mappingOwner());
+            assertEquals("host advertised only SDR", report.disabledHdrReason());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Delivers sleep and wake power broadcasts through the production WndProc.
+    @Test
+    void deliversSleepAndWakeThroughWndProc() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow first = openToplevel(platform, "Sleep", 16.0, 16.0);
+            WindowsWindow second = openToplevel(platform, "Wake", 80.0, 80.0);
+            platform.pump();
+            first.sendMessage(WindowsWindow.WM_POWERBROADCAST, WindowsWindow.PBT_APMSUSPEND, 0L);
+            second.sendMessage(WindowsWindow.WM_POWERBROADCAST, WindowsWindow.PBT_APMSUSPEND, 0L);
+            first.sendMessage(WindowsWindow.WM_POWERBROADCAST, WindowsWindow.PBT_APMRESUMESUSPEND, 0L);
+            second.sendMessage(WindowsWindow.WM_POWERBROADCAST, WindowsWindow.PBT_APMRESUMESUSPEND, 0L);
+            assertEquals(1, first.sleepEvents());
+            assertEquals(1, first.wakeEvents());
+            assertEquals(1, second.sleepEvents());
+            assertEquals(1, second.wakeEvents());
+            first.closeAsync().toCompletableFuture().get();
+            second.closeAsync().toCompletableFuture().get();
+            platform.pump();
         } finally {
             platform.close();
         }
@@ -198,6 +229,230 @@ final class WindowsPlatformTest {
             assertEquals(LogicalKey.ESCAPE, keys.get(1).key());
             assertEquals("ni", window.ime().surroundingText());
             assertTrue(window.ime().committed());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Delivers `WM_MOUSEWHEEL` through the production WndProc as one wheel notch.
+    @Test
+    void deliversPostedWheelThroughWndProc() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "Wheel", 32.0, 32.0);
+            platform.pump();
+            window.postWheel(10, 14, 1);
+            window.postPointer(PointerEventType.WHEEL, 10, 14);
+            platform.pump();
+            List<PointerEvent> pointers = window.takePointerEvents();
+            assertEquals(2, pointers.size());
+            assertEquals(PointerEventType.WHEEL, pointers.getFirst().type());
+            assertEquals(10.0f, pointers.getFirst().x());
+            assertEquals(14.0f, pointers.getFirst().y());
+            assertEquals(1.0f, pointers.getFirst().wheelDelta());
+            assertEquals(PointerEventType.WHEEL, pointers.get(1).type());
+            assertEquals(1.0f, pointers.get(1).wheelDelta());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Captures the HWND on `WM_LBUTTONDOWN` and releases it on `WM_LBUTTONUP`.
+    @Test
+    void capturesMouseOnLeftButtonDown() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "Capture", 32.0, 32.0);
+            platform.pump();
+            window.postPointer(PointerEventType.DOWN, 6, 6);
+            platform.pump();
+            assertTrue(window.captured());
+            window.postPointer(PointerEventType.UP, 6, 6);
+            platform.pump();
+            assertFalse(window.captured());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Loads `IDC_ARROW` through generated `LoadCursorW` and installs it with `SetCursor`.
+    @Test
+    void loadsArrowCursorThroughUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "Cursor", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.setSystemCursor(WindowsNativeWindow.IDC_ARROW));
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Delivers `WM_RBUTTON*` as secondary pointer events.
+    @Test
+    void deliversPostedSecondaryButtonThroughWndProc() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "RightButton", 32.0, 32.0);
+            platform.pump();
+            window.postPointer(PointerEventType.SECONDARY_DOWN, 4, 5);
+            window.postPointer(PointerEventType.SECONDARY_UP, 4, 5);
+            platform.pump();
+            List<PointerEvent> pointers = window.takePointerEvents();
+            assertEquals(2, pointers.size());
+            assertEquals(PointerEventType.SECONDARY_DOWN, pointers.getFirst().type());
+            assertEquals(PointerEventType.SECONDARY_UP, pointers.get(1).type());
+            assertEquals(4.0f, pointers.getFirst().x());
+            assertEquals(5.0f, pointers.getFirst().y());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Delivers `WM_MBUTTON*` as middle pointer events.
+    @Test
+    void deliversPostedMiddleButtonThroughWndProc() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MiddleButton", 32.0, 32.0);
+            platform.pump();
+            window.postPointer(PointerEventType.MIDDLE_DOWN, 7, 8);
+            window.postPointer(PointerEventType.MIDDLE_UP, 7, 8);
+            platform.pump();
+            List<PointerEvent> pointers = window.takePointerEvents();
+            assertEquals(2, pointers.size());
+            assertEquals(PointerEventType.MIDDLE_DOWN, pointers.getFirst().type());
+            assertEquals(PointerEventType.MIDDLE_UP, pointers.get(1).type());
+            assertEquals(7.0f, pointers.getFirst().x());
+            assertEquals(8.0f, pointers.getFirst().y());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Delivers Home/End/Backspace/Delete and latches Control so a following Home has `ctrl`.
+    @Test
+    void deliversHomeEndAndCtrlThroughWndProc() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "EditorKeys", 32.0, 32.0);
+            platform.pump();
+            window.postVirtualKey(true, 0x24);
+            window.postVirtualKey(false, 0x24);
+            window.postVirtualKey(true, 0x23);
+            window.postVirtualKey(false, 0x23);
+            window.postVirtualKey(true, 0x08);
+            window.postVirtualKey(false, 0x08);
+            window.postVirtualKey(true, 0x2E);
+            window.postVirtualKey(false, 0x2E);
+            window.postVirtualKey(true, 0x11);
+            window.postVirtualKey(true, 0x24);
+            window.postVirtualKey(false, 0x24);
+            window.postVirtualKey(false, 0x11);
+            window.postVirtualKey(true, 0x12);
+            window.postVirtualKey(true, 0x21);
+            window.postVirtualKey(false, 0x21);
+            window.postVirtualKey(false, 0x12);
+            window.postVirtualKey(true, 0x22);
+            window.postVirtualKey(false, 0x22);
+            platform.pump();
+            List<org.glavo.himari.layout.input.KeyEvent> keys = window.takeKeyEvents();
+            assertEquals(14, keys.size());
+            assertEquals(LogicalKey.HOME, keys.get(0).key());
+            assertEquals(LogicalKey.END, keys.get(2).key());
+            assertEquals(LogicalKey.BACKSPACE, keys.get(4).key());
+            assertEquals(LogicalKey.DELETE, keys.get(6).key());
+            assertEquals(LogicalKey.HOME, keys.get(8).key());
+            assertTrue(keys.get(8).ctrl());
+            assertFalse(keys.get(0).ctrl());
+            assertEquals(LogicalKey.PAGE_UP, keys.get(10).key());
+            assertTrue(keys.get(10).alt());
+            assertEquals(LogicalKey.PAGE_DOWN, keys.get(12).key());
+            assertFalse(keys.get(12).alt());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Latches `VK_SHIFT` so a following Tab is delivered with `shift`.
+    @Test
+    void deliversShiftTabThroughWndProc() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ShiftTab", 32.0, 32.0);
+            platform.pump();
+            window.postVirtualKey(true, 0x10);
+            window.postVirtualKey(true, 0x09);
+            window.postVirtualKey(false, 0x09);
+            window.postVirtualKey(false, 0x10);
+            platform.pump();
+            List<org.glavo.himari.layout.input.KeyEvent> keys = window.takeKeyEvents();
+            assertEquals(2, keys.size());
+            assertEquals(LogicalKey.TAB, keys.get(0).key());
+            assertTrue(keys.get(0).shift());
+            assertEquals(KeyEventType.UP, keys.get(1).type());
+            assertEquals(LogicalKey.TAB, keys.get(1).key());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Queries generated `GetPointerPenInfo` and decodes a packed `POINTER_PEN_INFO`.
+    @Test
+    void queriesPenAxesThroughGetPointerPenInfo() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "PenInfo", 32.0, 32.0);
+            platform.pump();
+            WindowsNativeWindow.PenAxes missing = window.queryPenInfo(0x00FFFFFF);
+            assertEquals(0.0f, missing.pressure());
+            assertEquals(0.0f, missing.tiltX());
+            assertEquals(0.0f, missing.tiltY());
+            java.lang.foreign.MemorySegment packed = java.lang.foreign.Arena.ofAuto().allocate(
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_PEN_INFO
+            );
+            packed.fill((byte) 0);
+            packed.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_PEN_INFO_PENMASK_OFFSET,
+                    WindowsNativeWindow.PEN_MASK_PRESSURE
+                            | WindowsNativeWindow.PEN_MASK_TILT_X
+                            | WindowsNativeWindow.PEN_MASK_TILT_Y
+            );
+            packed.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_PEN_INFO_PRESSURE_OFFSET,
+                    512
+            );
+            packed.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_PEN_INFO_TILTX_OFFSET,
+                    30
+            );
+            packed.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_PEN_INFO_TILTY_OFFSET,
+                    -15
+            );
+            WindowsNativeWindow.PenAxes axes = WindowsNativeWindow.decodePenInfo(packed);
+            assertEquals(0.5f, axes.pressure(), 0.001f);
+            assertEquals(30.0f, axes.tiltX(), 0.001f);
+            assertEquals(-15.0f, axes.tiltY(), 0.001f);
+            PointerEvent event = new PointerEvent(
+                    PointerEventType.DOWN,
+                    4.0f,
+                    5.0f,
+                    PointerDeviceKind.PEN,
+                    0.0f,
+                    7,
+                    0.5f,
+                    30.0f,
+                    -15.0f
+            );
+            assertEquals(0.5f, event.pressure());
+            assertEquals(30.0f, event.tiltX());
+            assertEquals(-15.0f, event.tiltY());
+            assertEquals(7, event.pointerId());
         } finally {
             platform.close();
         }
@@ -552,6 +807,46 @@ final class WindowsPlatformTest {
                 );
                 assertTrue(provider.invokePatternProvider(WindowsAutomationProvider.UIA_INVOKE_PATTERN_ID));
                 assertEquals(1, provider.invoke());
+                assertTrue(provider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_SYNCHRONIZED_INPUT_PATTERN_ID
+                ));
+                assertEquals(
+                        1,
+                        provider.startListening(WindowsAutomationProvider.SYNCHRONIZED_INPUT_KEY_DOWN)
+                );
+                assertEquals(1, provider.cancelSynchronizedInput());
+                assertTrue(provider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_PATTERN_ID
+                ));
+                assertEquals(0, provider.legacyChildId());
+                assertEquals(increment.label(), provider.legacyName());
+                assertEquals(WindowsAutomationProvider.ROLE_SYSTEM_PUSHBUTTON, provider.legacyRole());
+                assertEquals(2, provider.invokeLegacyDefaultAction());
+                assertEquals(increment.label(), provider.legacyValue());
+                assertEquals(WindowsAutomationProvider.STATE_SYSTEM_FOCUSABLE, provider.legacyState());
+                assertEquals(increment.label(), provider.legacyDescription());
+                assertEquals("Press", provider.legacyDefaultAction());
+                assertEquals("", provider.legacyKeyboardShortcut());
+                assertEquals(increment.label(), provider.legacyHelp());
+                assertTrue(provider.invokeFragmentNavigate(WindowsAutomationProvider.NAVIGATE_DIRECTION_PARENT));
+                assertFalse(provider.invokeFragmentNavigate(1));
+                assertEquals(1, provider.invokeFragmentSetFocus());
+                assertTrue(provider.invokeFragmentRoot());
+                double[] fragmentBounds = provider.invokeFragmentBoundingRectangle();
+                assertEquals(increment.bounds().x(), fragmentBounds[0], 0.001);
+                assertEquals(increment.bounds().y(), fragmentBounds[1], 0.001);
+                assertEquals(increment.bounds().width(), fragmentBounds[2], 0.001);
+                assertEquals(increment.bounds().height(), fragmentBounds[3], 0.001);
+                assertTrue(provider.invokeFragmentRootFromPoint(increment.bounds().x(), increment.bounds().y()));
+                assertTrue(provider.invokeFragmentRootFocus());
+                assertEquals(1, provider.invokeLegacySetValue(increment.label()));
+                assertEquals(increment.label(), provider.lastLegacyValue());
+                int[] runtimeId = provider.invokeFragmentRuntimeId();
+                assertEquals(1, runtimeId[0]);
+                assertEquals((int) increment.id(), runtimeId[1]);
+                assertEquals(0, provider.invokeEmbeddedFragmentRoots());
+                assertEquals(WindowsAutomationProvider.PROVIDER_OPTIONS_SERVER_SIDE, provider.invokeProviderOptions());
+                assertTrue(provider.invokeHostRawElementProvider());
             }
             LayoutTree valueTree = new LayoutTree();
             LayoutFactory factory = new LayoutFactory(valueTree);
@@ -652,7 +947,8 @@ final class WindowsPlatformTest {
                     java.util.Set.of(
                             SemanticsAction.INCREMENT,
                             SemanticsAction.DECREMENT,
-                            SemanticsAction.SCROLL_INTO_VIEW),
+                            SemanticsAction.SCROLL_INTO_VIEW,
+                            SemanticsAction.REALIZE),
                     null
             );
             list.setScroll(new SemanticsScroll(25.0, 20.0, true, 10.0, 30.0, true));
@@ -743,6 +1039,11 @@ final class WindowsPlatformTest {
                 assertEquals(0, gridProvider.invokeRowHeaders());
                 assertEquals(0, gridProvider.invokeColumnHeaders());
                 assertEquals(WindowsAutomationProvider.ROW_OR_COLUMN_MAJOR_ROW, gridProvider.rowOrColumnMajor());
+                assertTrue(gridProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_SPREADSHEET_PATTERN_ID
+                ));
+                assertTrue(gridProvider.invokeSpreadsheetItem("People"));
+                assertFalse(gridProvider.invokeSpreadsheetItem("missing"));
             }
             SemanticsNode cellNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.TABLE_CELL)
@@ -754,6 +1055,10 @@ final class WindowsPlatformTest {
                 assertEquals(0, cellProvider.gridItemRow());
                 assertEquals(1, cellProvider.gridItemColumn());
                 assertEquals(0, cellProvider.invokeRowHeaderItems());
+                assertTrue(cellProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_SPREADSHEET_ITEM_PATTERN_ID
+                ));
+                assertEquals("=r0c1", cellProvider.spreadsheetFormula());
             }
             SemanticsNode listNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.LIST)
@@ -771,6 +1076,41 @@ final class WindowsPlatformTest {
                 assertEquals(30.0, scrollProvider.scrollHorizontal(WindowsAutomationProvider.SCROLL_AMOUNT_SMALL_INCREMENT));
                 assertTrue(scrollProvider.invokePatternProvider(WindowsAutomationProvider.UIA_SCROLL_ITEM_PATTERN_ID));
                 assertEquals(1, scrollProvider.invokeScrollItem());
+                assertTrue(scrollProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_VIRTUALIZED_ITEM_PATTERN_ID
+                ));
+                assertEquals(1, scrollProvider.invokeVirtualizedItem());
+                assertTrue(scrollProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_ITEM_CONTAINER_PATTERN_ID
+                ));
+                assertTrue(scrollProvider.invokeFindItemByProperty("Items"));
+                assertFalse(scrollProvider.invokeFindItemByProperty("missing"));
+                assertTrue(scrollProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_MULTIPLE_VIEW_PATTERN_ID
+                ));
+                assertEquals(1, scrollProvider.currentView());
+                assertEquals("List", scrollProvider.viewName(1));
+                assertEquals(2, scrollProvider.setCurrentView(2));
+                assertEquals(2, scrollProvider.currentView());
+                assertTrue(scrollProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_DROP_TARGET_PATTERN_ID
+                ));
+                assertEquals("move", scrollProvider.dropTargetEffect());
+                assertTrue(scrollProvider.invokePatternProvider(WindowsAutomationProvider.UIA_DRAG_PATTERN_ID));
+                assertFalse(scrollProvider.isGrabbed());
+                assertEquals("copy", scrollProvider.dropEffect());
+                assertTrue(scrollProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_SELECTION_PATTERN_ID
+                ));
+                assertTrue(scrollProvider.canSelectMultiple());
+                assertFalse(scrollProvider.isSelectionRequired());
+                assertTrue(scrollProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_SELECTION_PATTERN2_ID
+                ));
+                assertEquals(1, scrollProvider.selectionItemCount());
+                assertTrue(scrollProvider.invokeCurrentSelectedItem());
+                assertTrue(scrollProvider.invokeFirstSelectedItem());
+                assertTrue(scrollProvider.invokeLastSelectedItem());
             }
             SemanticsNode dialogNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.DIALOG)
@@ -779,11 +1119,55 @@ final class WindowsPlatformTest {
             try (WindowsAutomationProvider windowProvider = window.automationProvider(dialogNode)) {
                 assertTrue(windowProvider.invokePatternProvider(WindowsAutomationProvider.UIA_WINDOW_PATTERN_ID));
                 assertTrue(windowProvider.canMaximize());
+                assertTrue(windowProvider.canMinimize());
+                assertTrue(windowProvider.isModal());
+                assertFalse(windowProvider.isTopmost());
+                assertTrue(windowProvider.waitForInputIdle(0));
+                assertEquals(
+                        WindowsAutomationProvider.WINDOW_INTERACTION_READY,
+                        windowProvider.windowInteractionState()
+                );
                 assertEquals(
                         WindowsAutomationProvider.WINDOW_VISUAL_STATE_MAXIMIZED,
                         windowProvider.setWindowVisualState(WindowsAutomationProvider.WINDOW_VISUAL_STATE_MAXIMIZED)
                 );
                 assertEquals(1, windowProvider.closeWindow());
+                assertTrue(windowProvider.invokePatternProvider(WindowsAutomationProvider.UIA_DOCK_PATTERN_ID));
+                assertEquals(
+                        WindowsAutomationProvider.DOCK_POSITION_NONE,
+                        windowProvider.dockPosition()
+                );
+                assertEquals(
+                        WindowsAutomationProvider.DOCK_POSITION_TOP,
+                        windowProvider.setDockPosition(WindowsAutomationProvider.DOCK_POSITION_TOP)
+                );
+                assertTrue(windowProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TRANSFORM_PATTERN_ID));
+                assertTrue(windowProvider.canMove());
+                assertTrue(windowProvider.canResize());
+                assertTrue(windowProvider.canRotate());
+                assertEquals(12.0, windowProvider.moveTransform(12.0, 24.0));
+                assertEquals(80.0, windowProvider.resizeTransform(80.0, 40.0));
+                assertEquals(15.0, windowProvider.rotateTransform(15.0));
+                assertTrue(windowProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_TRANSFORM_PATTERN2_ID
+                ));
+                assertTrue(windowProvider.canZoom());
+                assertEquals(1.0, windowProvider.zoomLevel());
+                assertEquals(2.5, windowProvider.zoomTransform(2.5));
+                assertEquals(2.5, windowProvider.zoomLevel());
+                assertEquals(3.5, windowProvider.zoomByUnit(WindowsAutomationProvider.ZOOM_UNIT_LARGE_INCREMENT));
+                assertEquals(3.5, windowProvider.zoomLevel());
+                assertEquals(0.5, windowProvider.zoomMinimum());
+                assertEquals(4.0, windowProvider.zoomMaximum());
+                assertTrue(windowProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_CUSTOM_NAVIGATION_PATTERN_ID
+                ));
+                assertTrue(windowProvider.invokeNavigate(WindowsAutomationProvider.NAVIGATE_DIRECTION_PARENT));
+                assertFalse(windowProvider.invokeNavigate(1));
+                assertTrue(windowProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_OBJECT_MODEL_PATTERN_ID
+                ));
+                assertTrue(windowProvider.invokeObjectModel());
             }
             try (WindowsAutomationProvider statusProvider = window.automationProvider(statusNode)) {
                 assertEquals(
@@ -794,6 +1178,20 @@ final class WindowsPlatformTest {
                         WindowsAutomationProvider.LIVE_SETTING_POLITE,
                         statusProvider.invokePropertyValue(WindowsAutomationProvider.UIA_LIVE_SETTING_PROPERTY_ID)
                 );
+                assertTrue(statusProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_ANNOTATION_PATTERN_ID
+                ));
+                assertEquals(
+                        WindowsAutomationProvider.ANNOTATION_TYPE_COMMENT,
+                        statusProvider.annotationTypeId()
+                );
+                assertEquals("Comment", statusProvider.annotationTypeName());
+                assertEquals("Himari", statusProvider.annotationAuthor());
+                assertEquals("2026-08-17", statusProvider.annotationDateTime());
+                assertTrue(statusProvider.invokeAnnotationTarget());
+                assertTrue(statusProvider.invokePatternProvider(WindowsAutomationProvider.UIA_STYLES_PATTERN_ID));
+                assertEquals(WindowsAutomationProvider.STYLE_ID_NORMAL, statusProvider.styleId());
+                assertEquals("Normal", statusProvider.styleName());
             }
             SemanticsNode fieldNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
@@ -805,6 +1203,15 @@ final class WindowsPlatformTest {
                 assertEquals("world", textProvider.setValue("world"));
                 assertEquals("world", textProvider.value());
                 assertFalse(textProvider.valueReadOnly());
+                assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_CHILD_PATTERN_ID));
+                assertTrue(textProvider.invokeTextContainer());
+                assertTrue(textProvider.invokeTextChildRange());
+                assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_EDIT_PATTERN_ID));
+                assertTrue(textProvider.invokeActiveComposition());
+                assertTrue(textProvider.invokeConversionTarget());
+                assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_PATTERN2_ID));
+                assertTrue(textProvider.invokeCaretRange());
+                assertTrue(textProvider.invokeRangeFromAnnotation());
                 assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_PATTERN_ID));
                 assertTrue(textProvider.invokeDocumentRange());
                 assertEquals(
@@ -860,6 +1267,8 @@ final class WindowsPlatformTest {
                 assertTrue(textProvider.invokeGetSelection());
                 assertTrue(textProvider.invokeScrollIntoView(true));
                 assertEquals(0, textProvider.invokeGetChildren());
+                assertEquals(1, textProvider.invokeShowContextMenu());
+                assertEquals(1, textProvider.invokeSimpleShowContextMenu());
             }
         } finally {
             platform.close();

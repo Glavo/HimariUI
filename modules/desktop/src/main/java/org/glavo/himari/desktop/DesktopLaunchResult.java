@@ -23,6 +23,10 @@ import java.util.Objects;
 /// @param macosStatus the macOS probe status
 /// @param metalStatus the Metal probe status
 /// @param objcStatus the Objective-C block probe status
+/// @param deviceRemovedReason the D3D12 `GetDeviceRemovedReason` `HRESULT`
+/// @param sleepEvents observed `PBT_APMSUSPEND` deliveries
+/// @param wakeEvents observed `PBT_APMRESUMESUSPEND` deliveries
+/// @param presentedAfterWake GDI scanlines written after the wake broadcast
 @NotNullByDefault
 public record DesktopLaunchResult(
         DesktopHost host,
@@ -41,7 +45,11 @@ public record DesktopLaunchResult(
         String waylandStatus,
         String macosStatus,
         String metalStatus,
-        String objcStatus
+        String objcStatus,
+        int deviceRemovedReason,
+        int sleepEvents,
+        int wakeEvents,
+        int presentedAfterWake
 ) {
     /// Validates the result.
     public DesktopLaunchResult {
@@ -56,7 +64,10 @@ public record DesktopLaunchResult(
                 || inspectorNodes < 0
                 || pngBytes < 0
                 || extendedLinearBytes < 0
-                || presentedScanlines < 0) {
+                || presentedScanlines < 0
+                || sleepEvents < 0
+                || wakeEvents < 0
+                || presentedAfterWake < 0) {
             throw new IllegalArgumentException("Desktop launch counters must be nonnegative");
         }
     }
@@ -86,7 +97,11 @@ public record DesktopLaunchResult(
                   "waylandStatus": "%s",
                   "macosStatus": "%s",
                   "metalStatus": "%s",
-                  "objcStatus": "%s"
+                  "objcStatus": "%s",
+                  "deviceRemovedReason": %d,
+                  "sleepEvents": %d,
+                  "wakeEvents": %d,
+                  "presentedAfterWake": %d
                 }
                 """.formatted(
                 host.name(),
@@ -105,7 +120,11 @@ public record DesktopLaunchResult(
                 waylandStatus,
                 macosStatus,
                 metalStatus,
-                objcStatus
+                objcStatus,
+                deviceRemovedReason,
+                sleepEvents,
+                wakeEvents,
+                presentedAfterWake
         );
     }
 }

@@ -33,6 +33,13 @@ public final class DesktopConformance {
         if (result.host() == DesktopHost.WINDOWS && !result.popupHosted()) {
             throw new IllegalStateException("Windows desktop launch did not host a popup HWND");
         }
+        if (result.host() == DesktopHost.WINDOWS
+                && (result.deviceRemovedReason() != 0
+                        || result.sleepEvents() < 2
+                        || result.wakeEvents() < 2
+                        || result.presentedAfterWake() <= 0)) {
+            throw new IllegalStateException("Windows desktop soak did not observe device health, sleep/wake, and re-present");
+        }
         if (result.messageLoopRan()) {
             throw new IllegalStateException("Smoke desktop launch must not enter the stay-open message loop");
         }

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/// Reads a checked SFNT, TTC first face, or WOFF1 directory, `cmap` format 4/12, `hmtx`, TrueType `loca`/`glyf` or
+/// Reads a checked SFNT, TTC first face, WOFF1, or WOFF2 directory, `cmap` format 4/12, `hmtx`, TrueType `loca`/`glyf` or
 /// CFF/CFF2 Type 2 outlines, optional GSUB, GDEF, GPOS/`kern`, COLR v0/v1/CPAL, `fvar`, `avar`, `gvar`,
 /// `HVAR`, `VVAR`, `MVAR`, `sbix`, CBLC/CBDT, EBLC/EBDT, and `gasp`.
 ///
@@ -133,7 +133,9 @@ public final class SfntFont {
     /// @param bytes the complete font file
     public SfntFont(MemorySegment bytes) {
         Objects.requireNonNull(bytes, "bytes");
-        MemorySegment sfnt = WoffFile.isWoff(bytes) ? WoffFile.unwrap(bytes) : bytes;
+        MemorySegment sfnt = Woff2File.isWoff2(bytes)
+                ? Woff2File.unwrap(bytes)
+                : WoffFile.isWoff(bytes) ? WoffFile.unwrap(bytes) : bytes;
         if (TtcFile.isTtc(sfnt)) {
             sfnt = TtcFile.firstFont(sfnt);
         }

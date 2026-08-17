@@ -127,6 +127,7 @@ public final class LayoutTree {
         LayoutNode target = path.getLast();
         if (event.type() == PointerEventType.DOWN && target.focusable()) {
             focus.request(target);
+            focus.setFocusVisible(false);
         }
         if (event.type() == PointerEventType.UP) {
             for (int index = path.size() - 1; index >= 0; index--) {
@@ -159,7 +160,7 @@ public final class LayoutTree {
             return false;
         }
         if (event.key() == LogicalKey.TAB) {
-            return focus.next() != null;
+            return (event.shift() ? focus.previous() : focus.next()) != null;
         }
         if (event.key() == LogicalKey.ENTER || event.key() == LogicalKey.SPACE) {
             @Nullable LayoutNode focused = focus.focusedNode();

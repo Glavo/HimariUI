@@ -232,6 +232,9 @@ final class ParagraphLayoutTest {
         assertEquals(2 * missing, line.selectionWidth(0, 2));
         assertEquals(missing, line.selectionLeft(0, 1));
         assertEquals(missing, line.selectionWidth(0, 1));
+        assertEquals(0, line.clusterAt(2 * missing));
+        assertEquals(1, line.clusterAt(missing));
+        assertEquals(2, line.clusterAt(0));
     }
 
     /// Keeps Latin visual order and prefix carets.
@@ -256,6 +259,9 @@ final class ParagraphLayoutTest {
         assertEquals(4 * letter + 2 * missing, line.caretX(6));
         assertEquals(2 * letter, line.selectionLeft(2, 4));
         assertEquals(2 * missing, line.selectionWidth(2, 4));
+        assertEquals(0, line.clusterAt(0));
+        assertEquals(1, line.clusterAt(letter));
+        assertEquals(6, line.clusterAt(4 * letter + 2 * missing));
     }
 
     /// Counts the newline as a cluster when it sits at the start of a later span.

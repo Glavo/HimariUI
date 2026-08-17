@@ -39,4 +39,19 @@ final class HangulSyllableTest {
         assertTrue(HangulSyllable.isCompatibility(0x3131));
         assertEquals(0, HangulSyllable.asLead(0x3133));
     }
+
+    /// Decomposes 가 and 각 back into modern L/V/T.
+    @Test
+    void decomposesGaAndGag() {
+        assertTrue(HangulSyllable.isSyllable(0xAC00));
+        int[] ga = HangulSyllable.decompose(0xAC00);
+        assertEquals(2, ga.length);
+        assertEquals(0x1100, ga[0]);
+        assertEquals(0x1161, ga[1]);
+        int[] gag = HangulSyllable.decompose(0xAC01);
+        assertEquals(3, gag.length);
+        assertEquals(0x1100, gag[0]);
+        assertEquals(0x1161, gag[1]);
+        assertEquals(0x11A8, gag[2]);
+    }
 }

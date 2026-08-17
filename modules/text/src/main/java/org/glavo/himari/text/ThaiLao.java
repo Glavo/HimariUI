@@ -66,6 +66,24 @@ public final class ThaiLao {
         return thai >= 0x0E40 && thai <= 0x0E44;
     }
 
+    /// Returns the Lao ho-no / ho-mo ligature for two code points, or `0` when none exists.
+    ///
+    /// @param first the first code point
+    /// @param second the second code point
+    /// @return `U+0EDC` or `U+0EDD`, or `0`
+    public static int laoLigature(int first, int second) {
+        if (first != 0x0EAB) {
+            return 0;
+        }
+        if (second == 0x0E99) {
+            return 0x0EDC;
+        }
+        if (second == 0x0EA1) {
+            return 0x0EDD;
+        }
+        return 0;
+    }
+
     /// Expands SARA AM and reorders Nikhahit, or returns `null` when no SARA AM is present.
     ///
     /// @param points the decoded code points

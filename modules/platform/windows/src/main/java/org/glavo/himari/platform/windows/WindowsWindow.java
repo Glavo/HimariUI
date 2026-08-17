@@ -118,6 +118,40 @@ public final class WindowsWindow implements PlatformWindow {
         return nativeWindow.queryPointerType(pointerId);
     }
 
+    /// Queries generated `GetPointerPenInfo` for `pointerId`.
+    ///
+    /// @param pointerId the pointer identity
+    /// @return the axes
+    public WindowsNativeWindow.PenAxes queryPenInfo(int pointerId) {
+        return nativeWindow.queryPenInfo(pointerId);
+    }
+
+    /// Posts one wheel notch through the production WndProc.
+    ///
+    /// @param x the client x
+    /// @param y the client y
+    /// @param notches signed `WHEEL_DELTA` multiples
+    public void postWheel(int x, int y, int notches) {
+        long packed = WindowsNativeWindow.packPointer(x, y);
+        long wParam = (Short.toUnsignedLong((short) (notches * WindowsNativeWindow.WHEEL_DELTA))) << 16;
+        nativeWindow.postMessage(0x020A, wParam, packed);
+    }
+
+    /// Loads a system cursor and installs it through generated User32 bindings.
+    ///
+    /// @param cursorId a `MAKEINTRESOURCE` identifier such as [`WindowsNativeWindow#IDC_ARROW`]
+    /// @return whether the cursor handle was non-null
+    public boolean setSystemCursor(int cursorId) {
+        return nativeWindow.setSystemCursor(cursorId);
+    }
+
+    /// Returns whether this HWND currently owns mouse capture.
+    ///
+    /// @return whether `GetCapture` reports this window
+    public boolean captured() {
+        return nativeWindow.captured();
+    }
+
     /// Returns key events delivered through WndProc since the last drain.
     ///
     /// @return the events
@@ -206,6 +240,39 @@ public final class WindowsWindow implements PlatformWindow {
         return nativeWindow.modalTimerTicks();
     }
 
+    /// `WM_POWERBROADCAST`.
+    public static final int WM_POWERBROADCAST = WindowsNativeWindow.WM_POWERBROADCAST;
+
+    /// `PBT_APMSUSPEND`.
+    public static final int PBT_APMSUSPEND = WindowsNativeWindow.PBT_APMSUSPEND;
+
+    /// `PBT_APMRESUMESUSPEND`.
+    public static final int PBT_APMRESUMESUSPEND = WindowsNativeWindow.PBT_APMRESUMESUSPEND;
+
+    /// Sends one message synchronously through the production WndProc.
+    ///
+    /// @param message the Win32 message identifier
+    /// @param wParam the message `wParam`
+    /// @param lParam the message `lParam`
+    /// @return the `WndProc` result
+    public long sendMessage(int message, long wParam, long lParam) {
+        return nativeWindow.sendMessage(message, wParam, lParam);
+    }
+
+    /// Returns observed `PBT_APMSUSPEND` deliveries through WndProc.
+    ///
+    /// @return the sleep count
+    public int sleepEvents() {
+        return nativeWindow.sleepEvents();
+    }
+
+    /// Returns observed `PBT_APMRESUMESUSPEND` deliveries through WndProc.
+    ///
+    /// @return the wake count
+    public int wakeEvents() {
+        return nativeWindow.wakeEvents();
+    }
+
     /// Blits unassociated 8-bit sRGB RGBA pixels into this HWND and retains them for `WM_PAINT`.
     ///
     /// @param rgba unassociated 8-bit sRGB pixels in row-major RGBA order
@@ -250,16 +317,29 @@ public final class WindowsWindow implements PlatformWindow {
                     case MOVE -> 0x0200;
                     case DOWN -> 0x0201;
                     case UP -> 0x0202;
+                    case WHEEL -> 0x020A;
+                    case SECONDARY_DOWN -> 0x0204;
+                    case SECONDARY_UP -> 0x0205;
+                    case MIDDLE_DOWN -> 0x0207;
+                    case MIDDLE_UP -> 0x0208;
                 };
-                nativeWindow.postMessage(message, 0L, packed);
+                long wParam = type == org.glavo.himari.layout.input.PointerEventType.WHEEL
+                        ? ((long) WindowsNativeWindow.WHEEL_DELTA) << 16
+                        : 0L;
+                nativeWindow.postMessage(message, wParam, packed);
             }
             case TOUCH, PEN -> {
                 int message = switch (type) {
                     case MOVE -> 0x0245;
                     case DOWN -> 0x0246;
                     case UP -> 0x0247;
+                    case WHEEL -> 0x0248;
+                    case SECONDARY_DOWN, SECONDARY_UP, MIDDLE_DOWN, MIDDLE_UP -> 0x0246;
                 };
-                nativeWindow.sendMessage(message, 0L, packed);
+                long wParam = type == org.glavo.himari.layout.input.PointerEventType.WHEEL
+                        ? ((long) WindowsNativeWindow.WHEEL_DELTA) << 16
+                        : 0L;
+                nativeWindow.sendMessage(message, wParam, packed);
             }
         }
     }

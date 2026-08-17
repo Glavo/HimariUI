@@ -43,6 +43,9 @@ public final class TextField {
     /// Last rejected composition, or `null`.
     private @Nullable String rejected;
 
+    /// Whether committed text is masked as a password.
+    private boolean password;
+
     /// Creates an empty field.
     public TextField() {
         this.committed = new GapBuffer();
@@ -71,10 +74,30 @@ public final class TextField {
 
     /// Returns the displayed text, including live composition.
     ///
+    /// Password fields replace each committed UTF-16 unit with `U+2022`. Live composition is
+    /// shown unmasked so IME candidates remain editable.
+    ///
     /// @return the displayed text
     public String displayedText() {
         String text = committed.toString();
+        if (password) {
+            text = "\u2022".repeat(text.length());
+        }
         return composition == null ? text : text + composition;
+    }
+
+    /// Enables or disables password masking.
+    ///
+    /// @param password whether committed text is masked
+    public void setPassword(boolean password) {
+        this.password = password;
+    }
+
+    /// Returns whether committed text is masked.
+    ///
+    /// @return whether this is a password field
+    public boolean password() {
+        return password;
     }
 
     /// Returns the caret offset in displayed text.
@@ -116,6 +139,115 @@ public final class TextField {
         }
         this.selectionStart = start;
         this.selectionEnd = end;
+    }
+
+    /// Selects the word covering `offset` in displayed text.
+    ///
+    /// @param offset a UTF-16 offset in displayed text
+    public void selectWordAt(int offset) {
+        int[] range = EditorSelection.wordRange(displayedText(), offset);
+        setSelection(range[0], range[1]);
+    }
+
+    /// Selects the line covering `offset` in displayed text.
+    ///
+    /// @param offset a UTF-16 offset in displayed text
+    public void selectLineAt(int offset) {
+        int[] range = EditorSelection.lineRange(displayedText(), offset);
+        setSelection(range[0], range[1]);
+    }
+
+    /// Moves the caret by one grapheme cluster.
+    ///
+    /// @param delta `-1` for previous, `1` for next
+    public void moveCaretByGrapheme(int delta) {
+        if (delta != -1 && delta != 1) {
+            throw new IllegalArgumentException("delta must be -1 or 1");
+        }
+        String displayed = displayedText();
+        int caret = caret();
+        int next = delta < 0 ? Graphemes.previous(displayed, caret) : Graphemes.next(displayed, caret);
+        setSelection(next, next);
+    }
+
+    /// Moves the caret to the start of the line covering the caret.
+    public void moveToLineStart() {
+        int[] range = EditorSelection.lineRange(displayedText(), caret());
+        setSelection(range[0], range[0]);
+    }
+
+    /// Moves the caret to the end of the line covering the caret.
+    public void moveToLineEnd() {
+        int[] range = EditorSelection.lineRange(displayedText(), caret());
+        setSelection(range[1], range[1]);
+    }
+
+    /// Deletes the selection, or the grapheme before the caret, while composition is idle.
+    public void deleteBackward() {
+        int start = selectionStart();
+        int end = selectionEnd();
+        if (start != end) {
+            replaceRange(start, end, "");
+            return;
+        }
+        if (start == 0) {
+            return;
+        }
+        replaceRange(Graphemes.previous(text(), start), start, "");
+    }
+
+    /// Deletes the selection, or the grapheme after the caret, while composition is idle.
+    public void deleteForward() {
+        int start = selectionStart();
+        int end = selectionEnd();
+        if (start != end) {
+            replaceRange(start, end, "");
+            return;
+        }
+        String committedText = text();
+        if (start >= committedText.length()) {
+            return;
+        }
+        replaceRange(start, Graphemes.next(committedText, start), "");
+    }
+
+    /// Copies the displayed selection into `clipboard`.
+    ///
+    /// Password fields leave `clipboard` unchanged so committed plaintext cannot leak.
+    ///
+    /// @param clipboard the destination bag
+    public void copy(EditorClipboard clipboard) {
+        Objects.requireNonNull(clipboard, "clipboard");
+        if (password) {
+            return;
+        }
+        clipboard.setText(displayedText().substring(selectionStart(), selectionEnd()));
+    }
+
+    /// Copies the displayed selection and deletes it while composition is idle.
+    ///
+    /// Password fields neither copy nor delete.
+    ///
+    /// @param clipboard the destination bag
+    public void cut(EditorClipboard clipboard) {
+        Objects.requireNonNull(clipboard, "clipboard");
+        if (password) {
+            return;
+        }
+        copy(clipboard);
+        int start = selectionStart();
+        int end = selectionEnd();
+        if (start != end) {
+            replaceRange(start, end, "");
+        }
+    }
+
+    /// Replaces the committed selection with `clipboard` text while composition is idle.
+    ///
+    /// @param clipboard the source bag
+    public void paste(EditorClipboard clipboard) {
+        Objects.requireNonNull(clipboard, "clipboard");
+        replaceRange(selectionStart(), selectionEnd(), clipboard.text());
     }
 
     /// Replaces a committed-text range while composition is idle.
@@ -257,7 +389,7 @@ public final class TextField {
         Objects.requireNonNull(factory, "factory");
         Objects.requireNonNull(name, "name");
         String displayed = displayedText();
-        String label = displayed.isEmpty() ? "Empty" : displayed;
+        String label = password ? "Password" : displayed.isEmpty() ? "Empty" : displayed;
         LayoutNode node = factory.leaf(
                 name,
                 SIZE,

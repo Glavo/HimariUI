@@ -15,5 +15,8 @@ public enum SemanticsAction {
     DECREMENT,
 
     /// Scrolls this item into the nearest scrollable ancestor viewport.
-    SCROLL_INTO_VIEW
+    SCROLL_INTO_VIEW,
+
+    /// Realizes a virtualized item so it can participate in the accessibility tree.
+    REALIZE
 }

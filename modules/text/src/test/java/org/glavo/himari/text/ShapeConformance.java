@@ -30,6 +30,8 @@ public final class ShapeConformance {
         List<ShapedGlyph> marked = DefaultShaper.shape(font, "\u0628\u064E\u062A");
         List<ShapedGlyph> hebrew = DefaultShaper.shape(font, "\u05D0\u05D1");
         List<ShapedGlyph> dagesh = DefaultShaper.shape(font, "\u05D1\u05BC");
+        List<ShapedGlyph> yodHiriq = DefaultShaper.shape(font, "\u05D9\u05B4");
+        List<ShapedGlyph> alefPatah = DefaultShaper.shape(font, "\u05D0\u05B7");
         List<ShapedGlyph> hangulLv = DefaultShaper.shape(font, "\u1100\u1161");
         List<ShapedGlyph> hangulLvt = DefaultShaper.shape(font, "\u1100\u1161\u11A8");
         List<ShapedGlyph> thaiAm = DefaultShaper.shape(font, "\u0E14\u0E4B\u0E33");
@@ -56,6 +58,26 @@ public final class ShapeConformance {
         if (dagesh.size() != 1 || dagesh.getFirst().codePoint() != 0xFB31 || dagesh.getFirst().glyphId() <= 0) {
             throw new IllegalStateException("Hebrew dagesh did not compose");
         }
+        if (yodHiriq.size() != 1 || yodHiriq.getFirst().codePoint() != 0xFB1D || yodHiriq.getFirst().glyphId() <= 0) {
+            throw new IllegalStateException("Hebrew yod-hiriq did not compose");
+        }
+        if (alefPatah.size() != 1 || alefPatah.getFirst().codePoint() != 0xFB2E || alefPatah.getFirst().glyphId() <= 0) {
+            throw new IllegalStateException("Hebrew alef-patah did not compose");
+        }
+        List<ShapedGlyph> betRafe = DefaultShaper.shape(font, "\u05D1\u05BF");
+        if (betRafe.size() != 1 || betRafe.getFirst().codePoint() != 0xFB4C || betRafe.getFirst().glyphId() <= 0) {
+            throw new IllegalStateException("Hebrew bet-rafe did not compose");
+        }
+        List<ShapedGlyph> alefLamed = DefaultShaper.shape(font, "\u05D0\u05DC");
+        if (alefLamed.size() != 1 || alefLamed.getFirst().codePoint() != 0xFB4F || alefLamed.getFirst().glyphId() <= 0) {
+            throw new IllegalStateException("Hebrew alef-lamed did not compose");
+        }
+        List<ShapedGlyph> yodYodPatah = DefaultShaper.shape(font, "\u05D9\u05D9\u05B7");
+        if (yodYodPatah.size() != 1
+                || yodYodPatah.getFirst().codePoint() != 0xFB1F
+                || yodYodPatah.getFirst().glyphId() <= 0) {
+            throw new IllegalStateException("Hebrew yod-yod-patah did not compose");
+        }
         if (hangulLv.size() != 1 || hangulLv.getFirst().codePoint() != 0xAC00 || hangulLv.getFirst().glyphId() <= 0) {
             throw new IllegalStateException("Hangul LV jamo did not compose");
         }
@@ -80,6 +102,25 @@ public final class ShapeConformance {
                 || laoAm.get(1).codePoint() != 0x0ECD
                 || laoAm.get(2).codePoint() != 0x0EB2) {
             throw new IllegalStateException("Lao SARA AM did not decompose");
+        }
+        List<ShapedGlyph> finalKaf = DefaultShaper.shape(font, "\u05D0\u05DB");
+        if (finalKaf.size() != 2 || finalKaf.get(1).codePoint() != 0x05DA) {
+            throw new IllegalStateException("Hebrew final kaf was not selected");
+        }
+        List<ShapedGlyph> yiddish = DefaultShaper.shape(font, "\u05D5\u05D5");
+        if (yiddish.size() != 1 || yiddish.getFirst().codePoint() != 0x05F0) {
+            throw new IllegalStateException("Yiddish double vav did not compose");
+        }
+        List<ShapedGlyph> hangulMissing = DefaultShaper.shape(font, "\uAC04");
+        if (hangulMissing.size() != 3
+                || hangulMissing.get(0).codePoint() != 0x1100
+                || hangulMissing.get(1).codePoint() != 0x1161
+                || hangulMissing.get(2).codePoint() != 0x11AB) {
+            throw new IllegalStateException("Missing Hangul syllable did not decompose");
+        }
+        List<ShapedGlyph> laoHo = DefaultShaper.shape(font, "\u0EAB\u0E99");
+        if (laoHo.size() != 1 || laoHo.getFirst().codePoint() != 0x0EDC) {
+            throw new IllegalStateException("Lao ho-no did not compose");
         }
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);

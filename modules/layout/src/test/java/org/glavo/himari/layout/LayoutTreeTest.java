@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -75,6 +76,154 @@ final class LayoutTreeTest {
         assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ENTER)));
         assertEquals(2, count.get());
         assertEquals(button.bounds(), tree.semantics().nodeWith(SemanticsAction.ACTIVATE).bounds());
+    }
+
+    /// Moves document-order focus backward when Tab is dispatched with shift.
+    @Test
+    void shiftTabMovesFocusToPreviousNode() {
+        LayoutTree tree = new LayoutTree();
+        LayoutFactory factory = new LayoutFactory(tree);
+        LayoutNode first = factory.leaf(
+                "first",
+                new Size(20.0f, 12.0f),
+                java.util.List.of(),
+                true,
+                SemanticsRole.BUTTON,
+                "One",
+                java.util.Set.of(SemanticsAction.ACTIVATE),
+                () -> { }
+        );
+        LayoutNode second = factory.leaf(
+                "second",
+                new Size(20.0f, 12.0f),
+                java.util.List.of(),
+                true,
+                SemanticsRole.BUTTON,
+                "Two",
+                java.util.Set.of(SemanticsAction.ACTIVATE),
+                () -> { }
+        );
+        tree.setRoot(factory.column("root", Alignment.START, java.util.List.of(), first, second));
+        tree.measure(Constraints.loose(100.0f, 100.0f));
+        tree.place();
+        assertEquals(first.id(), tree.focus().focusedId());
+        assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.TAB)));
+        assertEquals(second.id(), tree.focus().focusedId());
+        assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.TAB, true)));
+        assertEquals(first.id(), tree.focus().focusedId());
+        assertTrue(tree.focus().focusVisible());
+        assertTrue(tree.dispatch(new PointerEvent(
+                PointerEventType.DOWN,
+                second.bounds().x() + 1.0f,
+                second.bounds().y() + 1.0f
+        )));
+        assertEquals(second.id(), tree.focus().focusedId());
+        assertFalse(tree.focus().focusVisible());
+    }
+
+    /// Restricts Tab traversal to a trapped subtree until the trap is cleared.
+    @Test
+    void trapKeepsTabInsideSubtree() {
+        LayoutTree tree = new LayoutTree();
+        LayoutFactory factory = new LayoutFactory(tree);
+        LayoutNode outside = factory.leaf(
+                "outside",
+                new Size(20.0f, 12.0f),
+                java.util.List.of(),
+                true,
+                SemanticsRole.BUTTON,
+                "Outside",
+                java.util.Set.of(SemanticsAction.ACTIVATE),
+                () -> { }
+        );
+        LayoutNode innerFirst = factory.leaf(
+                "inner-first",
+                new Size(20.0f, 12.0f),
+                java.util.List.of(),
+                true,
+                SemanticsRole.BUTTON,
+                "InnerOne",
+                java.util.Set.of(SemanticsAction.ACTIVATE),
+                () -> { }
+        );
+        LayoutNode innerSecond = factory.leaf(
+                "inner-second",
+                new Size(20.0f, 12.0f),
+                java.util.List.of(),
+                true,
+                SemanticsRole.BUTTON,
+                "InnerTwo",
+                java.util.Set.of(SemanticsAction.ACTIVATE),
+                () -> { }
+        );
+        LayoutNode dialog = factory.column(
+                "dialog",
+                Alignment.START,
+                java.util.List.of(),
+                innerFirst,
+                innerSecond
+        );
+        tree.setRoot(factory.column("root", Alignment.START, java.util.List.of(), outside, dialog));
+        tree.measure(Constraints.loose(100.0f, 100.0f));
+        tree.place();
+        assertEquals(outside.id(), tree.focus().focusedId());
+        tree.focus().trap(dialog);
+        assertEquals(dialog.id(), tree.focus().trapId());
+        assertEquals(innerFirst.id(), tree.focus().focusedId());
+        assertFalse(tree.focus().request(outside));
+        assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.TAB)));
+        assertEquals(innerSecond.id(), tree.focus().focusedId());
+        assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.TAB)));
+        assertEquals(innerFirst.id(), tree.focus().focusedId());
+        tree.focus().clearTrap();
+        assertEquals(null, tree.focus().trapId());
+        assertTrue(tree.focus().request(outside));
+        assertEquals(outside.id(), tree.focus().focusedId());
+    }
+
+    /// Transfers keyboard focus from one window tree to another and restores it.
+    @Test
+    void transferMovesFocusBetweenWindowTrees() {
+        LayoutTree firstTree = new LayoutTree();
+        LayoutFactory firstFactory = new LayoutFactory(firstTree);
+        LayoutNode first = firstFactory.leaf(
+                "first",
+                new Size(20.0f, 12.0f),
+                java.util.List.of(),
+                true,
+                SemanticsRole.BUTTON,
+                "One",
+                java.util.Set.of(SemanticsAction.ACTIVATE),
+                () -> { }
+        );
+        firstTree.setRoot(firstFactory.column("root", Alignment.START, java.util.List.of(), first));
+        firstTree.measure(Constraints.loose(100.0f, 100.0f));
+        firstTree.place();
+        firstTree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.TAB));
+        LayoutTree secondTree = new LayoutTree();
+        LayoutFactory secondFactory = new LayoutFactory(secondTree);
+        LayoutNode second = secondFactory.leaf(
+                "second",
+                new Size(20.0f, 12.0f),
+                java.util.List.of(),
+                true,
+                SemanticsRole.BUTTON,
+                "Two",
+                java.util.Set.of(SemanticsAction.ACTIVATE),
+                () -> { }
+        );
+        secondTree.setRoot(secondFactory.column("root", Alignment.START, java.util.List.of(), second));
+        secondTree.measure(Constraints.loose(100.0f, 100.0f));
+        secondTree.place();
+        assertTrue(firstTree.focus().transferTo(secondTree.focus()));
+        assertFalse(firstTree.focus().focusVisible());
+        assertEquals(first.id(), firstTree.focus().focusedId());
+        assertTrue(secondTree.focus().focusVisible());
+        assertEquals(second.id(), secondTree.focus().focusedId());
+        assertTrue(secondTree.focus().transferTo(firstTree.focus()));
+        assertTrue(firstTree.focus().focusVisible());
+        assertEquals(first.id(), firstTree.focus().focusedId());
+        assertFalse(secondTree.focus().focusVisible());
     }
 
     /// Publishes live-region politeness through the semantics snapshot.

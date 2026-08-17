@@ -2,6 +2,8 @@ package org.glavo.himari.controls;
 
 import org.glavo.himari.platform.api.ImeSession;
 import org.glavo.himari.layout.Constraints;
+import org.glavo.himari.layout.LayoutFactory;
+import org.glavo.himari.layout.LayoutNode;
 import org.glavo.himari.layout.LayoutTree;
 import org.glavo.himari.layout.input.KeyEvent;
 import org.glavo.himari.layout.input.KeyEventType;
@@ -97,6 +99,29 @@ final class ControlGalleryTest {
         assertEquals(1, gallery.list().firstVisible());
     }
 
+    /// Materializes only a window of a 100,000-item list and scrolls by index.
+    @Test
+    void virtualizesOneHundredThousandItems() {
+        LazyList list = new LazyList(100_000, 16);
+        LayoutTree tree = new LayoutTree();
+        LayoutNode root = list.create(new LayoutFactory(tree), "huge");
+        tree.setRoot(root);
+        tree.measure(Constraints.loose(200.0f, 400.0f));
+        tree.place();
+        assertEquals(16, root.children().size());
+        assertEquals(0, list.firstVisible());
+        list.scrollTo(99_990);
+        LayoutNode scrolled = list.create(new LayoutFactory(tree), "huge-end");
+        assertEquals(16, scrolled.children().size());
+        assertEquals(99_984, list.firstVisible());
+        assertEquals("Item 99984", scrolled.children().getFirst().label());
+        assertEquals("Item 99999", scrolled.children().getLast().label());
+        list.page(-1);
+        assertEquals(99_968, list.firstVisible());
+        list.page(1);
+        assertEquals(99_984, list.firstVisible());
+    }
+
     /// Publishes progress range semantics without increment actions.
     @Test
     void publishesProgressRange() {
@@ -156,8 +181,86 @@ final class ControlGalleryTest {
         assertEquals("ni", field.text());
         field.setSelection(0, 2);
         field.replaceRange(0, 2, "hao");
+        field.replaceRange(0, 3, "hello world");
+        field.selectWordAt(1);
+        assertEquals(0, field.selectionStart());
+        assertEquals(5, field.selectionEnd());
+        field.selectLineAt(7);
+        assertEquals(0, field.selectionStart());
+        assertEquals(11, field.selectionEnd());
+        TextArea area = new TextArea();
+        area.replaceRange(0, 0, "ab\ncd");
+        area.selectWordAt(4);
+        assertEquals(3, area.selectionStart());
+        assertEquals(5, area.selectionEnd());
+        area.selectLineAt(4);
+        assertEquals(3, area.selectionStart());
+        assertEquals(5, area.selectionEnd());
+        field.replaceRange(0, field.text().length(), "e\u0301e");
+        field.setSelection(0, 0);
+        field.moveCaretByGrapheme(1);
+        assertEquals(2, field.caret());
+        field.moveCaretByGrapheme(1);
+        assertEquals(3, field.caret());
+        field.moveCaretByGrapheme(-1);
+        assertEquals(2, field.caret());
+        field.replaceRange(0, field.text().length(), "hao");
         assertEquals("hao", field.text());
         assertEquals(3, field.caret());
+        field.setSelection(3, 3);
+        field.moveToLineStart();
+        assertEquals(0, field.caret());
+        field.moveToLineEnd();
+        assertEquals(3, field.caret());
+        field.setSelection(3, 3);
+        field.deleteBackward();
+        assertEquals("ha", field.text());
+        field.setSelection(0, 0);
+        field.deleteForward();
+        assertEquals("a", field.text());
+        field.replaceRange(0, field.text().length(), "ab\ncd");
+        field.setSelection(4, 4);
+        field.moveToLineStart();
+        assertEquals(3, field.caret());
+        field.moveToLineEnd();
+        assertEquals(5, field.caret());
+        EditorClipboard clipboard = new EditorClipboard();
+        field.setSelection(0, 2);
+        field.copy(clipboard);
+        assertEquals("ab", clipboard.text());
+        field.setSelection(3, 5);
+        field.cut(clipboard);
+        assertEquals("cd", clipboard.text());
+        assertEquals("ab\n", field.text());
+        field.setSelection(3, 3);
+        field.paste(clipboard);
+        assertEquals("ab\ncd", field.text());
+        field.setPassword(true);
+        field.replaceRange(0, field.text().length(), "secret");
+        assertEquals("secret", field.text());
+        assertEquals("••••••", field.displayedText());
+        assertEquals("Password", field.create(new LayoutFactory(new LayoutTree()), "secret-field").label());
+        EditorClipboard leak = new EditorClipboard();
+        leak.setText("keep");
+        field.setSelection(0, 6);
+        field.copy(leak);
+        assertEquals("keep", leak.text());
+        field.cut(leak);
+        assertEquals("keep", leak.text());
+        assertEquals("secret", field.text());
+        field.setPassword(false);
+        TextArea areaHome = new TextArea();
+        areaHome.replaceRange(0, 0, "xy\nz");
+        areaHome.setSelection(4, 4);
+        areaHome.moveToLineStart();
+        assertEquals(3, areaHome.caret());
+        areaHome.deleteBackward();
+        assertEquals("xyz", areaHome.text());
+        EditorClipboard areaClip = new EditorClipboard();
+        areaHome.setSelection(0, 3);
+        areaHome.copy(areaClip);
+        assertEquals("xyz", areaClip.text());
+        field.replaceRange(0, field.text().length(), "hao");
         field.updateComposition("!");
         assertEquals("!", field.rejectComposition());
         assertEquals("hao", field.text());

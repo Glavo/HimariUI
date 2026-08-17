@@ -15,6 +15,19 @@ import org.glavo.himari.font.GdefMarkSetSampleFont;
 import org.glavo.himari.font.GposChainBacktrackSampleFont;
 import org.glavo.himari.font.GposChainDoubleBacktrackSampleFont;
 import org.glavo.himari.font.GposChainHeptaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainDecaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainUndecaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainDodecaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainTridecaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainTetradecaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainPentadecaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainHexadecaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainHeptadecaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainOctodecaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainEnneadecaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainIcosaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainHenicosaBacktrackSampleFont;
+import org.glavo.himari.font.GposChainDocosaBacktrackSampleFont;
 import org.glavo.himari.font.GposChainNonaBacktrackSampleFont;
 import org.glavo.himari.font.GposChainOctaBacktrackSampleFont;
 import org.glavo.himari.font.GposChainHexaBacktrackSampleFont;
@@ -31,6 +44,37 @@ import org.glavo.himari.font.GsubContextClassSampleFont;
 import org.glavo.himari.font.GsubChainBacktrackSampleFont;
 import org.glavo.himari.font.GsubChainDoubleBacktrackSampleFont;
 import org.glavo.himari.font.GsubChainHeptaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainDecaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainUndecaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainDodecaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainTridecaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainTetradecaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainPentadecaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainHexadecaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainHeptadecaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainOctodecaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainEnneadecaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainIcosaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainHenicosaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainDocosaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainTricosaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainTetracosaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainPentacosaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainHexacosaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainHeptacosaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainOctacosaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainEnneacosaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainTriacontaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainHentricontaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainDotricontaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainTritriacontaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainTetratriacontaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainPentatriacontaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainHexatriacontaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainHeptatriacontaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainOctatriacontaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainEnneatriacontaBacktrackSampleFont;
+import org.glavo.himari.font.GsubChainTetracontaBacktrackSampleFont;
 import org.glavo.himari.font.GsubChainNonaBacktrackSampleFont;
 import org.glavo.himari.font.GsubChainOctaBacktrackSampleFont;
 import org.glavo.himari.font.GsubChainHexaBacktrackSampleFont;
@@ -182,6 +226,350 @@ final class DefaultShaperTest {
                 GsubChainNonaBacktrackSampleFont.GLYPH_A,
                 DefaultShaper.shape(GsubChainNonaBacktrackSampleFont.create(), "KJIHGFEDABC").get(8).glyphId()
         );
+        assertEquals(
+                GsubChainDecaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainDecaBacktrackSampleFont.create(), "MLKJIHGFEDABC").get(10).glyphId()
+        );
+        assertEquals(
+                GsubChainDecaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainDecaBacktrackSampleFont.create(), "LKJIHGFEDABC").get(9).glyphId()
+        );
+        assertEquals(
+                GsubChainUndecaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainUndecaBacktrackSampleFont.create(), "NMLKJIHGFEDABC").get(11).glyphId()
+        );
+        assertEquals(
+                GsubChainUndecaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainUndecaBacktrackSampleFont.create(), "MLKJIHGFEDABC").get(10).glyphId()
+        );
+        assertEquals(
+                GsubChainDodecaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainDodecaBacktrackSampleFont.create(), "ONMLKJIHGFEDABC").get(12).glyphId()
+        );
+        assertEquals(
+                GsubChainDodecaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainDodecaBacktrackSampleFont.create(), "NMLKJIHGFEDABC").get(11).glyphId()
+        );
+        assertEquals(
+                GsubChainTridecaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainTridecaBacktrackSampleFont.create(), "PONMLKJIHGFEDABC").get(13).glyphId()
+        );
+        assertEquals(
+                GsubChainTridecaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainTridecaBacktrackSampleFont.create(), "ONMLKJIHGFEDABC").get(12).glyphId()
+        );
+        assertEquals(
+                GsubChainTetradecaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainTetradecaBacktrackSampleFont.create(), "QPONMLKJIHGFEDABC").get(14).glyphId()
+        );
+        assertEquals(
+                GsubChainTetradecaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainTetradecaBacktrackSampleFont.create(), "PONMLKJIHGFEDABC").get(13).glyphId()
+        );
+        assertEquals(
+                GsubChainPentadecaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainPentadecaBacktrackSampleFont.create(), "RQPONMLKJIHGFEDABC").get(15).glyphId()
+        );
+        assertEquals(
+                GsubChainPentadecaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainPentadecaBacktrackSampleFont.create(), "QPONMLKJIHGFEDABC").get(14).glyphId()
+        );
+        assertEquals(
+                GsubChainHexadecaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainHexadecaBacktrackSampleFont.create(), "SRQPONMLKJIHGFEDABC").get(16).glyphId()
+        );
+        assertEquals(
+                GsubChainHexadecaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainHexadecaBacktrackSampleFont.create(), "RQPONMLKJIHGFEDABC").get(15).glyphId()
+        );
+        assertEquals(
+                GsubChainHeptadecaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainHeptadecaBacktrackSampleFont.create(), "TSRQPONMLKJIHGFEDABC")
+                        .get(17)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHeptadecaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainHeptadecaBacktrackSampleFont.create(), "SRQPONMLKJIHGFEDABC")
+                        .get(16)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainOctodecaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainOctodecaBacktrackSampleFont.create(), "UTSRQPONMLKJIHGFEDABC")
+                        .get(18)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainOctodecaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainOctodecaBacktrackSampleFont.create(), "TSRQPONMLKJIHGFEDABC")
+                        .get(17)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainEnneadecaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainEnneadecaBacktrackSampleFont.create(), "VUTSRQPONMLKJIHGFEDABC")
+                        .get(19)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainEnneadecaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainEnneadecaBacktrackSampleFont.create(), "UTSRQPONMLKJIHGFEDABC")
+                        .get(18)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainIcosaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainIcosaBacktrackSampleFont.create(), "WVUTSRQPONMLKJIHGFEDABC")
+                        .get(20)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainIcosaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainIcosaBacktrackSampleFont.create(), "VUTSRQPONMLKJIHGFEDABC")
+                        .get(19)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHenicosaBacktrackSampleFont.GLYPH_Y,
+                DefaultShaper.shape(GsubChainHenicosaBacktrackSampleFont.create(), "XWVUTSRQPONMLKJIHGFEDABC")
+                        .get(21)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHenicosaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainHenicosaBacktrackSampleFont.create(), "WVUTSRQPONMLKJIHGFEDABC")
+                        .get(20)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainDocosaBacktrackSampleFont.GLYPH_Z,
+                DefaultShaper.shape(GsubChainDocosaBacktrackSampleFont.create(), "YXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(22)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainDocosaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainDocosaBacktrackSampleFont.create(), "XWVUTSRQPONMLKJIHGFEDABC")
+                        .get(21)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTricosaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainTricosaBacktrackSampleFont.create(), "ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(23)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTricosaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainTricosaBacktrackSampleFont.create(), "YXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(22)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTetracosaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainTetracosaBacktrackSampleFont.create(), "1ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(24)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTetracosaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainTetracosaBacktrackSampleFont.create(), "ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(23)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainPentacosaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainPentacosaBacktrackSampleFont.create(), "21ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(25)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainPentacosaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainPentacosaBacktrackSampleFont.create(), "1ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(24)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHexacosaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainHexacosaBacktrackSampleFont.create(), "321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(26)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHexacosaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainHexacosaBacktrackSampleFont.create(), "21ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(25)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHeptacosaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainHeptacosaBacktrackSampleFont.create(), "4321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(27)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHeptacosaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainHeptacosaBacktrackSampleFont.create(), "321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(26)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainOctacosaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainOctacosaBacktrackSampleFont.create(), "54321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(28)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainOctacosaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainOctacosaBacktrackSampleFont.create(), "4321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(27)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainEnneacosaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainEnneacosaBacktrackSampleFont.create(), "654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(29)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainEnneacosaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainEnneacosaBacktrackSampleFont.create(), "54321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(28)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTriacontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainTriacontaBacktrackSampleFont.create(), "7654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(30)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTriacontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainTriacontaBacktrackSampleFont.create(), "654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(29)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHentricontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainHentricontaBacktrackSampleFont.create(), "87654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(31)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHentricontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainHentricontaBacktrackSampleFont.create(), "7654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(30)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainDotricontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainDotricontaBacktrackSampleFont.create(), "987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(32)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainDotricontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainDotricontaBacktrackSampleFont.create(), "87654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(31)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTritriacontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainTritriacontaBacktrackSampleFont.create(), ":987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(33)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTritriacontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainTritriacontaBacktrackSampleFont.create(), "987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(32)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTetratriacontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainTetratriacontaBacktrackSampleFont.create(), ";:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(34)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTetratriacontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainTetratriacontaBacktrackSampleFont.create(), ":987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(33)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainPentatriacontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainPentatriacontaBacktrackSampleFont.create(), "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(35)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainPentatriacontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainPentatriacontaBacktrackSampleFont.create(), ";:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(34)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHexatriacontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainHexatriacontaBacktrackSampleFont.create(), "=" + "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(36)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHexatriacontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainHexatriacontaBacktrackSampleFont.create(), "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(35)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHeptatriacontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainHeptatriacontaBacktrackSampleFont.create(), ">" + "=" + "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(37)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainHeptatriacontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainHeptatriacontaBacktrackSampleFont.create(), "=" + "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(36)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainOctatriacontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainOctatriacontaBacktrackSampleFont.create(), "?" + ">" + "=" + "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(38)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainOctatriacontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainOctatriacontaBacktrackSampleFont.create(), ">" + "=" + "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(37)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainEnneatriacontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainEnneatriacontaBacktrackSampleFont.create(), "@" + "?" + ">" + "=" + "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(39)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainEnneatriacontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainEnneatriacontaBacktrackSampleFont.create(), "?" + ">" + "=" + "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(38)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTetracontaBacktrackSampleFont.GLYPH_ZERO,
+                DefaultShaper.shape(GsubChainTetracontaBacktrackSampleFont.create(), "[" + "@" + "?" + ">" + "=" + "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(40)
+                        .glyphId()
+        );
+        assertEquals(
+                GsubChainTetracontaBacktrackSampleFont.GLYPH_A,
+                DefaultShaper.shape(GsubChainTetracontaBacktrackSampleFont.create(), "@" + "?" + ">" + "=" + "<;:987654321ZYXWVUTSRQPONMLKJIHGFEDABC")
+                        .get(39)
+                        .glyphId()
+        );
     }
 
     /// Applies GPOS format-2 class context and chain through the shipped shaper.
@@ -286,6 +674,135 @@ final class DefaultShaperTest {
         assertEquals(
                 GposChainNonaBacktrackSampleFont.ADVANCE_LETTER,
                 DefaultShaper.shape(nine, "KJIHGFEDABC").get(8).xAdvance()
+        );
+        SfntFont ten = GposChainDecaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainDecaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainDecaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(ten, "MLKJIHGFEDABC").get(10).xAdvance()
+        );
+        assertEquals(
+                GposChainDecaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(ten, "LKJIHGFEDABC").get(9).xAdvance()
+        );
+        SfntFont eleven = GposChainUndecaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainUndecaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainUndecaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(eleven, "NMLKJIHGFEDABC").get(11).xAdvance()
+        );
+        assertEquals(
+                GposChainUndecaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(eleven, "MLKJIHGFEDABC").get(10).xAdvance()
+        );
+        SfntFont twelve = GposChainDodecaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainDodecaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainDodecaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(twelve, "ONMLKJIHGFEDABC").get(12).xAdvance()
+        );
+        assertEquals(
+                GposChainDodecaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(twelve, "NMLKJIHGFEDABC").get(11).xAdvance()
+        );
+        SfntFont thirteen = GposChainTridecaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainTridecaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainTridecaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(thirteen, "PONMLKJIHGFEDABC").get(13).xAdvance()
+        );
+        assertEquals(
+                GposChainTridecaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(thirteen, "ONMLKJIHGFEDABC").get(12).xAdvance()
+        );
+        SfntFont fourteen = GposChainTetradecaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainTetradecaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainTetradecaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(fourteen, "QPONMLKJIHGFEDABC").get(14).xAdvance()
+        );
+        assertEquals(
+                GposChainTetradecaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(fourteen, "PONMLKJIHGFEDABC").get(13).xAdvance()
+        );
+        SfntFont fifteen = GposChainPentadecaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainPentadecaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainPentadecaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(fifteen, "RQPONMLKJIHGFEDABC").get(15).xAdvance()
+        );
+        assertEquals(
+                GposChainPentadecaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(fifteen, "QPONMLKJIHGFEDABC").get(14).xAdvance()
+        );
+        SfntFont sixteen = GposChainHexadecaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainHexadecaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainHexadecaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(sixteen, "SRQPONMLKJIHGFEDABC").get(16).xAdvance()
+        );
+        assertEquals(
+                GposChainHexadecaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(sixteen, "RQPONMLKJIHGFEDABC").get(15).xAdvance()
+        );
+        SfntFont seventeen = GposChainHeptadecaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainHeptadecaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainHeptadecaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(seventeen, "TSRQPONMLKJIHGFEDABC").get(17).xAdvance()
+        );
+        assertEquals(
+                GposChainHeptadecaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(seventeen, "SRQPONMLKJIHGFEDABC").get(16).xAdvance()
+        );
+        SfntFont eighteen = GposChainOctodecaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainOctodecaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainOctodecaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(eighteen, "UTSRQPONMLKJIHGFEDABC").get(18).xAdvance()
+        );
+        assertEquals(
+                GposChainOctodecaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(eighteen, "TSRQPONMLKJIHGFEDABC").get(17).xAdvance()
+        );
+        SfntFont nineteen = GposChainEnneadecaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainEnneadecaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainEnneadecaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(nineteen, "VUTSRQPONMLKJIHGFEDABC").get(19).xAdvance()
+        );
+        assertEquals(
+                GposChainEnneadecaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(nineteen, "UTSRQPONMLKJIHGFEDABC").get(18).xAdvance()
+        );
+        SfntFont twenty = GposChainIcosaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainIcosaBacktrackSampleFont.ADVANCE_LETTER + GposChainIcosaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(twenty, "WVUTSRQPONMLKJIHGFEDABC").get(20).xAdvance()
+        );
+        assertEquals(
+                GposChainIcosaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(twenty, "VUTSRQPONMLKJIHGFEDABC").get(19).xAdvance()
+        );
+        SfntFont twentyOne = GposChainHenicosaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainHenicosaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainHenicosaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(twentyOne, "XWVUTSRQPONMLKJIHGFEDABC").get(21).xAdvance()
+        );
+        assertEquals(
+                GposChainHenicosaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(twentyOne, "WVUTSRQPONMLKJIHGFEDABC").get(20).xAdvance()
+        );
+        SfntFont twentyTwo = GposChainDocosaBacktrackSampleFont.create();
+        assertEquals(
+                GposChainDocosaBacktrackSampleFont.ADVANCE_LETTER
+                        + GposChainDocosaBacktrackSampleFont.CHAIN_DELTA,
+                DefaultShaper.shape(twentyTwo, "YXWVUTSRQPONMLKJIHGFEDABC").get(22).xAdvance()
+        );
+        assertEquals(
+                GposChainDocosaBacktrackSampleFont.ADVANCE_LETTER,
+                DefaultShaper.shape(twentyTwo, "XWVUTSRQPONMLKJIHGFEDABC").get(21).xAdvance()
         );
         SfntFont flagged = GposFlaggedChainBacktrackSampleFont.create();
         assertEquals(
@@ -580,6 +1097,59 @@ final class DefaultShaperTest {
         assertEquals(0, glyphs.get(1).xAdvance());
     }
 
+    /// Selects Hebrew final kaf at the end of a word.
+    @Test
+    void selectsHebrewFinalKaf() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05D0\u05DB");
+        assertEquals(2, glyphs.size());
+        assertEquals(0x05D0, glyphs.get(0).codePoint());
+        assertEquals(0x05DA, glyphs.get(1).codePoint());
+        assertNotEquals(font.glyphId('\u05DB'), glyphs.get(1).glyphId());
+    }
+
+    /// Keeps medial kaf when another Hebrew letter follows.
+    @Test
+    void keepsMedialKafBeforeHebrewLetter() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05DB\u05D0");
+        assertEquals(0x05DB, glyphs.get(0).codePoint());
+    }
+
+    /// Composes Yiddish double vav onto `U+05F0`.
+    @Test
+    void composesYiddishDoubleVav() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05D5\u05D5");
+        assertEquals(1, glyphs.size());
+        assertEquals(0x05F0, glyphs.getFirst().codePoint());
+        assertTrue(glyphs.getFirst().glyphId() > 0);
+    }
+
+    /// Decomposes a precomposed Hangul syllable that the font does not map.
+    @Test
+    void decomposesMissingHangulSyllable() {
+        SfntFont font = ScriptSampleFont.create();
+        assertEquals(0, font.glyphId(0xAC04));
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\uAC04");
+        assertEquals(3, glyphs.size());
+        assertEquals(0x1100, glyphs.get(0).codePoint());
+        assertEquals(0x1161, glyphs.get(1).codePoint());
+        assertEquals(0x11AB, glyphs.get(2).codePoint());
+        assertTrue(glyphs.get(0).glyphId() > 0);
+        assertTrue(glyphs.get(1).glyphId() > 0);
+    }
+
+    /// Composes Lao ho-no onto `U+0EDC`.
+    @Test
+    void composesLaoHoNo() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u0EAB\u0E99");
+        assertEquals(1, glyphs.size());
+        assertEquals(0x0EDC, glyphs.getFirst().codePoint());
+        assertTrue(glyphs.getFirst().glyphId() > 0);
+    }
+
     /// Leaves unmarked Hebrew as one-to-one cmap mapping.
     @Test
     void shapesUnmarkedHebrew() {
@@ -695,6 +1265,84 @@ final class DefaultShaperTest {
         assertEquals(GsubSampleFont.ADVANCE_INIT, triple.get(0).xAdvance());
         assertEquals(GsubSampleFont.ADVANCE_MEDI, triple.get(1).xAdvance());
         assertEquals(GsubSampleFont.ADVANCE_FINA, triple.get(2).xAdvance());
+    }
+
+    /// Composes yod plus hiriq onto `U+FB1D`.
+    @Test
+    void composesHebrewYodHiriq() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05D9\u05B4");
+        assertEquals(1, glyphs.size());
+        assertEquals(0xFB1D, glyphs.getFirst().codePoint());
+        assertNotEquals(font.glyphId('\u05D9'), glyphs.getFirst().glyphId());
+    }
+
+    /// Composes alef plus patah onto `U+FB2E`.
+    @Test
+    void composesHebrewAlefPatah() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05D0\u05B7");
+        assertEquals(1, glyphs.size());
+        assertEquals(0xFB2E, glyphs.getFirst().codePoint());
+        assertNotEquals(font.glyphId('\u05D0'), glyphs.getFirst().glyphId());
+    }
+
+    /// Composes alef plus qamats onto `U+FB2F`.
+    @Test
+    void composesHebrewAlefQamats() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05D0\u05B8");
+        assertEquals(1, glyphs.size());
+        assertEquals(0xFB2F, glyphs.getFirst().codePoint());
+        assertNotEquals(font.glyphId('\u05D0'), glyphs.getFirst().glyphId());
+    }
+
+    /// Composes bet plus rafe onto `U+FB4C`.
+    @Test
+    void composesHebrewBetRafe() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05D1\u05BF");
+        assertEquals(1, glyphs.size());
+        assertEquals(0xFB4C, glyphs.getFirst().codePoint());
+        assertNotEquals(font.glyphId('\u05D1'), glyphs.getFirst().glyphId());
+    }
+
+    /// Composes alef plus lamed onto `U+FB4F`.
+    @Test
+    void composesHebrewAlefLamed() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05D0\u05DC");
+        assertEquals(1, glyphs.size());
+        assertEquals(0xFB4F, glyphs.getFirst().codePoint());
+        assertNotEquals(font.glyphId('\u05D0'), glyphs.getFirst().glyphId());
+    }
+
+    /// Composes yod plus yod plus patah onto `U+FB1F`.
+    @Test
+    void composesHebrewYodYodPatah() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05D9\u05D9\u05B7");
+        assertEquals(1, glyphs.size());
+        assertEquals(0xFB1F, glyphs.getFirst().codePoint());
+        assertNotEquals(font.glyphId('\u05D9'), glyphs.getFirst().glyphId());
+    }
+
+    /// Composes kaf plus rafe onto `U+FB4D`.
+    @Test
+    void composesHebrewKafRafe() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05DB\u05BF");
+        assertEquals(1, glyphs.size());
+        assertEquals(0xFB4D, glyphs.getFirst().codePoint());
+    }
+
+    /// Composes pe plus rafe onto `U+FB4E`.
+    @Test
+    void composesHebrewPeRafe() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05E4\u05BF");
+        assertEquals(1, glyphs.size());
+        assertEquals(0xFB4E, glyphs.getFirst().codePoint());
     }
 
     /// Composes vav plus holam onto `U+FB4B`.

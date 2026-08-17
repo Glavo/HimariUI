@@ -123,10 +123,30 @@ public final class WindowsImeA11yConformance {
                 true,
                 SemanticsRole.LIST,
                 "Items",
-                java.util.Set.of(SemanticsAction.SCROLL_INTO_VIEW),
+                java.util.Set.of(SemanticsAction.SCROLL_INTO_VIEW, SemanticsAction.REALIZE),
                 null
         );
-        valueTree.setRoot(factory.column("root", Alignment.START, List.of(), toggle, slider, status, field, list));
+        LayoutNode dialog = factory.leaf(
+                "dialog",
+                new Size(80.0f, 40.0f),
+                List.of(),
+                true,
+                SemanticsRole.DIALOG,
+                "Confirm",
+                java.util.Set.of(),
+                null
+        );
+        valueTree.setRoot(factory.column(
+                "root",
+                Alignment.START,
+                List.of(),
+                toggle,
+                slider,
+                status,
+                field,
+                list,
+                dialog
+        ));
         valueTree.measure(Constraints.loose(400.0f, 400.0f));
         valueTree.place();
         List<WindowsAutomationNode> valueNodes = WindowsAutomationBridge.inspect(valueTree.semantics());
@@ -156,6 +176,25 @@ public final class WindowsImeA11yConformance {
         boolean uiaLiveSetting = false;
         boolean uiaTextCom = false;
         boolean uiaScrollItemCom = false;
+        boolean uiaVirtualizedItemCom = false;
+        boolean uiaDockCom = false;
+        boolean uiaTransformCom = false;
+        boolean uiaTransform2Com = false;
+        boolean uiaItemContainerCom = false;
+        boolean uiaSynchronizedInputCom = false;
+        boolean uiaMultipleViewCom = false;
+        boolean uiaDropTargetCom = false;
+        boolean uiaDragCom = false;
+        boolean uiaAnnotationCom = false;
+        boolean uiaTextChildCom = false;
+        boolean uiaStylesCom = false;
+        boolean uiaCustomNavigationCom = false;
+        boolean uiaObjectModelCom = false;
+        boolean uiaTextEditCom = false;
+        boolean uiaSelectionCom = false;
+        boolean uiaLegacyAccessibleCom = false;
+        boolean uiaText2Com = false;
+        boolean uiaSelection2Com = false;
         WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
         try {
             WindowsWindow window = platform.createWindow(
@@ -207,6 +246,37 @@ public final class WindowsImeA11yConformance {
                 ) == WindowsAutomationProvider.UIA_BUTTON_CONTROL_TYPE_ID;
                 uiaInvoke = provider.invokePatternProvider(WindowsAutomationProvider.UIA_INVOKE_PATTERN_ID)
                         && provider.invoke() == 1;
+                uiaSynchronizedInputCom = provider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_SYNCHRONIZED_INPUT_PATTERN_ID
+                )
+                        && provider.startListening(WindowsAutomationProvider.SYNCHRONIZED_INPUT_KEY_DOWN) == 1
+                        && provider.cancelSynchronizedInput() == 1;
+                uiaLegacyAccessibleCom = provider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_PATTERN_ID
+                )
+                        && provider.legacyChildId() == 0
+                        && incrementNode.label().equals(provider.legacyName())
+                        && provider.legacyRole() == WindowsAutomationProvider.ROLE_SYSTEM_PUSHBUTTON
+                        && provider.invokeLegacyDefaultAction() == 2
+                        && incrementNode.label().equals(provider.legacyValue())
+                        && provider.legacyState() == WindowsAutomationProvider.STATE_SYSTEM_FOCUSABLE
+                        && incrementNode.label().equals(provider.legacyDescription())
+                        && "Press".equals(provider.legacyDefaultAction())
+                        && provider.legacyKeyboardShortcut().isEmpty()
+                        && incrementNode.label().equals(provider.legacyHelp())
+                        && provider.invokeFragmentNavigate(WindowsAutomationProvider.NAVIGATE_DIRECTION_PARENT)
+                        && !provider.invokeFragmentNavigate(1)
+                        && provider.invokeFragmentSetFocus() == 1
+                        && provider.invokeFragmentRoot()
+                        && provider.invokeFragmentBoundingRectangle()[2] == incrementNode.bounds().width()
+                        && provider.invokeFragmentRootFromPoint(incrementNode.bounds().x(), incrementNode.bounds().y())
+                        && provider.invokeFragmentRootFocus()
+                        && provider.invokeLegacySetValue(incrementNode.label()) == 1
+                        && incrementNode.label().equals(provider.lastLegacyValue())
+                        && provider.invokeFragmentRuntimeId()[1] == (int) incrementNode.id()
+                        && provider.invokeEmbeddedFragmentRoots() == 0
+                        && provider.invokeProviderOptions() == WindowsAutomationProvider.PROVIDER_OPTIONS_SERVER_SIDE
+                        && provider.invokeHostRawElementProvider();
             }
             SemanticsNode toggleNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.TOGGLE)
@@ -235,12 +305,39 @@ public final class WindowsImeA11yConformance {
                         && statusProvider.invokePropertyValue(
                                 WindowsAutomationProvider.UIA_LIVE_SETTING_PROPERTY_ID
                         ) == WindowsAutomationProvider.LIVE_SETTING_POLITE;
+                uiaAnnotationCom = statusProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_ANNOTATION_PATTERN_ID
+                )
+                        && statusProvider.annotationTypeId() == WindowsAutomationProvider.ANNOTATION_TYPE_COMMENT
+                        && "Comment".equals(statusProvider.annotationTypeName())
+                        && "Himari".equals(statusProvider.annotationAuthor())
+                        && statusProvider.invokeAnnotationTarget();
+                uiaStylesCom = statusProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_STYLES_PATTERN_ID
+                )
+                        && statusProvider.styleId() == WindowsAutomationProvider.STYLE_ID_NORMAL
+                        && "Normal".equals(statusProvider.styleName());
             }
             SemanticsNode fieldNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
                     .findFirst()
                     .orElseThrow();
             try (WindowsAutomationProvider textProvider = window.automationProvider(fieldNode)) {
+                uiaTextChildCom = textProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_TEXT_CHILD_PATTERN_ID
+                )
+                        && textProvider.invokeTextContainer()
+                        && textProvider.invokeTextChildRange();
+                uiaTextEditCom = textProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_TEXT_EDIT_PATTERN_ID
+                )
+                        && textProvider.invokeActiveComposition()
+                        && textProvider.invokeConversionTarget();
+                uiaText2Com = textProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_TEXT_PATTERN2_ID
+                )
+                        && textProvider.invokeCaretRange()
+                        && textProvider.invokeRangeFromAnnotation();
                 uiaTextCom = textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_PATTERN_ID)
                         && textProvider.invokeDocumentRange()
                         && textProvider.invokeSupportedTextSelection()
@@ -272,7 +369,9 @@ public final class WindowsImeA11yConformance {
                         && !textProvider.invokeFindAttribute(40013)
                         && textProvider.invokeGetAttributeValue(40013) == 0
                         && textProvider.invokeScrollIntoView(true)
-                        && textProvider.invokeGetChildren() == 0;
+                        && textProvider.invokeGetChildren() == 0
+                        && textProvider.invokeShowContextMenu() == 1
+                        && textProvider.invokeSimpleShowContextMenu() == 1;
                 textProvider.invokeRemoveFromSelection();
                 uiaTextCom = uiaTextCom && !textProvider.invokeGetSelection();
                 textProvider.invokeAddToSelection();
@@ -286,12 +385,102 @@ public final class WindowsImeA11yConformance {
                 uiaScrollItemCom = scrollItemProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_SCROLL_ITEM_PATTERN_ID
                 ) && scrollItemProvider.invokeScrollItem() == 1;
+                uiaVirtualizedItemCom = scrollItemProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_VIRTUALIZED_ITEM_PATTERN_ID
+                ) && scrollItemProvider.invokeVirtualizedItem() == 1;
+                uiaItemContainerCom = scrollItemProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_ITEM_CONTAINER_PATTERN_ID
+                ) && scrollItemProvider.invokeFindItemByProperty("Items");
+                uiaMultipleViewCom = scrollItemProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_MULTIPLE_VIEW_PATTERN_ID
+                )
+                        && scrollItemProvider.currentView() == 1
+                        && "List".equals(scrollItemProvider.viewName(1))
+                        && scrollItemProvider.setCurrentView(2) == 2;
+                uiaDropTargetCom = scrollItemProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_DROP_TARGET_PATTERN_ID
+                ) && "move".equals(scrollItemProvider.dropTargetEffect());
+                uiaDragCom = scrollItemProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_DRAG_PATTERN_ID
+                )
+                        && !scrollItemProvider.isGrabbed()
+                        && "copy".equals(scrollItemProvider.dropEffect());
+                uiaSelectionCom = scrollItemProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_SELECTION_PATTERN_ID
+                )
+                        && scrollItemProvider.canSelectMultiple()
+                        && !scrollItemProvider.isSelectionRequired();
+                uiaSelection2Com = scrollItemProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_SELECTION_PATTERN2_ID
+                )
+                        && scrollItemProvider.selectionItemCount() == 1
+                        && scrollItemProvider.invokeCurrentSelectedItem()
+                        && scrollItemProvider.invokeFirstSelectedItem()
+                        && scrollItemProvider.invokeLastSelectedItem();
+            }
+            SemanticsNode dialogNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.DIALOG)
+                    .findFirst()
+                    .orElseThrow();
+            try (WindowsAutomationProvider dockProvider = window.automationProvider(dialogNode)) {
+                uiaDockCom = dockProvider.invokePatternProvider(WindowsAutomationProvider.UIA_DOCK_PATTERN_ID)
+                        && dockProvider.setDockPosition(WindowsAutomationProvider.DOCK_POSITION_TOP)
+                                == WindowsAutomationProvider.DOCK_POSITION_TOP;
+                uiaTransformCom = dockProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TRANSFORM_PATTERN_ID)
+                        && dockProvider.canMove()
+                        && dockProvider.moveTransform(8.0, 16.0) == 8.0
+                        && dockProvider.resizeTransform(64.0, 32.0) == 64.0
+                        && dockProvider.rotateTransform(9.0) == 9.0;
+                uiaTransform2Com = dockProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_TRANSFORM_PATTERN2_ID
+                )
+                        && dockProvider.canZoom()
+                        && dockProvider.zoomTransform(1.5) == 1.5
+                        && dockProvider.zoomLevel() == 1.5
+                        && dockProvider.zoomByUnit(WindowsAutomationProvider.ZOOM_UNIT_LARGE_INCREMENT) == 2.5
+                        && dockProvider.zoomLevel() == 2.5
+                        && dockProvider.zoomMinimum() == 0.5
+                        && dockProvider.zoomMaximum() == 4.0;
+                uiaCustomNavigationCom = dockProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_CUSTOM_NAVIGATION_PATTERN_ID
+                )
+                        && dockProvider.invokeNavigate(WindowsAutomationProvider.NAVIGATE_DIRECTION_PARENT);
+                uiaObjectModelCom = dockProvider.invokePatternProvider(
+                        WindowsAutomationProvider.UIA_OBJECT_MODEL_PATTERN_ID
+                )
+                        && dockProvider.invokeObjectModel();
             }
             if (!textStoreLock || !textStoreGeometry || !documentAttached) {
                 throw new IllegalStateException("ITextStoreACP lock, geometry, or TSF document attach failed");
             }
-            if (!uiaInvoke || !uiaToggleCom || !uiaRangeCom || !uiaLiveSetting || !uiaTextCom || !uiaScrollItemCom) {
-                throw new IllegalStateException("UIA Invoke/Toggle/Range/LiveSetting/Text/ScrollItem COM properties failed");
+            if (!uiaInvoke
+                    || !uiaToggleCom
+                    || !uiaRangeCom
+                    || !uiaLiveSetting
+                    || !uiaTextCom
+                    || !uiaScrollItemCom
+                    || !uiaVirtualizedItemCom
+                    || !uiaDockCom
+                    || !uiaTransformCom
+                    || !uiaTransform2Com
+                    || !uiaItemContainerCom
+                    || !uiaSynchronizedInputCom
+                    || !uiaMultipleViewCom
+                    || !uiaDropTargetCom
+                    || !uiaDragCom
+                    || !uiaAnnotationCom
+                    || !uiaTextChildCom
+                    || !uiaStylesCom
+                    || !uiaCustomNavigationCom
+                    || !uiaObjectModelCom
+                    || !uiaTextEditCom
+                    || !uiaSelectionCom
+                    || !uiaLegacyAccessibleCom
+                    || !uiaText2Com
+                    || !uiaSelection2Com) {
+                throw new IllegalStateException(
+                        "UIA Invoke/Toggle/Range/LiveSetting/Text/ScrollItem/VirtualizedItem/Dock/Transform/ItemContainer COM properties failed"
+                );
             }
             window.closeAsync().toCompletableFuture().get();
             platform.pump();
@@ -327,6 +516,25 @@ public final class WindowsImeA11yConformance {
                           "uiaLiveSetting": %s,
                           "uiaTextCom": %s,
                           "uiaScrollItemCom": %s,
+                          "uiaVirtualizedItemCom": %s,
+                          "uiaDockCom": %s,
+                          "uiaTransformCom": %s,
+                          "uiaTransform2Com": %s,
+                          "uiaItemContainerCom": %s,
+                          "uiaSynchronizedInputCom": %s,
+                          "uiaMultipleViewCom": %s,
+                          "uiaDropTargetCom": %s,
+                          "uiaDragCom": %s,
+                          "uiaAnnotationCom": %s,
+                          "uiaTextChildCom": %s,
+                          "uiaStylesCom": %s,
+                          "uiaCustomNavigationCom": %s,
+                          "uiaObjectModelCom": %s,
+                          "uiaTextEditCom": %s,
+                          "uiaSelectionCom": %s,
+                          "uiaLegacyAccessibleCom": %s,
+                          "uiaText2Com": %s,
+                          "uiaSelection2Com": %s,
                           "uiaTextRange": true,
                           "tsfThreadMgr": %s,
                           "textStoreAcp": %s,
@@ -343,6 +551,25 @@ public final class WindowsImeA11yConformance {
                         uiaLiveSetting,
                         uiaTextCom,
                         uiaScrollItemCom,
+                        uiaVirtualizedItemCom,
+                        uiaDockCom,
+                        uiaTransformCom,
+                        uiaTransform2Com,
+                        uiaItemContainerCom,
+                        uiaSynchronizedInputCom,
+                        uiaMultipleViewCom,
+                        uiaDropTargetCom,
+                        uiaDragCom,
+                        uiaAnnotationCom,
+                        uiaTextChildCom,
+                        uiaStylesCom,
+                        uiaCustomNavigationCom,
+                        uiaObjectModelCom,
+                        uiaTextEditCom,
+                        uiaSelectionCom,
+                        uiaLegacyAccessibleCom,
+                        uiaText2Com,
+                        uiaSelection2Com,
                         tsfAvailable,
                         textStoreLock,
                         textStoreGeometry,

@@ -49,6 +49,14 @@ final class ThaiLaoTest {
         assertArrayEquals(new int[] {0x0E81, 0x0ECD, 0x0EB2}, copy(expansion.points(), 3));
     }
 
+    /// Composes Lao ho-no and ho-mo ligatures.
+    @Test
+    void composesLaoHoLigatures() {
+        assertEquals(0x0EDC, ThaiLao.laoLigature(0x0EAB, 0x0E99));
+        assertEquals(0x0EDD, ThaiLao.laoLigature(0x0EAB, 0x0EA1));
+        assertEquals(0, ThaiLao.laoLigature(0x0EAB, 0x0E81));
+    }
+
     /// Copies the used prefix of an expansion buffer.
     private static int[] copy(int[] values, int count) {
         int[] copy = new int[count];

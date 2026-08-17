@@ -27,5 +27,23 @@ public enum LogicalKey {
     ARROW_UP,
 
     /// Increase a focused vertical range.
-    ARROW_DOWN
+    ARROW_DOWN,
+
+    /// Move the caret to the start of the current line.
+    HOME,
+
+    /// Move the caret to the end of the current line.
+    END,
+
+    /// Delete the cluster before the caret.
+    BACKSPACE,
+
+    /// Delete the cluster after the caret.
+    DELETE,
+
+    /// Page the focused collection backward.
+    PAGE_UP,
+
+    /// Page the focused collection forward.
+    PAGE_DOWN
 }

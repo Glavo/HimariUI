@@ -1,5 +1,6 @@
 package org.glavo.himari.layout.input.gesture;
 
+import org.glavo.himari.layout.input.PointerDeviceKind;
 import org.glavo.himari.layout.input.PointerEvent;
 import org.glavo.himari.layout.input.PointerEventType;
 import org.jetbrains.annotations.NotNullByDefault;
@@ -64,5 +65,51 @@ final class GestureArenaTest {
         );
         assertNull(arena.winner());
         assertSame(GestureDisposition.REJECTED, arena.disposition(GestureKind.TAP));
+    }
+
+    /// Accepts a second tap inside the double-tap window as a double tap.
+    @Test
+    void acceptsDoubleTapInsideIntervalAndSlop() {
+        GestureArena arena = new GestureArena();
+        arena.dispatch(new PointerEvent(PointerEventType.DOWN, 10.0f, 10.0f), 0L);
+        arena.dispatch(new PointerEvent(PointerEventType.UP, 10.0f, 10.0f), 40_000_000L);
+        assertTrue(arena.tapAccepted());
+        arena.dispatch(new PointerEvent(PointerEventType.DOWN, 11.0f, 10.0f), 80_000_000L);
+        arena.dispatch(new PointerEvent(PointerEventType.UP, 11.0f, 10.0f), 120_000_000L);
+        assertTrue(arena.doubleTapAccepted());
+        assertSame(GestureDisposition.REJECTED, arena.disposition(GestureKind.TAP));
+    }
+
+    /// Accepts a wheel notch as a scroll without a press sequence.
+    @Test
+    void acceptsWheelAsScroll() {
+        GestureArena arena = new GestureArena();
+        arena.dispatch(new PointerEvent(PointerEventType.WHEEL, 4.0f, 4.0f, PointerDeviceKind.MOUSE, -1.0f), 0L);
+        assertTrue(arena.scrollAccepted());
+        assertEquals(-1.0f, arena.lastScrollDelta());
+    }
+
+    /// Accepts a two-pointer pinch once contact distance exceeds scale slop.
+    @Test
+    void acceptsScaleWhenPinchExceedsSlop() {
+        GestureArena arena = new GestureArena();
+        arena.dispatch(new PointerEvent(PointerEventType.DOWN, 0.0f, 0.0f, PointerDeviceKind.TOUCH, 0.0f, 1), 0L);
+        arena.dispatch(new PointerEvent(PointerEventType.DOWN, 100.0f, 0.0f, PointerDeviceKind.TOUCH, 0.0f, 2), 1L);
+        arena.dispatch(new PointerEvent(PointerEventType.MOVE, 130.0f, 0.0f, PointerDeviceKind.TOUCH, 0.0f, 2), 16_000_000L);
+        assertTrue(arena.scaleAccepted());
+        assertEquals(1.3f, arena.scale(), 0.001f);
+        assertSame(GestureDisposition.REJECTED, arena.disposition(GestureKind.ROTATION));
+    }
+
+    /// Accepts a two-pointer twist once contact angle exceeds rotation slop.
+    @Test
+    void acceptsRotationWhenTwistExceedsSlop() {
+        GestureArena arena = new GestureArena();
+        arena.dispatch(new PointerEvent(PointerEventType.DOWN, 0.0f, 0.0f, PointerDeviceKind.TOUCH, 0.0f, 1), 0L);
+        arena.dispatch(new PointerEvent(PointerEventType.DOWN, 100.0f, 0.0f, PointerDeviceKind.TOUCH, 0.0f, 2), 1L);
+        arena.dispatch(new PointerEvent(PointerEventType.MOVE, 0.0f, 100.0f, PointerDeviceKind.TOUCH, 0.0f, 2), 16_000_000L);
+        assertTrue(arena.rotationAccepted());
+        assertEquals(Math.PI / 2.0, arena.rotation(), 0.01);
+        assertSame(GestureDisposition.REJECTED, arena.disposition(GestureKind.SCALE));
     }
 }

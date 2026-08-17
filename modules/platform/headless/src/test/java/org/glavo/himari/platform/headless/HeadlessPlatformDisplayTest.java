@@ -1,5 +1,6 @@
 package org.glavo.himari.platform.headless;
 
+import org.glavo.himari.platform.api.CapabilityReport;
 import org.glavo.himari.platform.api.Chromaticity;
 import org.glavo.himari.platform.api.DisplayColorDescription;
 import org.glavo.himari.platform.api.DisplayEvent;
@@ -232,6 +233,30 @@ final class HeadlessPlatformDisplayTest {
         assertEquals(WindowEventType.CREATED, createdEvent.type());
         assertTrue(displayEvents.isEmpty());
         assertTrue(windowEvents.isEmpty());
+    }
+
+    /// Builds a `DIAG-001` report from the session's advertised display modes.
+    @Test
+    void capabilityReportJoinsRequestedEffectiveAndDisabledHdrReason() {
+        HeadlessPlatform platform = openDefaultPlatform();
+        CapabilityReport sdr = CapabilityReport.from(platform);
+        assertEquals(PresentationMode.SDR, sdr.requested());
+        assertEquals(PresentationMode.SDR, sdr.effective());
+        assertEquals("application", sdr.mappingOwner());
+        assertEquals("host advertised only SDR", sdr.disabledHdrReason());
+        HeadlessDisplayConfiguration hdr = display(
+                "display-hdr",
+                new LogicalRect(0.0, 0.0, 800.0, 600.0),
+                1.0,
+                true,
+                hdrDescription(1_000.0, 203.0, 4.0)
+        );
+        CompletableFuture<Long> replacement = platform.replaceDisplays(List.of(hdr)).toCompletableFuture();
+        platform.eventLoop().runUntilIdle();
+        replacement.join();
+        CapabilityReport extended = CapabilityReport.from(platform);
+        assertEquals(PresentationMode.EXTENDED_LINEAR, extended.effective());
+        assertEquals("", extended.disabledHdrReason());
     }
 
     /// Opens the default completed Headless backend stage.

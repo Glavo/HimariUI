@@ -19,10 +19,13 @@ import java.util.Objects;
 /// select Presentation Forms-B when the font maps those forms. LAM plus an alef variant compose
 /// onto Presentation Forms-B lam-alef when the font maps the ligature; transparent marks between
 /// LAM and alef stay in the LAM cluster. Hebrew letter-plus-mark pairs compose onto Presentation
-/// Forms-A when the font maps the composed form. Hangul choseong/jungseong/jongseong sequences,
-/// including Hangul Compatibility Jamo, compose onto syllables when the font maps the syllable.
-/// Thai and Lao decompose SARA AM and reorder Nikhahit over above-base marks; left vowels stay
-/// in Unicode visual order. The glyph stream then applies GSUB type-2 `ccmp` decompositions and
+/// Forms-A when the font maps the composed form. Word-final kaf/mem/nun/pe/tsadi select final
+/// letters. Yiddish double-vav, vav-yod, and double-yod map to `U+05F0`–`U+05F2`. Hangul
+/// choseong/jungseong/jongseong sequences, including Hangul Compatibility Jamo, compose onto
+/// syllables when the font maps the syllable; a precomposed syllable missing from `cmap`
+/// decomposes onto modern jamo. Thai and Lao decompose SARA AM and reorder Nikhahit over
+/// above-base marks; left vowels stay in Unicode visual order. Lao ho plus no/mo compose onto
+/// `U+0EDC` / `U+0EDD` when the font maps those ligatures. The glyph stream then applies GSUB type-2 `ccmp` decompositions and
 /// type-4 `rlig`/`liga` ligatures when the font lists those lookups. GSUB `calt` then applies
 /// type-5 two-glyph context and type-6 one-lookahead chain substitutions. Consecutive pairs then
 /// receive GPOS type-2 or format-0 `kern` X-advance adjustments, plus `IgnoreMarks` and
@@ -137,6 +140,24 @@ public final class DefaultShaper {
                     consumed = hangulConsumed;
                 }
             }
+            if (consumed == 1 && HangulSyllable.isSyllable(codePoint) && font.glyphId(codePoint) == 0) {
+                int[] parts = HangulSyllable.decompose(codePoint);
+                if (written + parts.length > glyphs.length) {
+                    glyphs = Arrays.copyOf(glyphs, written + parts.length + (count - index));
+                }
+                for (int part : parts) {
+                    int partGlyph = font.glyphId(part);
+                    glyphs[written++] = new ShapedGlyph(
+                            part,
+                            partGlyph,
+                            cluster,
+                            advanceOf(font, part, partGlyph)
+                    );
+                }
+                lastLetterCluster = cluster;
+                index++;
+                continue;
+            }
             if (consumed == 1 && index + 2 < count) {
                 int triple = HebrewPresentation.compose(codePoint, points[index + 1], points[index + 2]);
                 if (triple != 0 && font.glyphId(triple) != 0) {
@@ -145,10 +166,31 @@ public final class DefaultShaper {
                 }
             }
             if (consumed == 1 && index + 1 < count) {
+                int yiddish = HebrewPresentation.yiddishLigature(codePoint, points[index + 1]);
+                if (yiddish != 0 && font.glyphId(yiddish) != 0) {
+                    mapped = yiddish;
+                    consumed = 2;
+                }
+            }
+            if (consumed == 1 && index + 1 < count) {
+                int lao = ThaiLao.laoLigature(codePoint, points[index + 1]);
+                if (lao != 0 && font.glyphId(lao) != 0) {
+                    mapped = lao;
+                    consumed = 2;
+                }
+            }
+            if (consumed == 1 && index + 1 < count) {
                 int composed = HebrewPresentation.compose(codePoint, points[index + 1]);
                 if (composed != 0 && font.glyphId(composed) != 0) {
                     mapped = composed;
                     consumed = 2;
+                }
+            }
+            if (consumed == 1 && HebrewPresentation.isLetter(codePoint)
+                    && !followingHebrewLetter(points, count, index)) {
+                int fin = HebrewPresentation.finalForm(codePoint);
+                if (fin != 0 && font.glyphId(fin) != 0) {
+                    mapped = fin;
                 }
             }
             if (consumed == 1 && ArabicPresentation.isLam(codePoint)) {
@@ -222,6 +264,18 @@ public final class DefaultShaper {
         applyPairs(font, glyphs, written);
         applyMarks(font, glyphs, written);
         return Collections.unmodifiableList(Arrays.asList(glyphs));
+    }
+
+    /// Returns whether a Hebrew letter follows `index`, skipping combining marks.
+    private static boolean followingHebrewLetter(int[] points, int count, int index) {
+        for (int cursor = index + 1; cursor < count; cursor++) {
+            int codePoint = points[cursor];
+            if (HebrewPresentation.isMark(codePoint)) {
+                continue;
+            }
+            return HebrewPresentation.isLetter(codePoint);
+        }
+        return false;
     }
 
     /// Returns the layout advance, forcing U+00AD to zero so an unused soft hyphen does not take
@@ -477,6 +531,7 @@ public final class DefaultShaper {
                     || HebrewPresentation.isLetter(codePoint)
                     || codePoint == 0x05B9
                     || HangulSyllable.isJamo(codePoint)
+                    || HangulSyllable.isSyllable(codePoint)
                     || ThaiLao.isThaiOrLao(codePoint)
                     || ArabicJoining.isTransparent(codePoint)
                     || codePoint == 0x200C

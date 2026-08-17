@@ -247,7 +247,38 @@ final class GsubSubstitutions {
                         || rule.backtrackSixth != 0
                         || rule.backtrackSeventh != 0
                         || rule.backtrackEighth != 0
-                        || rule.backtrackNinth != 0) {
+                        || rule.backtrackNinth != 0
+                        || rule.backtrackTenth != 0
+                        || rule.backtrackEleventh != 0
+                        || rule.backtrackTwelfth != 0
+                        || rule.backtrackThirteenth != 0
+                        || rule.backtrackFourteenth != 0
+                        || rule.backtrackFifteenth != 0
+                        || rule.backtrackSixteenth != 0
+                        || rule.backtrackSeventeenth != 0
+                        || rule.backtrackEighteenth != 0
+                        || rule.backtrackNineteenth != 0
+                        || rule.backtrackTwentieth != 0
+                        || rule.backtrackTwentyFirst != 0
+                        || rule.backtrackTwentySecond != 0
+                        || rule.backtrackTwentyThird != 0
+                        || rule.backtrackTwentyFourth != 0
+                        || rule.backtrackTwentyFifth != 0
+                        || rule.backtrackTwentySixth != 0
+                        || rule.backtrackTwentySeventh != 0
+                        || rule.backtrackTwentyEighth != 0
+                        || rule.backtrackTwentyNinth != 0
+                        || rule.backtrackThirtieth != 0
+                        || rule.backtrackThirtyFirst != 0
+                        || rule.backtrackThirtySecond != 0
+                        || rule.backtrackThirtyThird != 0
+                        || rule.backtrackThirtyFourth != 0
+                        || rule.backtrackThirtyFifth != 0
+                        || rule.backtrackThirtySixth != 0
+                        || rule.backtrackThirtySeventh != 0
+                        || rule.backtrackThirtyEighth != 0
+                        || rule.backtrackThirtyNinth != 0
+                        || rule.backtrackFortieth != 0) {
                     continue;
                 }
                 if (rule.current == current && rule.next == candidateNext && rule.lookahead == candidateLook) {
@@ -291,6 +322,37 @@ final class GsubSubstitutions {
                         rule.backtrackSeventh,
                         rule.backtrackEighth,
                         rule.backtrackNinth,
+                        rule.backtrackTenth,
+                        rule.backtrackEleventh,
+                        rule.backtrackTwelfth,
+                        rule.backtrackThirteenth,
+                        rule.backtrackFourteenth,
+                        rule.backtrackFifteenth,
+                        rule.backtrackSixteenth,
+                        rule.backtrackSeventeenth,
+                        rule.backtrackEighteenth,
+                        rule.backtrackNineteenth,
+                        rule.backtrackTwentieth,
+                        rule.backtrackTwentyFirst,
+                        rule.backtrackTwentySecond,
+                        rule.backtrackTwentyThird,
+                        rule.backtrackTwentyFourth,
+                        rule.backtrackTwentyFifth,
+                        rule.backtrackTwentySixth,
+                        rule.backtrackTwentySeventh,
+                        rule.backtrackTwentyEighth,
+                        rule.backtrackTwentyNinth,
+                        rule.backtrackThirtieth,
+                        rule.backtrackThirtyFirst,
+                        rule.backtrackThirtySecond,
+                        rule.backtrackThirtyThird,
+                        rule.backtrackThirtyFourth,
+                        rule.backtrackThirtyFifth,
+                        rule.backtrackThirtySixth,
+                        rule.backtrackThirtySeventh,
+                        rule.backtrackThirtyEighth,
+                        rule.backtrackThirtyNinth,
+                        rule.backtrackFortieth,
                         rule.lookupFlag,
                         rule.markSet
                 )) {
@@ -327,11 +389,54 @@ final class GsubSubstitutions {
             int backSeventh,
             int backEighth,
             int backNinth,
+            int backTenth,
+            int backEleventh,
+            int backTwelfth,
+            int backThirteenth,
+            int backFourteenth,
+            int backFifteenth,
+            int backSixteenth,
+            int backSeventeenth,
+            int backEighteenth,
+            int backNineteenth,
+            int backTwentieth,
+            int backTwentyFirst,
+            int backTwentySecond,
+            int backTwentyThird,
+            int backTwentyFourth,
+            int backTwentyFifth,
+            int backTwentySixth,
+            int backTwentySeventh,
+            int backTwentyEighth,
+            int backTwentyNinth,
+            int backThirtieth,
+            int backThirtyFirst,
+            int backThirtySecond,
+            int backThirtyThird,
+            int backThirtyFourth,
+            int backThirtyFifth,
+            int backThirtySixth,
+            int backThirtySeventh,
+            int backThirtyEighth,
+            int backThirtyNinth,
+            int backFortieth,
             int lookupFlag,
             int markSet
     ) {
         if (backNear == 0 && backMid == 0 && backFar == 0 && backFarther == 0
-                && backFifth == 0 && backSixth == 0 && backSeventh == 0 && backEighth == 0 && backNinth == 0) {
+                && backFifth == 0 && backSixth == 0 && backSeventh == 0 && backEighth == 0
+                && backNinth == 0 && backTenth == 0 && backEleventh == 0 && backTwelfth == 0
+                && backThirteenth == 0 && backFourteenth == 0 && backFifteenth == 0
+                && backSixteenth == 0 && backSeventeenth == 0 && backEighteenth == 0
+                && backNineteenth == 0 && backTwentieth == 0 && backTwentyFirst == 0
+                && backTwentySecond == 0 && backTwentyThird == 0 && backTwentyFourth == 0
+                && backTwentyFifth == 0 && backTwentySixth == 0 && backTwentySeventh == 0
+                && backTwentyEighth == 0 && backTwentyNinth == 0 && backThirtieth == 0
+                && backThirtyFirst == 0 && backThirtySecond == 0
+                && backThirtyThird == 0 && backThirtyFourth == 0
+                && backThirtyFifth == 0 && backThirtySixth == 0
+                && backThirtySeventh == 0 && backThirtyEighth == 0
+                && backThirtyNinth == 0 && backFortieth == 0) {
             return true;
         }
         if (backNear == 0) {
@@ -382,7 +487,7 @@ final class GsubSubstitutions {
         if (backSixth != 0 && (sixthIndex < 0 || glyphIds[sixthIndex] != backSixth)) {
             return false;
         }
-        if (backSeventh == 0 && backEighth == 0) {
+        if (backSeventh == 0 && backEighth == 0 && backNinth == 0 && backTenth == 0) {
             return true;
         }
         int seventhCursor = backSixth == 0 ? sixthCursor : sixthIndex;
@@ -390,7 +495,7 @@ final class GsubSubstitutions {
         if (backSeventh != 0 && (seventhIndex < 0 || glyphIds[seventhIndex] != backSeventh)) {
             return false;
         }
-        if (backEighth == 0 && backNinth == 0) {
+        if (backEighth == 0 && backNinth == 0 && backTenth == 0) {
             return true;
         }
         int eighthCursor = backSeventh == 0 ? seventhCursor : seventhIndex;
@@ -398,12 +503,260 @@ final class GsubSubstitutions {
         if (backEighth != 0 && (eighthIndex < 0 || glyphIds[eighthIndex] != backEighth)) {
             return false;
         }
-        if (backNinth == 0) {
+        if (backNinth == 0 && backTenth == 0) {
             return true;
         }
         int ninthCursor = backEighth == 0 ? eighthCursor : eighthIndex;
         int ninthIndex = gdef.prevKeptIndex(glyphIds, ninthCursor - 1, lookupFlag, markSet);
-        return ninthIndex >= 0 && glyphIds[ninthIndex] == backNinth;
+        if (backNinth != 0 && (ninthIndex < 0 || glyphIds[ninthIndex] != backNinth)) {
+            return false;
+        }
+        if (backTenth == 0 && backEleventh == 0) {
+            return true;
+        }
+        int tenthCursor = backNinth == 0 ? ninthCursor : ninthIndex;
+        int tenthIndex = gdef.prevKeptIndex(glyphIds, tenthCursor - 1, lookupFlag, markSet);
+        if (backTenth != 0 && (tenthIndex < 0 || glyphIds[tenthIndex] != backTenth)) {
+            return false;
+        }
+        if (backEleventh == 0 && backTwelfth == 0) {
+            return true;
+        }
+        int eleventhCursor = backTenth == 0 ? tenthCursor : tenthIndex;
+        int eleventhIndex = gdef.prevKeptIndex(glyphIds, eleventhCursor - 1, lookupFlag, markSet);
+        if (backEleventh != 0 && (eleventhIndex < 0 || glyphIds[eleventhIndex] != backEleventh)) {
+            return false;
+        }
+        if (backTwelfth == 0 && backThirteenth == 0) {
+            return true;
+        }
+        int twelfthCursor = backEleventh == 0 ? eleventhCursor : eleventhIndex;
+        int twelfthIndex = gdef.prevKeptIndex(glyphIds, twelfthCursor - 1, lookupFlag, markSet);
+        if (backTwelfth != 0 && (twelfthIndex < 0 || glyphIds[twelfthIndex] != backTwelfth)) {
+            return false;
+        }
+        if (backThirteenth == 0 && backFourteenth == 0 && backFifteenth == 0) {
+            return true;
+        }
+        int thirteenthCursor = backTwelfth == 0 ? twelfthCursor : twelfthIndex;
+        int thirteenthIndex = gdef.prevKeptIndex(glyphIds, thirteenthCursor - 1, lookupFlag, markSet);
+        if (backThirteenth != 0 && (thirteenthIndex < 0 || glyphIds[thirteenthIndex] != backThirteenth)) {
+            return false;
+        }
+        if (backFourteenth == 0 && backFifteenth == 0) {
+            return true;
+        }
+        int fourteenthCursor = backThirteenth == 0 ? thirteenthCursor : thirteenthIndex;
+        int fourteenthIndex = gdef.prevKeptIndex(glyphIds, fourteenthCursor - 1, lookupFlag, markSet);
+        if (backFourteenth != 0 && (fourteenthIndex < 0 || glyphIds[fourteenthIndex] != backFourteenth)) {
+            return false;
+        }
+        if (backFifteenth == 0 && backSixteenth == 0 && backSeventeenth == 0) {
+            return true;
+        }
+        int fifteenthCursor = backFourteenth == 0 ? fourteenthCursor : fourteenthIndex;
+        int fifteenthIndex = gdef.prevKeptIndex(glyphIds, fifteenthCursor - 1, lookupFlag, markSet);
+        if (backFifteenth != 0 && (fifteenthIndex < 0 || glyphIds[fifteenthIndex] != backFifteenth)) {
+            return false;
+        }
+        if (backSixteenth == 0 && backSeventeenth == 0) {
+            return true;
+        }
+        int sixteenthCursor = backFifteenth == 0 ? fifteenthCursor : fifteenthIndex;
+        int sixteenthIndex = gdef.prevKeptIndex(glyphIds, sixteenthCursor - 1, lookupFlag, markSet);
+        if (backSixteenth != 0 && (sixteenthIndex < 0 || glyphIds[sixteenthIndex] != backSixteenth)) {
+            return false;
+        }
+        if (backSeventeenth == 0 && backEighteenth == 0) {
+            return true;
+        }
+        int seventeenthCursor = backSixteenth == 0 ? sixteenthCursor : sixteenthIndex;
+        int seventeenthIndex = gdef.prevKeptIndex(glyphIds, seventeenthCursor - 1, lookupFlag, markSet);
+        if (backSeventeenth != 0 && (seventeenthIndex < 0 || glyphIds[seventeenthIndex] != backSeventeenth)) {
+            return false;
+        }
+        if (backEighteenth == 0 && backNineteenth == 0) {
+            return true;
+        }
+        int eighteenthCursor = backSeventeenth == 0 ? seventeenthCursor : seventeenthIndex;
+        int eighteenthIndex = gdef.prevKeptIndex(glyphIds, eighteenthCursor - 1, lookupFlag, markSet);
+        if (backEighteenth != 0 && (eighteenthIndex < 0 || glyphIds[eighteenthIndex] != backEighteenth)) {
+            return false;
+        }
+        if (backNineteenth == 0 && backTwentieth == 0) {
+            return true;
+        }
+        int nineteenthCursor = backEighteenth == 0 ? eighteenthCursor : eighteenthIndex;
+        int nineteenthIndex = gdef.prevKeptIndex(glyphIds, nineteenthCursor - 1, lookupFlag, markSet);
+        if (backNineteenth != 0 && (nineteenthIndex < 0 || glyphIds[nineteenthIndex] != backNineteenth)) {
+            return false;
+        }
+        if (backTwentieth == 0 && backTwentyFirst == 0) {
+            return true;
+        }
+        int twentiethCursor = backNineteenth == 0 ? nineteenthCursor : nineteenthIndex;
+        int twentiethIndex = gdef.prevKeptIndex(glyphIds, twentiethCursor - 1, lookupFlag, markSet);
+        if (backTwentieth != 0 && (twentiethIndex < 0 || glyphIds[twentiethIndex] != backTwentieth)) {
+            return false;
+        }
+        if (backTwentyFirst == 0 && backTwentySecond == 0) {
+            return true;
+        }
+        int twentyFirstCursor = backTwentieth == 0 ? twentiethCursor : twentiethIndex;
+        int twentyFirstIndex = gdef.prevKeptIndex(glyphIds, twentyFirstCursor - 1, lookupFlag, markSet);
+        if (backTwentyFirst != 0 && (twentyFirstIndex < 0 || glyphIds[twentyFirstIndex] != backTwentyFirst)) {
+            return false;
+        }
+        if (backTwentySecond == 0 && backTwentyThird == 0) {
+            return true;
+        }
+        int twentySecondCursor = backTwentyFirst == 0 ? twentyFirstCursor : twentyFirstIndex;
+        int twentySecondIndex = gdef.prevKeptIndex(glyphIds, twentySecondCursor - 1, lookupFlag, markSet);
+        if (backTwentySecond != 0 && (twentySecondIndex < 0 || glyphIds[twentySecondIndex] != backTwentySecond)) {
+            return false;
+        }
+        if (backTwentyThird == 0 && backTwentyFourth == 0) {
+            return true;
+        }
+        int twentyThirdCursor = backTwentySecond == 0 ? twentySecondCursor : twentySecondIndex;
+        int twentyThirdIndex = gdef.prevKeptIndex(glyphIds, twentyThirdCursor - 1, lookupFlag, markSet);
+        if (backTwentyThird != 0 && (twentyThirdIndex < 0 || glyphIds[twentyThirdIndex] != backTwentyThird)) {
+            return false;
+        }
+        if (backTwentyFourth == 0 && backTwentyFifth == 0 && backTwentySixth == 0) {
+            return true;
+        }
+        int twentyFourthCursor = backTwentyThird == 0 ? twentyThirdCursor : twentyThirdIndex;
+        int twentyFourthIndex = gdef.prevKeptIndex(glyphIds, twentyFourthCursor - 1, lookupFlag, markSet);
+        if (backTwentyFourth != 0 && (twentyFourthIndex < 0 || glyphIds[twentyFourthIndex] != backTwentyFourth)) {
+            return false;
+        }
+        if (backTwentyFifth == 0 && backTwentySixth == 0) {
+            return true;
+        }
+        int twentyFifthCursor = backTwentyFourth == 0 ? twentyFourthCursor : twentyFourthIndex;
+        int twentyFifthIndex = gdef.prevKeptIndex(glyphIds, twentyFifthCursor - 1, lookupFlag, markSet);
+        if (backTwentyFifth != 0 && (twentyFifthIndex < 0 || glyphIds[twentyFifthIndex] != backTwentyFifth)) {
+            return false;
+        }
+        if (backTwentySixth == 0 && backTwentySeventh == 0 && backTwentyEighth == 0) {
+            return true;
+        }
+        int twentySixthCursor = backTwentyFifth == 0 ? twentyFifthCursor : twentyFifthIndex;
+        int twentySixthIndex = gdef.prevKeptIndex(glyphIds, twentySixthCursor - 1, lookupFlag, markSet);
+        if (backTwentySixth != 0 && (twentySixthIndex < 0 || glyphIds[twentySixthIndex] != backTwentySixth)) {
+            return false;
+        }
+        if (backTwentySeventh == 0 && backTwentyEighth == 0) {
+            return true;
+        }
+        int twentySeventhCursor = backTwentySixth == 0 ? twentySixthCursor : twentySixthIndex;
+        int twentySeventhIndex = gdef.prevKeptIndex(glyphIds, twentySeventhCursor - 1, lookupFlag, markSet);
+        if (backTwentySeventh != 0 && (twentySeventhIndex < 0 || glyphIds[twentySeventhIndex] != backTwentySeventh)) {
+            return false;
+        }
+        if (backTwentyEighth == 0 && backTwentyNinth == 0 && backThirtieth == 0) {
+            return true;
+        }
+        int twentyEighthCursor = backTwentySeventh == 0 ? twentySeventhCursor : twentySeventhIndex;
+        int twentyEighthIndex = gdef.prevKeptIndex(glyphIds, twentyEighthCursor - 1, lookupFlag, markSet);
+        if (backTwentyEighth != 0 && (twentyEighthIndex < 0 || glyphIds[twentyEighthIndex] != backTwentyEighth)) {
+            return false;
+        }
+        if (backTwentyNinth == 0 && backThirtieth == 0) {
+            return true;
+        }
+        int twentyNinthCursor = backTwentyEighth == 0 ? twentyEighthCursor : twentyEighthIndex;
+        int twentyNinthIndex = gdef.prevKeptIndex(glyphIds, twentyNinthCursor - 1, lookupFlag, markSet);
+        if (backTwentyNinth != 0 && (twentyNinthIndex < 0 || glyphIds[twentyNinthIndex] != backTwentyNinth)) {
+            return false;
+        }
+        if (backThirtieth == 0 && backThirtyFirst == 0 && backThirtySecond == 0) {
+            return true;
+        }
+        int thirtiethCursor = backTwentyNinth == 0 ? twentyNinthCursor : twentyNinthIndex;
+        int thirtiethIndex = gdef.prevKeptIndex(glyphIds, thirtiethCursor - 1, lookupFlag, markSet);
+        if (backThirtieth != 0 && (thirtiethIndex < 0 || glyphIds[thirtiethIndex] != backThirtieth)) {
+            return false;
+        }
+        if (backThirtyFirst == 0 && backThirtySecond == 0) {
+            return true;
+        }
+        int thirtyFirstCursor = backThirtieth == 0 ? thirtiethCursor : thirtiethIndex;
+        int thirtyFirstIndex = gdef.prevKeptIndex(glyphIds, thirtyFirstCursor - 1, lookupFlag, markSet);
+        if (backThirtyFirst != 0 && (thirtyFirstIndex < 0 || glyphIds[thirtyFirstIndex] != backThirtyFirst)) {
+            return false;
+        }
+        if (backThirtySecond == 0 && backThirtyThird == 0 && backThirtyFourth == 0) {
+            return true;
+        }
+        int thirtySecondCursor = backThirtyFirst == 0 ? thirtyFirstCursor : thirtyFirstIndex;
+        int thirtySecondIndex = gdef.prevKeptIndex(glyphIds, thirtySecondCursor - 1, lookupFlag, markSet);
+        if (backThirtySecond != 0 && (thirtySecondIndex < 0 || glyphIds[thirtySecondIndex] != backThirtySecond)) {
+            return false;
+        }
+        if (backThirtyThird == 0 && backThirtyFourth == 0) {
+            return true;
+        }
+        int thirtyThirdCursor = backThirtySecond == 0 ? thirtySecondCursor : thirtySecondIndex;
+        int thirtyThirdIndex = gdef.prevKeptIndex(glyphIds, thirtyThirdCursor - 1, lookupFlag, markSet);
+        if (backThirtyThird != 0 && (thirtyThirdIndex < 0 || glyphIds[thirtyThirdIndex] != backThirtyThird)) {
+            return false;
+        }
+        if (backThirtyFourth == 0 && backThirtyFifth == 0 && backThirtySixth == 0) {
+            return true;
+        }
+        int thirtyFourthCursor = backThirtyThird == 0 ? thirtyThirdCursor : thirtyThirdIndex;
+        int thirtyFourthIndex = gdef.prevKeptIndex(glyphIds, thirtyFourthCursor - 1, lookupFlag, markSet);
+        if (backThirtyFourth != 0 && (thirtyFourthIndex < 0 || glyphIds[thirtyFourthIndex] != backThirtyFourth)) {
+            return false;
+        }
+        if (backThirtyFifth == 0 && backThirtySixth == 0) {
+            return true;
+        }
+        int thirtyFifthCursor = backThirtyFourth == 0 ? thirtyFourthCursor : thirtyFourthIndex;
+        int thirtyFifthIndex = gdef.prevKeptIndex(glyphIds, thirtyFifthCursor - 1, lookupFlag, markSet);
+        if (backThirtyFifth != 0 && (thirtyFifthIndex < 0 || glyphIds[thirtyFifthIndex] != backThirtyFifth)) {
+            return false;
+        }
+        if (backThirtySixth == 0 && backThirtySeventh == 0 && backThirtyEighth == 0) {
+            return true;
+        }
+        int thirtySixthCursor = backThirtyFifth == 0 ? thirtyFifthCursor : thirtyFifthIndex;
+        int thirtySixthIndex = gdef.prevKeptIndex(glyphIds, thirtySixthCursor - 1, lookupFlag, markSet);
+        if (backThirtySixth != 0 && (thirtySixthIndex < 0 || glyphIds[thirtySixthIndex] != backThirtySixth)) {
+            return false;
+        }
+        if (backThirtySeventh == 0 && backThirtyEighth == 0) {
+            return true;
+        }
+        int thirtySeventhCursor = backThirtySixth == 0 ? thirtySixthCursor : thirtySixthIndex;
+        int thirtySeventhIndex = gdef.prevKeptIndex(glyphIds, thirtySeventhCursor - 1, lookupFlag, markSet);
+        if (backThirtySeventh != 0 && (thirtySeventhIndex < 0 || glyphIds[thirtySeventhIndex] != backThirtySeventh)) {
+            return false;
+        }
+        if (backThirtyEighth == 0 && backThirtyNinth == 0 && backFortieth == 0) {
+            return true;
+        }
+        int thirtyEighthCursor = backThirtySeventh == 0 ? thirtySeventhCursor : thirtySeventhIndex;
+        int thirtyEighthIndex = gdef.prevKeptIndex(glyphIds, thirtyEighthCursor - 1, lookupFlag, markSet);
+        if (backThirtyEighth != 0 && (thirtyEighthIndex < 0 || glyphIds[thirtyEighthIndex] != backThirtyEighth)) {
+            return false;
+        }
+        if (backThirtyNinth == 0 && backFortieth == 0) {
+            return true;
+        }
+        int thirtyNinthCursor = backThirtyEighth == 0 ? thirtyEighthCursor : thirtyEighthIndex;
+        int thirtyNinthIndex = gdef.prevKeptIndex(glyphIds, thirtyNinthCursor - 1, lookupFlag, markSet);
+        if (backThirtyNinth != 0 && (thirtyNinthIndex < 0 || glyphIds[thirtyNinthIndex] != backThirtyNinth)) {
+            return false;
+        }
+        if (backFortieth == 0) {
+            return true;
+        }
+        int fortiethCursor = backThirtyNinth == 0 ? thirtyNinthCursor : thirtyNinthIndex;
+        int fortiethIndex = gdef.prevKeptIndex(glyphIds, fortiethCursor - 1, lookupFlag, markSet);
+        return fortiethIndex >= 0 && glyphIds[fortiethIndex] == backFortieth;
     }
 
     /// Reads up to `max` backtrack glyph or class ids. Index 0 is nearest.
@@ -415,7 +768,7 @@ final class GsubSubstitutions {
         if (count > max) {
             return null;
         }
-        int[] ids = new int[9];
+        int[] ids = new int[40];
         for (int index = 0; index < count; index++) {
             if (buffer.remaining() < 2) {
                 return null;
@@ -502,7 +855,38 @@ final class GsubSubstitutions {
                         || rule.backtrackSixth != 0
                         || rule.backtrackSeventh != 0
                         || rule.backtrackEighth != 0
-                        || rule.backtrackNinth != 0) {
+                        || rule.backtrackNinth != 0
+                        || rule.backtrackTenth != 0
+                        || rule.backtrackEleventh != 0
+                        || rule.backtrackTwelfth != 0
+                        || rule.backtrackThirteenth != 0
+                        || rule.backtrackFourteenth != 0
+                        || rule.backtrackFifteenth != 0
+                        || rule.backtrackSixteenth != 0
+                        || rule.backtrackSeventeenth != 0
+                        || rule.backtrackEighteenth != 0
+                        || rule.backtrackNineteenth != 0
+                        || rule.backtrackTwentieth != 0
+                        || rule.backtrackTwentyFirst != 0
+                        || rule.backtrackTwentySecond != 0
+                        || rule.backtrackTwentyThird != 0
+                        || rule.backtrackTwentyFourth != 0
+                        || rule.backtrackTwentyFifth != 0
+                        || rule.backtrackTwentySixth != 0
+                        || rule.backtrackTwentySeventh != 0
+                        || rule.backtrackTwentyEighth != 0
+                        || rule.backtrackTwentyNinth != 0
+                        || rule.backtrackThirtieth != 0
+                        || rule.backtrackThirtyFirst != 0
+                        || rule.backtrackThirtySecond != 0
+                        || rule.backtrackThirtyThird != 0
+                        || rule.backtrackThirtyFourth != 0
+                        || rule.backtrackThirtyFifth != 0
+                        || rule.backtrackThirtySixth != 0
+                        || rule.backtrackThirtySeventh != 0
+                        || rule.backtrackThirtyEighth != 0
+                        || rule.backtrackThirtyNinth != 0
+                        || rule.backtrackFortieth != 0) {
                     continue;
                 }
                 if (rule.current == current && rule.lookahead == lookahead) {
@@ -544,6 +928,37 @@ final class GsubSubstitutions {
                         rule.backtrackSeventh,
                         rule.backtrackEighth,
                         rule.backtrackNinth,
+                        rule.backtrackTenth,
+                        rule.backtrackEleventh,
+                        rule.backtrackTwelfth,
+                        rule.backtrackThirteenth,
+                        rule.backtrackFourteenth,
+                        rule.backtrackFifteenth,
+                        rule.backtrackSixteenth,
+                        rule.backtrackSeventeenth,
+                        rule.backtrackEighteenth,
+                        rule.backtrackNineteenth,
+                        rule.backtrackTwentieth,
+                        rule.backtrackTwentyFirst,
+                        rule.backtrackTwentySecond,
+                        rule.backtrackTwentyThird,
+                        rule.backtrackTwentyFourth,
+                        rule.backtrackTwentyFifth,
+                        rule.backtrackTwentySixth,
+                        rule.backtrackTwentySeventh,
+                        rule.backtrackTwentyEighth,
+                        rule.backtrackTwentyNinth,
+                        rule.backtrackThirtieth,
+                        rule.backtrackThirtyFirst,
+                        rule.backtrackThirtySecond,
+                        rule.backtrackThirtyThird,
+                        rule.backtrackThirtyFourth,
+                        rule.backtrackThirtyFifth,
+                        rule.backtrackThirtySixth,
+                        rule.backtrackThirtySeventh,
+                        rule.backtrackThirtyEighth,
+                        rule.backtrackThirtyNinth,
+                        rule.backtrackFortieth,
                         rule.lookupFlag,
                         rule.markSet
                 )) {
@@ -1241,7 +1656,7 @@ final class GsubSubstitutions {
             buffer.position(saved);
             return null;
         }
-        int @Nullable [] backs = readBacktrackIds(buffer, 9);
+        int @Nullable [] backs = readBacktrackIds(buffer, 40);
         if (backs == null) {
             buffer.position(saved);
             return null;
@@ -1286,7 +1701,38 @@ final class GsubSubstitutions {
                 backs[5],
                 backs[6],
                 backs[7],
-                backs[8]
+                backs[8],
+                backs[9],
+                backs[10],
+                backs[11],
+                backs[12],
+                backs[13],
+                backs[14],
+                backs[15],
+                backs[16],
+                backs[17],
+                backs[18],
+                backs[19],
+                backs[20],
+                backs[21],
+                backs[22],
+                backs[23],
+                backs[24],
+                backs[25],
+                backs[26],
+                backs[27],
+                backs[28],
+                backs[29],
+                backs[30],
+                backs[31],
+                backs[32],
+                backs[33],
+                backs[34],
+                backs[35],
+                backs[36],
+                backs[37],
+                backs[38],
+                backs[39]
         );
     }
 
@@ -1349,7 +1795,7 @@ final class GsubSubstitutions {
                 }
                 saved = buffer.position();
                 buffer.position(ruleOffset);
-                int @Nullable [] backClassIds = readBacktrackIds(buffer, 9);
+                int @Nullable [] backClassIds = readBacktrackIds(buffer, 40);
                 if (backClassIds == null) {
                     buffer.position(saved);
                     continue;
@@ -1414,6 +1860,37 @@ final class GsubSubstitutions {
                                                             sixth,
                                                             seventh,
                                                             0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
                                                             0
                                                     );
                                                 }
@@ -1452,7 +1929,7 @@ final class GsubSubstitutions {
         int sixthCoverage = 0;
         int seventhCoverage = 0;
         int eighthCoverage = 0;
-        if (backtrackCount > 9) {
+        if (backtrackCount > 40) {
             return new ChainRule[0];
         }
         if (backtrackCount >= 1) {
@@ -1503,7 +1980,193 @@ final class GsubSubstitutions {
             }
             eighthCoverage = offset + Short.toUnsignedInt(buffer.getShort());
         }
-        if (backtrackCount == 9) {
+        if (backtrackCount >= 9) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount >= 10) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount >= 11) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 12) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 13) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 14) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 15) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 16) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 17) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 18) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 19) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 20) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 21) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 22) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 23) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 24) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 25) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 26) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 27) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 28) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 29) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 30) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 31) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 32) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 33) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 34) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 35) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 36) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 37) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 38) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 39) {
+            if (buffer.remaining() < 2) {
+                return new ChainRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 40) {
             if (buffer.remaining() < 2) {
                 return new ChainRule[0];
             }
@@ -1590,6 +2253,37 @@ final class GsubSubstitutions {
                                                         sixth,
                                                         seventh,
                                                         0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
                                                         0
                                                 );
                                             }
@@ -1618,7 +2312,7 @@ final class GsubSubstitutions {
         }
         int coverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
         int backtrackCount = Short.toUnsignedInt(buffer.getShort());
-        if (backtrackCount > 9) {
+        if (backtrackCount > 40) {
             buffer.position(saved);
             return new ReverseRule[0];
         }
@@ -1686,7 +2380,98 @@ final class GsubSubstitutions {
             }
             eighthCoverageOffset = offset + Short.toUnsignedInt(buffer.getShort());
         }
-        if (backtrackCount == 9) {
+        if (backtrackCount >= 9) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount >= 10) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount >= 11) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 12) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 13) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 14) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 15) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 16) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 17) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 18) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 19) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 20) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 21) {
+            if (buffer.remaining() < 2) {
+                buffer.position(saved);
+                return new ReverseRule[0];
+            }
+            buffer.getShort();
+        }
+        if (backtrackCount == 22) {
             if (buffer.remaining() < 2) {
                 buffer.position(saved);
                 return new ReverseRule[0];
@@ -1764,6 +2549,37 @@ final class GsubSubstitutions {
                     backtrackSixth,
                     backtrackSeventh,
                     backtrackEighth,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
                     0
             );
         }
@@ -2023,6 +2839,38 @@ final class GsubSubstitutions {
     /// @param backtrackSixth the sixth required preceding glyph, or `0` when unused
     /// @param backtrackSeventh the seventh required preceding glyph, or `0` when unused
     /// @param backtrackEighth the eighth required preceding glyph, or `0` when unused
+    /// @param backtrackNinth the ninth required preceding glyph, or `0` when unused
+    /// @param backtrackTenth the tenth required preceding glyph, or `0` when unused
+    /// @param backtrackEleventh the eleventh required preceding glyph, or `0` when unused
+    /// @param backtrackTwelfth the twelfth required preceding glyph, or `0` when unused
+    /// @param backtrackThirteenth the thirteenth required preceding glyph, or `0` when unused
+    /// @param backtrackFourteenth the fourteenth required preceding glyph, or `0` when unused
+    /// @param backtrackFifteenth the fifteenth required preceding glyph, or `0` when unused
+    /// @param backtrackSixteenth the sixteenth required preceding glyph, or `0` when unused
+    /// @param backtrackSeventeenth the seventeenth required preceding glyph, or `0` when unused
+    /// @param backtrackEighteenth the eighteenth required preceding glyph, or `0` when unused
+    /// @param backtrackNineteenth the nineteenth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentieth the twentieth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyFirst the twenty-first required preceding glyph, or `0` when unused
+    /// @param backtrackTwentySecond the twenty-second required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyThird the twenty-third required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyFourth the twenty-fourth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyFifth the twenty-fifth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentySixth the twenty-sixth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentySeventh the twenty-seventh required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyEighth the twenty-eighth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyNinth the twenty-ninth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtieth the thirtieth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyFirst the thirty-first required preceding glyph, or `0` when unused
+    /// @param backtrackThirtySecond the thirty-second required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyThird the thirty-third required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyFourth the thirty-fourth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyFifth the thirty-fifth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtySixth the thirty-sixth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtySeventh the thirty-seventh required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyEighth the thirty-eighth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyNinth the thirty-ninth required preceding glyph, or `0` when unused
+    /// @param backtrackFortieth the fortieth required preceding glyph, or `0` when unused
     private record ChainRule(
             int current,
             int next,
@@ -2040,7 +2888,38 @@ final class GsubSubstitutions {
             int backtrackSixth,
             int backtrackSeventh,
             int backtrackEighth,
-            int backtrackNinth
+            int backtrackNinth,
+            int backtrackTenth,
+            int backtrackEleventh,
+            int backtrackTwelfth,
+            int backtrackThirteenth,
+            int backtrackFourteenth,
+            int backtrackFifteenth,
+            int backtrackSixteenth,
+            int backtrackSeventeenth,
+            int backtrackEighteenth,
+            int backtrackNineteenth,
+            int backtrackTwentieth,
+            int backtrackTwentyFirst,
+            int backtrackTwentySecond,
+            int backtrackTwentyThird,
+            int backtrackTwentyFourth,
+            int backtrackTwentyFifth,
+            int backtrackTwentySixth,
+            int backtrackTwentySeventh,
+            int backtrackTwentyEighth,
+            int backtrackTwentyNinth,
+            int backtrackThirtieth,
+            int backtrackThirtyFirst,
+            int backtrackThirtySecond,
+            int backtrackThirtyThird,
+            int backtrackThirtyFourth,
+            int backtrackThirtyFifth,
+            int backtrackThirtySixth,
+            int backtrackThirtySeventh,
+            int backtrackThirtyEighth,
+            int backtrackThirtyNinth,
+            int backtrackFortieth
     ) {
     }
 
@@ -2059,6 +2938,38 @@ final class GsubSubstitutions {
     /// @param backtrackSixth the sixth required preceding glyph, or `0` when unused
     /// @param backtrackSeventh the seventh required preceding glyph, or `0` when unused
     /// @param backtrackEighth the eighth required preceding glyph, or `0` when unused
+    /// @param backtrackNinth the ninth required preceding glyph, or `0` when unused
+    /// @param backtrackTenth the tenth required preceding glyph, or `0` when unused
+    /// @param backtrackEleventh the eleventh required preceding glyph, or `0` when unused
+    /// @param backtrackTwelfth the twelfth required preceding glyph, or `0` when unused
+    /// @param backtrackThirteenth the thirteenth required preceding glyph, or `0` when unused
+    /// @param backtrackFourteenth the fourteenth required preceding glyph, or `0` when unused
+    /// @param backtrackFifteenth the fifteenth required preceding glyph, or `0` when unused
+    /// @param backtrackSixteenth the sixteenth required preceding glyph, or `0` when unused
+    /// @param backtrackSeventeenth the seventeenth required preceding glyph, or `0` when unused
+    /// @param backtrackEighteenth the eighteenth required preceding glyph, or `0` when unused
+    /// @param backtrackNineteenth the nineteenth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentieth the twentieth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyFirst the twenty-first required preceding glyph, or `0` when unused
+    /// @param backtrackTwentySecond the twenty-second required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyThird the twenty-third required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyFourth the twenty-fourth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyFifth the twenty-fifth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentySixth the twenty-sixth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentySeventh the twenty-seventh required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyEighth the twenty-eighth required preceding glyph, or `0` when unused
+    /// @param backtrackTwentyNinth the twenty-ninth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtieth the thirtieth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyFirst the thirty-first required preceding glyph, or `0` when unused
+    /// @param backtrackThirtySecond the thirty-second required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyThird the thirty-third required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyFourth the thirty-fourth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyFifth the thirty-fifth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtySixth the thirty-sixth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtySeventh the thirty-seventh required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyEighth the thirty-eighth required preceding glyph, or `0` when unused
+    /// @param backtrackThirtyNinth the thirty-ninth required preceding glyph, or `0` when unused
+    /// @param backtrackFortieth the fortieth required preceding glyph, or `0` when unused
     private record ReverseRule(
             int current,
             int lookahead,
@@ -2073,7 +2984,38 @@ final class GsubSubstitutions {
             int backtrackSixth,
             int backtrackSeventh,
             int backtrackEighth,
-            int backtrackNinth
+            int backtrackNinth,
+            int backtrackTenth,
+            int backtrackEleventh,
+            int backtrackTwelfth,
+            int backtrackThirteenth,
+            int backtrackFourteenth,
+            int backtrackFifteenth,
+            int backtrackSixteenth,
+            int backtrackSeventeenth,
+            int backtrackEighteenth,
+            int backtrackNineteenth,
+            int backtrackTwentieth,
+            int backtrackTwentyFirst,
+            int backtrackTwentySecond,
+            int backtrackTwentyThird,
+            int backtrackTwentyFourth,
+            int backtrackTwentyFifth,
+            int backtrackTwentySixth,
+            int backtrackTwentySeventh,
+            int backtrackTwentyEighth,
+            int backtrackTwentyNinth,
+            int backtrackThirtieth,
+            int backtrackThirtyFirst,
+            int backtrackThirtySecond,
+            int backtrackThirtyThird,
+            int backtrackThirtyFourth,
+            int backtrackThirtyFifth,
+            int backtrackThirtySixth,
+            int backtrackThirtySeventh,
+            int backtrackThirtyEighth,
+            int backtrackThirtyNinth,
+            int backtrackFortieth
     ) {
     }
 

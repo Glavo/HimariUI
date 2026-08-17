@@ -71,6 +71,15 @@ final class PlatformValueTest {
                 WindowState.MAXIMIZED
         );
 
+        CapabilityReport sdr = new CapabilityReport(
+                PresentationMode.SDR,
+                PresentationMode.SDR,
+                DisplayColorDescription.SRGB_SDR,
+                "application",
+                "host advertised only SDR"
+        );
+        assertEquals(PresentationMode.SDR, sdr.effective());
+        assertEquals("host advertised only SDR", sdr.disabledHdrReason());
         assertThrows(IllegalArgumentException.class, () -> new LogicalRect(0.0, 0.0, -1.0, 1.0));
         assertThrows(IllegalArgumentException.class, () -> new PhysicalSize(-1, 0));
         assertThrows(IllegalArgumentException.class, () -> new WindowRequest(

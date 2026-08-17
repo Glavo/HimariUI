@@ -173,6 +173,32 @@
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }
     },
     {
+      "kind": "aggregate", "name": "uia_rect", "aggregateKind": "struct", "byteSize": 32, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "left", "type": "f64", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "top", "type": "f64", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "width", "type": "f64", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "height", "type": "f64", "byteOffset": 24, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "uia_rect_ptr", "pointee": "uia_rect", "constant": false, "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false } },
+    {
+      "kind": "aggregate", "name": "pointer_pen_info", "aggregateKind": "struct", "byteSize": 120, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "pointerType", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "pointerId", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "penFlags", "type": "u32", "byteOffset": 96, "bitOffset": null, "bitWidth": null },
+        { "name": "penMask", "type": "u32", "byteOffset": 100, "bitOffset": null, "bitWidth": null },
+        { "name": "pressure", "type": "u32", "byteOffset": 104, "bitOffset": null, "bitWidth": null },
+        { "name": "rotation", "type": "u32", "byteOffset": 108, "bitOffset": null, "bitWidth": null },
+        { "name": "tiltX", "type": "i32", "byteOffset": 112, "bitOffset": null, "bitWidth": null },
+        { "name": "tiltY", "type": "i32", "byteOffset": 116, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "pointer_pen_info_ptr", "pointee": "pointer_pen_info", "constant": false, "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false } },
+    {
       "kind": "aggregate", "name": "byte_array_32", "aggregateKind": "struct", "byteSize": 32, "alignment": 1, "packing": 0,
       "fields": [
         { "name": "first", "type": "u8", "byteOffset": 0, "bitOffset": null, "bitWidth": null }
@@ -1036,6 +1062,695 @@
       "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
     },
     {
+      "name": "ivirtualized_item_provider_realize",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "idock_provider_set_dock_position",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "dockPos", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "idock_provider_get_dock_position",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider_move",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "x", "type": "f64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "y", "type": "f64", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider_resize",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "width", "type": "f64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "height", "type": "f64", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider_rotate",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "degrees", "type": "f64", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider_get_can_move",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider_get_can_resize",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider_get_can_rotate",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "isynchronized_input_provider_start_listening",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "inputType", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "isynchronized_input_provider_cancel",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "imultiple_view_provider_set_current_view",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "viewId", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "imultiple_view_provider_get_current_view",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "idrop_target_provider_get_drop_target_effect",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "effect", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "idrag_provider_get_is_grabbed",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "idrag_provider_get_drop_effect",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "effect", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iannotation_provider_get_annotation_type_id",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iannotation_provider_get_annotation_type_name",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "name", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iannotation_provider_get_author",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "author", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iannotation_provider_get_date_time",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "dateTime", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iannotation_provider_get_target",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "target", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_child_provider_get_text_container",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "container", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_child_provider_get_text_range",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "range", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "istyles_provider_get_style_id",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "istyles_provider_get_style_name",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "name", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ispreadsheet_provider_get_item_by_name",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "name", "type": "const_wchar_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "found", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "icustom_navigation_provider_navigate",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "direction", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "retVal", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iobject_model_provider_get_underlying_object_model",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "retVal", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_edit_provider_get_active_composition",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "range", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_edit_provider_get_conversion_target",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "range", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iselection_provider_get_can_select_multiple",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iselection_provider_get_is_selection_required",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_get_child_id",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_get_name",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "name", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_get_role",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_do_default_action",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_get_value",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "value", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_get_state",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_get_description",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "description", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_get_default_action",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "action", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_get_keyboard_shortcut",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "shortcut", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_get_help",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "help", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_fragment_navigate",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "direction", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "retVal", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_fragment_set_focus",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_fragment_get_fragment_root",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "root", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_fragment_get_bounding_rectangle",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "rect", "type": "uia_rect_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_fragment_root_element_provider_from_point",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "x", "type": "f64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "y", "type": "f64", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "retVal", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_fragment_root_get_focus",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "retVal", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ilegacy_iaccessible_provider_set_value",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "value", "type": "const_wchar_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_fragment_get_runtime_id",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "runtimeId", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_fragment_get_embedded_fragment_roots",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "roots", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_get_provider_options",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "options", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_get_host_raw_element_provider",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "host", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_provider2_get_caret_range",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "isActive", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "range", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itext_provider2_range_from_annotation",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "annotation", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "range", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "ispreadsheet_item_provider_get_formula",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "formula", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iselection_provider2_get_item_count",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iselection_provider2_get_current_selected_item",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "item", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iselection_provider2_get_first_selected_item",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "item", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iselection_provider2_get_last_selected_item",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "item", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider2_zoom",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "zoom", "type": "f64", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider2_get_can_zoom",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider2_get_zoom_level",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "f64_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider2_zoom_by_unit",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "zoomUnit", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider2_get_zoom_minimum",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "f64_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "itransform_provider2_get_zoom_maximum",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "result", "type": "f64_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "imultiple_view_provider_get_view_name",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "viewId", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "name", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iitem_container_provider_find_item_by_property",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "startAfter", "type": "com_interface", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "propertyId", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "value", "type": "variant_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "found", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
+    },
+    {
       "name": "ivalue_provider_set_value",
       "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
       "parameters": [
@@ -1704,6 +2419,24 @@
       "availability": { "introduced": "7.0", "deprecated": null, "unavailable": false }
     },
     {
+      "name": "itext_range_provider2_show_context_menu",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "iraw_element_provider_simple2_show_context_menu",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "self", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "retained", "exceptionPolicy": "contain",
+      "availability": { "introduced": "8.0", "deprecated": null, "unavailable": false }
+    },
+    {
       "name": "itext_range_notimpl",
       "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
       "parameters": [
@@ -1867,6 +2600,16 @@
       "parameters": [
         { "name": "pointerId", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
         { "name": "pointerType", "type": "u32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "any",
+      "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getPointerPenInfo", "symbol": "GetPointerPenInfo",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "pointerId", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "penInfo", "type": "pointer_pen_info_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
       ],
       "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "any",
       "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false }
@@ -2249,6 +2992,48 @@
         { "name": "context", "type": "himc", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
         { "name": "form", "type": "compositionform_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
       ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "loadCursorW", "symbol": "LoadCursorW",
+      "result": { "type": "hcursor", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "instance", "type": "hinstance", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "cursorName", "type": "const_wchar_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "setCursor", "symbol": "SetCursor",
+      "result": { "type": "hcursor", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "cursor", "type": "hcursor", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "setCapture", "symbol": "SetCapture",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "releaseCapture", "symbol": "ReleaseCapture",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getCapture", "symbol": "GetCapture",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [],
       "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }
     }

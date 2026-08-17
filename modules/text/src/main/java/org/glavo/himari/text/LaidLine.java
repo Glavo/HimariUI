@@ -144,6 +144,30 @@ public record LaidLine(
         return left == Integer.MAX_VALUE ? 0 : right - left;
     }
 
+    /// Returns the source cluster whose visual caret is nearest `x`.
+    ///
+    /// This is the inverse of [`#caretX(int)`] used for click-to-caret. An empty line
+    /// returns [`#startCluster()`]. Distances that tie prefer the cluster whose caret
+    /// sits at or left of `x`.
+    ///
+    /// @param x the font-unit X from the line start
+    /// @return a cluster in `[startCluster, endClusterExclusive]`
+    public int clusterAt(int x) {
+        if (glyphs.isEmpty()) {
+            return startCluster;
+        }
+        int bestCluster = startCluster;
+        int bestDistance = Math.abs(caretX(startCluster) - x);
+        for (int cluster = startCluster + 1; cluster <= endClusterExclusive; cluster++) {
+            int distance = Math.abs(caretX(cluster) - x);
+            if (distance < bestDistance || (distance == bestDistance && caretX(cluster) <= x)) {
+                bestCluster = cluster;
+                bestDistance = distance;
+            }
+        }
+        return bestCluster;
+    }
+
     /// Returns whether any stored level is RTL.
     private boolean hasRtl() {
         for (int index = 0; index < bidiLevels.length; index++) {

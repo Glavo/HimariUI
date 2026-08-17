@@ -26,6 +26,35 @@ final class IccProfileTest {
         assertEquals(1.0f, linear.blue(), 0.01f);
     }
 
+    /// Decodes ICC parametric function type 1 as `(aX + b)^g`.
+    @Test
+    void paraType1DecodesPowerWithScale() {
+        IccProfile profile = IccProfile.parse(matrixWithParaType1());
+        assertEquals(1, profile.redTrc().paraFunction());
+        assertEquals(0.25f, profile.redTrc().decode(0.5f), 0.001f);
+        Color linear = profile.toExtendedLinear(0.5f, 0.5f, 0.5f, 1.0f);
+        assertTrue(linear.red() > 0.05f);
+        assertTrue(linear.red() < 0.5f);
+    }
+
+    /// Decodes ICC parametric function type 3 as the piecewise sRGB-style function.
+    @Test
+    void paraType3UsesLinearToe() {
+        IccProfile.Curve curve = new IccProfile.Curve(
+                2.0f,
+                new float[0],
+                3,
+                1.0f,
+                0.0f,
+                0.5f,
+                0.5f,
+                0.0f,
+                0.0f
+        );
+        assertEquals(0.25f, curve.decode(0.5f), 0.001f);
+        assertEquals(0.2f, curve.decode(0.4f), 0.001f);
+    }
+
     /// Rejects a truncated header instead of inventing tags.
     @Test
     void rejectsTruncatedProfile() {
@@ -59,6 +88,46 @@ final class IccProfileTest {
         assertEquals(0.2f, xyz[0], 0.001f);
         Color converted = lut.toExtendedLinear(1.0f, 0.0f, 0.0f, 1.0f);
         assertTrue(converted.red() > 0.05f);
+    }
+
+    /// Uses AToB2 when AToB0 and AToB1 are absent.
+    @Test
+    void atoB2ClutIsUsedWhenEarlierIntentsAreMissing() {
+        IccProfile lut = IccProfile.parse(matrixPlusTaggedLut(0x4132_4232, 13107));
+        assertEquals(null, lut.clut());
+        assertEquals(null, lut.clutAToB1());
+        assertNotNull(lut.clutAToB2());
+        float[] xyz = lut.clutAToB2().transform(1.0f, 0.0f, 0.0f);
+        assertEquals(0.2f, xyz[0], 0.001f);
+        Color converted = lut.toExtendedLinear(1.0f, 0.0f, 0.0f, 1.0f);
+        assertTrue(converted.red() > 0.05f);
+    }
+
+    /// Uses BToA2 when BToA0 and BToA1 are absent.
+    @Test
+    void bToA2ClutIsUsedWhenEarlierIntentsAreMissing() {
+        IccProfile lut = IccProfile.parse(matrixPlusTaggedLut(0x4232_4132, 65535));
+        assertEquals(null, lut.clutBToA0());
+        assertEquals(null, lut.clutBToA1());
+        assertNotNull(lut.clutBToA2());
+        float[] rgb = lut.clutBToA2().transform(1.0f, 0.0f, 0.0f);
+        assertEquals(1.0f, rgb[0], 0.001f);
+        Color device = lut.fromExtendedLinear(Color.extendedLinear(1.0f, 0.0f, 0.0f, 1.0f));
+        assertTrue(device.red() >= 0.0f);
+    }
+
+    /// Uses BToA1 when BToA0 is absent.
+    @Test
+    void bToA1ClutIsUsedWhenBToA0IsMissing() {
+        IccProfile lut = IccProfile.parse(matrixPlusTaggedLut(0x4232_4131, 65535));
+        assertEquals(null, lut.clutBToA0());
+        assertNotNull(lut.clutBToA1());
+        float[] rgb = lut.clutBToA1().transform(1.0f, 0.0f, 0.0f);
+        assertEquals(1.0f, rgb[0], 0.001f);
+        assertEquals(0.0f, rgb[1], 0.001f);
+        assertEquals(0.0f, rgb[2], 0.001f);
+        Color device = lut.fromExtendedLinear(Color.extendedLinear(1.0f, 0.0f, 0.0f, 1.0f));
+        assertTrue(device.red() >= 0.0f);
     }
 
     /// Uses BToA0 when inverting a unique CLUT cell.
@@ -225,6 +294,54 @@ final class IccProfileTest {
         putS15(bytes, offset + 8, x);
         putS15(bytes, offset + 12, y);
         putS15(bytes, offset + 16, z);
+    }
+
+    /// Builds the matrix profile with type-1 `para` TRCs (`Y = X^2`).
+    private static byte[] matrixWithParaType1() {
+        int tagCount = 6;
+        int table = 132 + tagCount * 12;
+        int xyzSize = 20;
+        int curveSize = 24;
+        int size = table + 3 * xyzSize + 3 * curveSize;
+        byte[] bytes = new byte[size];
+        putU32(bytes, 0, size);
+        putU32(bytes, 8, 0x0240_0000);
+        putSignature(bytes, 12, "mntr");
+        putSignature(bytes, 16, "RGB ");
+        putSignature(bytes, 20, "XYZ ");
+        putSignature(bytes, 36, "acsp");
+        putS15(bytes, 68, 0.9642f);
+        putS15(bytes, 72, 1.0f);
+        putS15(bytes, 76, 0.8249f);
+        putU32(bytes, 128, tagCount);
+        int redXyz = table;
+        int greenXyz = redXyz + xyzSize;
+        int blueXyz = greenXyz + xyzSize;
+        int redTrc = blueXyz + xyzSize;
+        int greenTrc = redTrc + curveSize;
+        int blueTrc = greenTrc + curveSize;
+        putTag(bytes, 0, 0x7258_595A, redXyz, xyzSize);
+        putTag(bytes, 1, 0x6758_595A, greenXyz, xyzSize);
+        putTag(bytes, 2, 0x6258_595A, blueXyz, xyzSize);
+        putTag(bytes, 3, 0x7254_5243, redTrc, curveSize);
+        putTag(bytes, 4, 0x6754_5243, greenTrc, curveSize);
+        putTag(bytes, 5, 0x6254_5243, blueTrc, curveSize);
+        putXyz(bytes, redXyz, 0.4360657f, 0.2224884f, 0.0139160f);
+        putXyz(bytes, greenXyz, 0.3851477f, 0.7168732f, 0.0971045f);
+        putXyz(bytes, blueXyz, 0.1430664f, 0.0606084f, 0.7141733f);
+        putParaType1(bytes, redTrc);
+        putParaType1(bytes, greenTrc);
+        putParaType1(bytes, blueTrc);
+        return bytes;
+    }
+
+    /// Writes a type-1 `para` tag `Y = X^2`.
+    private static void putParaType1(byte[] bytes, int offset) {
+        putSignature(bytes, offset, "para");
+        putU16(bytes, offset + 8, 1);
+        putS15(bytes, offset + 12, 2.0f);
+        putS15(bytes, offset + 16, 1.0f);
+        putS15(bytes, offset + 20, 0.0f);
     }
 
     /// Writes one identity `curv` tag.

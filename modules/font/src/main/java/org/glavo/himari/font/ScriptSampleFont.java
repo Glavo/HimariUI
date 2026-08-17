@@ -81,6 +81,30 @@ public final class ScriptSampleFont {
     /// Last Lao code point stored in this font.
     private static final int LAO_LAST = 0x0ECD;
 
+    /// Glyph of `U+FB1D`.
+    private static final int GLYPH_FB1D = GLYPH_LAO + (LAO_LAST - 0x0E81) + 1;
+
+    /// Glyph of `U+FB2E`.
+    private static final int GLYPH_FB2E = GLYPH_FB1D + 1;
+
+    /// Glyph of `U+FB2F`.
+    private static final int GLYPH_FB2F = GLYPH_FB2E + 1;
+
+    /// Glyph of `U+FB4C`.
+    private static final int GLYPH_FB4C = GLYPH_FB2F + 1;
+
+    /// Glyph of `U+FB1F`.
+    private static final int GLYPH_FB1F = GLYPH_FB4C + 4;
+
+    /// Glyph of `U+FB4F`.
+    private static final int GLYPH_FB4F = GLYPH_FB4C + 3;
+
+    /// Glyph of Yiddish double vav `U+05F0`.
+    private static final int GLYPH_YIDDISH = GLYPH_FB4C + 5;
+
+    /// Glyph of Lao ho-no `U+0EDC`.
+    private static final int GLYPH_LAO_LIGATURE = GLYPH_YIDDISH + 3;
+
     /// Prevents instantiation.
     private ScriptSampleFont() {
     }
@@ -114,7 +138,7 @@ public final class ScriptSampleFont {
     ///
     /// @return the count
     static int glyphCount() {
-        return GLYPH_LAO + (LAO_LAST - 0x0E81) + 1;
+        return GLYPH_LAO_LIGATURE + 2;
     }
 
     /// Returns whether `glyphId` is an empty outline.
@@ -142,19 +166,20 @@ public final class ScriptSampleFont {
     /// Writes the format-4 cmap.
     private static byte[] cmap() {
         int[] starts = {
-                ASCII_FIRST, 0x05B9, 0x05BC, 0x05C1, 0x05D0, 0x0621, 0x064B,
-                0x0E01, 0x0E81, 0x1100, 0x1161, 0x11A8, 0xAC00, 0xFB2A, 0xFB30, 0xFB4B, 0xFE80, 0xFFFF
+                ASCII_FIRST, 0x05B9, 0x05BC, 0x05C1, 0x05D0, 0x05F0, 0x0621, 0x064B,
+                0x0E01, 0x0E81, 0x0EDC, 0x1100, 0x1161, 0x11A8, 0xAC00, 0xFB1D, 0xFB1F, 0xFB2A, 0xFB2E, 0xFB30, 0xFB4B, 0xFB4C, 0xFE80, 0xFFFF
         };
         int[] ends = {
-                ASCII_LAST, 0x05B9, 0x05BC, 0x05C2, 0x05EA, 0x064A, 0x0652,
-                THAI_LAST, LAO_LAST, 0x1100, 0x1161, 0x11A8, 0xAC01, 0xFB2D, 0xFB31, 0xFB4B, FE_LAST, 0xFFFF
+                ASCII_LAST, 0x05B9, 0x05BC, 0x05C2, 0x05EA, 0x05F2, 0x064A, 0x0652,
+                THAI_LAST, LAO_LAST, 0x0EDD, 0x1100, 0x1161, 0x11A8, 0xAC01, 0xFB1D, 0xFB1F, 0xFB2D, 0xFB2F, 0xFB31, 0xFB4B, 0xFB4F, FE_LAST, 0xFFFF
         };
         int[] firstGlyphs = {
                 GLYPH_SPACE, GLYPH_HEBREW_MARK, GLYPH_HEBREW_MARK, GLYPH_HEBREW_MARK + 1, GLYPH_HEBREW_LETTER,
+                GLYPH_YIDDISH,
                 GLYPH_ARABIC_LETTER, GLYPH_ARABIC_MARK,
-                GLYPH_THAI, GLYPH_LAO,
+                GLYPH_THAI, GLYPH_LAO, GLYPH_LAO_LIGATURE,
                 GLYPH_HANGUL_LEAD, GLYPH_HANGUL_VOWEL, GLYPH_HANGUL_TRAIL, GLYPH_HANGUL_GA,
-                GLYPH_FB2A, GLYPH_FB30, GLYPH_FB4B, GLYPH_FE80, 0
+                GLYPH_FB1D, GLYPH_FB1F, GLYPH_FB2A, GLYPH_FB2E, GLYPH_FB30, GLYPH_FB4B, GLYPH_FB4C, GLYPH_FE80, 0
         };
         int segCount = starts.length;
         ByteBuffer buffer = ByteBuffer.allocate(384).order(ByteOrder.BIG_ENDIAN);

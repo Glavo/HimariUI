@@ -21,7 +21,9 @@ import java.util.Objects;
 import java.util.UUID;
 
 /// Implements `IRawElementProviderSimple` plus Invoke, Toggle, RangeValue, Value,
-/// ExpandCollapse, SelectionItem, Grid, Table, Scroll, ScrollItem, Window, and Text COM patterns.
+/// ExpandCollapse, SelectionItem, Grid, Table, Scroll, ScrollItem, VirtualizedItem, Dock,
+/// Transform, Transform2, ItemContainer, Window, Text, TextChild, Styles, Spreadsheet,
+/// CustomNavigation, and ObjectModel COM patterns.
 @SuppressWarnings("restricted")
 @NotNullByDefault
 public final class WindowsAutomationProvider implements AutoCloseable {
@@ -31,6 +33,18 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `IRawElementProviderSimple`.
     private static final UUID IRAW_ELEMENT_PROVIDER_SIMPLE =
             UUID.fromString("d6dd68d1-86fd-4332-8666-9abedea2d24c");
+
+    /// `IRawElementProviderSimple2`.
+    private static final UUID IRAW_ELEMENT_PROVIDER_SIMPLE2 =
+            UUID.fromString("a0a839a9-8da1-4a82-806a-8e0d44e79f56");
+
+    /// `IRawElementProviderFragment`.
+    private static final UUID IRAW_ELEMENT_PROVIDER_FRAGMENT =
+            UUID.fromString("f7063da8-8359-439c-9297-bbc5299a7d87");
+
+    /// `IRawElementProviderFragmentRoot`.
+    private static final UUID IRAW_ELEMENT_PROVIDER_FRAGMENT_ROOT =
+            UUID.fromString("620ce2a5-ab8f-40a9-86cb-de3c75599b58");
 
     /// `IInvokeProvider`.
     private static final UUID IINVOKE_PROVIDER = UUID.fromString("619be086-1f4e-4ee4-839e-4544a54da35d");
@@ -67,6 +81,87 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `IScrollItemProvider`.
     private static final UUID ISCROLL_ITEM_PROVIDER = UUID.fromString("2360c714-4bf1-4b26-ba65-9b21316127eb");
 
+    /// `IVirtualizedItemProvider`.
+    private static final UUID IVIRTUALIZED_ITEM_PROVIDER =
+            UUID.fromString("6ba3d5f4-3935-4117-8b15-0c437c2e6c2e");
+
+    /// `IDockProvider`.
+    private static final UUID IDOCK_PROVIDER = UUID.fromString("159bc72c-4ad3-485e-9637-d7052edf0146");
+
+    /// `ITransformProvider`.
+    private static final UUID ITRANSFORM_PROVIDER = UUID.fromString("6829ddc4-4f91-4ffa-b86f-bd3e5267c311");
+
+    /// `IItemContainerProvider`.
+    private static final UUID IITEM_CONTAINER_PROVIDER =
+            UUID.fromString("e3fad038-4e21-4237-a4d6-55676557c162");
+
+    /// `ISynchronizedInputProvider`.
+    private static final UUID ISYNCHRONIZED_INPUT_PROVIDER =
+            UUID.fromString("29db1a06-02ce-4cf7-9b42-565d4fab20ee");
+
+    /// `IMultipleViewProvider`.
+    private static final UUID IMULTIPLE_VIEW_PROVIDER =
+            UUID.fromString("6278cab1-b556-4a1a-b4e0-418d48aeb45b");
+
+    /// `IDropTargetProvider`.
+    private static final UUID IDROP_TARGET_PROVIDER =
+            UUID.fromString("bae82bfd-358a-481c-85a0-d8b4d90a5d61");
+
+    /// `IDragProvider`.
+    private static final UUID IDRAG_PROVIDER = UUID.fromString("6aa7bbbb-7ff9-497d-904f-d20b897929d8");
+
+    /// `IAnnotationProvider`.
+    private static final UUID IANNOTATION_PROVIDER =
+            UUID.fromString("f95c7e80-bd63-4601-9782-445ebff011fc");
+
+    /// `ITextChildProvider`.
+    private static final UUID ITEXT_CHILD_PROVIDER =
+            UUID.fromString("4c2de2b9-c88f-4f88-a111-f24c2400987a");
+
+    /// `IStylesProvider`.
+    private static final UUID ISTYLES_PROVIDER =
+            UUID.fromString("19b6b649-f5d7-4a6d-bdcb-129252be588a");
+
+    /// `ISpreadsheetProvider`.
+    private static final UUID ISPREADSHEET_PROVIDER =
+            UUID.fromString("6f6b5d35-5525-4f80-b758-85473832ffc7");
+
+    /// `ICustomNavigationProvider`.
+    private static final UUID ICUSTOM_NAVIGATION_PROVIDER =
+            UUID.fromString("01ea217a-1766-47ed-a6fc-0ed7656d026e");
+
+    /// `IObjectModelProvider`.
+    private static final UUID IOBJECT_MODEL_PROVIDER =
+            UUID.fromString("3ad86ebd-f5ef-483d-bb18-b1042a475d64");
+
+    /// `ITextEditProvider`.
+    private static final UUID ITEXT_EDIT_PROVIDER =
+            UUID.fromString("ea3605b4-3a05-400e-b5f9-4e91b40f6176");
+
+    /// `ISelectionProvider`.
+    private static final UUID ISELECTION_PROVIDER =
+            UUID.fromString("fb8b03af-3bdf-48d4-bd36-1a65793be168");
+
+    /// `ILegacyIAccessibleProvider`.
+    private static final UUID ILEGACY_IACCESSIBLE_PROVIDER =
+            UUID.fromString("e44c3566-915d-4070-99c6-047bff5a08f5");
+
+    /// `ITextProvider2`.
+    private static final UUID ITEXT_PROVIDER2 =
+            UUID.fromString("0eb205d3-a011-4ff4-a575-437f56c4dd83");
+
+    /// `ISpreadsheetItemProvider`.
+    private static final UUID ISPREADSHEET_ITEM_PROVIDER =
+            UUID.fromString("ea51a14a-bd5d-4c2f-8b8a-5e1d0d3e4e3e");
+
+    /// `ISelectionProvider2`.
+    private static final UUID ISELECTION_PROVIDER2 =
+            UUID.fromString("14f68475-ee1c-44f6-a869-d239381f0fe7");
+
+    /// `ITransformProvider2`.
+    private static final UUID ITRANSFORM_PROVIDER2 =
+            UUID.fromString("4758742f-7ac2-460c-bc48-09fc09308a13");
+
     /// `IValueProvider`.
     private static final UUID IVALUE_PROVIDER = UUID.fromString("c7935180-6fb3-4201-b174-7df73adbf64a");
 
@@ -79,8 +174,15 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `ITextRangeProvider`.
     private static final UUID ITEXT_RANGE_PROVIDER = UUID.fromString("534729dc-411e-4aaa-9d3a-eb1d1d2c9d87");
 
+    /// `ITextRangeProvider2`.
+    private static final UUID ITEXT_RANGE_PROVIDER2 =
+            UUID.fromString("9bbce42c-1921-4f18-89ca-dba1910a0386");
+
     /// `UIA_ControlTypePropertyId`.
     static final int UIA_CONTROL_TYPE_PROPERTY_ID = 30003;
+
+    /// `UIA_NamePropertyId`.
+    static final int UIA_NAME_PROPERTY_ID = 30005;
 
     /// `UIA_LiveSettingPropertyId`.
     static final int UIA_LIVE_SETTING_PROPERTY_ID = 30135;
@@ -114,6 +216,102 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// `UIA_ScrollItemPatternId`.
     static final int UIA_SCROLL_ITEM_PATTERN_ID = 10017;
+
+    /// `UIA_VirtualizedItemPatternId`.
+    static final int UIA_VIRTUALIZED_ITEM_PATTERN_ID = 10020;
+
+    /// `UIA_DockPatternId`.
+    static final int UIA_DOCK_PATTERN_ID = 10011;
+
+    /// `UIA_TransformPatternId`.
+    static final int UIA_TRANSFORM_PATTERN_ID = 10016;
+
+    /// `UIA_ItemContainerPatternId`.
+    static final int UIA_ITEM_CONTAINER_PATTERN_ID = 10019;
+
+    /// `UIA_SynchronizedInputPatternId`.
+    static final int UIA_SYNCHRONIZED_INPUT_PATTERN_ID = 10021;
+
+    /// `UIA_MultipleViewPatternId`.
+    static final int UIA_MULTIPLE_VIEW_PATTERN_ID = 10008;
+
+    /// `UIA_AnnotationPatternId`.
+    static final int UIA_ANNOTATION_PATTERN_ID = 10023;
+
+    /// `UIA_DragPatternId`.
+    static final int UIA_DRAG_PATTERN_ID = 10030;
+
+    /// `UIA_DropTargetPatternId`.
+    static final int UIA_DROP_TARGET_PATTERN_ID = 10031;
+
+    /// `UIA_TextChildPatternId`.
+    static final int UIA_TEXT_CHILD_PATTERN_ID = 10029;
+
+    /// `UIA_StylesPatternId`.
+    static final int UIA_STYLES_PATTERN_ID = 10025;
+
+    /// `UIA_SpreadsheetPatternId`.
+    static final int UIA_SPREADSHEET_PATTERN_ID = 10026;
+
+    /// `UIA_CustomNavigationPatternId`.
+    static final int UIA_CUSTOM_NAVIGATION_PATTERN_ID = 10033;
+
+    /// `UIA_ObjectModelPatternId`.
+    static final int UIA_OBJECT_MODEL_PATTERN_ID = 10022;
+
+    /// `UIA_TextEditPatternId`.
+    static final int UIA_TEXT_EDIT_PATTERN_ID = 10032;
+
+    /// `UIA_SelectionPatternId`.
+    static final int UIA_SELECTION_PATTERN_ID = 10001;
+
+    /// `UIA_LegacyIAccessiblePatternId`.
+    static final int UIA_LEGACY_IACCESSIBLE_PATTERN_ID = 10018;
+
+    /// `UIA_TextPattern2Id`.
+    static final int UIA_TEXT_PATTERN2_ID = 10024;
+
+    /// `UIA_SpreadsheetItemPatternId`.
+    static final int UIA_SPREADSHEET_ITEM_PATTERN_ID = 10027;
+
+    /// `UIA_SelectionPattern2Id`.
+    static final int UIA_SELECTION_PATTERN2_ID = 10034;
+
+    /// `UIA_TransformPattern2Id`.
+    static final int UIA_TRANSFORM_PATTERN2_ID = 10028;
+
+    /// `ZoomUnit_LargeIncrement`.
+    static final int ZOOM_UNIT_LARGE_INCREMENT = 1;
+
+    /// First-stable `ITransformProvider2` zoom minimum.
+    static final double ZOOM_MINIMUM = 0.5;
+
+    /// First-stable `ITransformProvider2` zoom maximum.
+    static final double ZOOM_MAXIMUM = 4.0;
+
+    /// `ROLE_SYSTEM_CLIENT`.
+    static final int ROLE_SYSTEM_CLIENT = 10;
+
+    /// `ROLE_SYSTEM_PUSHBUTTON`.
+    static final int ROLE_SYSTEM_PUSHBUTTON = 43;
+
+    /// `STATE_SYSTEM_FOCUSABLE`.
+    static final int STATE_SYSTEM_FOCUSABLE = 0x0010_0000;
+
+    /// `StyleId_Normal`.
+    static final int STYLE_ID_NORMAL = 70000;
+
+    /// `NavigateDirection_Parent`.
+    static final int NAVIGATE_DIRECTION_PARENT = 0;
+
+    /// `ProviderOptions_ServerSideProvider`.
+    static final int PROVIDER_OPTIONS_SERVER_SIDE = 0x1;
+
+    /// `AnnotationType_Comment`.
+    static final int ANNOTATION_TYPE_COMMENT = 60003;
+
+    /// `SynchronizedInputType_KeyDown`.
+    static final int SYNCHRONIZED_INPUT_KEY_DOWN = 2;
 
     /// `UIA_ExpandCollapsePatternId`.
     static final int UIA_EXPAND_COLLAPSE_PATTERN_ID = 10005;
@@ -166,6 +364,12 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `ToggleState_Indeterminate`.
     static final int TOGGLE_STATE_INDETERMINATE = 2;
 
+    /// `DockPosition_None`.
+    static final int DOCK_POSITION_NONE = 5;
+
+    /// `DockPosition_Top`.
+    static final int DOCK_POSITION_TOP = 0;
+
     /// `WindowVisualState_Normal`.
     static final int WINDOW_VISUAL_STATE_NORMAL = 0;
 
@@ -202,6 +406,9 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `VT_I4`.
     private static final int VT_I4 = 3;
 
+    /// `VT_BSTR`.
+    private static final int VT_BSTR = 8;
+
     /// `S_OK`.
     private static final int S_OK = 0;
 
@@ -210,6 +417,9 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// `E_POINTER`.
     private static final int E_POINTER = 0x8000_4003;
+
+    /// `E_INVALIDARG`.
+    private static final int E_INVALIDARG = 0x8007_0057;
 
     /// `E_NOTIMPL`.
     private static final int E_NOTIMPL = 0x8000_4001;
@@ -229,11 +439,83 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// Simple provider vtable.
     private final MemorySegment simpleVtable;
 
+    /// Fragment provider COM object.
+    private final MemorySegment fragmentObject;
+
+    /// Fragment-root provider COM object.
+    private final MemorySegment fragmentRootObject;
+
     /// Invoke provider COM object.
     private final MemorySegment invokeObject;
 
     /// Scroll-item provider COM object.
     private final MemorySegment scrollItemObject;
+
+    /// Virtualized-item provider COM object.
+    private final MemorySegment virtualizedItemObject;
+
+    /// Dock provider COM object.
+    private final MemorySegment dockObject;
+
+    /// Transform provider COM object.
+    private final MemorySegment transformObject;
+
+    /// Item-container provider COM object.
+    private final MemorySegment itemContainerObject;
+
+    /// COM object returned by a successful [`#invokeFindItemByProperty(String)`].
+    private final MemorySegment foundItemObject;
+
+    /// Synchronized-input provider COM object.
+    private final MemorySegment synchronizedInputObject;
+
+    /// Multiple-view provider COM object.
+    private final MemorySegment multipleViewObject;
+
+    /// Drop-target provider COM object.
+    private final MemorySegment dropTargetObject;
+
+    /// Drag provider COM object.
+    private final MemorySegment dragObject;
+
+    /// Annotation provider COM object.
+    private final MemorySegment annotationObject;
+
+    /// Text-child provider COM object.
+    private final MemorySegment textChildObject;
+
+    /// Styles provider COM object.
+    private final MemorySegment stylesObject;
+
+    /// Spreadsheet provider COM object.
+    private final MemorySegment spreadsheetObject;
+
+    /// Custom-navigation provider COM object.
+    private final MemorySegment customNavigationObject;
+
+    /// Object-model provider COM object.
+    private final MemorySegment objectModelObject;
+
+    /// Text-edit provider COM object.
+    private final MemorySegment textEditObject;
+
+    /// Selection-container provider COM object.
+    private final MemorySegment selectionContainerObject;
+
+    /// Legacy IAccessible provider COM object.
+    private final MemorySegment legacyAccessibleObject;
+
+    /// Text provider 2 COM object.
+    private final MemorySegment text2Object;
+
+    /// Spreadsheet-item provider COM object.
+    private final MemorySegment spreadsheetItemObject;
+
+    /// Selection provider 2 COM object.
+    private final MemorySegment selection2Object;
+
+    /// Transform provider 2 COM object.
+    private final MemorySegment transform2Object;
 
     /// Value provider COM object.
     private final MemorySegment valueObject;
@@ -355,6 +637,60 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// Number of `IScrollItemProvider::ScrollIntoView` invocations.
     private int scrollItemCount;
 
+    /// Number of `IVirtualizedItemProvider::Realize` invocations.
+    private int virtualizedItemCount;
+
+    /// Number of `ITextRangeProvider2::ShowContextMenu` invocations.
+    private int textRangeContextMenuCount;
+
+    /// Number of `IRawElementProviderSimple2::ShowContextMenu` invocations.
+    private int simpleContextMenuCount;
+
+    /// `IRawElementProviderFragment::SetFocus` invocations.
+    private int fragmentFocusCount;
+
+    /// `ILegacyIAccessibleProvider::SetValue` invocations.
+    private int legacySetValueCount;
+
+    /// Last `ILegacyIAccessibleProvider::SetValue` payload.
+    private String lastLegacyValue = "";
+
+    /// Current `IDockProvider` dock position.
+    private int dockPosition;
+
+    /// Current `ITransformProvider` X origin.
+    private double transformX;
+
+    /// Current `ITransformProvider` Y origin.
+    private double transformY;
+
+    /// Current `ITransformProvider` width.
+    private double transformWidth;
+
+    /// Current `ITransformProvider` height.
+    private double transformHeight;
+
+    /// Current `ITransformProvider` rotation in degrees.
+    private double transformRotate;
+
+    /// Current `ITransformProvider2` zoom level.
+    private double transformZoom = 1.0;
+
+    /// COM object returned by the last successful [`#invokeFindItemByProperty(String)`].
+    private MemorySegment lastFoundItem = MemorySegment.NULL;
+
+    /// Last `ISynchronizedInputProvider::StartListening` input type.
+    private int synchronizedInputType;
+
+    /// Number of `ISynchronizedInputProvider::StartListening` invocations.
+    private int synchronizedInputStarts;
+
+    /// Number of `ISynchronizedInputProvider::Cancel` invocations.
+    private int synchronizedInputCancels;
+
+    /// Current `IMultipleViewProvider` view identifier.
+    private int currentView;
+
     /// Current `IValueProvider` string.
     private String valueText;
 
@@ -372,6 +708,13 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         this.node = node;
         this.valueText = node.label();
         this.windowVisualState = WINDOW_VISUAL_STATE_NORMAL;
+        this.dockPosition = DOCK_POSITION_NONE;
+        this.transformX = 0.0;
+        this.transformY = 0.0;
+        this.transformWidth = 1.0;
+        this.transformHeight = 1.0;
+        this.transformRotate = 0.0;
+        this.currentView = 1;
         this.toggleState = initialToggleState(node);
         this.rangeValue = node.rangeValue() == null ? 0.0 : node.rangeValue();
         this.expandState = initialExpandState(node);
@@ -412,12 +755,17 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         this.rangeStart = 0;
         this.rangeEnd = node.label().length();
         this.arena = Arena.ofConfined();
-        this.simpleVtable = arena.allocate(ValueLayout.ADDRESS, 6);
+        this.simpleVtable = arena.allocate(ValueLayout.ADDRESS, 8);
         this.simpleObject = arena.allocate(ValueLayout.ADDRESS);
         simpleObject.set(ValueLayout.ADDRESS, 0L, simpleVtable);
         simpleVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryInterface, failures, arena));
         simpleVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
         simpleVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        simpleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIrawElementProviderGetProviderOptionsStub(this::getProviderOptions, failures, arena)
+        );
         simpleVtable.setAtIndex(
                 ValueLayout.ADDRESS,
                 4L,
@@ -427,6 +775,68 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 ValueLayout.ADDRESS,
                 5L,
                 bindings.createIrawElementProviderGetPropertyValueStub(this::getPropertyValue, failures, arena)
+        );
+        simpleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                6L,
+                bindings.createIrawElementProviderSimple2ShowContextMenuStub(this::showSimpleContextMenu, failures, arena)
+        );
+        simpleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                7L,
+                bindings.createIrawElementProviderGetHostRawElementProviderStub(this::getHostRawElementProvider, failures, arena)
+        );
+        this.fragmentObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment fragmentVtable = arena.allocate(ValueLayout.ADDRESS, 9);
+        fragmentObject.set(ValueLayout.ADDRESS, 0L, fragmentVtable);
+        fragmentVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryFragment, failures, arena));
+        fragmentVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        fragmentVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        fragmentVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIrawElementProviderFragmentNavigateStub(this::navigateFragment, failures, arena)
+        );
+        fragmentVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createIrawElementProviderFragmentSetFocusStub(this::setFragmentFocus, failures, arena)
+        );
+        fragmentVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                5L,
+                bindings.createIrawElementProviderFragmentGetFragmentRootStub(this::getFragmentRoot, failures, arena)
+        );
+        fragmentVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                6L,
+                bindings.createIrawElementProviderFragmentGetBoundingRectangleStub(this::getFragmentBoundingRectangle, failures, arena)
+        );
+        fragmentVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                7L,
+                bindings.createIrawElementProviderFragmentGetRuntimeIdStub(this::getFragmentRuntimeId, failures, arena)
+        );
+        fragmentVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                8L,
+                bindings.createIrawElementProviderFragmentGetEmbeddedFragmentRootsStub(this::getEmbeddedFragmentRoots, failures, arena)
+        );
+        this.fragmentRootObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment fragmentRootVtable = arena.allocate(ValueLayout.ADDRESS, 5);
+        fragmentRootObject.set(ValueLayout.ADDRESS, 0L, fragmentRootVtable);
+        fragmentRootVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryFragmentRoot, failures, arena));
+        fragmentRootVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        fragmentRootVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        fragmentRootVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIrawElementProviderFragmentRootElementProviderFromPointStub(this::elementProviderFromPoint, failures, arena)
+        );
+        fragmentRootVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createIrawElementProviderFragmentRootGetFocusStub(this::getFragmentRootFocus, failures, arena)
         );
         this.invokeObject = arena.allocate(ValueLayout.ADDRESS);
         MemorySegment invokeVtable = arena.allocate(ValueLayout.ADDRESS, 4);
@@ -445,6 +855,442 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 ValueLayout.ADDRESS,
                 3L,
                 bindings.createIscrollItemProviderScrollIntoViewStub(this::scrollItemIntoView, failures, arena)
+        );
+        this.virtualizedItemObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment virtualizedItemVtable = arena.allocate(ValueLayout.ADDRESS, 4);
+        virtualizedItemObject.set(ValueLayout.ADDRESS, 0L, virtualizedItemVtable);
+        virtualizedItemVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::queryVirtualizedItem, failures, arena)
+        );
+        virtualizedItemVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        virtualizedItemVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        virtualizedItemVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIvirtualizedItemProviderRealizeStub(this::realizeVirtualizedItem, failures, arena)
+        );
+        this.dockObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment dockVtable = arena.allocate(ValueLayout.ADDRESS, 5);
+        dockObject.set(ValueLayout.ADDRESS, 0L, dockVtable);
+        dockVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryDock, failures, arena));
+        dockVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        dockVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        dockVtable.setAtIndex(ValueLayout.ADDRESS, 3L, bindings.createIdockProviderSetDockPositionStub(this::setDockPosition, failures, arena));
+        dockVtable.setAtIndex(ValueLayout.ADDRESS, 4L, bindings.createIdockProviderGetDockPositionStub(this::getDockPosition, failures, arena));
+        this.transformObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment transformVtable = arena.allocate(ValueLayout.ADDRESS, 9);
+        transformObject.set(ValueLayout.ADDRESS, 0L, transformVtable);
+        transformVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryTransform, failures, arena));
+        transformVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        transformVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        transformVtable.setAtIndex(ValueLayout.ADDRESS, 3L, bindings.createItransformProviderMoveStub(this::moveTransform, failures, arena));
+        transformVtable.setAtIndex(ValueLayout.ADDRESS, 4L, bindings.createItransformProviderResizeStub(this::resizeTransform, failures, arena));
+        transformVtable.setAtIndex(ValueLayout.ADDRESS, 5L, bindings.createItransformProviderRotateStub(this::rotateTransform, failures, arena));
+        transformVtable.setAtIndex(ValueLayout.ADDRESS, 6L, bindings.createItransformProviderGetCanMoveStub(this::getCanMove, failures, arena));
+        transformVtable.setAtIndex(ValueLayout.ADDRESS, 7L, bindings.createItransformProviderGetCanResizeStub(this::getCanResize, failures, arena));
+        transformVtable.setAtIndex(ValueLayout.ADDRESS, 8L, bindings.createItransformProviderGetCanRotateStub(this::getCanRotate, failures, arena));
+        this.itemContainerObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment itemContainerVtable = arena.allocate(ValueLayout.ADDRESS, 4);
+        itemContainerObject.set(ValueLayout.ADDRESS, 0L, itemContainerVtable);
+        itemContainerVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::queryItemContainer, failures, arena)
+        );
+        itemContainerVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        itemContainerVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        itemContainerVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIitemContainerProviderFindItemByPropertyStub(this::findItemByProperty, failures, arena)
+        );
+        this.foundItemObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment foundItemVtable = arena.allocate(ValueLayout.ADDRESS, 6);
+        foundItemObject.set(ValueLayout.ADDRESS, 0L, foundItemVtable);
+        foundItemVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryFoundItem, failures, arena));
+        foundItemVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        foundItemVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        foundItemVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createIrawElementProviderGetPatternProviderStub(this::getFoundItemPatternProvider, failures, arena)
+        );
+        foundItemVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                5L,
+                bindings.createIrawElementProviderGetPropertyValueStub(this::getFoundItemPropertyValue, failures, arena)
+        );
+        this.synchronizedInputObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment synchronizedInputVtable = arena.allocate(ValueLayout.ADDRESS, 5);
+        synchronizedInputObject.set(ValueLayout.ADDRESS, 0L, synchronizedInputVtable);
+        synchronizedInputVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::querySynchronizedInput, failures, arena)
+        );
+        synchronizedInputVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        synchronizedInputVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        synchronizedInputVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIsynchronizedInputProviderStartListeningStub(this::startListening, failures, arena)
+        );
+        synchronizedInputVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createIsynchronizedInputProviderCancelStub(this::cancelSynchronizedInput, failures, arena)
+        );
+        this.multipleViewObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment multipleViewVtable = arena.allocate(ValueLayout.ADDRESS, 6);
+        multipleViewObject.set(ValueLayout.ADDRESS, 0L, multipleViewVtable);
+        multipleViewVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::queryMultipleView, failures, arena)
+        );
+        multipleViewVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        multipleViewVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        multipleViewVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createImultipleViewProviderSetCurrentViewStub(this::setCurrentView, failures, arena)
+        );
+        multipleViewVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createImultipleViewProviderGetCurrentViewStub(this::getCurrentView, failures, arena)
+        );
+        multipleViewVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                5L,
+                bindings.createImultipleViewProviderGetViewNameStub(this::getViewName, failures, arena)
+        );
+        this.dropTargetObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment dropTargetVtable = arena.allocate(ValueLayout.ADDRESS, 4);
+        dropTargetObject.set(ValueLayout.ADDRESS, 0L, dropTargetVtable);
+        dropTargetVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryDropTarget, failures, arena));
+        dropTargetVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        dropTargetVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        dropTargetVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIdropTargetProviderGetDropTargetEffectStub(this::getDropTargetEffect, failures, arena)
+        );
+        this.dragObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment dragVtable = arena.allocate(ValueLayout.ADDRESS, 5);
+        dragObject.set(ValueLayout.ADDRESS, 0L, dragVtable);
+        dragVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryDrag, failures, arena));
+        dragVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        dragVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        dragVtable.setAtIndex(ValueLayout.ADDRESS, 3L, bindings.createIdragProviderGetIsGrabbedStub(this::getIsGrabbed, failures, arena));
+        dragVtable.setAtIndex(ValueLayout.ADDRESS, 4L, bindings.createIdragProviderGetDropEffectStub(this::getDropEffect, failures, arena));
+        this.annotationObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment annotationVtable = arena.allocate(ValueLayout.ADDRESS, 8);
+        annotationObject.set(ValueLayout.ADDRESS, 0L, annotationVtable);
+        annotationVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryAnnotation, failures, arena));
+        annotationVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        annotationVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        annotationVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIannotationProviderGetAnnotationTypeIdStub(this::getAnnotationTypeId, failures, arena)
+        );
+        annotationVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createIannotationProviderGetAnnotationTypeNameStub(this::getAnnotationTypeName, failures, arena)
+        );
+        annotationVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                5L,
+                bindings.createIannotationProviderGetAuthorStub(this::getAnnotationAuthor, failures, arena)
+        );
+        annotationVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                6L,
+                bindings.createIannotationProviderGetDateTimeStub(this::getAnnotationDateTime, failures, arena)
+        );
+        annotationVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                7L,
+                bindings.createIannotationProviderGetTargetStub(this::getAnnotationTarget, failures, arena)
+        );
+        this.textChildObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment textChildVtable = arena.allocate(ValueLayout.ADDRESS, 5);
+        textChildObject.set(ValueLayout.ADDRESS, 0L, textChildVtable);
+        textChildVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryTextChild, failures, arena));
+        textChildVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        textChildVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        textChildVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createItextChildProviderGetTextContainerStub(this::getTextContainer, failures, arena)
+        );
+        textChildVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createItextChildProviderGetTextRangeStub(this::getTextChildRange, failures, arena)
+        );
+        this.stylesObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment stylesVtable = arena.allocate(ValueLayout.ADDRESS, 5);
+        stylesObject.set(ValueLayout.ADDRESS, 0L, stylesVtable);
+        stylesVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryStyles, failures, arena));
+        stylesVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        stylesVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        stylesVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIstylesProviderGetStyleIdStub(this::getStyleId, failures, arena)
+        );
+        stylesVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createIstylesProviderGetStyleNameStub(this::getStyleName, failures, arena)
+        );
+        this.spreadsheetObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment spreadsheetVtable = arena.allocate(ValueLayout.ADDRESS, 4);
+        spreadsheetObject.set(ValueLayout.ADDRESS, 0L, spreadsheetVtable);
+        spreadsheetVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::querySpreadsheet, failures, arena)
+        );
+        spreadsheetVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        spreadsheetVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        spreadsheetVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIspreadsheetProviderGetItemByNameStub(this::getSpreadsheetItemByName, failures, arena)
+        );
+        this.customNavigationObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment customNavigationVtable = arena.allocate(ValueLayout.ADDRESS, 4);
+        customNavigationObject.set(ValueLayout.ADDRESS, 0L, customNavigationVtable);
+        customNavigationVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::queryCustomNavigation, failures, arena)
+        );
+        customNavigationVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        customNavigationVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        customNavigationVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIcustomNavigationProviderNavigateStub(this::navigateCustom, failures, arena)
+        );
+        this.objectModelObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment objectModelVtable = arena.allocate(ValueLayout.ADDRESS, 4);
+        objectModelObject.set(ValueLayout.ADDRESS, 0L, objectModelVtable);
+        objectModelVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::queryObjectModel, failures, arena)
+        );
+        objectModelVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        objectModelVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        objectModelVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIobjectModelProviderGetUnderlyingObjectModelStub(this::getUnderlyingObjectModel, failures, arena)
+        );
+        this.textEditObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment textEditVtable = arena.allocate(ValueLayout.ADDRESS, 5);
+        textEditObject.set(ValueLayout.ADDRESS, 0L, textEditVtable);
+        textEditVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryTextEdit, failures, arena));
+        textEditVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        textEditVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        textEditVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createItextEditProviderGetActiveCompositionStub(this::getActiveComposition, failures, arena)
+        );
+        textEditVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createItextEditProviderGetConversionTargetStub(this::getConversionTarget, failures, arena)
+        );
+        this.selectionContainerObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment selectionContainerVtable = arena.allocate(ValueLayout.ADDRESS, 5);
+        selectionContainerObject.set(ValueLayout.ADDRESS, 0L, selectionContainerVtable);
+        selectionContainerVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::querySelectionContainer, failures, arena)
+        );
+        selectionContainerVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        selectionContainerVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        selectionContainerVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIselectionProviderGetCanSelectMultipleStub(this::getCanSelectMultiple, failures, arena)
+        );
+        selectionContainerVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createIselectionProviderGetIsSelectionRequiredStub(this::getIsSelectionRequired, failures, arena)
+        );
+        this.legacyAccessibleObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment legacyAccessibleVtable = arena.allocate(ValueLayout.ADDRESS, 14);
+        legacyAccessibleObject.set(ValueLayout.ADDRESS, 0L, legacyAccessibleVtable);
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::queryLegacyAccessible, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        legacyAccessibleVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIlegacyIaccessibleProviderGetChildIdStub(this::getLegacyChildId, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createIlegacyIaccessibleProviderGetNameStub(this::getLegacyName, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                5L,
+                bindings.createIlegacyIaccessibleProviderGetRoleStub(this::getLegacyRole, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                6L,
+                bindings.createIlegacyIaccessibleProviderDoDefaultActionStub(this::doLegacyDefaultAction, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                7L,
+                bindings.createIlegacyIaccessibleProviderGetValueStub(this::getLegacyValue, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                8L,
+                bindings.createIlegacyIaccessibleProviderGetStateStub(this::getLegacyState, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                9L,
+                bindings.createIlegacyIaccessibleProviderGetDescriptionStub(this::getLegacyDescription, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                10L,
+                bindings.createIlegacyIaccessibleProviderGetDefaultActionStub(this::getLegacyDefaultAction, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                11L,
+                bindings.createIlegacyIaccessibleProviderGetKeyboardShortcutStub(this::getLegacyKeyboardShortcut, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                12L,
+                bindings.createIlegacyIaccessibleProviderGetHelpStub(this::getLegacyHelp, failures, arena)
+        );
+        legacyAccessibleVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                13L,
+                bindings.createIlegacyIaccessibleProviderSetValueStub(this::setLegacyValue, failures, arena)
+        );
+        this.text2Object = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment text2Vtable = arena.allocate(ValueLayout.ADDRESS, 5);
+        text2Object.set(ValueLayout.ADDRESS, 0L, text2Vtable);
+        text2Vtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryText2, failures, arena));
+        text2Vtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        text2Vtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        text2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createItextProvider2GetCaretRangeStub(this::getCaretRange, failures, arena)
+        );
+        text2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createItextProvider2RangeFromAnnotationStub(this::rangeFromAnnotation, failures, arena)
+        );
+        this.spreadsheetItemObject = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment spreadsheetItemVtable = arena.allocate(ValueLayout.ADDRESS, 4);
+        spreadsheetItemObject.set(ValueLayout.ADDRESS, 0L, spreadsheetItemVtable);
+        spreadsheetItemVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::querySpreadsheetItem, failures, arena)
+        );
+        spreadsheetItemVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        spreadsheetItemVtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        spreadsheetItemVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIspreadsheetItemProviderGetFormulaStub(this::getSpreadsheetFormula, failures, arena)
+        );
+        this.selection2Object = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment selection2Vtable = arena.allocate(ValueLayout.ADDRESS, 7);
+        selection2Object.set(ValueLayout.ADDRESS, 0L, selection2Vtable);
+        selection2Vtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::querySelection2, failures, arena));
+        selection2Vtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        selection2Vtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        selection2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIselectionProvider2GetItemCountStub(this::getSelectionItemCount, failures, arena)
+        );
+        selection2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createIselectionProvider2GetCurrentSelectedItemStub(this::getCurrentSelectedItem, failures, arena)
+        );
+        selection2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                5L,
+                bindings.createIselectionProvider2GetFirstSelectedItemStub(this::getFirstSelectedItem, failures, arena)
+        );
+        selection2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                6L,
+                bindings.createIselectionProvider2GetLastSelectedItemStub(this::getLastSelectedItem, failures, arena)
+        );
+        this.transform2Object = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment transform2Vtable = arena.allocate(ValueLayout.ADDRESS, 9);
+        transform2Object.set(ValueLayout.ADDRESS, 0L, transform2Vtable);
+        transform2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                0L,
+                bindings.createIunknownQueryInterfaceStub(this::queryTransform2, failures, arena)
+        );
+        transform2Vtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        transform2Vtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        transform2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createItransformProvider2ZoomStub(this::zoomTransform, failures, arena)
+        );
+        transform2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createItransformProvider2GetCanZoomStub(this::getCanZoom, failures, arena)
+        );
+        transform2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                5L,
+                bindings.createItransformProvider2GetZoomLevelStub(this::getZoomLevel, failures, arena)
+        );
+        transform2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                6L,
+                bindings.createItransformProvider2ZoomByUnitStub(this::zoomByUnit, failures, arena)
+        );
+        transform2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                7L,
+                bindings.createItransformProvider2GetZoomMinimumStub(this::getZoomMinimum, failures, arena)
+        );
+        transform2Vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                8L,
+                bindings.createItransformProvider2GetZoomMaximumStub(this::getZoomMaximum, failures, arena)
         );
         this.valueObject = arena.allocate(ValueLayout.ADDRESS);
         MemorySegment valueVtable = arena.allocate(ValueLayout.ADDRESS, 6);
@@ -669,7 +1515,7 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 bindings.createItextProviderGetSupportedTextSelectionStub(this::supportedTextSelection, failures, arena)
         );
         this.textRangeObject = arena.allocate(ValueLayout.ADDRESS);
-        MemorySegment textRangeVtable = arena.allocate(ValueLayout.ADDRESS, 21);
+        MemorySegment textRangeVtable = arena.allocate(ValueLayout.ADDRESS, 22);
         textRangeObject.set(ValueLayout.ADDRESS, 0L, textRangeVtable);
         textRangeVtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryTextRange, failures, arena));
         textRangeVtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
@@ -762,6 +1608,11 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 20L,
                 bindings.createItextRangeProviderGetChildrenStub(this::getChildren, failures, arena)
         );
+        textRangeVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                21L,
+                bindings.createItextRangeProvider2ShowContextMenuStub(this::showTextRangeContextMenu, failures, arena)
+        );
     }
 
     /// Creates a provider for one semantics node.
@@ -843,6 +1694,1263 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 )
         );
         return scrollItemCount;
+    }
+
+    /// Invokes `IVirtualizedItemProvider::Realize` through the generated COM vtable.
+    ///
+    /// @return the invocation count after the call
+    public int invokeVirtualizedItem() {
+        requireOpen();
+        requireSuccess(
+                "IVirtualizedItemProvider::Realize",
+                Win32FfmBindings.invokeIvirtualizedItemProviderRealizePointer(
+                        functionAt(virtualizedItemObject, 3),
+                        virtualizedItemObject
+                )
+        );
+        return virtualizedItemCount;
+    }
+
+    /// Invokes `IDockProvider::SetDockPosition` through the generated COM vtable.
+    ///
+    /// @param position the `DockPosition` value
+    /// @return the stored dock position
+    public int setDockPosition(int position) {
+        requireOpen();
+        requireSuccess(
+                "IDockProvider::SetDockPosition",
+                Win32FfmBindings.invokeIdockProviderSetDockPositionPointer(
+                        functionAt(dockObject, 3),
+                        dockObject,
+                        position
+                )
+        );
+        return dockPosition;
+    }
+
+    /// Reads `IDockProvider::get_DockPosition` through the generated COM vtable.
+    ///
+    /// @return the stored dock position
+    public int dockPosition() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IDockProvider::get_DockPosition",
+                Win32FfmBindings.invokeIdockProviderGetDockPositionPointer(
+                        functionAt(dockObject, 4),
+                        dockObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Invokes `ITransformProvider::Move` through the generated COM vtable.
+    ///
+    /// @param x the origin X
+    /// @param y the origin Y
+    /// @return the stored X origin
+    public double moveTransform(double x, double y) {
+        requireOpen();
+        requireSuccess(
+                "ITransformProvider::Move",
+                Win32FfmBindings.invokeItransformProviderMovePointer(functionAt(transformObject, 3), transformObject, x, y)
+        );
+        return transformX;
+    }
+
+    /// Invokes `ITransformProvider::Resize` through the generated COM vtable.
+    ///
+    /// @param width the width
+    /// @param height the height
+    /// @return the stored width
+    public double resizeTransform(double width, double height) {
+        requireOpen();
+        requireSuccess(
+                "ITransformProvider::Resize",
+                Win32FfmBindings.invokeItransformProviderResizePointer(
+                        functionAt(transformObject, 4),
+                        transformObject,
+                        width,
+                        height
+                )
+        );
+        return transformWidth;
+    }
+
+    /// Invokes `ITransformProvider::Rotate` through the generated COM vtable.
+    ///
+    /// @param degrees the rotation in degrees
+    /// @return the stored rotation
+    public double rotateTransform(double degrees) {
+        requireOpen();
+        requireSuccess(
+                "ITransformProvider::Rotate",
+                Win32FfmBindings.invokeItransformProviderRotatePointer(
+                        functionAt(transformObject, 5),
+                        transformObject,
+                        degrees
+                )
+        );
+        return transformRotate;
+    }
+
+    /// Reads `ITransformProvider::get_CanMove` through the generated COM vtable.
+    ///
+    /// @return whether move is advertised
+    public boolean canMove() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ITransformProvider::get_CanMove",
+                Win32FfmBindings.invokeItransformProviderGetCanMovePointer(
+                        functionAt(transformObject, 6),
+                        transformObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Reads `ITransformProvider::get_CanResize` through the generated COM vtable.
+    ///
+    /// @return whether resize is advertised
+    public boolean canResize() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ITransformProvider::get_CanResize",
+                Win32FfmBindings.invokeItransformProviderGetCanResizePointer(
+                        functionAt(transformObject, 7),
+                        transformObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Reads `ITransformProvider::get_CanRotate` through the generated COM vtable.
+    ///
+    /// @return whether rotate is advertised
+    public boolean canRotate() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ITransformProvider::get_CanRotate",
+                Win32FfmBindings.invokeItransformProviderGetCanRotatePointer(
+                        functionAt(transformObject, 8),
+                        transformObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Invokes `IItemContainerProvider::FindItemByProperty` through the generated COM vtable.
+    ///
+    /// @param name the `UIA_NamePropertyId` string
+    /// @return whether a matching item pointer was returned
+    public boolean invokeFindItemByProperty(String name) {
+        requireOpen();
+        Objects.requireNonNull(name, "name");
+        MemorySegment variant = arena.allocate(Win32Layouts.VARIANT);
+        variant.fill((byte) 0);
+        variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_BSTR);
+        MemorySegment chars = arena.allocate((name.length() + 1L) * 2L);
+        byte[] utf16 = name.getBytes(StandardCharsets.UTF_16LE);
+        MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
+        variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, chars);
+        MemorySegment found = arena.allocate(ValueLayout.ADDRESS);
+        found.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IItemContainerProvider::FindItemByProperty",
+                Win32FfmBindings.invokeIitemContainerProviderFindItemByPropertyPointer(
+                        functionAt(itemContainerObject, 3),
+                        itemContainerObject,
+                        MemorySegment.NULL,
+                        UIA_NAME_PROPERTY_ID,
+                        variant,
+                        found
+                )
+        );
+        MemorySegment fetched = found.get(ValueLayout.ADDRESS, 0L);
+        if (fetched.address() == 0L) {
+            lastFoundItem = MemorySegment.NULL;
+            return false;
+        }
+        lastFoundItem = fetched.byteSize() == 0L
+                ? fetched.reinterpret(ValueLayout.ADDRESS.byteSize())
+                : fetched;
+        return true;
+    }
+
+    /// Invokes `ISynchronizedInputProvider::StartListening` through the generated COM vtable.
+    ///
+    /// @param inputType the `SynchronizedInputType` value
+    /// @return the invocation count after the call
+    public int startListening(int inputType) {
+        requireOpen();
+        requireSuccess(
+                "ISynchronizedInputProvider::StartListening",
+                Win32FfmBindings.invokeIsynchronizedInputProviderStartListeningPointer(
+                        functionAt(synchronizedInputObject, 3),
+                        synchronizedInputObject,
+                        inputType
+                )
+        );
+        return synchronizedInputStarts;
+    }
+
+    /// Invokes `ISynchronizedInputProvider::Cancel` through the generated COM vtable.
+    ///
+    /// @return the cancel count after the call
+    public int cancelSynchronizedInput() {
+        requireOpen();
+        requireSuccess(
+                "ISynchronizedInputProvider::Cancel",
+                Win32FfmBindings.invokeIsynchronizedInputProviderCancelPointer(
+                        functionAt(synchronizedInputObject, 4),
+                        synchronizedInputObject
+                )
+        );
+        return synchronizedInputCancels;
+    }
+
+    /// Invokes `IMultipleViewProvider::SetCurrentView` through the generated COM vtable.
+    ///
+    /// @param viewId the view identifier
+    /// @return the stored view identifier
+    public int setCurrentView(int viewId) {
+        requireOpen();
+        requireSuccess(
+                "IMultipleViewProvider::SetCurrentView",
+                Win32FfmBindings.invokeImultipleViewProviderSetCurrentViewPointer(
+                        functionAt(multipleViewObject, 3),
+                        multipleViewObject,
+                        viewId
+                )
+        );
+        return currentView;
+    }
+
+    /// Reads `IMultipleViewProvider::get_CurrentView` through the generated COM vtable.
+    ///
+    /// @return the stored view identifier
+    public int currentView() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IMultipleViewProvider::get_CurrentView",
+                Win32FfmBindings.invokeImultipleViewProviderGetCurrentViewPointer(
+                        functionAt(multipleViewObject, 4),
+                        multipleViewObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Reads `IMultipleViewProvider::GetViewName` through the generated COM vtable.
+    ///
+    /// @param viewId the view identifier
+    /// @return the view name
+    public String viewName(int viewId) {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IMultipleViewProvider::GetViewName",
+                Win32FfmBindings.invokeImultipleViewProviderGetViewNamePointer(
+                        functionAt(multipleViewObject, 5),
+                        multipleViewObject,
+                        viewId,
+                        result
+                )
+        );
+        MemorySegment chars = result.get(ValueLayout.ADDRESS, 0L);
+        if (chars.address() == 0L) {
+            return "";
+        }
+        MemorySegment readable = chars.byteSize() < 2L ? chars.reinterpret(256) : chars;
+        StringBuilder text = new StringBuilder();
+        for (int index = 0; index < 64; index++) {
+            char unit = readable.getAtIndex(ValueLayout.JAVA_CHAR, index);
+            if (unit == 0) {
+                break;
+            }
+            text.append(unit);
+        }
+        return text.toString();
+    }
+
+    /// Reads `IDropTargetProvider::get_DropTargetEffect` through the generated COM vtable.
+    ///
+    /// @return the advertised drop effect
+    public String dropTargetEffect() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IDropTargetProvider::get_DropTargetEffect",
+                Win32FfmBindings.invokeIdropTargetProviderGetDropTargetEffectPointer(
+                        functionAt(dropTargetObject, 3),
+                        dropTargetObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `IDragProvider::get_IsGrabbed` through the generated COM vtable.
+    ///
+    /// @return whether the item is grabbed
+    public boolean isGrabbed() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IDragProvider::get_IsGrabbed",
+                Win32FfmBindings.invokeIdragProviderGetIsGrabbedPointer(functionAt(dragObject, 3), dragObject, state)
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Reads `IDragProvider::get_DropEffect` through the generated COM vtable.
+    ///
+    /// @return the advertised drop effect
+    public String dropEffect() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IDragProvider::get_DropEffect",
+                Win32FfmBindings.invokeIdragProviderGetDropEffectPointer(functionAt(dragObject, 4), dragObject, result)
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `IAnnotationProvider::get_AnnotationTypeId` through the generated COM vtable.
+    ///
+    /// @return the annotation type identifier
+    public int annotationTypeId() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IAnnotationProvider::get_AnnotationTypeId",
+                Win32FfmBindings.invokeIannotationProviderGetAnnotationTypeIdPointer(
+                        functionAt(annotationObject, 3),
+                        annotationObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Reads `IAnnotationProvider::get_AnnotationTypeName` through the generated COM vtable.
+    ///
+    /// @return the annotation type name
+    public String annotationTypeName() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IAnnotationProvider::get_AnnotationTypeName",
+                Win32FfmBindings.invokeIannotationProviderGetAnnotationTypeNamePointer(
+                        functionAt(annotationObject, 4),
+                        annotationObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `IAnnotationProvider::get_Author` through the generated COM vtable.
+    ///
+    /// @return the author string
+    public String annotationAuthor() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IAnnotationProvider::get_Author",
+                Win32FfmBindings.invokeIannotationProviderGetAuthorPointer(
+                        functionAt(annotationObject, 5),
+                        annotationObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `IAnnotationProvider::get_DateTime` through the generated COM vtable.
+    ///
+    /// @return the date-time string
+    public String annotationDateTime() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IAnnotationProvider::get_DateTime",
+                Win32FfmBindings.invokeIannotationProviderGetDateTimePointer(
+                        functionAt(annotationObject, 6),
+                        annotationObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `IAnnotationProvider::get_Target` through the generated COM vtable.
+    ///
+    /// @return whether a target pointer was returned
+    public boolean invokeAnnotationTarget() {
+        requireOpen();
+        MemorySegment target = arena.allocate(ValueLayout.ADDRESS);
+        target.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IAnnotationProvider::get_Target",
+                Win32FfmBindings.invokeIannotationProviderGetTargetPointer(
+                        functionAt(annotationObject, 7),
+                        annotationObject,
+                        target
+                )
+        );
+        return target.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Reads `ITextChildProvider::get_TextContainer` through the generated COM vtable.
+    ///
+    /// @return whether a container pointer was returned
+    public boolean invokeTextContainer() {
+        requireOpen();
+        MemorySegment container = arena.allocate(ValueLayout.ADDRESS);
+        container.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextChildProvider::get_TextContainer",
+                Win32FfmBindings.invokeItextChildProviderGetTextContainerPointer(
+                        functionAt(textChildObject, 3),
+                        textChildObject,
+                        container
+                )
+        );
+        return container.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Reads `ITextChildProvider::get_TextRange` through the generated COM vtable.
+    ///
+    /// @return whether a range pointer was returned
+    public boolean invokeTextChildRange() {
+        requireOpen();
+        MemorySegment range = arena.allocate(ValueLayout.ADDRESS);
+        range.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextChildProvider::get_TextRange",
+                Win32FfmBindings.invokeItextChildProviderGetTextRangePointer(
+                        functionAt(textChildObject, 4),
+                        textChildObject,
+                        range
+                )
+        );
+        return range.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Reads `IStylesProvider::get_StyleId` through the generated COM vtable.
+    ///
+    /// @return the style identifier
+    public int styleId() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IStylesProvider::get_StyleId",
+                Win32FfmBindings.invokeIstylesProviderGetStyleIdPointer(functionAt(stylesObject, 3), stylesObject, state)
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Reads `IStylesProvider::get_StyleName` through the generated COM vtable.
+    ///
+    /// @return the style name
+    public String styleName() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IStylesProvider::get_StyleName",
+                Win32FfmBindings.invokeIstylesProviderGetStyleNamePointer(
+                        functionAt(stylesObject, 4),
+                        stylesObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Invokes `ISpreadsheetProvider::GetItemByName` through the generated COM vtable.
+    ///
+    /// @param name the item name
+    /// @return whether a matching item pointer was returned
+    public boolean invokeSpreadsheetItem(String name) {
+        requireOpen();
+        Objects.requireNonNull(name, "name");
+        MemorySegment chars = arena.allocate((name.length() + 1L) * 2L);
+        byte[] utf16 = name.getBytes(StandardCharsets.UTF_16LE);
+        MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
+        MemorySegment found = arena.allocate(ValueLayout.ADDRESS);
+        found.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ISpreadsheetProvider::GetItemByName",
+                Win32FfmBindings.invokeIspreadsheetProviderGetItemByNamePointer(
+                        functionAt(spreadsheetObject, 3),
+                        spreadsheetObject,
+                        chars,
+                        found
+                )
+        );
+        return found.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `ICustomNavigationProvider::Navigate` through the generated COM vtable.
+    ///
+    /// @param direction a `NavigateDirection` value
+    /// @return whether a target pointer was returned
+    public boolean invokeNavigate(int direction) {
+        requireOpen();
+        MemorySegment target = arena.allocate(ValueLayout.ADDRESS);
+        target.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ICustomNavigationProvider::Navigate",
+                Win32FfmBindings.invokeIcustomNavigationProviderNavigatePointer(
+                        functionAt(customNavigationObject, 3),
+                        customNavigationObject,
+                        direction,
+                        target
+                )
+        );
+        return target.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `IObjectModelProvider::GetUnderlyingObjectModel` through the generated COM vtable.
+    ///
+    /// @return whether an object-model pointer was returned
+    public boolean invokeObjectModel() {
+        requireOpen();
+        MemorySegment model = arena.allocate(ValueLayout.ADDRESS);
+        model.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IObjectModelProvider::GetUnderlyingObjectModel",
+                Win32FfmBindings.invokeIobjectModelProviderGetUnderlyingObjectModelPointer(
+                        functionAt(objectModelObject, 3),
+                        objectModelObject,
+                        model
+                )
+        );
+        return model.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `ITextEditProvider::GetActiveComposition` through the generated COM vtable.
+    ///
+    /// @return whether a composition range pointer was returned
+    public boolean invokeActiveComposition() {
+        requireOpen();
+        MemorySegment range = arena.allocate(ValueLayout.ADDRESS);
+        range.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextEditProvider::GetActiveComposition",
+                Win32FfmBindings.invokeItextEditProviderGetActiveCompositionPointer(
+                        functionAt(textEditObject, 3),
+                        textEditObject,
+                        range
+                )
+        );
+        return range.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `ITextEditProvider::GetConversionTarget` through the generated COM vtable.
+    ///
+    /// @return whether a conversion-target pointer was returned
+    public boolean invokeConversionTarget() {
+        requireOpen();
+        MemorySegment range = arena.allocate(ValueLayout.ADDRESS);
+        range.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextEditProvider::GetConversionTarget",
+                Win32FfmBindings.invokeItextEditProviderGetConversionTargetPointer(
+                        functionAt(textEditObject, 4),
+                        textEditObject,
+                        range
+                )
+        );
+        return range.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Reads `ISelectionProvider::get_CanSelectMultiple` through the generated COM vtable.
+    ///
+    /// @return whether multiple selection is advertised
+    public boolean canSelectMultiple() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ISelectionProvider::get_CanSelectMultiple",
+                Win32FfmBindings.invokeIselectionProviderGetCanSelectMultiplePointer(
+                        functionAt(selectionContainerObject, 3),
+                        selectionContainerObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Reads `ISelectionProvider::get_IsSelectionRequired` through the generated COM vtable.
+    ///
+    /// @return whether a selection is required
+    public boolean isSelectionRequired() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ISelectionProvider::get_IsSelectionRequired",
+                Win32FfmBindings.invokeIselectionProviderGetIsSelectionRequiredPointer(
+                        functionAt(selectionContainerObject, 4),
+                        selectionContainerObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Reads `ILegacyIAccessibleProvider::get_ChildId` through the generated COM vtable.
+    ///
+    /// @return the MSAA child identifier
+    public int legacyChildId() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, -1);
+        requireSuccess(
+                "ILegacyIAccessibleProvider::get_ChildId",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderGetChildIdPointer(
+                        functionAt(legacyAccessibleObject, 3),
+                        legacyAccessibleObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Reads `ILegacyIAccessibleProvider::get_Name` through the generated COM vtable.
+    ///
+    /// @return the accessible name
+    public String legacyName() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ILegacyIAccessibleProvider::get_Name",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderGetNamePointer(
+                        functionAt(legacyAccessibleObject, 4),
+                        legacyAccessibleObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `ILegacyIAccessibleProvider::get_Role` through the generated COM vtable.
+    ///
+    /// @return the MSAA role
+    public int legacyRole() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ILegacyIAccessibleProvider::get_Role",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderGetRolePointer(
+                        functionAt(legacyAccessibleObject, 5),
+                        legacyAccessibleObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Invokes `ILegacyIAccessibleProvider::DoDefaultAction` through the generated COM vtable.
+    ///
+    /// @return the number of default-action invocations
+    public int invokeLegacyDefaultAction() {
+        requireOpen();
+        requireSuccess(
+                "ILegacyIAccessibleProvider::DoDefaultAction",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderDoDefaultActionPointer(
+                        functionAt(legacyAccessibleObject, 6),
+                        legacyAccessibleObject
+                )
+        );
+        return invokeCount;
+    }
+
+    /// Reads `ILegacyIAccessibleProvider::get_Value` through the generated COM vtable.
+    ///
+    /// @return the accessible value
+    public String legacyValue() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ILegacyIAccessibleProvider::get_Value",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderGetValuePointer(
+                        functionAt(legacyAccessibleObject, 7),
+                        legacyAccessibleObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `ILegacyIAccessibleProvider::get_State` through the generated COM vtable.
+    ///
+    /// @return the MSAA state bits
+    public int legacyState() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ILegacyIAccessibleProvider::get_State",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderGetStatePointer(
+                        functionAt(legacyAccessibleObject, 8),
+                        legacyAccessibleObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Reads `ILegacyIAccessibleProvider::get_Description` through the generated COM vtable.
+    ///
+    /// @return the accessible description
+    public String legacyDescription() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ILegacyIAccessibleProvider::get_Description",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderGetDescriptionPointer(
+                        functionAt(legacyAccessibleObject, 9),
+                        legacyAccessibleObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `ILegacyIAccessibleProvider::get_DefaultAction` through the generated COM vtable.
+    ///
+    /// @return the default-action name
+    public String legacyDefaultAction() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ILegacyIAccessibleProvider::get_DefaultAction",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderGetDefaultActionPointer(
+                        functionAt(legacyAccessibleObject, 10),
+                        legacyAccessibleObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `ILegacyIAccessibleProvider::get_KeyboardShortcut` through the generated COM vtable.
+    ///
+    /// @return the keyboard shortcut, which first-stable leaves empty
+    public String legacyKeyboardShortcut() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ILegacyIAccessibleProvider::get_KeyboardShortcut",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderGetKeyboardShortcutPointer(
+                        functionAt(legacyAccessibleObject, 11),
+                        legacyAccessibleObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `ILegacyIAccessibleProvider::get_Help` through the generated COM vtable.
+    ///
+    /// @return the accessible help string
+    public String legacyHelp() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ILegacyIAccessibleProvider::get_Help",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderGetHelpPointer(
+                        functionAt(legacyAccessibleObject, 12),
+                        legacyAccessibleObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Invokes `IRawElementProviderFragment::Navigate` through the generated COM vtable.
+    ///
+    /// @param direction a `NavigateDirection` value
+    /// @return whether a fragment pointer was returned
+    public boolean invokeFragmentNavigate(int direction) {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IRawElementProviderFragment::Navigate",
+                Win32FfmBindings.invokeIrawElementProviderFragmentNavigatePointer(
+                        functionAt(fragmentObject, 3),
+                        fragmentObject,
+                        direction,
+                        result
+                )
+        );
+        return result.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Reads `IRawElementProviderSimple::get_ProviderOptions` through the generated COM vtable.
+    ///
+    /// @return the provider-options bitfield
+    public int invokeProviderOptions() {
+        requireOpen();
+        MemorySegment options = arena.allocate(ValueLayout.JAVA_INT);
+        options.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IRawElementProviderSimple::get_ProviderOptions",
+                Win32FfmBindings.invokeIrawElementProviderGetProviderOptionsPointer(
+                        functionAt(simpleObject, 3),
+                        simpleObject,
+                        options
+                )
+        );
+        return options.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Invokes `IRawElementProviderSimple::get_HostRawElementProvider` through the generated COM vtable.
+    ///
+    /// @return whether a host provider pointer was returned
+    public boolean invokeHostRawElementProvider() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IRawElementProviderSimple::get_HostRawElementProvider",
+                Win32FfmBindings.invokeIrawElementProviderGetHostRawElementProviderPointer(
+                        functionAt(simpleObject, 7),
+                        simpleObject,
+                        result
+                )
+        );
+        return result.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `IRawElementProviderFragment::SetFocus` through the generated COM vtable.
+    ///
+    /// @return the invocation count after the call
+    public int invokeFragmentSetFocus() {
+        requireOpen();
+        requireSuccess(
+                "IRawElementProviderFragment::SetFocus",
+                Win32FfmBindings.invokeIrawElementProviderFragmentSetFocusPointer(
+                        functionAt(fragmentObject, 4),
+                        fragmentObject
+                )
+        );
+        return fragmentFocusCount;
+    }
+
+    /// Invokes `IRawElementProviderFragment::get_FragmentRoot` through the generated COM vtable.
+    ///
+    /// @return whether a fragment-root pointer was returned
+    public boolean invokeFragmentRoot() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IRawElementProviderFragment::get_FragmentRoot",
+                Win32FfmBindings.invokeIrawElementProviderFragmentGetFragmentRootPointer(
+                        functionAt(fragmentObject, 5),
+                        fragmentObject,
+                        result
+                )
+        );
+        return result.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `IRawElementProviderFragment::get_BoundingRectangle` through the generated COM vtable.
+    ///
+    /// @return `{left, top, width, height}` in logical pixels
+    public double[] invokeFragmentBoundingRectangle() {
+        requireOpen();
+        MemorySegment rect = arena.allocate(32);
+        requireSuccess(
+                "IRawElementProviderFragment::get_BoundingRectangle",
+                Win32FfmBindings.invokeIrawElementProviderFragmentGetBoundingRectanglePointer(
+                        functionAt(fragmentObject, 6),
+                        fragmentObject,
+                        rect
+                )
+        );
+        return new double[] {
+                rect.get(ValueLayout.JAVA_DOUBLE, 0L),
+                rect.get(ValueLayout.JAVA_DOUBLE, 8L),
+                rect.get(ValueLayout.JAVA_DOUBLE, 16L),
+                rect.get(ValueLayout.JAVA_DOUBLE, 24L)
+        };
+    }
+
+    /// Invokes `IRawElementProviderFragment::GetRuntimeId` through the generated COM vtable.
+    ///
+    /// The first-stable encoding is a count-prefixed `int32` vector rather than an oleaut32 `SAFEARRAY`.
+    ///
+    /// @return the packed `{count, id}` pair
+    public int[] invokeFragmentRuntimeId() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IRawElementProviderFragment::GetRuntimeId",
+                Win32FfmBindings.invokeIrawElementProviderFragmentGetRuntimeIdPointer(
+                        functionAt(fragmentObject, 7),
+                        fragmentObject,
+                        result
+                )
+        );
+        MemorySegment block = result.get(ValueLayout.ADDRESS, 0L);
+        if (block.address() == 0L) {
+            return new int[0];
+        }
+        block = block.byteSize() == 0L ? block.reinterpret(8) : block;
+        int count = block.get(ValueLayout.JAVA_INT, 0L);
+        if (count < 1) {
+            return new int[] {count};
+        }
+        return new int[] {count, block.get(ValueLayout.JAVA_INT, 4L)};
+    }
+
+    /// Invokes `IRawElementProviderFragment::GetEmbeddedFragmentRoots` through the generated COM vtable.
+    ///
+    /// @return the packed root count
+    public int invokeEmbeddedFragmentRoots() {
+        return packedCount("IRawElementProviderFragment::GetEmbeddedFragmentRoots", fragmentObject, 8);
+    }
+
+    /// Invokes `IRawElementProviderFragmentRoot::ElementProviderFromPoint` through the generated COM vtable.
+    ///
+    /// @param x the horizontal point
+    /// @param y the vertical point
+    /// @return whether a fragment pointer was returned
+    public boolean invokeFragmentRootFromPoint(double x, double y) {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IRawElementProviderFragmentRoot::ElementProviderFromPoint",
+                Win32FfmBindings.invokeIrawElementProviderFragmentRootElementProviderFromPointPointer(
+                        functionAt(fragmentRootObject, 3),
+                        fragmentRootObject,
+                        x,
+                        y,
+                        result
+                )
+        );
+        return result.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `IRawElementProviderFragmentRoot::GetFocus` through the generated COM vtable.
+    ///
+    /// @return whether a focused fragment pointer was returned
+    public boolean invokeFragmentRootFocus() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "IRawElementProviderFragmentRoot::GetFocus",
+                Win32FfmBindings.invokeIrawElementProviderFragmentRootGetFocusPointer(
+                        functionAt(fragmentRootObject, 4),
+                        fragmentRootObject,
+                        result
+                )
+        );
+        return result.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `ILegacyIAccessibleProvider::SetValue` through the generated COM vtable.
+    ///
+    /// @param value the accessible value
+    /// @return the invocation count after the call
+    public int invokeLegacySetValue(String value) {
+        requireOpen();
+        MemorySegment chars = arena.allocate((value.length() + 1L) * 2L);
+        byte[] utf16 = value.getBytes(StandardCharsets.UTF_16LE);
+        MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
+        requireSuccess(
+                "ILegacyIAccessibleProvider::SetValue",
+                Win32FfmBindings.invokeIlegacyIaccessibleProviderSetValuePointer(
+                        functionAt(legacyAccessibleObject, 13),
+                        legacyAccessibleObject,
+                        chars
+                )
+        );
+        return legacySetValueCount;
+    }
+
+    /// Returns the last `SetValue` payload.
+    ///
+    /// @return the stored value
+    public String lastLegacyValue() {
+        return lastLegacyValue;
+    }
+
+    /// Invokes `ITextProvider2::GetCaretRange` through the generated COM vtable.
+    ///
+    /// @return whether an active caret range pointer was returned
+    public boolean invokeCaretRange() {
+        requireOpen();
+        MemorySegment active = arena.allocate(ValueLayout.JAVA_INT);
+        active.set(ValueLayout.JAVA_INT, 0L, 0);
+        MemorySegment range = arena.allocate(ValueLayout.ADDRESS);
+        range.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextProvider2::GetCaretRange",
+                Win32FfmBindings.invokeItextProvider2GetCaretRangePointer(
+                        functionAt(text2Object, 3),
+                        text2Object,
+                        active,
+                        range
+                )
+        );
+        return active.get(ValueLayout.JAVA_INT, 0L) != 0 && range.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Reads `ISpreadsheetItemProvider::get_Formula` through the generated COM vtable.
+    ///
+    /// @return the formula string
+    public String spreadsheetFormula() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ISpreadsheetItemProvider::get_Formula",
+                Win32FfmBindings.invokeIspreadsheetItemProviderGetFormulaPointer(
+                        functionAt(spreadsheetItemObject, 3),
+                        spreadsheetItemObject,
+                        result
+                )
+        );
+        return decodeUtf16(result.get(ValueLayout.ADDRESS, 0L));
+    }
+
+    /// Reads `ISelectionProvider2::get_ItemCount` through the generated COM vtable.
+    ///
+    /// @return the advertised item count
+    public int selectionItemCount() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ISelectionProvider2::get_ItemCount",
+                Win32FfmBindings.invokeIselectionProvider2GetItemCountPointer(
+                        functionAt(selection2Object, 3),
+                        selection2Object,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Reads `ISelectionProvider2::get_CurrentSelectedItem` through the generated COM vtable.
+    ///
+    /// @return whether a selected-item pointer was returned
+    public boolean invokeCurrentSelectedItem() {
+        requireOpen();
+        MemorySegment item = arena.allocate(ValueLayout.ADDRESS);
+        item.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ISelectionProvider2::get_CurrentSelectedItem",
+                Win32FfmBindings.invokeIselectionProvider2GetCurrentSelectedItemPointer(
+                        functionAt(selection2Object, 4),
+                        selection2Object,
+                        item
+                )
+        );
+        return item.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Reads `ISelectionProvider2::get_FirstSelectedItem` through the generated COM vtable.
+    ///
+    /// @return whether a selected-item pointer was returned
+    public boolean invokeFirstSelectedItem() {
+        requireOpen();
+        MemorySegment item = arena.allocate(ValueLayout.ADDRESS);
+        item.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ISelectionProvider2::get_FirstSelectedItem",
+                Win32FfmBindings.invokeIselectionProvider2GetFirstSelectedItemPointer(
+                        functionAt(selection2Object, 5),
+                        selection2Object,
+                        item
+                )
+        );
+        return item.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Reads `ISelectionProvider2::get_LastSelectedItem` through the generated COM vtable.
+    ///
+    /// @return whether a selected-item pointer was returned
+    public boolean invokeLastSelectedItem() {
+        requireOpen();
+        MemorySegment item = arena.allocate(ValueLayout.ADDRESS);
+        item.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ISelectionProvider2::get_LastSelectedItem",
+                Win32FfmBindings.invokeIselectionProvider2GetLastSelectedItemPointer(
+                        functionAt(selection2Object, 6),
+                        selection2Object,
+                        item
+                )
+        );
+        return item.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `ITextProvider2::RangeFromAnnotation` through the generated COM vtable.
+    ///
+    /// @return whether a text-range pointer was returned
+    public boolean invokeRangeFromAnnotation() {
+        requireOpen();
+        MemorySegment range = arena.allocate(ValueLayout.ADDRESS);
+        range.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextProvider2::RangeFromAnnotation",
+                Win32FfmBindings.invokeItextProvider2RangeFromAnnotationPointer(
+                        functionAt(text2Object, 4),
+                        text2Object,
+                        MemorySegment.NULL,
+                        range
+                )
+        );
+        return range.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `ITransformProvider2::Zoom` through the generated COM vtable.
+    ///
+    /// @param zoom the requested zoom level
+    /// @return the stored zoom level
+    public double zoomTransform(double zoom) {
+        requireOpen();
+        requireSuccess(
+                "ITransformProvider2::Zoom",
+                Win32FfmBindings.invokeItransformProvider2ZoomPointer(
+                        functionAt(transform2Object, 3),
+                        transform2Object,
+                        zoom
+                )
+        );
+        return transformZoom;
+    }
+
+    /// Reads `ITransformProvider2::get_CanZoom` through the generated COM vtable.
+    ///
+    /// @return whether zoom is advertised
+    public boolean canZoom() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "ITransformProvider2::get_CanZoom",
+                Win32FfmBindings.invokeItransformProvider2GetCanZoomPointer(
+                        functionAt(transform2Object, 4),
+                        transform2Object,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Reads `ITransformProvider2::get_ZoomLevel` through the generated COM vtable.
+    ///
+    /// @return the stored zoom level
+    public double zoomLevel() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_DOUBLE);
+        state.set(ValueLayout.JAVA_DOUBLE, 0L, 0.0);
+        requireSuccess(
+                "ITransformProvider2::get_ZoomLevel",
+                Win32FfmBindings.invokeItransformProvider2GetZoomLevelPointer(
+                        functionAt(transform2Object, 5),
+                        transform2Object,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_DOUBLE, 0L);
+    }
+
+    /// Invokes `ITransformProvider2::ZoomByUnit` through the generated COM vtable.
+    ///
+    /// @param zoomUnit a `ZoomUnit` identifier
+    /// @return the stored zoom level
+    public double zoomByUnit(int zoomUnit) {
+        requireOpen();
+        requireSuccess(
+                "ITransformProvider2::ZoomByUnit",
+                Win32FfmBindings.invokeItransformProvider2ZoomByUnitPointer(
+                        functionAt(transform2Object, 6),
+                        transform2Object,
+                        zoomUnit
+                )
+        );
+        return transformZoom;
+    }
+
+    /// Reads `ITransformProvider2::get_ZoomMinimum` through the generated COM vtable.
+    ///
+    /// @return the advertised minimum zoom
+    public double zoomMinimum() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_DOUBLE);
+        state.set(ValueLayout.JAVA_DOUBLE, 0L, 0.0);
+        requireSuccess(
+                "ITransformProvider2::get_ZoomMinimum",
+                Win32FfmBindings.invokeItransformProvider2GetZoomMinimumPointer(
+                        functionAt(transform2Object, 7),
+                        transform2Object,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_DOUBLE, 0L);
+    }
+
+    /// Reads `ITransformProvider2::get_ZoomMaximum` through the generated COM vtable.
+    ///
+    /// @return the advertised maximum zoom
+    public double zoomMaximum() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_DOUBLE);
+        state.set(ValueLayout.JAVA_DOUBLE, 0L, 0.0);
+        requireSuccess(
+                "ITransformProvider2::get_ZoomMaximum",
+                Win32FfmBindings.invokeItransformProvider2GetZoomMaximumPointer(
+                        functionAt(transform2Object, 8),
+                        transform2Object,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_DOUBLE, 0L);
     }
 
     /// Invokes `IValueProvider::SetValue` through the generated COM vtable.
@@ -958,6 +3066,98 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 "IWindowProvider::get_CanMaximize",
                 Win32FfmBindings.invokeIwindowProviderGetCanMaximizePointer(
                         functionAt(windowObject, 6),
+                        windowObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Invokes `IWindowProvider::WaitForInputIdle` through the generated COM vtable.
+    ///
+    /// @param milliseconds the idle timeout
+    /// @return whether the provider reported idle success
+    public boolean waitForInputIdle(int milliseconds) {
+        requireOpen();
+        MemorySegment success = arena.allocate(ValueLayout.JAVA_INT);
+        success.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IWindowProvider::WaitForInputIdle",
+                Win32FfmBindings.invokeIwindowProviderWaitForInputIdlePointer(
+                        functionAt(windowObject, 5),
+                        windowObject,
+                        milliseconds,
+                        success
+                )
+        );
+        return success.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Reads `IWindowProvider::get_CanMinimize` through the generated COM vtable.
+    ///
+    /// @return whether minimize is advertised
+    public boolean canMinimize() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IWindowProvider::get_CanMinimize",
+                Win32FfmBindings.invokeIwindowProviderGetCanMinimizePointer(
+                        functionAt(windowObject, 7),
+                        windowObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Reads `IWindowProvider::get_IsModal` through the generated COM vtable.
+    ///
+    /// @return whether the window is advertised as modal
+    public boolean isModal() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IWindowProvider::get_IsModal",
+                Win32FfmBindings.invokeIwindowProviderGetIsModalPointer(
+                        functionAt(windowObject, 8),
+                        windowObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L) != 0;
+    }
+
+    /// Reads `IWindowProvider::get_WindowInteractionState` through the generated COM vtable.
+    ///
+    /// @return the interaction state
+    public int windowInteractionState() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IWindowProvider::get_WindowInteractionState",
+                Win32FfmBindings.invokeIwindowProviderGetWindowInteractionStatePointer(
+                        functionAt(windowObject, 10),
+                        windowObject,
+                        state
+                )
+        );
+        return state.get(ValueLayout.JAVA_INT, 0L);
+    }
+
+    /// Reads `IWindowProvider::get_IsTopmost` through the generated COM vtable.
+    ///
+    /// @return whether the window is advertised as topmost
+    public boolean isTopmost() {
+        requireOpen();
+        MemorySegment state = arena.allocate(ValueLayout.JAVA_INT);
+        state.set(ValueLayout.JAVA_INT, 0L, 0);
+        requireSuccess(
+                "IWindowProvider::get_IsTopmost",
+                Win32FfmBindings.invokeIwindowProviderGetIsTopmostPointer(
+                        functionAt(windowObject, 11),
                         windowObject,
                         state
                 )
@@ -1836,6 +4036,36 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return block.get(ValueLayout.JAVA_INT, 0L);
     }
 
+    /// Invokes `ITextRangeProvider2::ShowContextMenu` through the generated COM vtable.
+    ///
+    /// @return the invocation count after the call
+    public int invokeShowContextMenu() {
+        requireOpen();
+        requireSuccess(
+                "ITextRangeProvider2::ShowContextMenu",
+                Win32FfmBindings.invokeItextRangeProvider2ShowContextMenuPointer(
+                        functionAt(textRangeObject, 21),
+                        textRangeObject
+                )
+        );
+        return textRangeContextMenuCount;
+    }
+
+    /// Invokes `IRawElementProviderSimple2::ShowContextMenu` through the generated COM vtable.
+    ///
+    /// @return the invocation count after the call
+    public int invokeSimpleShowContextMenu() {
+        requireOpen();
+        requireSuccess(
+                "IRawElementProviderSimple2::ShowContextMenu",
+                Win32FfmBindings.invokeIrawElementProviderSimple2ShowContextMenuPointer(
+                        functionAt(simpleObject, 6),
+                        simpleObject
+                )
+        );
+        return simpleContextMenuCount;
+    }
+
     /// Invokes `ITextRangeProvider::Select` through the generated COM vtable.
     public void invokeSelect() {
         requireOpen();
@@ -1893,7 +4123,26 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// Implements `IRawElementProviderSimple::QueryInterface`.
     private int queryInterface(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        if (WindowsCom.matches(interfaceId, IRAW_ELEMENT_PROVIDER_SIMPLE2)) {
+            return query(interfaceId, result, IRAW_ELEMENT_PROVIDER_SIMPLE2, simpleObject);
+        }
+        if (WindowsCom.matches(interfaceId, IRAW_ELEMENT_PROVIDER_FRAGMENT)) {
+            return query(interfaceId, result, IRAW_ELEMENT_PROVIDER_FRAGMENT, fragmentObject);
+        }
+        if (WindowsCom.matches(interfaceId, IRAW_ELEMENT_PROVIDER_FRAGMENT_ROOT)) {
+            return query(interfaceId, result, IRAW_ELEMENT_PROVIDER_FRAGMENT_ROOT, fragmentRootObject);
+        }
         return query(interfaceId, result, IRAW_ELEMENT_PROVIDER_SIMPLE, simpleObject);
+    }
+
+    /// Implements Fragment QI.
+    private int queryFragment(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IRAW_ELEMENT_PROVIDER_FRAGMENT, fragmentObject);
+    }
+
+    /// Implements FragmentRoot QI.
+    private int queryFragmentRoot(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IRAW_ELEMENT_PROVIDER_FRAGMENT_ROOT, fragmentRootObject);
     }
 
     /// Implements Invoke QI.
@@ -1956,6 +4205,116 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return query(interfaceId, result, ISCROLL_ITEM_PROVIDER, scrollItemObject);
     }
 
+    /// Implements VirtualizedItem QI.
+    private int queryVirtualizedItem(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IVIRTUALIZED_ITEM_PROVIDER, virtualizedItemObject);
+    }
+
+    /// Implements Dock QI.
+    private int queryDock(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IDOCK_PROVIDER, dockObject);
+    }
+
+    /// Implements Transform QI.
+    private int queryTransform(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ITRANSFORM_PROVIDER, transformObject);
+    }
+
+    /// Implements ItemContainer QI.
+    private int queryItemContainer(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IITEM_CONTAINER_PROVIDER, itemContainerObject);
+    }
+
+    /// Implements SynchronizedInput QI.
+    private int querySynchronizedInput(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ISYNCHRONIZED_INPUT_PROVIDER, synchronizedInputObject);
+    }
+
+    /// Implements MultipleView QI.
+    private int queryMultipleView(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IMULTIPLE_VIEW_PROVIDER, multipleViewObject);
+    }
+
+    /// Implements DropTarget QI.
+    private int queryDropTarget(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IDROP_TARGET_PROVIDER, dropTargetObject);
+    }
+
+    /// Implements Drag QI.
+    private int queryDrag(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IDRAG_PROVIDER, dragObject);
+    }
+
+    /// Implements Annotation QI.
+    private int queryAnnotation(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IANNOTATION_PROVIDER, annotationObject);
+    }
+
+    /// Implements TextChild QI.
+    private int queryTextChild(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ITEXT_CHILD_PROVIDER, textChildObject);
+    }
+
+    /// Implements Styles QI.
+    private int queryStyles(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ISTYLES_PROVIDER, stylesObject);
+    }
+
+    /// Implements Spreadsheet QI.
+    private int querySpreadsheet(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ISPREADSHEET_PROVIDER, spreadsheetObject);
+    }
+
+    /// Implements CustomNavigation QI.
+    private int queryCustomNavigation(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ICUSTOM_NAVIGATION_PROVIDER, customNavigationObject);
+    }
+
+    /// Implements ObjectModel QI.
+    private int queryObjectModel(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IOBJECT_MODEL_PROVIDER, objectModelObject);
+    }
+
+    /// Implements TextEdit QI.
+    private int queryTextEdit(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ITEXT_EDIT_PROVIDER, textEditObject);
+    }
+
+    /// Implements Selection-container QI.
+    private int querySelectionContainer(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ISELECTION_PROVIDER, selectionContainerObject);
+    }
+
+    /// Implements LegacyIAccessible QI.
+    private int queryLegacyAccessible(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ILEGACY_IACCESSIBLE_PROVIDER, legacyAccessibleObject);
+    }
+
+    /// Implements TextProvider2 QI.
+    private int queryText2(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ITEXT_PROVIDER2, text2Object);
+    }
+
+    /// Implements SpreadsheetItem QI.
+    private int querySpreadsheetItem(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ISPREADSHEET_ITEM_PROVIDER, spreadsheetItemObject);
+    }
+
+    /// Implements SelectionProvider2 QI.
+    private int querySelection2(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ISELECTION_PROVIDER2, selection2Object);
+    }
+
+    /// Implements TransformProvider2 QI.
+    private int queryTransform2(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, ITRANSFORM_PROVIDER2, transform2Object);
+    }
+
+    /// Implements found-item `IRawElementProviderSimple` QI.
+    private int queryFoundItem(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IRAW_ELEMENT_PROVIDER_SIMPLE, foundItemObject);
+    }
+
     /// Implements Value QI.
     private int queryValue(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
         return query(interfaceId, result, IVALUE_PROVIDER, valueObject);
@@ -1973,6 +4332,9 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// Implements TextRange QI.
     private int queryTextRange(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        if (WindowsCom.matches(interfaceId, ITEXT_RANGE_PROVIDER2)) {
+            return query(interfaceId, result, ITEXT_RANGE_PROVIDER2, textRangeObject);
+        }
         return query(interfaceId, result, ITEXT_RANGE_PROVIDER, textRangeObject);
     }
 
@@ -2032,6 +4394,50 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         } else if (patternId == UIA_SCROLL_ITEM_PATTERN_ID
                 && node.actions().contains(SemanticsAction.SCROLL_INTO_VIEW)) {
             selected = scrollItemObject;
+        } else if (patternId == UIA_VIRTUALIZED_ITEM_PATTERN_ID
+                && node.actions().contains(SemanticsAction.REALIZE)) {
+            selected = virtualizedItemObject;
+        } else if (patternId == UIA_DOCK_PATTERN_ID && node.role() == SemanticsRole.DIALOG) {
+            selected = dockObject;
+        } else if (patternId == UIA_TRANSFORM_PATTERN_ID && node.role() == SemanticsRole.DIALOG) {
+            selected = transformObject;
+        } else if (patternId == UIA_TRANSFORM_PATTERN2_ID && node.role() == SemanticsRole.DIALOG) {
+            selected = transform2Object;
+        } else if (patternId == UIA_ITEM_CONTAINER_PATTERN_ID && node.role() == SemanticsRole.LIST) {
+            selected = itemContainerObject;
+        } else if (patternId == UIA_MULTIPLE_VIEW_PATTERN_ID && node.role() == SemanticsRole.LIST) {
+            selected = multipleViewObject;
+        } else if (patternId == UIA_DROP_TARGET_PATTERN_ID && node.role() == SemanticsRole.LIST) {
+            selected = dropTargetObject;
+        } else if (patternId == UIA_DRAG_PATTERN_ID && node.role() == SemanticsRole.LIST) {
+            selected = dragObject;
+        } else if (patternId == UIA_ANNOTATION_PATTERN_ID && node.role() == SemanticsRole.STATUS) {
+            selected = annotationObject;
+        } else if (patternId == UIA_TEXT_CHILD_PATTERN_ID && node.textRange() != null) {
+            selected = textChildObject;
+        } else if (patternId == UIA_STYLES_PATTERN_ID && node.role() == SemanticsRole.STATUS) {
+            selected = stylesObject;
+        } else if (patternId == UIA_SPREADSHEET_PATTERN_ID && node.grid() != null) {
+            selected = spreadsheetObject;
+        } else if (patternId == UIA_CUSTOM_NAVIGATION_PATTERN_ID && node.role() == SemanticsRole.DIALOG) {
+            selected = customNavigationObject;
+        } else if (patternId == UIA_OBJECT_MODEL_PATTERN_ID && node.role() == SemanticsRole.DIALOG) {
+            selected = objectModelObject;
+        } else if (patternId == UIA_TEXT_EDIT_PATTERN_ID && node.textRange() != null) {
+            selected = textEditObject;
+        } else if (patternId == UIA_SELECTION_PATTERN_ID && node.role() == SemanticsRole.LIST) {
+            selected = selectionContainerObject;
+        } else if (patternId == UIA_LEGACY_IACCESSIBLE_PATTERN_ID) {
+            selected = legacyAccessibleObject;
+        } else if (patternId == UIA_TEXT_PATTERN2_ID && node.textRange() != null) {
+            selected = text2Object;
+        } else if (patternId == UIA_SPREADSHEET_ITEM_PATTERN_ID && node.gridItem() != null) {
+            selected = spreadsheetItemObject;
+        } else if (patternId == UIA_SELECTION_PATTERN2_ID && node.role() == SemanticsRole.LIST) {
+            selected = selection2Object;
+        } else if (patternId == UIA_SYNCHRONIZED_INPUT_PATTERN_ID
+                && node.actions().contains(SemanticsAction.ACTIVATE)) {
+            selected = synchronizedInputObject;
         } else if (patternId == UIA_VALUE_PATTERN_ID
                 && (node.role() == SemanticsRole.TEXT_FIELD || node.role() == SemanticsRole.TEXT_AREA)) {
             selected = valueObject;
@@ -2073,6 +4479,679 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// Implements `IScrollItemProvider::ScrollIntoView`.
     private int scrollItemIntoView(MemorySegment self) {
         scrollItemCount++;
+        return S_OK;
+    }
+
+    /// Implements `IVirtualizedItemProvider::Realize`.
+    private int realizeVirtualizedItem(MemorySegment self) {
+        virtualizedItemCount++;
+        return S_OK;
+    }
+
+    /// Implements `IDockProvider::SetDockPosition`.
+    private int setDockPosition(MemorySegment self, int position) {
+        dockPosition = position;
+        return S_OK;
+    }
+
+    /// Implements `IDockProvider::get_DockPosition`.
+    private int getDockPosition(MemorySegment self, MemorySegment value) {
+        return writeInt(value, dockPosition);
+    }
+
+    /// Implements `ITransformProvider::Move`.
+    private int moveTransform(MemorySegment self, double x, double y) {
+        transformX = x;
+        transformY = y;
+        return S_OK;
+    }
+
+    /// Implements `ITransformProvider::Resize`.
+    private int resizeTransform(MemorySegment self, double width, double height) {
+        transformWidth = width;
+        transformHeight = height;
+        return S_OK;
+    }
+
+    /// Implements `ITransformProvider::Rotate`.
+    private int rotateTransform(MemorySegment self, double degrees) {
+        transformRotate = degrees;
+        return S_OK;
+    }
+
+    /// Implements `ITransformProvider::get_CanMove`.
+    private int getCanMove(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 1);
+    }
+
+    /// Implements `ITransformProvider::get_CanResize`.
+    private int getCanResize(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 1);
+    }
+
+    /// Implements `ITransformProvider::get_CanRotate`.
+    private int getCanRotate(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 1);
+    }
+
+    /// Implements `ITransformProvider2::Zoom`.
+    private int zoomTransform(MemorySegment self, double zoom) {
+        transformZoom = zoom;
+        return S_OK;
+    }
+
+    /// Implements `ITransformProvider2::get_CanZoom`.
+    private int getCanZoom(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 1);
+    }
+
+    /// Implements `ITransformProvider2::get_ZoomLevel`.
+    private int getZoomLevel(MemorySegment self, MemorySegment value) {
+        if (value.address() == 0L) {
+            return E_POINTER;
+        }
+        value.reinterpret(ValueLayout.JAVA_DOUBLE.byteSize()).set(ValueLayout.JAVA_DOUBLE, 0L, transformZoom);
+        return S_OK;
+    }
+
+    /// Implements `ITransformProvider2::ZoomByUnit`.
+    private int zoomByUnit(MemorySegment self, int zoomUnit) {
+        if (zoomUnit != ZOOM_UNIT_LARGE_INCREMENT) {
+            return E_INVALIDARG;
+        }
+        transformZoom += 1.0;
+        return S_OK;
+    }
+
+    /// Implements `ITransformProvider2::get_ZoomMinimum`.
+    private int getZoomMinimum(MemorySegment self, MemorySegment value) {
+        if (value.address() == 0L) {
+            return E_POINTER;
+        }
+        value.reinterpret(ValueLayout.JAVA_DOUBLE.byteSize()).set(ValueLayout.JAVA_DOUBLE, 0L, ZOOM_MINIMUM);
+        return S_OK;
+    }
+
+    /// Implements `ITransformProvider2::get_ZoomMaximum`.
+    private int getZoomMaximum(MemorySegment self, MemorySegment value) {
+        if (value.address() == 0L) {
+            return E_POINTER;
+        }
+        value.reinterpret(ValueLayout.JAVA_DOUBLE.byteSize()).set(ValueLayout.JAVA_DOUBLE, 0L, ZOOM_MAXIMUM);
+        return S_OK;
+    }
+
+    /// Implements `IItemContainerProvider::FindItemByProperty`.
+    private int findItemByProperty(
+            MemorySegment self,
+            MemorySegment startAfter,
+            int propertyId,
+            MemorySegment value,
+            MemorySegment found
+    ) {
+        if (found.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment out = found.reinterpret(ValueLayout.ADDRESS.byteSize());
+        if (propertyId != UIA_NAME_PROPERTY_ID || startAfter.address() != 0L || value.address() == 0L) {
+            out.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+            return S_OK;
+        }
+        MemorySegment variant = value.reinterpret(Win32Layouts.VARIANT.byteSize());
+        short vt = variant.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET);
+        if (vt != VT_BSTR) {
+            out.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+            return S_OK;
+        }
+        MemorySegment chars = variant.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET);
+        if (chars.address() == 0L) {
+            out.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+            return S_OK;
+        }
+        MemorySegment readable = chars.byteSize() < 2L ? chars.reinterpret(256) : chars;
+        StringBuilder text = new StringBuilder();
+        for (int index = 0; index < 64; index++) {
+            char unit = readable.getAtIndex(ValueLayout.JAVA_CHAR, index);
+            if (unit == 0) {
+                break;
+            }
+            text.append(unit);
+        }
+        if (!node.label().equals(text.toString())) {
+            out.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+            return S_OK;
+        }
+        out.set(ValueLayout.ADDRESS, 0L, foundItemObject);
+        addRef(foundItemObject);
+        return S_OK;
+    }
+
+    /// Implements `GetPatternProvider` on a found item.
+    private int getFoundItemPatternProvider(MemorySegment self, int patternId, MemorySegment provider) {
+        if (provider.address() == 0L) {
+            return E_POINTER;
+        }
+        provider.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        return S_OK;
+    }
+
+    /// Implements `ISynchronizedInputProvider::StartListening`.
+    private int startListening(MemorySegment self, int inputType) {
+        synchronizedInputType = inputType;
+        synchronizedInputStarts++;
+        return S_OK;
+    }
+
+    /// Implements `ISynchronizedInputProvider::Cancel`.
+    private int cancelSynchronizedInput(MemorySegment self) {
+        synchronizedInputCancels++;
+        return S_OK;
+    }
+
+    /// Implements `IMultipleViewProvider::SetCurrentView`.
+    private int setCurrentView(MemorySegment self, int viewId) {
+        currentView = viewId;
+        return S_OK;
+    }
+
+    /// Implements `IMultipleViewProvider::get_CurrentView`.
+    private int getCurrentView(MemorySegment self, MemorySegment value) {
+        return writeInt(value, currentView);
+    }
+
+    /// Implements `IDropTargetProvider::get_DropTargetEffect`.
+    private int getDropTargetEffect(MemorySegment self, MemorySegment effect) {
+        return writeUtf16(effect, "move");
+    }
+
+    /// Implements `IDragProvider::get_IsGrabbed`.
+    private int getIsGrabbed(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 0);
+    }
+
+    /// Implements `IDragProvider::get_DropEffect`.
+    private int getDropEffect(MemorySegment self, MemorySegment effect) {
+        return writeUtf16(effect, "copy");
+    }
+
+    /// Implements `IAnnotationProvider::get_AnnotationTypeId`.
+    private int getAnnotationTypeId(MemorySegment self, MemorySegment value) {
+        return writeInt(value, ANNOTATION_TYPE_COMMENT);
+    }
+
+    /// Implements `IAnnotationProvider::get_AnnotationTypeName`.
+    private int getAnnotationTypeName(MemorySegment self, MemorySegment name) {
+        return writeUtf16(name, "Comment");
+    }
+
+    /// Implements `IAnnotationProvider::get_Author`.
+    private int getAnnotationAuthor(MemorySegment self, MemorySegment author) {
+        return writeUtf16(author, "Himari");
+    }
+
+    /// Implements `IAnnotationProvider::get_DateTime`.
+    private int getAnnotationDateTime(MemorySegment self, MemorySegment dateTime) {
+        return writeUtf16(dateTime, "2026-08-17");
+    }
+
+    /// Implements `IAnnotationProvider::get_Target`.
+    private int getAnnotationTarget(MemorySegment self, MemorySegment target) {
+        if (target.address() == 0L) {
+            return E_POINTER;
+        }
+        target.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, simpleObject);
+        addRef(simpleObject);
+        return S_OK;
+    }
+
+    /// Implements `ITextChildProvider::get_TextContainer`.
+    private int getTextContainer(MemorySegment self, MemorySegment container) {
+        if (container.address() == 0L) {
+            return E_POINTER;
+        }
+        container.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, simpleObject);
+        addRef(simpleObject);
+        return S_OK;
+    }
+
+    /// Implements `ITextChildProvider::get_TextRange`.
+    private int getTextChildRange(MemorySegment self, MemorySegment range) {
+        if (range.address() == 0L) {
+            return E_POINTER;
+        }
+        range.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, textRangeObject);
+        addRef(textRangeObject);
+        return S_OK;
+    }
+
+    /// Implements `IStylesProvider::get_StyleId`.
+    private int getStyleId(MemorySegment self, MemorySegment value) {
+        return writeInt(value, STYLE_ID_NORMAL);
+    }
+
+    /// Implements `IStylesProvider::get_StyleName`.
+    private int getStyleName(MemorySegment self, MemorySegment name) {
+        return writeUtf16(name, "Normal");
+    }
+
+    /// Implements `ISpreadsheetProvider::GetItemByName`.
+    private int getSpreadsheetItemByName(MemorySegment self, MemorySegment name, MemorySegment found) {
+        if (found.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment out = found.reinterpret(ValueLayout.ADDRESS.byteSize());
+        if (name.address() == 0L || !node.label().equals(decodeUtf16(name))) {
+            out.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+            return S_OK;
+        }
+        out.set(ValueLayout.ADDRESS, 0L, foundItemObject);
+        addRef(foundItemObject);
+        return S_OK;
+    }
+
+    /// Implements `ICustomNavigationProvider::Navigate`.
+    private int navigateCustom(MemorySegment self, int direction, MemorySegment retVal) {
+        if (retVal.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment out = retVal.reinterpret(ValueLayout.ADDRESS.byteSize());
+        if (direction != NAVIGATE_DIRECTION_PARENT) {
+            out.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+            return S_OK;
+        }
+        out.set(ValueLayout.ADDRESS, 0L, simpleObject);
+        addRef(simpleObject);
+        return S_OK;
+    }
+
+    /// Implements `IObjectModelProvider::GetUnderlyingObjectModel`.
+    private int getUnderlyingObjectModel(MemorySegment self, MemorySegment retVal) {
+        if (retVal.address() == 0L) {
+            return E_POINTER;
+        }
+        retVal.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, simpleObject);
+        addRef(simpleObject);
+        return S_OK;
+    }
+
+    /// Implements `ITextEditProvider::GetActiveComposition`.
+    private int getActiveComposition(MemorySegment self, MemorySegment range) {
+        if (range.address() == 0L) {
+            return E_POINTER;
+        }
+        range.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, textRangeObject);
+        addRef(textRangeObject);
+        return S_OK;
+    }
+
+    /// Implements `ITextEditProvider::GetConversionTarget`.
+    private int getConversionTarget(MemorySegment self, MemorySegment range) {
+        if (range.address() == 0L) {
+            return E_POINTER;
+        }
+        range.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, textRangeObject);
+        addRef(textRangeObject);
+        return S_OK;
+    }
+
+    /// Implements `ISelectionProvider::get_CanSelectMultiple`.
+    private int getCanSelectMultiple(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 1);
+    }
+
+    /// Implements `ISelectionProvider::get_IsSelectionRequired`.
+    private int getIsSelectionRequired(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 0);
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::get_ChildId`.
+    private int getLegacyChildId(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 0);
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::get_Name`.
+    private int getLegacyName(MemorySegment self, MemorySegment name) {
+        return writeUtf16(name, node.label());
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::get_Role`.
+    private int getLegacyRole(MemorySegment self, MemorySegment value) {
+        int role = node.actions().contains(SemanticsAction.ACTIVATE)
+                ? ROLE_SYSTEM_PUSHBUTTON
+                : ROLE_SYSTEM_CLIENT;
+        return writeInt(value, role);
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::DoDefaultAction`.
+    private int doLegacyDefaultAction(MemorySegment self) {
+        invokeCount++;
+        return S_OK;
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::get_Value`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param value the out-parameter that receives the accessible value
+    /// @return `S_OK`, or `E_POINTER` when `value` is null
+    private int getLegacyValue(MemorySegment self, MemorySegment value) {
+        return writeUtf16(value, node.label());
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::get_State`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param state the out-parameter that receives the MSAA state bits
+    /// @return `S_OK`, or `E_POINTER` when `state` is null
+    private int getLegacyState(MemorySegment self, MemorySegment state) {
+        return writeInt(state, STATE_SYSTEM_FOCUSABLE);
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::get_Description`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param description the out-parameter that receives the accessible description
+    /// @return `S_OK`, or `E_POINTER` when `description` is null
+    private int getLegacyDescription(MemorySegment self, MemorySegment description) {
+        return writeUtf16(description, node.label());
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::get_DefaultAction`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param action the out-parameter that receives the default-action name
+    /// @return `S_OK`, or `E_POINTER` when `action` is null
+    private int getLegacyDefaultAction(MemorySegment self, MemorySegment action) {
+        String name = node.actions().contains(SemanticsAction.ACTIVATE) ? "Press" : "";
+        return writeUtf16(action, name);
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::get_KeyboardShortcut`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param shortcut the out-parameter that receives the shortcut string
+    /// @return `S_OK`, or `E_POINTER` when `shortcut` is null
+    private int getLegacyKeyboardShortcut(MemorySegment self, MemorySegment shortcut) {
+        return writeUtf16(shortcut, "");
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::get_Help`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param help the out-parameter that receives the help string
+    /// @return `S_OK`, or `E_POINTER` when `help` is null
+    private int getLegacyHelp(MemorySegment self, MemorySegment help) {
+        return writeUtf16(help, node.label());
+    }
+
+    /// Implements `IRawElementProviderFragment::Navigate`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param direction a `NavigateDirection` value
+    /// @param retVal the out-parameter that receives the fragment
+    /// @return `S_OK`, or `E_POINTER` when `retVal` is null
+    private int navigateFragment(MemorySegment self, int direction, MemorySegment retVal) {
+        if (retVal.address() == 0L) {
+            return E_POINTER;
+        }
+        if (direction != NAVIGATE_DIRECTION_PARENT) {
+            retVal.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+            return S_OK;
+        }
+        retVal.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, fragmentObject);
+        addRef(fragmentObject);
+        return S_OK;
+    }
+
+    /// Implements `IRawElementProviderSimple::get_ProviderOptions`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param options the out-parameter that receives the bitfield
+    /// @return `S_OK`, or `E_POINTER` when `options` is null
+    private int getProviderOptions(MemorySegment self, MemorySegment options) {
+        if (options.address() == 0L) {
+            return E_POINTER;
+        }
+        options.reinterpret(ValueLayout.JAVA_INT.byteSize()).set(ValueLayout.JAVA_INT, 0L, PROVIDER_OPTIONS_SERVER_SIDE);
+        return S_OK;
+    }
+
+    /// Implements `IRawElementProviderSimple::get_HostRawElementProvider`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param host the out-parameter that receives the host provider
+    /// @return `S_OK`, or `E_POINTER` when `host` is null
+    private int getHostRawElementProvider(MemorySegment self, MemorySegment host) {
+        if (host.address() == 0L) {
+            return E_POINTER;
+        }
+        host.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, simpleObject);
+        addRef(simpleObject);
+        return S_OK;
+    }
+
+    /// Implements `IRawElementProviderFragment::SetFocus`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @return `S_OK`
+    private int setFragmentFocus(MemorySegment self) {
+        fragmentFocusCount++;
+        return S_OK;
+    }
+
+    /// Implements `IRawElementProviderFragment::get_FragmentRoot`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param root the out-parameter that receives the fragment root
+    /// @return `S_OK`, or `E_POINTER` when `root` is null
+    private int getFragmentRoot(MemorySegment self, MemorySegment root) {
+        if (root.address() == 0L) {
+            return E_POINTER;
+        }
+        root.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, fragmentObject);
+        addRef(fragmentObject);
+        return S_OK;
+    }
+
+    /// Implements `IRawElementProviderFragment::get_BoundingRectangle`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param rect the out-parameter that receives the UIA rectangle
+    /// @return `S_OK`, or `E_POINTER` when `rect` is null
+    private int getFragmentBoundingRectangle(MemorySegment self, MemorySegment rect) {
+        if (rect.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment writable = rect.byteSize() < 32L ? rect.reinterpret(32) : rect;
+        writable.set(ValueLayout.JAVA_DOUBLE, 0L, node.bounds().x());
+        writable.set(ValueLayout.JAVA_DOUBLE, 8L, node.bounds().y());
+        writable.set(ValueLayout.JAVA_DOUBLE, 16L, node.bounds().width());
+        writable.set(ValueLayout.JAVA_DOUBLE, 24L, node.bounds().height());
+        return S_OK;
+    }
+
+    /// Implements `IRawElementProviderFragment::GetRuntimeId`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param runtimeId the out-parameter that receives the packed identifier
+    /// @return `S_OK`, or `E_POINTER` when `runtimeId` is null
+    private int getFragmentRuntimeId(MemorySegment self, MemorySegment runtimeId) {
+        if (runtimeId.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment block = arena.allocate(8);
+        block.set(ValueLayout.JAVA_INT, 0L, 1);
+        block.set(ValueLayout.JAVA_INT, 4L, (int) node.id());
+        runtimeId.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, block);
+        return S_OK;
+    }
+
+    /// Implements `IRawElementProviderFragment::GetEmbeddedFragmentRoots`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param roots the out-parameter that receives the packed empty root list
+    /// @return `S_OK`, or `E_POINTER` when `roots` is null
+    private int getEmbeddedFragmentRoots(MemorySegment self, MemorySegment roots) {
+        return writeEmptyPacked(roots);
+    }
+
+    /// Implements `IRawElementProviderFragmentRoot::ElementProviderFromPoint`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param x the unused horizontal point
+    /// @param y the unused vertical point
+    /// @param retVal the out-parameter that receives the fragment
+    /// @return `S_OK`, or `E_POINTER` when `retVal` is null
+    private int elementProviderFromPoint(MemorySegment self, double x, double y, MemorySegment retVal) {
+        if (retVal.address() == 0L) {
+            return E_POINTER;
+        }
+        retVal.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, fragmentObject);
+        addRef(fragmentObject);
+        return S_OK;
+    }
+
+    /// Implements `IRawElementProviderFragmentRoot::GetFocus`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param retVal the out-parameter that receives the focused fragment
+    /// @return `S_OK`, or `E_POINTER` when `retVal` is null
+    private int getFragmentRootFocus(MemorySegment self, MemorySegment retVal) {
+        if (retVal.address() == 0L) {
+            return E_POINTER;
+        }
+        retVal.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, fragmentObject);
+        addRef(fragmentObject);
+        return S_OK;
+    }
+
+    /// Implements `ILegacyIAccessibleProvider::SetValue`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param value the UTF-16 value
+    /// @return `S_OK`
+    private int setLegacyValue(MemorySegment self, MemorySegment value) {
+        lastLegacyValue = decodeUtf16(value);
+        legacySetValueCount++;
+        return S_OK;
+    }
+
+    /// Implements `ITextRangeProvider2::ShowContextMenu`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @return `S_OK`
+    private int showTextRangeContextMenu(MemorySegment self) {
+        textRangeContextMenuCount++;
+        return S_OK;
+    }
+
+    /// Implements `IRawElementProviderSimple2::ShowContextMenu`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @return `S_OK`
+    private int showSimpleContextMenu(MemorySegment self) {
+        simpleContextMenuCount++;
+        return S_OK;
+    }
+
+    /// Implements `ITextProvider2::GetCaretRange`.
+    private int getCaretRange(MemorySegment self, MemorySegment isActive, MemorySegment range) {
+        if (isActive.address() == 0L || range.address() == 0L) {
+            return E_POINTER;
+        }
+        writeInt(isActive, 1);
+        range.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, textRangeObject);
+        addRef(textRangeObject);
+        return S_OK;
+    }
+
+    /// Implements `ISpreadsheetItemProvider::get_Formula`.
+    private int getSpreadsheetFormula(MemorySegment self, MemorySegment formula) {
+        return writeUtf16(formula, "=" + node.label());
+    }
+
+    /// Implements `ISelectionProvider2::get_ItemCount`.
+    private int getSelectionItemCount(MemorySegment self, MemorySegment value) {
+        return writeInt(value, 1);
+    }
+
+    /// Implements `ISelectionProvider2::get_CurrentSelectedItem`.
+    private int getCurrentSelectedItem(MemorySegment self, MemorySegment item) {
+        return writeSelectedItem(item);
+    }
+
+    /// Implements `ISelectionProvider2::get_FirstSelectedItem`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param item the out-parameter that receives the selected item
+    /// @return `S_OK`, or `E_POINTER` when `item` is null
+    private int getFirstSelectedItem(MemorySegment self, MemorySegment item) {
+        return writeSelectedItem(item);
+    }
+
+    /// Implements `ISelectionProvider2::get_LastSelectedItem`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param item the out-parameter that receives the selected item
+    /// @return `S_OK`, or `E_POINTER` when `item` is null
+    private int getLastSelectedItem(MemorySegment self, MemorySegment item) {
+        return writeSelectedItem(item);
+    }
+
+    /// Implements `ITextProvider2::RangeFromAnnotation`.
+    ///
+    /// @param self the unused COM this pointer
+    /// @param annotation unused; first-stable returns the document range
+    /// @param range the out-parameter that receives the text range
+    /// @return `S_OK`, or `E_POINTER` when `range` is null
+    private int rangeFromAnnotation(MemorySegment self, MemorySegment annotation, MemorySegment range) {
+        if (range.address() == 0L) {
+            return E_POINTER;
+        }
+        range.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, textRangeObject);
+        addRef(textRangeObject);
+        return S_OK;
+    }
+
+    /// Writes the first-stable selected-item pointer.
+    ///
+    /// @param item the out-parameter that receives [`#foundItemObject`]
+    /// @return `S_OK`, or `E_POINTER` when `item` is null
+    private int writeSelectedItem(MemorySegment item) {
+        if (item.address() == 0L) {
+            return E_POINTER;
+        }
+        item.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, foundItemObject);
+        addRef(foundItemObject);
+        return S_OK;
+    }
+
+    /// Implements `IMultipleViewProvider::GetViewName`.
+    private int getViewName(MemorySegment self, int viewId, MemorySegment name) {
+        if (name.address() == 0L) {
+            return E_POINTER;
+        }
+        String label = viewId == 1 ? "List" : node.label();
+        MemorySegment chars = arena.allocate((label.length() + 1L) * 2L);
+        byte[] utf16 = label.getBytes(StandardCharsets.UTF_16LE);
+        MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
+        name.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, chars);
+        return S_OK;
+    }
+
+    /// Implements `GetPropertyValue` on a found item.
+    private int getFoundItemPropertyValue(MemorySegment self, int propertyId, MemorySegment value) {
+        if (value.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment variant = value.reinterpret(Win32Layouts.VARIANT.byteSize());
+        variant.fill((byte) 0);
+        if (propertyId == UIA_NAME_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_BSTR);
+            MemorySegment chars = arena.allocate((node.label().length() + 1L) * 2L);
+            byte[] utf16 = node.label().getBytes(StandardCharsets.UTF_16LE);
+            MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
+            variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, chars);
+        }
         return S_OK;
     }
 
@@ -2774,6 +5853,35 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             return E_POINTER;
         }
         value.set(ValueLayout.JAVA_INT, 0L, payload);
+        return S_OK;
+    }
+
+    /// Decodes a NUL-terminated UTF-16 string from a COM out-parameter pointer.
+    private static String decodeUtf16(MemorySegment pointer) {
+        if (pointer.address() == 0L) {
+            return "";
+        }
+        MemorySegment readable = pointer.byteSize() < 256L ? pointer.reinterpret(256) : pointer;
+        StringBuilder text = new StringBuilder();
+        for (int index = 0; index < 64; index++) {
+            char unit = readable.getAtIndex(ValueLayout.JAVA_CHAR, index);
+            if (unit == 0) {
+                break;
+            }
+            text.append(unit);
+        }
+        return text.toString();
+    }
+
+    /// Writes a UTF-16 C string through a `BSTR` out-parameter.
+    private int writeUtf16(MemorySegment out, String text) {
+        if (out.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment chars = arena.allocate((text.length() + 1L) * 2L);
+        byte[] utf16 = text.getBytes(StandardCharsets.UTF_16LE);
+        MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
+        out.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, chars);
         return S_OK;
     }
 

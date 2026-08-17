@@ -140,6 +140,20 @@ public final class D3d12Device implements AutoCloseable {
         return capabilities;
     }
 
+    /// Reads `ID3D12Device::GetDeviceRemovedReason` through the generated COM vtable.
+    ///
+    /// A healthy device returns `S_OK` (`0`). A removed or reset adapter returns a failing
+    /// `HRESULT` that later presents must treat as a lost-device signal.
+    ///
+    /// @return the removal `HRESULT`
+    public int deviceRemovedReason() {
+        requireOpen();
+        return D3d12FfmBindings.invokeId3d12DeviceGetDeviceRemovedReasonPointer(
+                D3d12Native.functionAt(device, D3d12Layouts.ID3D12_DEVICE_VTABLE_GET_DEVICE_REMOVED_REASON_OFFSET),
+                device
+        );
+    }
+
     /// Returns the owned factory pointer.
     ///
     /// @return the factory

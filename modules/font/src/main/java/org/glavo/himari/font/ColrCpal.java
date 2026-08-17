@@ -18,9 +18,16 @@ import java.util.List;
 /// `PaintLinearGradient`, `PaintRadialGradient`, `PaintSweepGradient`, and the variable
 /// gradient forms 5/7/9 (first color-stop palette), plus `PaintColrGlyph`, into the same
 /// layer list used by v0. `PaintVarSolid` and the first `VarColorLine` stop may apply an
-/// 8-bit ItemVariationStore delta to the palette index. Variable wrap paints unwrap to the
-/// nested paint the same way as their non-variable forms. Other paint formats are ignored. A missing table pair yields no color
-/// layers. Palette index [`PaletteColor#FOREGROUND`] leaves [`ColorLayer#color()`] `null`.
+/// 8-bit ItemVariationStore delta to the palette index. `PaintVarTranslate` may apply a store
+/// delta to `dx` and `dy`, `PaintVarScale` to `scaleX`/`scaleY`, `PaintVarScaleUniform` to both
+/// scale axes, `PaintVarRotate` to the angle, `PaintVarSkew` to both skew angles,
+/// `PaintVarTransform` to `xx`/`yx`/`xy`/`yy`/`dx`/`dy`, around-center paints to `centerX` and
+/// `centerY`, `PaintVarScaleAroundCenter` to scale plus center, and
+/// `PaintVarSkewAroundCenter` to skew plus center.
+/// Variable wrap
+/// paints unwrap to the nested paint the same way as their non-variable forms. Other paint
+/// formats are ignored. A missing table pair yields no color layers. Palette index
+/// [`PaletteColor#FOREGROUND`] leaves [`ColorLayer#color()`] `null`.
 @NotNullByDefault
 final class ColrCpal {
     /// Shared empty parser.
@@ -33,6 +40,34 @@ final class ColrCpal {
             new PaletteColor[0],
             new int[0],
             0,
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
+            new int[0],
             new int[0],
             new int[0],
             new int[0],
@@ -75,6 +110,90 @@ final class ColrCpal {
     /// ItemVariationStore inner index for each translate X, or `-1`.
     private final int[] layerTranslateInners;
 
+    /// Base `PaintVarScale` X factors as `F2DOT14` for each flattened layer.
+    private final int[] layerScaleXs;
+
+    /// ItemVariationStore inner index for each scale X, or `-1`.
+    private final int[] layerScaleInners;
+
+    /// Base `PaintVarRotate` angles as `F2DOT14` for each flattened layer.
+    private final int[] layerRotates;
+
+    /// ItemVariationStore inner index for each rotate angle, or `-1`.
+    private final int[] layerRotateInners;
+
+    /// Base `PaintVarTranslate` Y offsets for each flattened layer.
+    private final int[] layerTranslateYs;
+
+    /// ItemVariationStore inner index for each translate Y, or `-1`.
+    private final int[] layerTranslateYInners;
+
+    /// Base `PaintVarSkew` X angles as `F2DOT14` for each flattened layer.
+    private final int[] layerSkewXs;
+
+    /// ItemVariationStore inner index for each skew X, or `-1`.
+    private final int[] layerSkewInners;
+
+    /// Base `PaintVarScale` Y factors as `F2DOT14` for each flattened layer.
+    private final int[] layerScaleYs;
+
+    /// ItemVariationStore inner index for each scale Y, or `-1`.
+    private final int[] layerScaleYInners;
+
+    /// Base `PaintVarSkew` Y angles as `F2DOT14` for each flattened layer.
+    private final int[] layerSkewYs;
+
+    /// ItemVariationStore inner index for each skew Y, or `-1`.
+    private final int[] layerSkewYInners;
+
+    /// Base `PaintVarTransform` `xx` values as `16.16` for each flattened layer.
+    private final int[] layerTransformXxs;
+
+    /// ItemVariationStore inner index for each transform `xx`, or `-1`.
+    private final int[] layerTransformInners;
+
+    /// Base around-center X offsets for each flattened layer.
+    private final int[] layerCenterXs;
+
+    /// ItemVariationStore inner index for each center X, or `-1`.
+    private final int[] layerCenterInners;
+
+    /// Base `PaintVarTransform` `yx` values as `16.16` for each flattened layer.
+    private final int[] layerTransformYxs;
+
+    /// ItemVariationStore inner index for each transform `yx`, or `-1`.
+    private final int[] layerTransformYxInners;
+
+    /// Base around-center Y offsets for each flattened layer.
+    private final int[] layerCenterYs;
+
+    /// ItemVariationStore inner index for each center Y, or `-1`.
+    private final int[] layerCenterYInners;
+
+    /// Base `PaintVarTransform` `xy` values as `16.16` for each flattened layer.
+    private final int[] layerTransformXys;
+
+    /// ItemVariationStore inner index for each transform `xy`, or `-1`.
+    private final int[] layerTransformXyInners;
+
+    /// Base `PaintVarTransform` `yy` values as `16.16` for each flattened layer.
+    private final int[] layerTransformYys;
+
+    /// ItemVariationStore inner index for each transform `yy`, or `-1`.
+    private final int[] layerTransformYyInners;
+
+    /// Base `PaintVarTransform` `dx` values as `16.16` for each flattened layer.
+    private final int[] layerTransformDxs;
+
+    /// ItemVariationStore inner index for each transform `dx`, or `-1`.
+    private final int[] layerTransformDxInners;
+
+    /// Base `PaintVarTransform` `dy` values as `16.16` for each flattened layer.
+    private final int[] layerTransformDys;
+
+    /// ItemVariationStore inner index for each transform `dy`, or `-1`.
+    private final int[] layerTransformDyInners;
+
     /// First-stable variation-region start.
     private final float regionStart;
 
@@ -100,6 +219,34 @@ final class ColrCpal {
             int[] layerVarInners,
             int[] layerTranslateXs,
             int[] layerTranslateInners,
+            int[] layerScaleXs,
+            int[] layerScaleInners,
+            int[] layerRotates,
+            int[] layerRotateInners,
+            int[] layerTranslateYs,
+            int[] layerTranslateYInners,
+            int[] layerSkewXs,
+            int[] layerSkewInners,
+            int[] layerScaleYs,
+            int[] layerScaleYInners,
+            int[] layerSkewYs,
+            int[] layerSkewYInners,
+            int[] layerTransformXxs,
+            int[] layerTransformInners,
+            int[] layerCenterXs,
+            int[] layerCenterInners,
+            int[] layerTransformYxs,
+            int[] layerTransformYxInners,
+            int[] layerCenterYs,
+            int[] layerCenterYInners,
+            int[] layerTransformXys,
+            int[] layerTransformXyInners,
+            int[] layerTransformYys,
+            int[] layerTransformYyInners,
+            int[] layerTransformDxs,
+            int[] layerTransformDxInners,
+            int[] layerTransformDys,
+            int[] layerTransformDyInners,
             float regionStart,
             float regionPeak,
             float regionEnd,
@@ -116,6 +263,34 @@ final class ColrCpal {
         this.layerVarInners = layerVarInners;
         this.layerTranslateXs = layerTranslateXs;
         this.layerTranslateInners = layerTranslateInners;
+        this.layerScaleXs = layerScaleXs;
+        this.layerScaleInners = layerScaleInners;
+        this.layerRotates = layerRotates;
+        this.layerRotateInners = layerRotateInners;
+        this.layerTranslateYs = layerTranslateYs;
+        this.layerTranslateYInners = layerTranslateYInners;
+        this.layerSkewXs = layerSkewXs;
+        this.layerSkewInners = layerSkewInners;
+        this.layerScaleYs = layerScaleYs;
+        this.layerScaleYInners = layerScaleYInners;
+        this.layerSkewYs = layerSkewYs;
+        this.layerSkewYInners = layerSkewYInners;
+        this.layerTransformXxs = layerTransformXxs;
+        this.layerTransformInners = layerTransformInners;
+        this.layerCenterXs = layerCenterXs;
+        this.layerCenterInners = layerCenterInners;
+        this.layerTransformYxs = layerTransformYxs;
+        this.layerTransformYxInners = layerTransformYxInners;
+        this.layerCenterYs = layerCenterYs;
+        this.layerCenterYInners = layerCenterYInners;
+        this.layerTransformXys = layerTransformXys;
+        this.layerTransformXyInners = layerTransformXyInners;
+        this.layerTransformYys = layerTransformYys;
+        this.layerTransformYyInners = layerTransformYyInners;
+        this.layerTransformDxs = layerTransformDxs;
+        this.layerTransformDxInners = layerTransformDxInners;
+        this.layerTransformDys = layerTransformDys;
+        this.layerTransformDyInners = layerTransformDyInners;
         this.regionStart = regionStart;
         this.regionPeak = regionPeak;
         this.regionEnd = regionEnd;
@@ -147,6 +322,34 @@ final class ColrCpal {
         int[] layerVarInners = new int[0];
         int[] layerTranslateXs = new int[0];
         int[] layerTranslateInners = new int[0];
+        int[] layerScaleXs = new int[0];
+        int[] layerScaleInners = new int[0];
+        int[] layerRotates = new int[0];
+        int[] layerRotateInners = new int[0];
+        int[] layerTranslateYs = new int[0];
+        int[] layerTranslateYInners = new int[0];
+        int[] layerSkewXs = new int[0];
+        int[] layerSkewInners = new int[0];
+        int[] layerScaleYs = new int[0];
+        int[] layerScaleYInners = new int[0];
+        int[] layerSkewYs = new int[0];
+        int[] layerSkewYInners = new int[0];
+        int[] layerTransformXxs = new int[0];
+        int[] layerTransformInners = new int[0];
+        int[] layerCenterXs = new int[0];
+        int[] layerCenterInners = new int[0];
+        int[] layerTransformYxs = new int[0];
+        int[] layerTransformYxInners = new int[0];
+        int[] layerCenterYs = new int[0];
+        int[] layerCenterYInners = new int[0];
+        int[] layerTransformXys = new int[0];
+        int[] layerTransformXyInners = new int[0];
+        int[] layerTransformYys = new int[0];
+        int[] layerTransformYyInners = new int[0];
+        int[] layerTransformDxs = new int[0];
+        int[] layerTransformDxInners = new int[0];
+        int[] layerTransformDys = new int[0];
+        int[] layerTransformDyInners = new int[0];
         float regionStart = 0.0f;
         float regionPeak = 0.0f;
         float regionEnd = 0.0f;
@@ -200,6 +403,34 @@ final class ColrCpal {
             layerVarInners = flattened.varInners;
             layerTranslateXs = flattened.translateXs;
             layerTranslateInners = flattened.translateInners;
+            layerScaleXs = flattened.scaleXs;
+            layerScaleInners = flattened.scaleInners;
+            layerRotates = flattened.rotates;
+            layerRotateInners = flattened.rotateInners;
+            layerTranslateYs = flattened.translateYs;
+            layerTranslateYInners = flattened.translateYInners;
+            layerSkewXs = flattened.skewXs;
+            layerSkewInners = flattened.skewInners;
+            layerScaleYs = flattened.scaleYs;
+            layerScaleYInners = flattened.scaleYInners;
+            layerSkewYs = flattened.skewYs;
+            layerSkewYInners = flattened.skewYInners;
+            layerTransformXxs = flattened.transformXxs;
+            layerTransformInners = flattened.transformInners;
+            layerCenterXs = flattened.centerXs;
+            layerCenterInners = flattened.centerInners;
+            layerTransformYxs = flattened.transformYxs;
+            layerTransformYxInners = flattened.transformYxInners;
+            layerCenterYs = flattened.centerYs;
+            layerCenterYInners = flattened.centerYInners;
+            layerTransformXys = flattened.transformXys;
+            layerTransformXyInners = flattened.transformXyInners;
+            layerTransformYys = flattened.transformYys;
+            layerTransformYyInners = flattened.transformYyInners;
+            layerTransformDxs = flattened.transformDxs;
+            layerTransformDxInners = flattened.transformDxInners;
+            layerTransformDys = flattened.transformDys;
+            layerTransformDyInners = flattened.transformDyInners;
             if (storeOffset > 0) {
                 ItemStore store = readItemStore(color, storeOffset);
                 regionStart = store.start;
@@ -247,6 +478,34 @@ final class ColrCpal {
                 layerVarInners,
                 layerTranslateXs,
                 layerTranslateInners,
+                layerScaleXs,
+                layerScaleInners,
+                layerRotates,
+                layerRotateInners,
+                layerTranslateYs,
+                layerTranslateYInners,
+                layerSkewXs,
+                layerSkewInners,
+                layerScaleYs,
+                layerScaleYInners,
+                layerSkewYs,
+                layerSkewYInners,
+                layerTransformXxs,
+                layerTransformInners,
+                layerCenterXs,
+                layerCenterInners,
+                layerTransformYxs,
+                layerTransformYxInners,
+                layerCenterYs,
+                layerCenterYInners,
+                layerTransformXys,
+                layerTransformXyInners,
+                layerTransformYys,
+                layerTransformYyInners,
+                layerTransformDxs,
+                layerTransformDxInners,
+                layerTransformDys,
+                layerTransformDyInners,
                 regionStart,
                 regionPeak,
                 regionEnd,
@@ -257,7 +516,44 @@ final class ColrCpal {
     /// Flattens a first-stable COLR v1 paint subset into v0-style layer arrays.
     private static V1Layers flattenV1(ByteBuffer color, int baseGlyphList, int layerList) {
         if (baseGlyphList <= 0 || baseGlyphList + 4 > color.capacity()) {
-            return new V1Layers(new int[0], new int[0], new int[0], new int[0], new int[0], new int[0], new int[0], new int[0]);
+            return new V1Layers(
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0],
+                    new int[0]
+            );
         }
         color.clear();
         color.position(baseGlyphList);
@@ -281,6 +577,34 @@ final class ColrCpal {
         ArrayList<Integer> varInners = new ArrayList<>();
         ArrayList<Integer> translateXs = new ArrayList<>();
         ArrayList<Integer> translateInners = new ArrayList<>();
+        ArrayList<Integer> scaleXs = new ArrayList<>();
+        ArrayList<Integer> scaleInners = new ArrayList<>();
+        ArrayList<Integer> rotates = new ArrayList<>();
+        ArrayList<Integer> rotateInners = new ArrayList<>();
+        ArrayList<Integer> translateYs = new ArrayList<>();
+        ArrayList<Integer> translateYInners = new ArrayList<>();
+        ArrayList<Integer> skewXs = new ArrayList<>();
+        ArrayList<Integer> skewInners = new ArrayList<>();
+        ArrayList<Integer> scaleYs = new ArrayList<>();
+        ArrayList<Integer> scaleYInners = new ArrayList<>();
+        ArrayList<Integer> skewYs = new ArrayList<>();
+        ArrayList<Integer> skewYInners = new ArrayList<>();
+        ArrayList<Integer> transformXxs = new ArrayList<>();
+        ArrayList<Integer> transformInners = new ArrayList<>();
+        ArrayList<Integer> centerXs = new ArrayList<>();
+        ArrayList<Integer> centerInners = new ArrayList<>();
+        ArrayList<Integer> transformYxs = new ArrayList<>();
+        ArrayList<Integer> transformYxInners = new ArrayList<>();
+        ArrayList<Integer> centerYs = new ArrayList<>();
+        ArrayList<Integer> centerYInners = new ArrayList<>();
+        ArrayList<Integer> transformXys = new ArrayList<>();
+        ArrayList<Integer> transformXyInners = new ArrayList<>();
+        ArrayList<Integer> transformYys = new ArrayList<>();
+        ArrayList<Integer> transformYyInners = new ArrayList<>();
+        ArrayList<Integer> transformDxs = new ArrayList<>();
+        ArrayList<Integer> transformDxInners = new ArrayList<>();
+        ArrayList<Integer> transformDys = new ArrayList<>();
+        ArrayList<Integer> transformDyInners = new ArrayList<>();
         for (int index = 0; index < count; index++) {
             firstLayers[index] = glyphs.size();
             collectPaint(
@@ -294,6 +618,62 @@ final class ColrCpal {
                     varInners,
                     translateXs,
                     translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
+                    0,
+                    -1,
                     0,
                     -1,
                     0
@@ -305,15 +685,106 @@ final class ColrCpal {
         int[] layerVars = new int[varInners.size()];
         int[] layerXs = new int[translateXs.size()];
         int[] layerXInners = new int[translateInners.size()];
+        int[] layerScales = new int[scaleXs.size()];
+        int[] layerScaleVars = new int[scaleInners.size()];
+        int[] layerAngles = new int[rotates.size()];
+        int[] layerAngleVars = new int[rotateInners.size()];
+        int[] layerYs = new int[translateYs.size()];
+        int[] layerYInners = new int[translateYInners.size()];
+        int[] layerSkews = new int[skewXs.size()];
+        int[] layerSkewVars = new int[skewInners.size()];
+        int[] layerScaleYVals = new int[scaleYs.size()];
+        int[] layerScaleYVars = new int[scaleYInners.size()];
+        int[] layerSkewYVals = new int[skewYs.size()];
+        int[] layerSkewYVars = new int[skewYInners.size()];
+        int[] layerXx = new int[transformXxs.size()];
+        int[] layerXxVars = new int[transformInners.size()];
+        int[] layerCenters = new int[centerXs.size()];
+        int[] layerCenterVars = new int[centerInners.size()];
+        int[] layerYx = new int[transformYxs.size()];
+        int[] layerYxVars = new int[transformYxInners.size()];
+        int[] layerCenterYVals = new int[centerYs.size()];
+        int[] layerCenterYVars = new int[centerYInners.size()];
+        int[] layerXy = new int[transformXys.size()];
+        int[] layerXyVars = new int[transformXyInners.size()];
+        int[] layerYy = new int[transformYys.size()];
+        int[] layerYyVars = new int[transformYyInners.size()];
+        int[] layerDx = new int[transformDxs.size()];
+        int[] layerDxVars = new int[transformDxInners.size()];
+        int[] layerDy = new int[transformDys.size()];
+        int[] layerDyVars = new int[transformDyInners.size()];
         for (int index = 0; index < glyphs.size(); index++) {
             layerGlyphs[index] = glyphs.get(index);
             layerPalettes[index] = palettes.get(index);
             layerVars[index] = varInners.get(index);
             layerXs[index] = translateXs.get(index);
             layerXInners[index] = translateInners.get(index);
+            layerScales[index] = scaleXs.get(index);
+            layerScaleVars[index] = scaleInners.get(index);
+            layerAngles[index] = rotates.get(index);
+            layerAngleVars[index] = rotateInners.get(index);
+            layerYs[index] = translateYs.get(index);
+            layerYInners[index] = translateYInners.get(index);
+            layerSkews[index] = skewXs.get(index);
+            layerSkewVars[index] = skewInners.get(index);
+            layerScaleYVals[index] = scaleYs.get(index);
+            layerScaleYVars[index] = scaleYInners.get(index);
+            layerSkewYVals[index] = skewYs.get(index);
+            layerSkewYVars[index] = skewYInners.get(index);
+            layerXx[index] = transformXxs.get(index);
+            layerXxVars[index] = transformInners.get(index);
+            layerCenters[index] = centerXs.get(index);
+            layerCenterVars[index] = centerInners.get(index);
+            layerYx[index] = transformYxs.get(index);
+            layerYxVars[index] = transformYxInners.get(index);
+            layerCenterYVals[index] = centerYs.get(index);
+            layerCenterYVars[index] = centerYInners.get(index);
+            layerXy[index] = transformXys.get(index);
+            layerXyVars[index] = transformXyInners.get(index);
+            layerYy[index] = transformYys.get(index);
+            layerYyVars[index] = transformYyInners.get(index);
+            layerDx[index] = transformDxs.get(index);
+            layerDxVars[index] = transformDxInners.get(index);
+            layerDy[index] = transformDys.get(index);
+            layerDyVars[index] = transformDyInners.get(index);
         }
         return new V1Layers(
-                baseGlyphs, firstLayers, layerCounts, layerGlyphs, layerPalettes, layerVars, layerXs, layerXInners
+                baseGlyphs,
+                firstLayers,
+                layerCounts,
+                layerGlyphs,
+                layerPalettes,
+                layerVars,
+                layerXs,
+                layerXInners,
+                layerScales,
+                layerScaleVars,
+                layerAngles,
+                layerAngleVars,
+                layerYs,
+                layerYInners,
+                layerSkews,
+                layerSkewVars,
+                layerScaleYVals,
+                layerScaleYVars,
+                layerSkewYVals,
+                layerSkewYVars,
+                layerXx,
+                layerXxVars,
+                layerCenters,
+                layerCenterVars,
+                layerYx,
+                layerYxVars,
+                layerCenterYVals,
+                layerCenterYVars,
+                layerXy,
+                layerXyVars,
+                layerYy,
+                layerYyVars,
+                layerDx,
+                layerDxVars,
+                layerDy,
+                layerDyVars
         );
     }
 
@@ -329,8 +800,64 @@ final class ColrCpal {
             ArrayList<Integer> varInners,
             ArrayList<Integer> translateXs,
             ArrayList<Integer> translateInners,
+            ArrayList<Integer> scaleXs,
+            ArrayList<Integer> scaleInners,
+            ArrayList<Integer> rotates,
+            ArrayList<Integer> rotateInners,
+            ArrayList<Integer> translateYs,
+            ArrayList<Integer> translateYInners,
+            ArrayList<Integer> skewXs,
+            ArrayList<Integer> skewInners,
+            ArrayList<Integer> scaleYs,
+            ArrayList<Integer> scaleYInners,
+            ArrayList<Integer> skewYs,
+            ArrayList<Integer> skewYInners,
+            ArrayList<Integer> transformXxs,
+            ArrayList<Integer> transformInners,
+            ArrayList<Integer> centerXs,
+            ArrayList<Integer> centerInners,
+            ArrayList<Integer> transformYxs,
+            ArrayList<Integer> transformYxInners,
+            ArrayList<Integer> centerYs,
+            ArrayList<Integer> centerYInners,
+            ArrayList<Integer> transformXys,
+            ArrayList<Integer> transformXyInners,
+            ArrayList<Integer> transformYys,
+            ArrayList<Integer> transformYyInners,
+            ArrayList<Integer> transformDxs,
+            ArrayList<Integer> transformDxInners,
+            ArrayList<Integer> transformDys,
+            ArrayList<Integer> transformDyInners,
             int wrapX,
             int wrapInner,
+            int wrapScale,
+            int wrapScaleInner,
+            int wrapRotate,
+            int wrapRotateInner,
+            int wrapY,
+            int wrapYInner,
+            int wrapSkew,
+            int wrapSkewInner,
+            int wrapScaleY,
+            int wrapScaleYInner,
+            int wrapSkewY,
+            int wrapSkewYInner,
+            int wrapTransformXx,
+            int wrapTransformInner,
+            int wrapCenterX,
+            int wrapCenterInner,
+            int wrapTransformYx,
+            int wrapTransformYxInner,
+            int wrapCenterY,
+            int wrapCenterYInner,
+            int wrapTransformXy,
+            int wrapTransformXyInner,
+            int wrapTransformYy,
+            int wrapTransformYyInner,
+            int wrapTransformDx,
+            int wrapTransformDxInner,
+            int wrapTransformDy,
+            int wrapTransformDyInner,
             int depth
     ) {
         if (depth > 8 || paint < 0 || paint + 1 > color.capacity()) {
@@ -359,8 +886,64 @@ final class ColrCpal {
                             varInners,
                             translateXs,
                             translateInners,
+                            scaleXs,
+                            scaleInners,
+                            rotates,
+                            rotateInners,
+                            translateYs,
+                            translateYInners,
+                            skewXs,
+                            skewInners,
+                            scaleYs,
+                            scaleYInners,
+                            skewYs,
+                            skewYInners,
+                            transformXxs,
+                            transformInners,
+                            centerXs,
+                            centerInners,
+                            transformYxs,
+                            transformYxInners,
+                            centerYs,
+                            centerYInners,
+                            transformXys,
+                            transformXyInners,
+                            transformYys,
+                            transformYyInners,
+                            transformDxs,
+                            transformDxInners,
+                            transformDys,
+                            transformDyInners,
                             wrapX,
                             wrapInner,
+                            wrapScale,
+                            wrapScaleInner,
+                            wrapRotate,
+                            wrapRotateInner,
+                            wrapY,
+                            wrapYInner,
+                            wrapSkew,
+                            wrapSkewInner,
+                            wrapScaleY,
+                            wrapScaleYInner,
+                            wrapSkewY,
+                            wrapSkewYInner,
+                            wrapTransformXx,
+                            wrapTransformInner,
+                            wrapCenterX,
+                            wrapCenterInner,
+                            wrapTransformYx,
+                            wrapTransformYxInner,
+                            wrapCenterY,
+                            wrapCenterYInner,
+                            wrapTransformXy,
+                            wrapTransformXyInner,
+                            wrapTransformYy,
+                            wrapTransformYyInner,
+                            wrapTransformDx,
+                            wrapTransformDxInner,
+                            wrapTransformDy,
+                            wrapTransformDyInner,
                             depth + 1
                     );
                 }
@@ -380,6 +963,34 @@ final class ColrCpal {
                 varInners.add(varInnerOf(color, child));
                 translateXs.add(wrapX);
                 translateInners.add(wrapInner);
+                scaleXs.add(wrapScale);
+                scaleInners.add(wrapScaleInner);
+                rotates.add(wrapRotate);
+                rotateInners.add(wrapRotateInner);
+                translateYs.add(wrapY);
+                translateYInners.add(wrapYInner);
+                skewXs.add(wrapSkew);
+                skewInners.add(wrapSkewInner);
+                scaleYs.add(wrapScaleY);
+                scaleYInners.add(wrapScaleYInner);
+                skewYs.add(wrapSkewY);
+                skewYInners.add(wrapSkewYInner);
+                transformXxs.add(wrapTransformXx);
+                transformInners.add(wrapTransformInner);
+                centerXs.add(wrapCenterX);
+                centerInners.add(wrapCenterInner);
+                transformYxs.add(wrapTransformYx);
+                transformYxInners.add(wrapTransformYxInner);
+                centerYs.add(wrapCenterY);
+                centerYInners.add(wrapCenterYInner);
+                transformXys.add(wrapTransformXy);
+                transformXyInners.add(wrapTransformXyInner);
+                transformYys.add(wrapTransformYy);
+                transformYyInners.add(wrapTransformYyInner);
+                transformDxs.add(wrapTransformDx);
+                transformDxInners.add(wrapTransformDxInner);
+                transformDys.add(wrapTransformDy);
+                transformDyInners.add(wrapTransformDyInner);
             }
             return;
         }
@@ -400,8 +1011,64 @@ final class ColrCpal {
                         varInners,
                         translateXs,
                         translateInners,
+                        scaleXs,
+                        scaleInners,
+                        rotates,
+                        rotateInners,
+                        translateYs,
+                        translateYInners,
+                        skewXs,
+                        skewInners,
+                        scaleYs,
+                        scaleYInners,
+                        skewYs,
+                        skewYInners,
+                        transformXxs,
+                        transformInners,
+                        centerXs,
+                        centerInners,
+                        transformYxs,
+                        transformYxInners,
+                        centerYs,
+                        centerYInners,
+                        transformXys,
+                        transformXyInners,
+                        transformYys,
+                        transformYyInners,
+                        transformDxs,
+                        transformDxInners,
+                        transformDys,
+                        transformDyInners,
                         wrapX,
                         wrapInner,
+                        wrapScale,
+                        wrapScaleInner,
+                        wrapRotate,
+                        wrapRotateInner,
+                        wrapY,
+                        wrapYInner,
+                        wrapSkew,
+                        wrapSkewInner,
+                        wrapScaleY,
+                        wrapScaleYInner,
+                        wrapSkewY,
+                        wrapSkewYInner,
+                        wrapTransformXx,
+                        wrapTransformInner,
+                        wrapCenterX,
+                        wrapCenterInner,
+                        wrapTransformYx,
+                        wrapTransformYxInner,
+                        wrapCenterY,
+                        wrapCenterYInner,
+                        wrapTransformXy,
+                        wrapTransformXyInner,
+                        wrapTransformYy,
+                        wrapTransformYyInner,
+                        wrapTransformDx,
+                        wrapTransformDxInner,
+                        wrapTransformDy,
+                        wrapTransformDyInner,
                         depth + 1
                 );
             }
@@ -413,7 +1080,170 @@ final class ColrCpal {
             }
             int child = paint + offset24(color);
             int dx = color.getShort();
-            color.getShort();
+            int dy = color.getShort();
+            int inner = varIndex(color.getInt());
+            int dyInner = inner < 0 ? -1 : inner + 1;
+            collectPaint(
+                    color,
+                    child,
+                    layerList,
+                    baseGlyphs,
+                    paints,
+                    glyphs,
+                    palettes,
+                    varInners,
+                    translateXs,
+                    translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    dx,
+                    inner,
+                    wrapScale,
+                    wrapScaleInner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    dy,
+                    dyInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    wrapScaleY,
+                    wrapScaleYInner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    wrapCenterX,
+                    wrapCenterInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    wrapCenterY,
+                    wrapCenterYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
+                    depth + 1
+            );
+            return;
+        }
+        if (format == 17) {
+            if (color.remaining() < 11) {
+                return;
+            }
+            int child = paint + offset24(color);
+            int scaleX = color.getShort();
+            int scaleY = color.getShort();
+            int inner = varIndex(color.getInt());
+            int scaleYInner = inner < 0 ? -1 : inner + 1;
+            collectPaint(
+                    color,
+                    child,
+                    layerList,
+                    baseGlyphs,
+                    paints,
+                    glyphs,
+                    palettes,
+                    varInners,
+                    translateXs,
+                    translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    wrapX,
+                    wrapInner,
+                    scaleX,
+                    inner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    wrapY,
+                    wrapYInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    scaleY,
+                    scaleYInner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    wrapCenterX,
+                    wrapCenterInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    wrapCenterY,
+                    wrapCenterYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
+                    depth + 1
+            );
+            return;
+        }
+        if (format == 25) {
+            if (color.remaining() < 9) {
+                return;
+            }
+            int child = paint + offset24(color);
+            int angle = color.getShort();
             int inner = varIndex(color.getInt());
             collectPaint(
                     color,
@@ -426,8 +1256,656 @@ final class ColrCpal {
                     varInners,
                     translateXs,
                     translateInners,
-                    dx,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    wrapX,
+                    wrapInner,
+                    wrapScale,
+                    wrapScaleInner,
+                    angle,
                     inner,
+                    wrapY,
+                    wrapYInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    wrapScaleY,
+                    wrapScaleYInner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    wrapCenterX,
+                    wrapCenterInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    wrapCenterY,
+                    wrapCenterYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
+                    depth + 1
+            );
+            return;
+        }
+        if (format == 29) {
+            if (color.remaining() < 11) {
+                return;
+            }
+            int child = paint + offset24(color);
+            int skew = color.getShort();
+            int skewY = color.getShort();
+            int inner = varIndex(color.getInt());
+            int skewYInner = inner < 0 ? -1 : inner + 1;
+            collectPaint(
+                    color,
+                    child,
+                    layerList,
+                    baseGlyphs,
+                    paints,
+                    glyphs,
+                    palettes,
+                    varInners,
+                    translateXs,
+                    translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    wrapX,
+                    wrapInner,
+                    wrapScale,
+                    wrapScaleInner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    wrapY,
+                    wrapYInner,
+                    skew,
+                    inner,
+                    wrapScaleY,
+                    wrapScaleYInner,
+                    skewY,
+                    skewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    wrapCenterX,
+                    wrapCenterInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    wrapCenterY,
+                    wrapCenterYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
+                    depth + 1
+            );
+            return;
+        }
+        if (format == 21) {
+            if (color.remaining() < 9) {
+                return;
+            }
+            int child = paint + offset24(color);
+            int scale = color.getShort();
+            int inner = varIndex(color.getInt());
+            collectPaint(
+                    color,
+                    child,
+                    layerList,
+                    baseGlyphs,
+                    paints,
+                    glyphs,
+                    palettes,
+                    varInners,
+                    translateXs,
+                    translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    wrapX,
+                    wrapInner,
+                    scale,
+                    inner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    wrapY,
+                    wrapYInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    scale,
+                    inner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    wrapCenterX,
+                    wrapCenterInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    wrapCenterY,
+                    wrapCenterYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
+                    depth + 1
+            );
+            return;
+        }
+        if (format == 19) {
+            if (color.remaining() < 15) {
+                return;
+            }
+            int child = paint + offset24(color);
+            int scaleX = color.getShort();
+            int scaleY = color.getShort();
+            int centerX = color.getShort();
+            int centerY = color.getShort();
+            int inner = varIndex(color.getInt());
+            int scaleYInner = inner < 0 ? -1 : inner + 1;
+            int centerXInner = inner < 0 ? -1 : inner + 2;
+            int centerYInner = inner < 0 ? -1 : inner + 3;
+            collectPaint(
+                    color,
+                    child,
+                    layerList,
+                    baseGlyphs,
+                    paints,
+                    glyphs,
+                    palettes,
+                    varInners,
+                    translateXs,
+                    translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    wrapX,
+                    wrapInner,
+                    scaleX,
+                    inner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    wrapY,
+                    wrapYInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    scaleY,
+                    scaleYInner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    centerX,
+                    centerXInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    centerY,
+                    centerYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
+                    depth + 1
+            );
+            return;
+        }
+        if (format == 23) {
+            if (color.remaining() < 13) {
+                return;
+            }
+            int child = paint + offset24(color);
+            int scale = color.getShort();
+            int centerX = color.getShort();
+            int centerY = color.getShort();
+            int inner = varIndex(color.getInt());
+            int centerXInner = inner < 0 ? -1 : inner + 1;
+            int centerYInner = inner < 0 ? -1 : inner + 2;
+            collectPaint(
+                    color,
+                    child,
+                    layerList,
+                    baseGlyphs,
+                    paints,
+                    glyphs,
+                    palettes,
+                    varInners,
+                    translateXs,
+                    translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    wrapX,
+                    wrapInner,
+                    scale,
+                    inner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    wrapY,
+                    wrapYInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    scale,
+                    inner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    centerX,
+                    centerXInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    centerY,
+                    centerYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
+                    depth + 1
+            );
+            return;
+        }
+        if (format == 31) {
+            if (color.remaining() < 15) {
+                return;
+            }
+            int child = paint + offset24(color);
+            int skewX = color.getShort();
+            int skewY = color.getShort();
+            int centerX = color.getShort();
+            int centerY = color.getShort();
+            int inner = varIndex(color.getInt());
+            int skewYInner = inner < 0 ? -1 : inner + 1;
+            int centerXInner = inner < 0 ? -1 : inner + 2;
+            int centerYInner = inner < 0 ? -1 : inner + 3;
+            collectPaint(
+                    color,
+                    child,
+                    layerList,
+                    baseGlyphs,
+                    paints,
+                    glyphs,
+                    palettes,
+                    varInners,
+                    translateXs,
+                    translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    wrapX,
+                    wrapInner,
+                    wrapScale,
+                    wrapScaleInner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    wrapY,
+                    wrapYInner,
+                    skewX,
+                    inner,
+                    wrapScaleY,
+                    wrapScaleYInner,
+                    skewY,
+                    skewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    centerX,
+                    centerXInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    centerY,
+                    centerYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
+                    depth + 1
+            );
+            return;
+        }
+        if (format == 13) {
+            if (color.remaining() < 31) {
+                return;
+            }
+            int child = paint + offset24(color);
+            int xx = color.getInt();
+            int yx = color.getInt();
+            int xy = color.getInt();
+            int yy = color.getInt();
+            int dx = color.getInt();
+            int dy = color.getInt();
+            int inner = varIndex(color.getInt());
+            int yxInner = inner < 0 ? -1 : inner + 1;
+            int xyInner = inner < 0 ? -1 : inner + 2;
+            int yyInner = inner < 0 ? -1 : inner + 3;
+            int dxInner = inner < 0 ? -1 : inner + 4;
+            int dyInner = inner < 0 ? -1 : inner + 5;
+            collectPaint(
+                    color,
+                    child,
+                    layerList,
+                    baseGlyphs,
+                    paints,
+                    glyphs,
+                    palettes,
+                    varInners,
+                    translateXs,
+                    translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    wrapX,
+                    wrapInner,
+                    wrapScale,
+                    wrapScaleInner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    wrapY,
+                    wrapYInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    wrapScaleY,
+                    wrapScaleYInner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    xx,
+                    inner,
+                    wrapCenterX,
+                    wrapCenterInner,
+                    yx,
+                    yxInner,
+                    wrapCenterY,
+                    wrapCenterYInner,
+                    xy,
+                    xyInner,
+                    yy,
+                    yyInner,
+                    dx,
+                    dxInner,
+                    dy,
+                    dyInner,
+                    depth + 1
+            );
+            return;
+        }
+        if (format == 27) {
+            if (color.remaining() < 13) {
+                return;
+            }
+            int child = paint + offset24(color);
+            int angle = color.getShort();
+            int center = color.getShort();
+            int centerY = color.getShort();
+            int inner = varIndex(color.getInt());
+            int centerInner = inner < 0 ? -1 : inner + 1;
+            int centerYInner = inner < 0 ? -1 : inner + 2;
+            collectPaint(
+                    color,
+                    child,
+                    layerList,
+                    baseGlyphs,
+                    paints,
+                    glyphs,
+                    palettes,
+                    varInners,
+                    translateXs,
+                    translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
+                    wrapX,
+                    wrapInner,
+                    wrapScale,
+                    wrapScaleInner,
+                    angle,
+                    inner,
+                    wrapY,
+                    wrapYInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    wrapScaleY,
+                    wrapScaleYInner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    center,
+                    centerInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    centerY,
+                    centerYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
                     depth + 1
             );
             return;
@@ -448,8 +1926,64 @@ final class ColrCpal {
                     varInners,
                     translateXs,
                     translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
                     wrapX,
                     wrapInner,
+                    wrapScale,
+                    wrapScaleInner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    wrapY,
+                    wrapYInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    wrapScaleY,
+                    wrapScaleYInner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    wrapCenterX,
+                    wrapCenterInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    wrapCenterY,
+                    wrapCenterYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
                     depth + 1
             );
             return;
@@ -472,8 +2006,64 @@ final class ColrCpal {
                     varInners,
                     translateXs,
                     translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
                     wrapX,
                     wrapInner,
+                    wrapScale,
+                    wrapScaleInner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    wrapY,
+                    wrapYInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    wrapScaleY,
+                    wrapScaleYInner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    wrapCenterX,
+                    wrapCenterInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    wrapCenterY,
+                    wrapCenterYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
                     depth + 1
             );
             collectPaint(
@@ -487,8 +2077,64 @@ final class ColrCpal {
                     varInners,
                     translateXs,
                     translateInners,
+                    scaleXs,
+                    scaleInners,
+                    rotates,
+                    rotateInners,
+                    translateYs,
+                    translateYInners,
+                    skewXs,
+                    skewInners,
+                    scaleYs,
+                    scaleYInners,
+                    skewYs,
+                    skewYInners,
+                    transformXxs,
+                    transformInners,
+                    centerXs,
+                    centerInners,
+                    transformYxs,
+                    transformYxInners,
+                    centerYs,
+                    centerYInners,
+                    transformXys,
+                    transformXyInners,
+                    transformYys,
+                    transformYyInners,
+                    transformDxs,
+                    transformDxInners,
+                    transformDys,
+                    transformDyInners,
                     wrapX,
                     wrapInner,
+                    wrapScale,
+                    wrapScaleInner,
+                    wrapRotate,
+                    wrapRotateInner,
+                    wrapY,
+                    wrapYInner,
+                    wrapSkew,
+                    wrapSkewInner,
+                    wrapScaleY,
+                    wrapScaleYInner,
+                    wrapSkewY,
+                    wrapSkewYInner,
+                    wrapTransformXx,
+                    wrapTransformInner,
+                    wrapCenterX,
+                    wrapCenterInner,
+                    wrapTransformYx,
+                    wrapTransformYxInner,
+                    wrapCenterY,
+                    wrapCenterYInner,
+                    wrapTransformXy,
+                    wrapTransformXyInner,
+                    wrapTransformYy,
+                    wrapTransformYyInner,
+                    wrapTransformDx,
+                    wrapTransformDxInner,
+                    wrapTransformDy,
+                    wrapTransformDyInner,
                     depth + 1
             );
         }
@@ -711,7 +2357,35 @@ final class ColrCpal {
             int[] layerPalettes,
             int[] varInners,
             int[] translateXs,
-            int[] translateInners
+            int[] translateInners,
+            int[] scaleXs,
+            int[] scaleInners,
+            int[] rotates,
+            int[] rotateInners,
+            int[] translateYs,
+            int[] translateYInners,
+            int[] skewXs,
+            int[] skewInners,
+            int[] scaleYs,
+            int[] scaleYInners,
+            int[] skewYs,
+            int[] skewYInners,
+            int[] transformXxs,
+            int[] transformInners,
+            int[] centerXs,
+            int[] centerInners,
+            int[] transformYxs,
+            int[] transformYxInners,
+            int[] centerYs,
+            int[] centerYInners,
+            int[] transformXys,
+            int[] transformXyInners,
+            int[] transformYys,
+            int[] transformYyInners,
+            int[] transformDxs,
+            int[] transformDxInners,
+            int[] transformDys,
+            int[] transformDyInners
     ) {
     }
 
@@ -769,7 +2443,124 @@ final class ColrCpal {
                     translateX += varDelta(layerTranslateInners[slot], normalized);
                 }
             }
-            layers[index] = new ColorLayer(layerGlyphs[slot], paletteIndex, color, translateX);
+            int scaleX = 0;
+            if (slot < layerScaleXs.length) {
+                scaleX = layerScaleXs[slot];
+                if (slot < layerScaleInners.length) {
+                    scaleX += varDelta(layerScaleInners[slot], normalized);
+                }
+            }
+            int rotate = 0;
+            if (slot < layerRotates.length) {
+                rotate = layerRotates[slot];
+                if (slot < layerRotateInners.length) {
+                    rotate += varDelta(layerRotateInners[slot], normalized);
+                }
+            }
+            int translateY = 0;
+            if (slot < layerTranslateYs.length) {
+                translateY = layerTranslateYs[slot];
+                if (slot < layerTranslateYInners.length) {
+                    translateY += varDelta(layerTranslateYInners[slot], normalized);
+                }
+            }
+            int skewX = 0;
+            if (slot < layerSkewXs.length) {
+                skewX = layerSkewXs[slot];
+                if (slot < layerSkewInners.length) {
+                    skewX += varDelta(layerSkewInners[slot], normalized);
+                }
+            }
+            int scaleY = 0;
+            if (slot < layerScaleYs.length) {
+                scaleY = layerScaleYs[slot];
+                if (slot < layerScaleYInners.length) {
+                    scaleY += varDelta(layerScaleYInners[slot], normalized);
+                }
+            }
+            int skewY = 0;
+            if (slot < layerSkewYs.length) {
+                skewY = layerSkewYs[slot];
+                if (slot < layerSkewYInners.length) {
+                    skewY += varDelta(layerSkewYInners[slot], normalized);
+                }
+            }
+            int transformXx = 0;
+            if (slot < layerTransformXxs.length) {
+                transformXx = layerTransformXxs[slot];
+                if (slot < layerTransformInners.length) {
+                    transformXx += varDelta(layerTransformInners[slot], normalized);
+                }
+            }
+            int centerX = 0;
+            if (slot < layerCenterXs.length) {
+                centerX = layerCenterXs[slot];
+                if (slot < layerCenterInners.length) {
+                    centerX += varDelta(layerCenterInners[slot], normalized);
+                }
+            }
+            int transformYx = 0;
+            if (slot < layerTransformYxs.length) {
+                transformYx = layerTransformYxs[slot];
+                if (slot < layerTransformYxInners.length) {
+                    transformYx += varDelta(layerTransformYxInners[slot], normalized);
+                }
+            }
+            int centerY = 0;
+            if (slot < layerCenterYs.length) {
+                centerY = layerCenterYs[slot];
+                if (slot < layerCenterYInners.length) {
+                    centerY += varDelta(layerCenterYInners[slot], normalized);
+                }
+            }
+            int transformXy = 0;
+            if (slot < layerTransformXys.length) {
+                transformXy = layerTransformXys[slot];
+                if (slot < layerTransformXyInners.length) {
+                    transformXy += varDelta(layerTransformXyInners[slot], normalized);
+                }
+            }
+            int transformYy = 0;
+            if (slot < layerTransformYys.length) {
+                transformYy = layerTransformYys[slot];
+                if (slot < layerTransformYyInners.length) {
+                    transformYy += varDelta(layerTransformYyInners[slot], normalized);
+                }
+            }
+            int transformDx = 0;
+            if (slot < layerTransformDxs.length) {
+                transformDx = layerTransformDxs[slot];
+                if (slot < layerTransformDxInners.length) {
+                    transformDx += varDelta(layerTransformDxInners[slot], normalized);
+                }
+            }
+            int transformDy = 0;
+            if (slot < layerTransformDys.length) {
+                transformDy = layerTransformDys[slot];
+                if (slot < layerTransformDyInners.length) {
+                    transformDy += varDelta(layerTransformDyInners[slot], normalized);
+                }
+            }
+            layers[index] = new ColorLayer(
+                    layerGlyphs[slot],
+                    paletteIndex,
+                    color,
+                    translateX,
+                    scaleX,
+                    rotate,
+                    translateY,
+                    skewX,
+                    scaleY,
+                    skewY,
+                    transformXx,
+                    centerX,
+                    transformYx,
+                    centerY,
+                    transformXy,
+                    transformYy,
+                    transformDx,
+                    transformDy
+            );
         }
         return Collections.unmodifiableList(Arrays.asList(layers));
     }

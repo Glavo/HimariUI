@@ -12,5 +12,17 @@ public enum GestureKind {
     DRAG,
 
     /// A stationary hold that reached the long-press timeout.
-    LONG_PRESS
+    LONG_PRESS,
+
+    /// Two taps inside the double-tap interval and slop.
+    DOUBLE_TAP,
+
+    /// A wheel notch, independent of a press sequence.
+    SCROLL,
+
+    /// A two-pointer pinch that changed contact distance.
+    SCALE,
+
+    /// A two-pointer twist that changed contact angle.
+    ROTATION
 }

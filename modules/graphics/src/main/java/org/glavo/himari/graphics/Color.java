@@ -107,6 +107,99 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
         };
     }
 
+    /// Converts this color to linear BT.2020, clipping each primary into `[0, 1]`.
+    ///
+    /// @return the linear BT.2020 color
+    public Color toLinearBt2020() {
+        Color linear = toExtendedLinear();
+        float[] bt2020 = extendedToLinearBt2020(linear.red, linear.green, linear.blue);
+        return new Color(
+                ColorEncoding.LINEAR_BT2020,
+                clamp01(bt2020[0]),
+                clamp01(bt2020[1]),
+                clamp01(bt2020[2]),
+                linear.alpha
+        );
+    }
+
+    /// Converts this color to encoded BT.2020, clipping each primary into `[0, 1]`.
+    ///
+    /// @return the encoded BT.2020 color
+    public Color toBt2020() {
+        Color linear = toLinearBt2020();
+        return new Color(
+                ColorEncoding.BT2020,
+                encodeBt2020(linear.red),
+                encodeBt2020(linear.green),
+                encodeBt2020(linear.blue),
+                linear.alpha
+        );
+    }
+
+    /// Converts this color to BT.2100 PQ at 100-nit reference white.
+    ///
+    /// Linear BT.2020 `1.0` encodes as 100 nits. Components are clipped to the PQ domain.
+    ///
+    /// @return the PQ-encoded color
+    public Color toBt2100Pq() {
+        Color linear = toLinearBt2020();
+        return new Color(
+                ColorEncoding.BT2100_PQ,
+                encodePq(linear.red * PQ_REFERENCE_WHITE_NITS),
+                encodePq(linear.green * PQ_REFERENCE_WHITE_NITS),
+                encodePq(linear.blue * PQ_REFERENCE_WHITE_NITS),
+                linear.alpha
+        );
+    }
+
+    /// Converts this color to BT.2100 HLG.
+    ///
+    /// Linear BT.2020 `1.0` is the HLG system peak. Components are clipped to `[0, 1]` before
+    /// the OETF.
+    ///
+    /// @return the HLG-encoded color
+    public Color toBt2100Hlg() {
+        Color linear = toLinearBt2020();
+        return new Color(
+                ColorEncoding.BT2100_HLG,
+                encodeHlg(linear.red),
+                encodeHlg(linear.green),
+                encodeHlg(linear.blue),
+                linear.alpha
+        );
+    }
+
+    /// Converts this color to linear Display-P3, clipping each primary into `[0, 1]`.
+    ///
+    /// @return the linear Display-P3 color
+    public Color toLinearDisplayP3() {
+        Color linear = toExtendedLinear();
+        float[] p3 = extendedToLinearP3(linear.red, linear.green, linear.blue);
+        return new Color(
+                ColorEncoding.LINEAR_DISPLAY_P3,
+                clamp01(p3[0]),
+                clamp01(p3[1]),
+                clamp01(p3[2]),
+                linear.alpha
+        );
+    }
+
+    /// Converts this color to encoded Display-P3, clipping each primary into `[0, 1]`.
+    ///
+    /// Display-P3 uses the sRGB transfer. Components are encoded after the linear P3 conversion.
+    ///
+    /// @return the encoded Display-P3 color
+    public Color toDisplayP3() {
+        Color linear = toLinearDisplayP3();
+        return new Color(
+                ColorEncoding.DISPLAY_P3,
+                encodeSrgb(linear.red),
+                encodeSrgb(linear.green),
+                encodeSrgb(linear.blue),
+                linear.alpha
+        );
+    }
+
     /// Returns packed 8-bit sRGB with unassociated alpha.
     ///
     /// @return `0xAARRGGBB`
@@ -137,6 +230,22 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
         );
     }
 
+    /// Converts extended-linear sRGB into linear Display-P3 D65.
+    ///
+    /// The matrix is the inverse of [#p3LinearToExtended] published as CSS Color 4 sRGB→P3.
+    ///
+    /// @param red the linear sRGB red
+    /// @param green the linear sRGB green
+    /// @param blue the linear sRGB blue
+    /// @return `{R, G, B}` in linear Display-P3
+    private static float[] extendedToLinearP3(float red, float green, float blue) {
+        return new float[] {
+            0.822461968361196f * red + 0.177538031638804f * green,
+            0.033194198630632f * red + 0.966805801369368f * green,
+            0.017082630783304f * red + 0.072397440658258f * green + 0.910519928558438f * blue
+        };
+    }
+
     /// Converts linear BT.2020 D65 into extended-linear sRGB through CIE XYZ.
     ///
     /// @param red the linear BT.2020 red
@@ -149,6 +258,21 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
         float y = 0.2627002120f * red + 0.6779980716f * green + 0.0593017165f * blue;
         float z = 0.0280726930f * green + 1.0609850577f * blue;
         return xyzD65ToExtended(x, y, z, alpha);
+    }
+
+    /// Converts extended-linear sRGB into linear BT.2020 through CIE XYZ D65.
+    ///
+    /// @param red the linear sRGB red
+    /// @param green the linear sRGB green
+    /// @param blue the linear sRGB blue
+    /// @return `{R, G, B}` in linear BT.2020
+    private static float[] extendedToLinearBt2020(float red, float green, float blue) {
+        float[] xyz = extendedToXyzD65(red, green, blue);
+        return new float[] {
+            1.716651187971268f * xyz[0] + -0.355670783776392f * xyz[1] + -0.253366281373660f * xyz[2],
+            -0.666684351832489f * xyz[0] + 1.616481236634939f * xyz[1] + 0.015768545813911f * xyz[2],
+            0.017639857445311f * xyz[0] + -0.042770613257809f * xyz[1] + 0.942103121235474f * xyz[2]
+        };
     }
 
     /// Converts CIE XYZ D65 into extended-linear sRGB.
@@ -165,6 +289,14 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
                 0.0556300797f * x + -0.2039769589f * y + 1.0569715142f * z,
                 alpha
         );
+    }
+
+    /// Converts this color to CIE XYZ D65 through the extended-linear working encoding.
+    ///
+    /// @return `{X, Y, Z}`
+    public float[] toXyzD65() {
+        Color linear = toExtendedLinear();
+        return extendedToXyzD65(linear.red, linear.green, linear.blue);
     }
 
     /// Converts extended-linear sRGB into CIE XYZ D65.
@@ -241,6 +373,20 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
             return (encoded * encoded) / 3.0f;
         }
         return (float) ((Math.exp((encoded - 0.5599107295) / 0.17883277) + 0.28466892) / 12.0);
+    }
+
+    /// Applies the BT.2100 HLG OETF.
+    ///
+    /// Scene-linear `1.0` is the HLG system peak.
+    ///
+    /// @param linear the scene-linear component
+    /// @return the HLG-encoded component
+    static float encodeHlg(float linear) {
+        float clipped = Math.max(linear, 0.0f);
+        if (clipped <= 1.0f / 12.0f) {
+            return (float) Math.sqrt(3.0f * clipped);
+        }
+        return (float) (0.17883277 * Math.log(12.0 * clipped - 0.28466892) + 0.5599107295);
     }
 
     /// Encodes one linear sRGB component.

@@ -70,4 +70,13 @@ final class FirstStableLeftoversTest {
         assertNotNull(png);
         assertEquals(SbixSampleFont.TAG_PNG, png.graphicType());
     }
+
+    /// WOFF2 unwrap uses [`SfntFont`] on a [`Woff2File#wrap(byte[])`] image.
+    @Test
+    void woff2OpensThroughSfntFont() {
+        byte[] woff2 = Woff2File.wrap(
+                ColrV1SampleFont.bytes().toArray(java.lang.foreign.ValueLayout.JAVA_BYTE));
+        SfntFont font = new SfntFont(woff2);
+        assertEquals(2, font.colorLayers(ColrV1SampleFont.GLYPH_BASE).size());
+    }
 }

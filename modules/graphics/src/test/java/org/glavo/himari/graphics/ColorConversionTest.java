@@ -102,4 +102,140 @@ final class ColorConversionTest {
         assertEquals(linear.red(), linear.green(), 0.0001f);
         assertEquals(linear.red(), linear.blue(), 0.0001f);
     }
+
+    /// Encodes extended-linear white into linear BT.2020 white.
+    @Test
+    void extendedLinearWhiteEncodesToLinearBt2020White() {
+        Color encoded = Color.extendedLinear(1.0f, 1.0f, 1.0f, 1.0f).toLinearBt2020();
+        assertEquals(ColorEncoding.LINEAR_BT2020, encoded.encoding());
+        assertEquals(1.0f, encoded.red(), EPSILON);
+        assertEquals(1.0f, encoded.green(), EPSILON);
+        assertEquals(1.0f, encoded.blue(), EPSILON);
+    }
+
+    /// Encodes and decodes linear BT.2020 red through the shipped BT.2020 OETF.
+    @Test
+    void bt2020RedRoundTripsThroughEncode() {
+        Color source = new Color(ColorEncoding.LINEAR_BT2020, 1.0f, 0.0f, 0.0f, 1.0f);
+        Color encoded = source.toBt2020();
+        assertEquals(ColorEncoding.BT2020, encoded.encoding());
+        Color linear = encoded.toLinearBt2020();
+        assertEquals(1.0f, linear.red(), EPSILON);
+        assertEquals(0.0f, linear.green(), EPSILON);
+        assertEquals(0.0f, linear.blue(), EPSILON);
+    }
+
+    /// Encodes extended-linear 100-nit white as BT.2100 PQ and decodes it back.
+    @Test
+    void pqHundredNitWhiteRoundTripsThroughEncode() {
+        Color encoded = Color.extendedLinear(1.0f, 1.0f, 1.0f, 1.0f).toBt2100Pq();
+        assertEquals(ColorEncoding.BT2100_PQ, encoded.encoding());
+        assertEquals(Color.encodePq(Color.PQ_REFERENCE_WHITE_NITS), encoded.red(), 0.002f);
+        Color linear = encoded.toExtendedLinear();
+        assertEquals(1.0f, linear.red(), 0.002f);
+        assertEquals(1.0f, linear.green(), 0.002f);
+        assertEquals(1.0f, linear.blue(), 0.002f);
+    }
+
+    /// Encodes and decodes linear Display-P3 red through the shipped P3 transfer.
+    @Test
+    void displayP3RedRoundTripsThroughEncode() {
+        Color source = new Color(ColorEncoding.LINEAR_DISPLAY_P3, 1.0f, 0.0f, 0.0f, 1.0f);
+        Color encoded = source.toDisplayP3();
+        assertEquals(ColorEncoding.DISPLAY_P3, encoded.encoding());
+        Color linear = encoded.toLinearDisplayP3();
+        assertEquals(1.0f, linear.red(), EPSILON);
+        assertEquals(0.0f, linear.green(), EPSILON);
+        assertEquals(0.0f, linear.blue(), EPSILON);
+    }
+
+    /// Encodes extended-linear white into linear Display-P3 white.
+    @Test
+    void extendedLinearWhiteEncodesToLinearDisplayP3White() {
+        Color encoded = Color.extendedLinear(1.0f, 1.0f, 1.0f, 1.0f).toLinearDisplayP3();
+        assertEquals(ColorEncoding.LINEAR_DISPLAY_P3, encoded.encoding());
+        assertEquals(1.0f, encoded.red(), EPSILON);
+        assertEquals(1.0f, encoded.green(), EPSILON);
+        assertEquals(1.0f, encoded.blue(), EPSILON);
+    }
+
+    /// Encodes HLG mid-signal scene-linear `1/12` back to `0.5`.
+    @Test
+    void hlgMidSignalRoundTripsThroughEncode() {
+        float mid = 1.0f / 12.0f;
+        Color encoded = Color.extendedLinear(mid, mid, mid, 1.0f).toBt2100Hlg();
+        assertEquals(ColorEncoding.BT2100_HLG, encoded.encoding());
+        assertEquals(0.5f, encoded.red(), 0.002f);
+        Color linear = encoded.toExtendedLinear();
+        assertEquals(mid, linear.red(), 0.002f);
+    }
+
+    /// Bradford maps D65 white onto D50 white.
+    @Test
+    void bradfordAdaptsD65WhiteToD50() {
+        float[] d65 = Color.SRGB_WHITE.toXyzD65();
+        float[] d50 = ChromaticAdaptation.bradford(
+                d65[0],
+                d65[1],
+                d65[2],
+                ChromaticAdaptation.D65_X,
+                ChromaticAdaptation.D65_Y,
+                ChromaticAdaptation.D65_Z,
+                ChromaticAdaptation.D50_X,
+                ChromaticAdaptation.D50_Y,
+                ChromaticAdaptation.D50_Z
+        );
+        assertEquals(ChromaticAdaptation.D50_X, d50[0], EPSILON);
+        assertEquals(ChromaticAdaptation.D50_Y, d50[1], EPSILON);
+        assertEquals(ChromaticAdaptation.D50_Z, d50[2], EPSILON);
+    }
+
+    /// CAT02 maps D65 white onto illuminant A and disagrees with Bradford on a non-white stimulus.
+    @Test
+    void cat02AdaptsD65WhiteToIlluminantAAndDiffersFromBradford() {
+        float[] white = ChromaticAdaptation.cat02(
+                ChromaticAdaptation.D65_X,
+                ChromaticAdaptation.D65_Y,
+                ChromaticAdaptation.D65_Z,
+                ChromaticAdaptation.D65_X,
+                ChromaticAdaptation.D65_Y,
+                ChromaticAdaptation.D65_Z,
+                ChromaticAdaptation.A_X,
+                ChromaticAdaptation.A_Y,
+                ChromaticAdaptation.A_Z
+        );
+        assertEquals(ChromaticAdaptation.A_X, white[0], EPSILON);
+        assertEquals(ChromaticAdaptation.A_Y, white[1], EPSILON);
+        assertEquals(ChromaticAdaptation.A_Z, white[2], EPSILON);
+        Color red = new Color(ColorEncoding.LINEAR_SRGB, 1.0f, 0.0f, 0.0f, 1.0f);
+        float[] xyz = red.toXyzD65();
+        float[] bradford = ChromaticAdaptation.bradford(
+                xyz[0],
+                xyz[1],
+                xyz[2],
+                ChromaticAdaptation.D65_X,
+                ChromaticAdaptation.D65_Y,
+                ChromaticAdaptation.D65_Z,
+                ChromaticAdaptation.A_X,
+                ChromaticAdaptation.A_Y,
+                ChromaticAdaptation.A_Z
+        );
+        float[] cat02 = ChromaticAdaptation.cat02(
+                xyz[0],
+                xyz[1],
+                xyz[2],
+                ChromaticAdaptation.D65_X,
+                ChromaticAdaptation.D65_Y,
+                ChromaticAdaptation.D65_Z,
+                ChromaticAdaptation.A_X,
+                ChromaticAdaptation.A_Y,
+                ChromaticAdaptation.A_Z
+        );
+        assertTrue(
+                Math.abs(bradford[0] - cat02[0])
+                                + Math.abs(bradford[1] - cat02[1])
+                                + Math.abs(bradford[2] - cat02[2])
+                        > 0.001f
+        );
+    }
 }
