@@ -65,6 +65,23 @@ public final class Menu {
         popup.show();
     }
 
+    /// Returns whether the menu is disabled.
+    ///
+    /// @return whether the menu is disabled
+    public boolean disabled() {
+        return popup.disabled();
+    }
+
+    /// Sets the disabled state on the overlay and every item.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        popup.setDisabled(disabled);
+        for (Button item : items) {
+            item.setDisabled(disabled);
+        }
+    }
+
     /// Dismisses the menu.
     public void dismiss() {
         popup.dismiss();
@@ -96,7 +113,7 @@ public final class Menu {
         Objects.requireNonNull(factory, "factory");
         Objects.requireNonNull(name, "name");
         if (!popup.isOpen()) {
-            return factory.leaf(
+            LayoutNode closed = factory.leaf(
                     name,
                     new Size(160.0f, 0.0f),
                     List.of(),
@@ -106,6 +123,8 @@ public final class Menu {
                     Set.of(),
                     null
             );
+            closed.setDisabled(popup.disabled());
+            return closed;
         }
         ArrayList<LayoutNode> children = new ArrayList<>();
         for (int index = 0; index < items.size(); index++) {
@@ -124,7 +143,7 @@ public final class Menu {
                     }
             ));
         }
-        return factory.column(
+        LayoutNode created = factory.column(
                 name,
                 Alignment.START,
                 List.of(new LayoutModifier.Padding(4.0f)),
@@ -132,5 +151,7 @@ public final class Menu {
                 label,
                 children.toArray(LayoutNode[]::new)
         );
+        created.setDisabled(popup.disabled());
+        return created;
     }
 }

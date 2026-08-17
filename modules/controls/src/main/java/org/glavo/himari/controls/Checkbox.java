@@ -25,6 +25,9 @@ public final class Checkbox {
     /// Whether the box is checked.
     private boolean checked;
 
+    /// Whether the box ignores activation.
+    private boolean disabled;
+
     /// Mounted leaf that receives the published checked state.
     private @Nullable LayoutNode node;
 
@@ -40,6 +43,33 @@ public final class Checkbox {
     /// @return the state
     public boolean isChecked() {
         return checked;
+    }
+
+    /// Sets the checked state and publishes it to the mounted leaf when present.
+    ///
+    /// @param checked the state
+    public void setChecked(boolean checked) {
+        this.checked = checked;
+        if (node != null) {
+            node.setSelected(checked);
+        }
+    }
+
+    /// Returns whether the box is disabled.
+    ///
+    /// @return whether the box is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the mounted leaf when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (node != null) {
+            node.setDisabled(disabled);
+        }
     }
 
     /// Builds the checkbox leaf.
@@ -61,12 +91,16 @@ public final class Checkbox {
                 this::toggle
         );
         created.setSelected(checked);
+        created.setDisabled(disabled);
         this.node = created;
         return created;
     }
 
     /// Flips the checked state.
     private void toggle() {
+        if (disabled) {
+            return;
+        }
         checked = !checked;
         if (node != null) {
             node.setSelected(checked);

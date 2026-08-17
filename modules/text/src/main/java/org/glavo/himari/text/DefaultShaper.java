@@ -12,13 +12,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/// Maps clusters through `cmap` and `hmtx`, applying first-stable script presentation.
+/// Maps clusters through NFC, `cmap` and `hmtx`, applying first-stable script presentation.
 ///
 /// Latin, Greek, Cyrillic, Han, and Kana use one-to-one `cmap` mapping. Arabic joining letters
 /// apply GSUB `isol`/`init`/`medi`/`fina` when the font lists those features, otherwise they
 /// select Presentation Forms-B when the font maps those forms. LAM plus an alef variant compose
 /// onto Presentation Forms-B lam-alef when the font maps the ligature; transparent marks between
-/// LAM and alef stay in the LAM cluster. Hebrew letter-plus-mark pairs compose onto Presentation
+/// LAM and alef stay in the LAM cluster. LAM plus LAM plus HEH compose onto isolated Allah
+/// `U+FDF2` when the font maps that ligature. Alef wasla `U+0671` joins as a right-joining letter
+/// and maps onto `U+FB50`/`U+FB51`. Ligature and multi-code-point compositions set
+/// [`ShapedGlyph#unsafeToBreak()`]. Arabic shadda plus tanwin/vowel/superscript alef compose onto
+/// Presentation Forms-A when the font maps those forms. Hebrew letter-plus-mark pairs compose onto Presentation
 /// Forms-A when the font maps the composed form. Word-final kaf/mem/nun/pe/tsadi select final
 /// letters. Yiddish double-vav, vav-yod, and double-yod map to `U+05F0`–`U+05F2`. Hangul
 /// choseong/jungseong/jongseong sequences, including Hangul Compatibility Jamo, compose onto
@@ -47,6 +51,7 @@ public final class DefaultShaper {
     public static @Unmodifiable List<ShapedGlyph> shape(SfntFont font, String text) {
         Objects.requireNonNull(font, "font");
         Objects.requireNonNull(text, "text");
+        text = UnicodeNormalize.nfc(text);
         int utf16Length = text.length();
         if (utf16Length == 0) {
             return List.of();
@@ -173,6 +178,13 @@ public final class DefaultShaper {
                 }
             }
             if (consumed == 1 && index + 1 < count) {
+                int shadda = ArabicPresentation.shaddaLigature(codePoint, points[index + 1]);
+                if (shadda != 0 && font.glyphId(shadda) != 0) {
+                    mapped = shadda;
+                    consumed = 2;
+                }
+            }
+            if (consumed == 1 && index + 1 < count) {
                 int lao = ThaiLao.laoLigature(codePoint, points[index + 1]);
                 if (lao != 0 && font.glyphId(lao) != 0) {
                     mapped = lao;
@@ -194,6 +206,24 @@ public final class DefaultShaper {
                 }
             }
             if (consumed == 1 && ArabicPresentation.isLam(codePoint)) {
+                int allah = ArabicPresentation.allahLigature(points, index, count);
+                if (allah != 0 && font.glyphId(allah) != 0) {
+                    int length = ArabicPresentation.allahLength(points, index, count);
+                    int ligatureGlyph = font.glyphId(allah);
+                    glyphs[written++] = new ShapedGlyph(
+                            allah,
+                            ligatureGlyph,
+                            cluster,
+                            advanceOf(font, allah, ligatureGlyph),
+                            0,
+                            0,
+                            0,
+                            true
+                    );
+                    lastLetterCluster = cluster;
+                    index += length;
+                    continue;
+                }
                 int alefIndex = index + 1;
                 while (alefIndex < count && ArabicJoining.isTransparent(points[alefIndex])) {
                     alefIndex++;
@@ -206,7 +236,11 @@ public final class DefaultShaper {
                                 ligature,
                                 ligatureGlyph,
                                 cluster,
-                                advanceOf(font, ligature, ligatureGlyph)
+                                advanceOf(font, ligature, ligatureGlyph),
+                                0,
+                                0,
+                                0,
+                                true
                         );
                         lastLetterCluster = cluster;
                         for (int mark = index + 1; mark < alefIndex; mark++) {
@@ -249,7 +283,11 @@ public final class DefaultShaper {
                     mapped,
                     glyphId,
                     cluster,
-                    advanceOf(font, mapped, glyphId)
+                    advanceOf(font, mapped, glyphId),
+                    0,
+                    0,
+                    0,
+                    consumed > 1
             );
             written++;
             index += consumed;
@@ -327,7 +365,8 @@ public final class DefaultShaper {
                     advanceOf(font, first.codePoint(), ligatureId),
                     first.xOffset(),
                     first.yOffset(),
-                    first.fontIndex()
+                    first.fontIndex(),
+                    true
             );
             index += match.consumed();
         }
@@ -530,6 +569,8 @@ public final class DefaultShaper {
             if (ArabicJoining.isArabicLetter(codePoint)
                     || HebrewPresentation.isLetter(codePoint)
                     || codePoint == 0x05B9
+                    || codePoint == 0x05BA
+                    || codePoint == 0x05C7
                     || HangulSyllable.isJamo(codePoint)
                     || HangulSyllable.isSyllable(codePoint)
                     || ThaiLao.isThaiOrLao(codePoint)

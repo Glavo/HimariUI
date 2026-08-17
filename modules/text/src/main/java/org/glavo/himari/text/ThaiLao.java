@@ -57,6 +57,24 @@ public final class ThaiLao {
         return codePoint >= 0x0E00 && codePoint <= 0x0EFF;
     }
 
+    /// Returns whether `codePoint` is a Thai or Lao below-base mark.
+    ///
+    /// @param codePoint the code point
+    /// @return whether the code point is SARA U, SARA UU, or Phinthu
+    public static boolean isBelowMark(int codePoint) {
+        int thai = codePoint & ~0x80;
+        return thai == 0x0E38 || thai == 0x0E39 || thai == 0x0E3A;
+    }
+
+    /// Returns whether `codePoint` is a Thai or Lao consonant base.
+    ///
+    /// @param codePoint the code point
+    /// @return whether the code point is `U+0E01`–`U+0E2E` or `U+0E81`–`U+0EAE`
+    public static boolean isBase(int codePoint) {
+        int thai = codePoint & ~0x80;
+        return thai >= 0x0E01 && thai <= 0x0E2E;
+    }
+
     /// Returns whether `codePoint` is a Thai or Lao left vowel.
     ///
     /// @param codePoint the code point

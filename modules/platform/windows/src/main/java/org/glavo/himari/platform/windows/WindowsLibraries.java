@@ -18,7 +18,8 @@ import java.lang.foreign.ValueLayout;
 import java.nio.ByteOrder;
 import java.util.Locale;
 
-/// Owns the Kernel32, User32, GDI32, DXGI, OLE, and IMM32 lookups for one Windows session.
+/// Owns the Kernel32, User32, GDI32, DXGI, OLE, oleaut32, IMM32, and UIAutomationCore lookups for one
+/// Windows session.
 @SuppressWarnings("restricted")
 @NotNullByDefault
 public final class WindowsLibraries implements AutoCloseable {
@@ -69,7 +70,9 @@ public final class WindowsLibraries implements AutoCloseable {
                     .or(open("gdi32.dll", arena))
                     .or(open("dxgi.dll", arena))
                     .or(open("ole32.dll", arena))
-                    .or(open("imm32.dll", arena));
+                    .or(open("oleaut32.dll", arena))
+                    .or(open("imm32.dll", arena))
+                    .or(open("UIAutomationCore.dll", arena));
             Win32FfmBindings bindings = new Win32FfmBindings(symbols);
             int ole = bindings.oleInitialize(MemorySegment.NULL);
             if (ole < 0) {

@@ -32,6 +32,12 @@ public final class Popup {
     /// Whether the popup is visible.
     private boolean open;
 
+    /// Whether the popup ignores show and dismissal input.
+    private boolean disabled;
+
+    /// Mounted leaf that receives the published disabled state.
+    private @Nullable LayoutNode node;
+
     /// Creates a closed overlay popup.
     ///
     /// @param label the accessible name
@@ -64,7 +70,27 @@ public final class Popup {
 
     /// Shows the popup.
     public void show() {
+        if (disabled) {
+            return;
+        }
         open = true;
+    }
+
+    /// Returns whether the popup is disabled.
+    ///
+    /// @return whether the popup is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the mounted leaf when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (node != null) {
+            node.setDisabled(disabled);
+        }
     }
 
     /// Dismisses the popup.
@@ -78,7 +104,7 @@ public final class Popup {
     /// @return whether this popup consumed the event
     public boolean handleKey(KeyEvent event) {
         Objects.requireNonNull(event, "event");
-        if (!open || event.type() != KeyEventType.DOWN || event.key() != LogicalKey.ESCAPE) {
+        if (disabled || !open || event.type() != KeyEventType.DOWN || event.key() != LogicalKey.ESCAPE) {
             return false;
         }
         dismiss();
@@ -93,7 +119,7 @@ public final class Popup {
     public boolean handlePointer(LayoutTree tree, PointerEvent event) {
         Objects.requireNonNull(tree, "tree");
         Objects.requireNonNull(event, "event");
-        if (!open || event.type() != PointerEventType.DOWN) {
+        if (disabled || !open || event.type() != PointerEventType.DOWN) {
             return false;
         }
         @Nullable SemanticsNode node = find(tree, role());
@@ -113,16 +139,19 @@ public final class Popup {
         Objects.requireNonNull(factory, "factory");
         Objects.requireNonNull(name, "name");
         float height = open ? 48.0f : 0.0f;
-        return factory.leaf(
+        LayoutNode created = factory.leaf(
                 name,
                 new Size(160.0f, height),
                 List.of(new LayoutModifier.Padding(open ? 4.0f : 0.0f)),
-                open,
+                open && !disabled,
                 role(),
                 open ? label : "",
                 open ? Set.of(SemanticsAction.ACTIVATE) : Set.of(),
                 this::dismiss
         );
+        created.setDisabled(disabled);
+        this.node = created;
+        return created;
     }
 
     /// Returns the semantics role for [#kind()].

@@ -43,6 +43,13 @@ final class CheckboxRadioIconTest {
         tree.place();
         assertTrue(tree.semantics().nodes().stream().anyMatch(node ->
                 node.role() == SemanticsRole.RADIO && node.label().equals("B") && Boolean.TRUE.equals(node.selected())));
+        gallery.radio().setDisabled(true);
+        gallery.radio().select(0);
+        assertEquals(1, gallery.radio().selected());
+        assertTrue(gallery.radio().disabled());
+        assertTrue(tree.semantics().nodes().stream().anyMatch(node ->
+                node.role() == SemanticsRole.RADIO && node.disabled()));
+        gallery.radio().setDisabled(false);
     }
 
     /// Activates the gallery icon button through pointer input.
@@ -60,6 +67,11 @@ final class CheckboxRadioIconTest {
         click(tree, icon);
         assertEquals(1, gallery.iconButton().activations());
         assertEquals("plus", gallery.iconButton().icon());
+        gallery.iconButton().setDisabled(true);
+        click(tree, icon);
+        assertEquals(1, gallery.iconButton().activations());
+        assertTrue(gallery.iconButton().disabled());
+        gallery.iconButton().setDisabled(false);
     }
 
     /// Dispatches a pointer press on `node`.

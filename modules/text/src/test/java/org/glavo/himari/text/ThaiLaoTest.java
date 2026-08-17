@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,6 +56,13 @@ final class ThaiLaoTest {
         assertEquals(0x0EDC, ThaiLao.laoLigature(0x0EAB, 0x0E99));
         assertEquals(0x0EDD, ThaiLao.laoLigature(0x0EAB, 0x0EA1));
         assertEquals(0, ThaiLao.laoLigature(0x0EAB, 0x0E81));
+        assertTrue(ThaiLao.isBelowMark(0x0E38));
+        assertTrue(ThaiLao.isBelowMark(0x0EB9));
+        assertTrue(ThaiLao.isBelowMark(0x0E3A));
+        assertFalse(ThaiLao.isBelowMark(0x0E34));
+        assertTrue(ThaiLao.isBase(0x0E01));
+        assertTrue(ThaiLao.isBase(0x0E81));
+        assertFalse(ThaiLao.isBase(0x0E40));
     }
 
     /// Copies the used prefix of an expansion buffer.

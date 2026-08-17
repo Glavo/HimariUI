@@ -56,6 +56,21 @@ public final class Dialog {
         popup.show();
     }
 
+    /// Returns whether the dialog is disabled.
+    ///
+    /// @return whether the dialog is disabled
+    public boolean disabled() {
+        return popup.disabled();
+    }
+
+    /// Sets the disabled state on the overlay and the close button.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        popup.setDisabled(disabled);
+        close.setDisabled(disabled);
+    }
+
     /// Dismisses the dialog.
     public void dismiss() {
         popup.dismiss();
@@ -87,7 +102,7 @@ public final class Dialog {
         Objects.requireNonNull(factory, "factory");
         Objects.requireNonNull(name, "name");
         if (!popup.isOpen()) {
-            return factory.leaf(
+            LayoutNode closed = factory.leaf(
                     name,
                     new Size(200.0f, 0.0f),
                     List.of(),
@@ -97,8 +112,10 @@ public final class Dialog {
                     Set.of(),
                     null
             );
+            closed.setDisabled(popup.disabled());
+            return closed;
         }
-        return factory.column(
+        LayoutNode created = factory.column(
                 name,
                 Alignment.START,
                 List.of(new LayoutModifier.Padding(8.0f)),
@@ -107,5 +124,7 @@ public final class Dialog {
                 BootstrapLabel.create(factory, name + "-title", title),
                 close.create(factory, name + "-close")
         );
+        created.setDisabled(popup.disabled());
+        return created;
     }
 }

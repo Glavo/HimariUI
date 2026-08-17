@@ -7,7 +7,9 @@ build/
 .kotlin
 /external/
 .codex
-/teavm-local.properties
+/teavm-local.propertiesc
+hs_err_*.log
+replay_*.log
 
 ### IntelliJ IDEA ###
 .idea/

@@ -59,6 +59,87 @@ final class ParagraphLayoutTest {
         assertTrue(lines.get(1).width() <= maxWidth);
     }
 
+    /// Truncates a wrapping paragraph to one line ending in U+2026.
+    @Test
+    void ellipsisTruncatesOverflowToOneLine() {
+        SfntFont font = BitmapSfntFont.create();
+        int letter = font.metrics(font.glyphId('A')).advanceWidth();
+        List<LaidLine> wrapped = ParagraphLayout.layout(font, "AAAA", letter * 2);
+        assertEquals(2, wrapped.size());
+        List<LaidLine> lines = ParagraphLayout.layout(
+                font,
+                "AAAA",
+                letter * 2,
+                LineAlignment.START,
+                true
+        );
+        assertEquals(1, lines.size());
+        LaidLine line = lines.getFirst();
+        assertEquals(0x2026, line.glyphs().getLast().codePoint());
+        assertTrue(line.width() <= letter * 2);
+        assertTrue(line.glyphs().size() < 4);
+    }
+
+    /// Advances U+0009 to the next four-space tab stop.
+    @Test
+    void tabAdvancesToNextStop() {
+        SfntFont font = BitmapSfntFont.create();
+        int space = font.metrics(font.glyphId(' ')).advanceWidth();
+        int letter = font.metrics(font.glyphId('A')).advanceWidth();
+        List<LaidLine> lines = ParagraphLayout.layout(font, "A\tB", 1000);
+        assertEquals(1, lines.size());
+        LaidLine line = lines.getFirst();
+        assertEquals(3, line.glyphs().size());
+        assertEquals(0x09, line.glyphs().get(1).codePoint());
+        int tabStop = 4 * space;
+        int expectedTab = tabStop - (letter % tabStop);
+        assertEquals(expectedTab, line.glyphs().get(1).xAdvance());
+        assertEquals(letter + expectedTab + letter, line.width());
+    }
+
+    /// Centers leftover width before the first glyph.
+    @Test
+    void centersLeftoverWidth() {
+        SfntFont font = BitmapSfntFont.create();
+        int letter = font.metrics(font.glyphId('A')).advanceWidth();
+        LaidLine line = ParagraphLayout.layout(font, "AA", letter * 4, LineAlignment.CENTER).getFirst();
+        assertEquals(letter, line.indent());
+        assertEquals(letter, line.caretX(0));
+        assertEquals(letter * 3, line.caretX(2));
+    }
+
+    /// Flushes leftover width to the trailing edge.
+    @Test
+    void endsFlushToTrailingEdge() {
+        SfntFont font = BitmapSfntFont.create();
+        int letter = font.metrics(font.glyphId('A')).advanceWidth();
+        LaidLine line = ParagraphLayout.layout(font, "AA", letter * 4, LineAlignment.END).getFirst();
+        assertEquals(letter * 2, line.indent());
+        assertEquals(letter * 2, line.caretX(0));
+        assertEquals(letter * 4, line.caretX(2));
+    }
+
+    /// Indents the first line of a paragraph by the requested advance.
+    @Test
+    void firstLineIndentShiftsCaret() {
+        SfntFont font = BitmapSfntFont.create();
+        int letter = font.metrics(font.glyphId('A')).advanceWidth();
+        List<LaidLine> lines = ParagraphLayout.layout(font, "AA AA", letter * 4, letter);
+        assertEquals(letter, lines.getFirst().indent());
+        assertEquals(letter, lines.getFirst().caretX(0));
+        if (lines.size() > 1) {
+            assertEquals(0, lines.get(1).indent());
+        }
+        List<LaidLine> hanging = ParagraphLayout.layout(font, "AAAA AAAA", letter * 4, 0, letter);
+        assertTrue(hanging.size() > 1);
+        assertEquals(0, hanging.getFirst().indent());
+        assertEquals(letter, hanging.get(1).indent());
+        List<LaidLine> last = ParagraphLayout.layout(font, "AAAA AAAA", letter * 4, 0, 0, letter);
+        assertTrue(last.size() > 1);
+        assertEquals(0, last.getFirst().indent());
+        assertEquals(letter, last.get(last.size() - 1).indent());
+    }
+
     /// Breaks a long unspaced run before the overflowing glyph.
     @Test
     void breaksOverflowingRun() {

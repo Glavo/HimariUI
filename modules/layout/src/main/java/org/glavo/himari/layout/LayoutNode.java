@@ -48,7 +48,10 @@ public final class LayoutNode {
     private final SemanticsRole role;
 
     /// The semantics label.
-    private final String label;
+    private String label;
+
+    /// The accessible hint, empty when absent.
+    private String hint = "";
 
     /// Declared semantics actions.
     private final @Unmodifiable Set<SemanticsAction> actions;
@@ -79,6 +82,48 @@ public final class LayoutNode {
 
     /// Published cell position, or `null`.
     private @Nullable SemanticsGridItem gridItem;
+
+    /// Whether the node is disabled.
+    private boolean disabled;
+
+    /// Whether the node is read-only.
+    private boolean readOnly;
+
+    /// Whether the node is a password field.
+    private boolean password;
+
+    /// Access key published to semantics, empty when absent.
+    private String accessKey = "";
+
+    /// Accelerator key published to semantics, empty when absent.
+    private String acceleratorKey = "";
+
+    /// Whether the node is required for form submission.
+    private boolean required;
+
+    /// Item-status text published to semantics, empty when absent.
+    private String itemStatus = "";
+
+    /// BCP-47 locale published to semantics, empty when unspecified.
+    private String locale = "";
+
+    /// Hierarchical level published to semantics; `0` when unspecified.
+    private int level;
+
+    /// One-based position in a set; `0` when unspecified.
+    private int positionInSet;
+
+    /// Set size published to semantics; `0` when unspecified.
+    private int sizeOfSet;
+
+    /// Full description published to semantics, empty when absent.
+    private String description = "";
+
+    /// Whether the node currently reports invalid form data.
+    private boolean error;
+
+    /// Listeners invoked after [#setLabel(String)] when this node is a live region.
+    private final ArrayList<Runnable> labelListeners = new ArrayList<>(0);
 
     /// Scroll offset applied when this node uses [LayoutKind#SCROLL].
     private float scrollOffset;
@@ -220,6 +265,57 @@ public final class LayoutNode {
         return label;
     }
 
+    /// Replaces the semantics label published by the next snapshot.
+    ///
+    /// A live-region node uses this when its announcement text changes so the next snapshot
+    /// and host accessibility bridge observe the new name.
+    ///
+    /// When [`#liveRegion()`] is not [`SemanticsLiveRegion#OFF`], every registered
+    /// [`#addLabelListener(Runnable)`] listener runs after the field is replaced.
+    ///
+    /// @param label the non-blank label
+    public void setLabel(String label) {
+        Objects.requireNonNull(label, "label");
+        if (label.isBlank()) {
+            throw new IllegalArgumentException("Semantics label must be nonblank");
+        }
+        this.label = label;
+        if (liveRegion != SemanticsLiveRegion.OFF && !labelListeners.isEmpty()) {
+            Runnable[] snapshot = labelListeners.toArray(Runnable[]::new);
+            for (Runnable listener : snapshot) {
+                listener.run();
+            }
+        }
+    }
+
+    /// Registers a listener invoked after [#setLabel(String)] when this node is a live region.
+    ///
+    /// @param listener the callback
+    public void addLabelListener(Runnable listener) {
+        labelListeners.add(Objects.requireNonNull(listener, "listener"));
+    }
+
+    /// Removes a listener previously passed to [#addLabelListener(Runnable)].
+    ///
+    /// @param listener the callback
+    public void removeLabelListener(Runnable listener) {
+        labelListeners.remove(Objects.requireNonNull(listener, "listener"));
+    }
+
+    /// Returns the accessible hint.
+    ///
+    /// @return the hint, empty when absent
+    public String hint() {
+        return hint;
+    }
+
+    /// Replaces the accessible hint published by the next snapshot.
+    ///
+    /// @param hint the hint, possibly empty
+    public void setHint(String hint) {
+        this.hint = Objects.requireNonNull(hint, "hint");
+    }
+
     /// Returns the declared semantics actions.
     ///
     /// @return the actions
@@ -281,6 +377,199 @@ public final class LayoutNode {
     /// @param selected the state
     public void setSelected(boolean selected) {
         this.selected = selected;
+    }
+
+    /// Returns whether the node is disabled.
+    ///
+    /// @return whether the node is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Publishes the disabled state for the next semantics snapshot.
+    ///
+    /// Disabled nodes do not activate, adjust, or take focus.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    /// Returns whether the node is read-only.
+    ///
+    /// @return whether the node is read-only
+    public boolean readOnly() {
+        return readOnly;
+    }
+
+    /// Publishes the read-only state for the next semantics snapshot.
+    ///
+    /// @param readOnly the state
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+    }
+
+    /// Returns whether the node is a password field.
+    ///
+    /// @return whether the node is a password field
+    public boolean password() {
+        return password;
+    }
+
+    /// Publishes the password state for the next semantics snapshot.
+    ///
+    /// @param password the state
+    public void setPassword(boolean password) {
+        this.password = password;
+    }
+
+    /// Returns the access key.
+    ///
+    /// @return the access key, empty when absent
+    public String accessKey() {
+        return accessKey;
+    }
+
+    /// Publishes the access key for the next semantics snapshot.
+    ///
+    /// @param accessKey the key, possibly empty
+    public void setAccessKey(String accessKey) {
+        this.accessKey = Objects.requireNonNull(accessKey, "accessKey");
+    }
+
+    /// Returns the accelerator key.
+    ///
+    /// @return the accelerator key, empty when absent
+    public String acceleratorKey() {
+        return acceleratorKey;
+    }
+
+    /// Publishes the accelerator key for the next semantics snapshot.
+    ///
+    /// @param acceleratorKey the key, possibly empty
+    public void setAcceleratorKey(String acceleratorKey) {
+        this.acceleratorKey = Objects.requireNonNull(acceleratorKey, "acceleratorKey");
+    }
+
+    /// Returns whether the node is required for form submission.
+    ///
+    /// @return whether the node is required
+    public boolean required() {
+        return required;
+    }
+
+    /// Publishes the required-for-form state for the next semantics snapshot.
+    ///
+    /// @param required the state
+    public void setRequired(boolean required) {
+        this.required = required;
+    }
+
+    /// Returns the item-status text.
+    ///
+    /// @return the status, empty when absent
+    public String itemStatus() {
+        return itemStatus;
+    }
+
+    /// Publishes the item-status text for the next semantics snapshot.
+    ///
+    /// @param itemStatus the status, possibly empty
+    public void setItemStatus(String itemStatus) {
+        this.itemStatus = Objects.requireNonNull(itemStatus, "itemStatus");
+    }
+
+    /// Returns the BCP-47 locale.
+    ///
+    /// @return the locale, empty when unspecified
+    public String locale() {
+        return locale;
+    }
+
+    /// Publishes the BCP-47 locale for the next semantics snapshot.
+    ///
+    /// @param locale the locale, possibly empty
+    public void setLocale(String locale) {
+        this.locale = Objects.requireNonNull(locale, "locale");
+    }
+
+    /// Returns the hierarchical level.
+    ///
+    /// @return the level, or `0` when unspecified
+    public int level() {
+        return level;
+    }
+
+    /// Publishes the hierarchical level for the next semantics snapshot.
+    ///
+    /// @param level the nonnegative level
+    public void setLevel(int level) {
+        if (level < 0) {
+            throw new IllegalArgumentException("level must be nonnegative");
+        }
+        this.level = level;
+    }
+
+    /// Returns the one-based position in a set.
+    ///
+    /// @return the position, or `0` when unspecified
+    public int positionInSet() {
+        return positionInSet;
+    }
+
+    /// Publishes the one-based set position for the next semantics snapshot.
+    ///
+    /// @param positionInSet the nonnegative position
+    public void setPositionInSet(int positionInSet) {
+        if (positionInSet < 0) {
+            throw new IllegalArgumentException("positionInSet must be nonnegative");
+        }
+        this.positionInSet = positionInSet;
+    }
+
+    /// Returns the set size.
+    ///
+    /// @return the size, or `0` when unspecified
+    public int sizeOfSet() {
+        return sizeOfSet;
+    }
+
+    /// Publishes the set size for the next semantics snapshot.
+    ///
+    /// @param sizeOfSet the nonnegative size
+    public void setSizeOfSet(int sizeOfSet) {
+        if (sizeOfSet < 0) {
+            throw new IllegalArgumentException("sizeOfSet must be nonnegative");
+        }
+        this.sizeOfSet = sizeOfSet;
+    }
+
+    /// Returns the full description.
+    ///
+    /// @return the description, empty when absent
+    public String description() {
+        return description;
+    }
+
+    /// Publishes the full description for the next semantics snapshot.
+    ///
+    /// @param description the description, possibly empty
+    public void setDescription(String description) {
+        this.description = Objects.requireNonNull(description, "description");
+    }
+
+    /// Returns whether the node currently reports invalid form data.
+    ///
+    /// @return whether the node is in an error state
+    public boolean error() {
+        return error;
+    }
+
+    /// Publishes the form-validation error state for the next semantics snapshot.
+    ///
+    /// @param error the state
+    public void setError(boolean error) {
+        this.error = error;
     }
 
     /// Publishes a finite range value for the next semantics snapshot.
@@ -407,7 +696,7 @@ public final class LayoutNode {
     ///
     /// @return whether an activation callback ran
     boolean activate() {
-        if (onActivate == null || !actions.contains(SemanticsAction.ACTIVATE)) {
+        if (disabled || onActivate == null || !actions.contains(SemanticsAction.ACTIVATE)) {
             return false;
         }
         onActivate.run();
@@ -419,7 +708,7 @@ public final class LayoutNode {
     /// @param delta `1` to increment or `-1` to decrement
     /// @return whether an adjustment callback ran
     boolean adjust(int delta) {
-        if (onAdjust == null || delta == 0) {
+        if (disabled || onAdjust == null || delta == 0) {
             return false;
         }
         SemanticsAction required = delta > 0 ? SemanticsAction.INCREMENT : SemanticsAction.DECREMENT;

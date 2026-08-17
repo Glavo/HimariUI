@@ -46,6 +46,15 @@ public final class TextField {
     /// Whether committed text is masked as a password.
     private boolean password;
 
+    /// Whether committed edits are rejected.
+    private boolean readOnly;
+
+    /// Whether the field ignores activation and committed edits.
+    private boolean disabled;
+
+    /// Mounted leaf that receives the published disabled and read-only states.
+    private @Nullable LayoutNode node;
+
     /// Creates an empty field.
     public TextField() {
         this.committed = new GapBuffer();
@@ -221,7 +230,7 @@ public final class TextField {
         if (password) {
             return;
         }
-        clipboard.setText(displayedText().substring(selectionStart(), selectionEnd()));
+        clipboard.setTextAndHtml(displayedText().substring(selectionStart(), selectionEnd()));
     }
 
     /// Copies the displayed selection and deletes it while composition is idle.
@@ -257,6 +266,9 @@ public final class TextField {
     /// @param replacement the replacement
     public void replaceRange(int start, int end, String replacement) {
         Objects.requireNonNull(replacement, "replacement");
+        if (readOnly || disabled) {
+            return;
+        }
         if (composition != null) {
             throw new IllegalStateException("Cannot replace committed text during composition");
         }
@@ -404,6 +416,44 @@ public final class TextField {
         int end = composition == null ? selectionEnd() : displayed.length();
         int caret = composition == null ? selectionEnd : displayed.length();
         node.setTextRange(new SemanticsTextRange(start, end, caret));
+        node.setReadOnly(readOnly);
+        node.setDisabled(disabled);
+        node.setPassword(password);
+        this.node = node;
         return node;
+    }
+
+    /// Returns whether committed edits are rejected.
+    ///
+    /// @return whether the field is read-only
+    public boolean readOnly() {
+        return readOnly;
+    }
+
+    /// Sets whether committed edits are rejected.
+    ///
+    /// @param readOnly the state
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+        if (node != null) {
+            node.setReadOnly(readOnly);
+        }
+    }
+
+    /// Returns whether the field is disabled.
+    ///
+    /// @return whether the field is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the mounted leaf when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (node != null) {
+            node.setDisabled(disabled);
+        }
     }
 }

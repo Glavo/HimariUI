@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// Verifies Scrollbar through the shipped gallery path.
 @NotNullByDefault
@@ -38,6 +39,15 @@ final class ScrollbarTest {
         assertEquals(30.0, first(tree, SemanticsRole.SCROLLBAR).rangeValue());
         tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ARROW_LEFT));
         assertEquals(20.0f, gallery.scrollbar().value());
+        gallery.scrollbar().setDisabled(true);
+        tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ARROW_RIGHT));
+        assertEquals(20.0f, gallery.scrollbar().value());
+        assertTrue(first(tree, SemanticsRole.SCROLLBAR).disabled());
+        gallery.scrollbar().setDisabled(false);
+        gallery.progress().setDisabled(true);
+        assertTrue(gallery.progress().disabled());
+        assertTrue(first(tree, SemanticsRole.PROGRESS).disabled());
+        gallery.progress().setDisabled(false);
     }
 
     /// Returns the first node with the role.

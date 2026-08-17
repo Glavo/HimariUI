@@ -7,6 +7,7 @@ import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,6 +21,15 @@ public final class LiveStatus {
 
     /// Current announcement text.
     private String message;
+
+    /// Live-region politeness published by [#create(LayoutFactory, String)].
+    private SemanticsLiveRegion liveRegion = SemanticsLiveRegion.POLITE;
+
+    /// Last leaf published by [#create(LayoutFactory, String)], or `null` before the first create.
+    private @Nullable LayoutNode published;
+
+    /// Whether the status is disabled.
+    private boolean disabled;
 
     /// Creates a status with an initial announcement.
     ///
@@ -35,11 +45,31 @@ public final class LiveStatus {
         return message;
     }
 
-    /// Replaces the announcement published by the next [#create(LayoutFactory, String)].
+    /// Replaces the announcement and updates the last published leaf label when one exists.
+    ///
+    /// [`LayoutNode#setLabel(String)`] notifies live-region listeners so a host accessibility
+    /// bridge can raise `UIA_LiveRegionChangedEventId`.
     ///
     /// @param message the announcement
     public void announce(String message) {
         this.message = requireMessage(message);
+        if (published != null) {
+            published.setLabel(this.message);
+        }
+    }
+
+    /// Replaces the politeness published by the next [#create(LayoutFactory, String)].
+    ///
+    /// @param liveRegion the politeness
+    public void setLiveRegion(SemanticsLiveRegion liveRegion) {
+        this.liveRegion = Objects.requireNonNull(liveRegion, "liveRegion");
+    }
+
+    /// Returns the published politeness.
+    ///
+    /// @return the politeness
+    public SemanticsLiveRegion liveRegion() {
+        return liveRegion;
     }
 
     /// Builds the status leaf as a polite live region.
@@ -60,8 +90,27 @@ public final class LiveStatus {
                 Set.of(),
                 null
         );
-        node.setLiveRegion(SemanticsLiveRegion.POLITE);
+        node.setLiveRegion(liveRegion);
+        node.setDisabled(disabled);
+        this.published = node;
         return node;
+    }
+
+    /// Returns whether the status is disabled.
+    ///
+    /// @return whether the status is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the last created leaf when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (published != null) {
+            published.setDisabled(disabled);
+        }
     }
 
     /// Rejects a blank announcement.

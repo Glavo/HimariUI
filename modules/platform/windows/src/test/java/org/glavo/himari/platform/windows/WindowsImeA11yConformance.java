@@ -290,6 +290,9 @@ public final class WindowsImeA11yConformance {
                     .filter(node -> node.role() == SemanticsRole.STATUS)
                     .findFirst()
                     .orElseThrow();
+            if (statusNode.liveRegion() != SemanticsLiveRegion.POLITE) {
+                throw new IllegalStateException("status snapshot is not polite");
+            }
             try (WindowsAutomationProvider toggleProvider = window.automationProvider(toggleNode)) {
                 uiaToggleCom = toggleProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TOGGLE_PATTERN_ID)
                         && toggleProvider.toggle() == WindowsAutomationProvider.TOGGLE_STATE_ON;
@@ -298,13 +301,16 @@ public final class WindowsImeA11yConformance {
                 uiaRangeCom = rangeProvider.invokePatternProvider(WindowsAutomationProvider.UIA_RANGE_VALUE_PATTERN_ID)
                         && rangeProvider.setRangeValue(8.0) == 8.0;
             }
-            try (WindowsAutomationProvider statusProvider = window.automationProvider(statusNode)) {
+            try (WindowsAutomationProvider statusProvider = window.automationProvider(status)) {
+                status.setLabel("Updated");
                 uiaLiveSetting = statusProvider.invokePropertyValue(
                         WindowsAutomationProvider.UIA_CONTROL_TYPE_PROPERTY_ID
                 ) == WindowsAutomationProvider.UIA_STATUS_BAR_CONTROL_TYPE_ID
                         && statusProvider.invokePropertyValue(
                                 WindowsAutomationProvider.UIA_LIVE_SETTING_PROPERTY_ID
-                        ) == WindowsAutomationProvider.LIVE_SETTING_POLITE;
+                        ) == WindowsAutomationProvider.LIVE_SETTING_POLITE
+                        && statusProvider.liveRegionChangedCount() == 1
+                        && statusProvider.lastLiveRegionEventResult() >= 0;
                 uiaAnnotationCom = statusProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_ANNOTATION_PATTERN_ID
                 )
@@ -340,6 +346,13 @@ public final class WindowsImeA11yConformance {
                         && textProvider.invokeRangeFromAnnotation();
                 uiaTextCom = textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_PATTERN_ID)
                         && textProvider.invokeDocumentRange()
+                        && textProvider.invokeGetVisibleRanges()
+                        && textProvider.invokeRangeFromChild()
+                        && textProvider.invokeRangeFromPoint(
+                                fieldNode.bounds().x() + 1.0,
+                                fieldNode.bounds().y() + 1.0
+                        )
+                        && !textProvider.invokeRangeFromPoint(-1000.0, -1000.0)
                         && textProvider.invokeSupportedTextSelection()
                         == WindowsAutomationProvider.SUPPORTED_TEXT_SELECTION_SINGLE
                         && "hello".equals(textProvider.invokeGetText(-1))
@@ -376,6 +389,10 @@ public final class WindowsImeA11yConformance {
                 uiaTextCom = uiaTextCom && !textProvider.invokeGetSelection();
                 textProvider.invokeAddToSelection();
                 uiaTextCom = uiaTextCom && textProvider.invokeGetSelection();
+            }
+            try (WindowsAutomationProvider liveField = window.automationProvider(field)) {
+                field.setLabel("updated-hello");
+                uiaTextCom = uiaTextCom && "updated-hello".equals(liveField.invokeGetText(-1));
             }
             SemanticsNode listNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.LIST)

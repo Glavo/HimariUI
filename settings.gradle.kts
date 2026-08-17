@@ -36,6 +36,7 @@ include(
     ":modules:rhi-metal",
     ":modules:objc",
     ":modules:render-software",
+    ":modules:render-vector",
     ":modules:runtime",
     ":modules:state",
     ":modules:text",
@@ -67,3 +68,4 @@ project(":modules:rhi-d3d12").projectDir = file("modules/rhi/d3d12")
 project(":modules:rhi-vulkan").projectDir = file("modules/rhi/vulkan")
 project(":modules:rhi-metal").projectDir = file("modules/rhi/metal")
 project(":modules:samples:counter").projectDir = file("modules/samples/counter")
+project(":modules:render-vector").projectDir = file("modules/render/vector-jdk25")

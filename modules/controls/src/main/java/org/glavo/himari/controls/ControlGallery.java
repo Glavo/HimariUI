@@ -18,7 +18,13 @@ import org.glavo.himari.runtime.animation.AnimationTransaction;
 import org.glavo.himari.runtime.animation.MotionImportance;
 import org.glavo.himari.runtime.animation.MotionPolicy;
 import org.glavo.himari.runtime.animation.MotionSpec;
+import org.glavo.himari.runtime.reload.ResourceKind;
+import org.glavo.himari.runtime.reload.ResourceReload;
+import org.glavo.himari.runtime.reload.ResourceSnapshot;
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
+
+import java.lang.foreign.ValueLayout;
 
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +39,15 @@ public final class ControlGallery {
 
     /// Icon button used by the gallery.
     private final IconButton iconButton;
+
+    /// Image used by the gallery.
+    private final Image image;
+
+    /// Drawing surface used by the gallery.
+    private final Canvas canvas;
+
+    /// Spacer used by the gallery.
+    private final Spacer spacer;
 
     /// Checkbox used by the gallery.
     private final Checkbox checkbox;
@@ -94,6 +109,9 @@ public final class ControlGallery {
     /// Theme tokens used by the gallery.
     private ThemeTokens theme;
 
+    /// Last UTF-8 font family installed by [#applyFontReload(ResourceReload, String)].
+    private @Nullable String fontFamily;
+
     /// External button activation counter.
     private final AtomicInteger externalClicks = new AtomicInteger();
 
@@ -107,6 +125,9 @@ public final class ControlGallery {
     public ControlGallery() {
         this.button = new Button("Increment", externalClicks::incrementAndGet);
         this.iconButton = new IconButton("plus", () -> { });
+        this.image = new Image("logo");
+        this.canvas = new Canvas("Sketch", new Size(48.0f, 32.0f));
+        this.spacer = new Spacer(new Size(8.0f, 8.0f));
         this.checkbox = new Checkbox("Agree");
         this.radio = new Radio(List.of("A", "B"));
         this.toggle = new Toggle("Muted");
@@ -150,6 +171,27 @@ public final class ControlGallery {
     /// @return the icon button
     public IconButton iconButton() {
         return iconButton;
+    }
+
+    /// Returns the image.
+    ///
+    /// @return the image
+    public Image image() {
+        return image;
+    }
+
+    /// Returns the drawing surface.
+    ///
+    /// @return the canvas
+    public Canvas canvas() {
+        return canvas;
+    }
+
+    /// Returns the spacer.
+    ///
+    /// @return the spacer
+    public Spacer spacer() {
+        return spacer;
     }
 
     /// Returns the checkbox.
@@ -292,6 +334,13 @@ public final class ControlGallery {
         return theme;
     }
 
+    /// Returns the last font family installed by [#applyFontReload(ResourceReload, String)].
+    ///
+    /// @return the family, or `null` before the first successful font reload
+    public @Nullable String fontFamily() {
+        return fontFamily;
+    }
+
     /// Returns the gallery gesture arena.
     ///
     /// @return the arena
@@ -304,6 +353,93 @@ public final class ControlGallery {
     /// @param theme the tokens
     public void setTheme(ThemeTokens theme) {
         this.theme = Objects.requireNonNull(theme, "theme");
+    }
+
+    /// Applies the current published theme generation for `key` from `reload`.
+    ///
+    /// @param reload the resource generations
+    /// @param key the theme consumer key
+    /// @return whether a theme payload was installed
+    public boolean applyThemeReload(ResourceReload reload, String key) {
+        Objects.requireNonNull(reload, "reload");
+        Objects.requireNonNull(key, "key");
+        @Nullable ResourceSnapshot snapshot = reload.current(ResourceKind.THEME, key);
+        if (snapshot == null) {
+            return false;
+        }
+        this.theme = ThemeTokens.decode(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE));
+        return true;
+    }
+
+    /// Applies the current published style generation for `key` from `reload`.
+    ///
+    /// A payload containing `reducedMotion=true` or `rtl=true` updates those tokens. Other
+    /// tokens are left unchanged.
+    ///
+    /// @param reload the resource generations
+    /// @param key the style consumer key
+    /// @return whether a style payload was installed
+    public boolean applyStyleReload(ResourceReload reload, String key) {
+        Objects.requireNonNull(reload, "reload");
+        Objects.requireNonNull(key, "key");
+        @Nullable ResourceSnapshot snapshot = reload.current(ResourceKind.STYLE, key);
+        if (snapshot == null) {
+            return false;
+        }
+        String payload = new String(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE), java.nio.charset.StandardCharsets.UTF_8);
+        if (payload.contains("reducedMotion=true")) {
+            this.theme = this.theme.withReducedMotion(true);
+        }
+        if (payload.contains("rtl=true")) {
+            this.theme = this.theme.withTextDirection(TextDirection.RTL);
+        }
+        return true;
+    }
+
+    /// Applies the current published image generation for `key` from `reload`.
+    ///
+    /// A UTF-8 payload becomes the gallery icon-button name used by the next
+    /// [#create(LayoutTree)].
+    ///
+    /// @param reload the resource generations
+    /// @param key the image consumer key
+    /// @return whether an image payload was installed
+    public boolean applyImageReload(ResourceReload reload, String key) {
+        Objects.requireNonNull(reload, "reload");
+        Objects.requireNonNull(key, "key");
+        @Nullable ResourceSnapshot snapshot = reload.current(ResourceKind.IMAGE, key);
+        if (snapshot == null) {
+            return false;
+        }
+        String name = new String(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE), java.nio.charset.StandardCharsets.UTF_8);
+        if (name.isEmpty()) {
+            return false;
+        }
+        iconButton.setIcon(name);
+        image.setSource(name);
+        return true;
+    }
+
+    /// Applies the current published font generation for `key` from `reload`.
+    ///
+    /// A UTF-8 payload becomes the gallery font family.
+    ///
+    /// @param reload the resource generations
+    /// @param key the font consumer key
+    /// @return whether a font payload was installed
+    public boolean applyFontReload(ResourceReload reload, String key) {
+        Objects.requireNonNull(reload, "reload");
+        Objects.requireNonNull(key, "key");
+        @Nullable ResourceSnapshot snapshot = reload.current(ResourceKind.FONT, key);
+        if (snapshot == null) {
+            return false;
+        }
+        String family = new String(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE), java.nio.charset.StandardCharsets.UTF_8);
+        if (family.isEmpty()) {
+            return false;
+        }
+        this.fontFamily = family;
+        return true;
     }
 
     /// Resolves one animation transaction from the current theme's reduced-motion policy.
@@ -363,6 +499,9 @@ public final class ControlGallery {
                 BootstrapLabel.create(factory, "title", "Controls"),
                 button.create(factory, "button"),
                 iconButton.create(factory, "icon-button"),
+                image.create(factory, "image"),
+                canvas.create(factory, "canvas"),
+                spacer.create(factory, "spacer"),
                 checkbox.create(factory, "checkbox"),
                 radio.create(factory, "radio"),
                 toggle.create(factory, "toggle"),

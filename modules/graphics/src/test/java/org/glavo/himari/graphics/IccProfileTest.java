@@ -55,6 +55,43 @@ final class IccProfileTest {
         assertEquals(0.2f, curve.decode(0.4f), 0.001f);
     }
 
+    /// Decodes ICC parametric function type 2 as a constant toe plus a power branch.
+    @Test
+    void paraType2UsesConstantToe() {
+        IccProfile.Curve curve = new IccProfile.Curve(
+                2.0f,
+                new float[0],
+                2,
+                1.0f,
+                0.0f,
+                0.1f,
+                0.0f,
+                0.0f,
+                0.0f
+        );
+        assertEquals(0.1f, curve.decode(0.0f), 0.001f);
+        assertEquals(0.35f, curve.decode(0.5f), 0.001f);
+        assertEquals(0.5f, curve.encode(0.35f), 0.02f);
+    }
+
+    /// Decodes ICC parametric function type 4 as a linear toe plus an offset power branch.
+    @Test
+    void paraType4UsesOffsetPower() {
+        IccProfile.Curve curve = new IccProfile.Curve(
+                2.0f,
+                new float[0],
+                4,
+                1.0f,
+                0.0f,
+                0.5f,
+                0.5f,
+                0.1f,
+                0.0f
+        );
+        assertEquals(0.2f, curve.decode(0.4f), 0.001f);
+        assertEquals(0.35f, curve.decode(0.5f), 0.001f);
+    }
+
     /// Rejects a truncated header instead of inventing tags.
     @Test
     void rejectsTruncatedProfile() {

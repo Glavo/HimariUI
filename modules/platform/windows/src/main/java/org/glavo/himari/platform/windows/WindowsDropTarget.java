@@ -68,6 +68,9 @@ public final class WindowsDropTarget implements AutoCloseable {
     /// Unicode text extracted by `IDataObject::GetData`, or `null`.
     private @Nullable String lastDroppedText;
 
+    /// `CF_HDROP` paths extracted by `IDataObject::GetData`, or `null`.
+    private @Nullable java.util.List<String> lastDroppedFiles;
+
     /// Whether `RegisterDragDrop` succeeded.
     private boolean registered;
 
@@ -184,6 +187,13 @@ public final class WindowsDropTarget implements AutoCloseable {
         return lastDroppedText;
     }
 
+    /// Returns `CF_HDROP` paths extracted through `IDataObject::GetData`.
+    ///
+    /// @return the paths, or `null` when no drop-files payload was present
+    public @Nullable java.util.List<String> lastDroppedFiles() {
+        return lastDroppedFiles;
+    }
+
     /// Revokes the HWND registration and releases this owner's COM reference.
     @Override
     public void close() {
@@ -259,9 +269,64 @@ public final class WindowsDropTarget implements AutoCloseable {
         lastDropX = point.get(ValueLayout.JAVA_INT, Win32Layouts.POINTL_X_OFFSET);
         lastDropY = point.get(ValueLayout.JAVA_INT, Win32Layouts.POINTL_Y_OFFSET);
         lastDroppedText = extractUnicode(dataObject);
+        lastDroppedFiles = extractDropFiles(dataObject);
         dropCount++;
         writeCopyEffect(effect);
         return S_OK;
+    }
+
+    /// Calls `IDataObject::GetData` for `CF_HDROP`.
+    ///
+    /// @param dataObject the source, or `NULL`
+    /// @return the paths, or `null`
+    private @Nullable java.util.List<String> extractDropFiles(MemorySegment dataObject) {
+        if (dataObject.address() == 0L) {
+            return null;
+        }
+        MemorySegment vtableAddress = dataObject.reinterpret(ValueLayout.ADDRESS.byteSize())
+                .get(ValueLayout.ADDRESS, 0L);
+        if (vtableAddress.address() == 0L) {
+            return null;
+        }
+        MemorySegment getData = vtableAddress.reinterpret(ValueLayout.ADDRESS.byteSize() * 4L)
+                .getAtIndex(ValueLayout.ADDRESS, 3L);
+        MemorySegment format = arena.allocate(Win32Layouts.FORMATETC);
+        format.fill((byte) 0);
+        format.set(ValueLayout.JAVA_SHORT, Win32Layouts.FORMATETC_CF_FORMAT_OFFSET,
+                (short) WindowsDataObject.CF_HDROP);
+        format.set(ValueLayout.JAVA_INT, Win32Layouts.FORMATETC_DW_ASPECT_OFFSET, 1);
+        format.set(ValueLayout.JAVA_INT, Win32Layouts.FORMATETC_LINDEX_OFFSET, -1);
+        format.set(ValueLayout.JAVA_INT, Win32Layouts.FORMATETC_TYMED_OFFSET, WindowsDataObject.TYMED_HGLOBAL);
+        MemorySegment medium = arena.allocate(Win32Layouts.STGMEDIUM);
+        medium.fill((byte) 0);
+        int result = Win32FfmBindings.invokeIdataObjectGetDataPointer(getData, dataObject, format, medium);
+        if (result < 0) {
+            return null;
+        }
+        try {
+            MemorySegment handle = medium.get(ValueLayout.ADDRESS, Win32Layouts.STGMEDIUM_HGLOBAL_OFFSET);
+            if (handle.address() == 0L) {
+                return null;
+            }
+            Win32FfmBindings.GlobalLockResult locked = bindings.globalLock(handle);
+            if (locked.value().address() == 0L) {
+                return null;
+            }
+            try {
+                Win32FfmBindings.GlobalSizeResult size = bindings.globalSize(handle);
+                int length = Math.toIntExact(size.value());
+                byte[] payload = new byte[length];
+                MemorySegment mapped = locked.value().byteSize() < length
+                        ? locked.value().reinterpret(length)
+                        : locked.value();
+                MemorySegment.copy(mapped, 0L, MemorySegment.ofArray(payload), 0L, length);
+                return WindowsClipboard.decodeDropFiles(payload);
+            } finally {
+                bindings.globalUnlock(handle);
+            }
+        } finally {
+            bindings.releaseStgMedium(medium);
+        }
     }
 
     /// Calls `IDataObject::GetData` for `CF_UNICODETEXT`.

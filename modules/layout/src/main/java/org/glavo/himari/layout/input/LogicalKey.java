@@ -45,5 +45,8 @@ public enum LogicalKey {
     PAGE_UP,
 
     /// Page the focused collection forward.
-    PAGE_DOWN
+    PAGE_DOWN,
+
+    /// Windows / Super modifier.
+    META
 }

@@ -9,6 +9,7 @@ import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.glavo.himari.layout.semantics.SemanticsScroll;
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
@@ -23,27 +24,93 @@ public final class LazyList {
     private static final float ITEM_HEIGHT = 20.0f;
 
     /// Total logical item count.
-    private final int itemCount;
+    private int itemCount;
 
     /// Number of simultaneously materialized items.
     private final int windowSize;
 
+    /// Extra items materialized before and after the visible window.
+    private final int overscan;
+
+    /// Measured item heights; `0` means [`#ITEM_HEIGHT`] is still in use.
+    private final ArrayList<Float> measured = new ArrayList<>();
+
     /// Index of the first materialized item.
     private int firstVisible;
+
+    /// Whether the list ignores scroll and mutation.
+    private boolean disabled;
+
+    /// Mounted column that receives the published disabled state.
+    private @Nullable LayoutNode node;
 
     /// Creates a list.
     ///
     /// @param itemCount the nonnegative total count
     /// @param windowSize the positive window size
     public LazyList(int itemCount, int windowSize) {
+        this(itemCount, windowSize, 0);
+    }
+
+    /// Creates a list with overscan.
+    ///
+    /// @param itemCount the nonnegative total count
+    /// @param windowSize the positive window size
+    /// @param overscan the nonnegative prefetch count on each side
+    public LazyList(int itemCount, int windowSize, int overscan) {
         if (itemCount < 0) {
             throw new IllegalArgumentException("itemCount must be nonnegative");
         }
         if (windowSize <= 0) {
             throw new IllegalArgumentException("windowSize must be positive");
         }
+        if (overscan < 0) {
+            throw new IllegalArgumentException("overscan must be nonnegative");
+        }
         this.itemCount = itemCount;
         this.windowSize = windowSize;
+        this.overscan = overscan;
+    }
+
+    /// Returns the overscan in items.
+    ///
+    /// @return the overscan
+    public int overscan() {
+        return overscan;
+    }
+
+    /// Returns the height used for `index`, preferring a measured height.
+    ///
+    /// @param index the item index
+    /// @return the height
+    public float heightAt(int index) {
+        if (index < 0 || index >= itemCount) {
+            throw new IllegalArgumentException("Item index is out of range");
+        }
+        if (index < measured.size()) {
+            float recorded = measured.get(index);
+            if (recorded > 0.0f) {
+                return recorded;
+            }
+        }
+        return ITEM_HEIGHT;
+    }
+
+    /// Records a measured height for `index`.
+    ///
+    /// @param index the item index
+    /// @param height the positive measured height
+    public void correctHeight(int index, float height) {
+        if (index < 0 || index >= itemCount) {
+            throw new IllegalArgumentException("Item index is out of range");
+        }
+        if (!(height > 0.0f) || !Float.isFinite(height)) {
+            throw new IllegalArgumentException("Measured item height must be finite and positive");
+        }
+        while (measured.size() <= index) {
+            measured.add(0.0f);
+        }
+        measured.set(index, height);
     }
 
     /// Returns the first visible index.
@@ -58,6 +125,23 @@ public final class LazyList {
     /// @return the count
     public int itemCount() {
         return itemCount;
+    }
+
+    /// Returns whether the list is disabled.
+    ///
+    /// @return whether the list is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the mounted column when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (node != null) {
+            node.setDisabled(disabled);
+        }
     }
 
     /// Returns labels for every logical item, including unmounted rows.
@@ -76,9 +160,10 @@ public final class LazyList {
     /// @return the unmounted labels in document order
     public @Unmodifiable List<String> unmountedLabels() {
         ArrayList<String> labels = new ArrayList<>();
-        int last = Math.min(itemCount, firstVisible + windowSize);
+        int first = materializedFirst();
+        int last = materializedLast();
         for (int index = 0; index < itemCount; index++) {
-            if (index < firstVisible || index >= last) {
+            if (index < first || index >= last) {
                 labels.add("Item " + index);
             }
         }
@@ -94,12 +179,12 @@ public final class LazyList {
         Objects.requireNonNull(factory, "factory");
         Objects.requireNonNull(name, "name");
         ArrayList<LayoutNode> items = new ArrayList<>();
-        int last = Math.min(itemCount, firstVisible + windowSize);
-        for (int index = firstVisible; index < last; index++) {
+        int last = materializedLast();
+        for (int index = materializedFirst(); index < last; index++) {
             String label = "Item " + index;
             items.add(factory.leaf(
                     name + "-item-" + index,
-                    new Size(160.0f, ITEM_HEIGHT),
+                    new Size(160.0f, heightAt(index)),
                     List.of(),
                     index == firstVisible,
                     SemanticsRole.LIST,
@@ -123,6 +208,8 @@ public final class LazyList {
                 items.toArray(LayoutNode[]::new)
         );
         column.setScroll(scrollSnapshot());
+        column.setDisabled(disabled);
+        this.node = column;
         return column;
     }
 
@@ -143,8 +230,71 @@ public final class LazyList {
     ///
     /// @param index the requested first-visible index
     public void scrollTo(int index) {
+        if (disabled) {
+            return;
+        }
         int maximum = Math.max(0, itemCount - windowSize);
         firstVisible = Math.min(maximum, Math.max(0, index));
+    }
+
+    /// Inserts one logical item at `index` and preserves the first-visible anchor when possible.
+    ///
+    /// @param index the insertion index in `[0, itemCount]`
+    public void insert(int index) {
+        if (disabled) {
+            return;
+        }
+        if (index < 0 || index > itemCount) {
+            throw new IllegalArgumentException("insert index is out of range");
+        }
+        itemCount++;
+        if (index < measured.size()) {
+            measured.add(index, 0.0f);
+        }
+        if (index <= firstVisible) {
+            firstVisible++;
+        }
+        clampWindow();
+    }
+
+    /// Removes the logical item at `index` and clamps the window.
+    ///
+    /// @param index the removal index in `[0, itemCount)`
+    public void remove(int index) {
+        if (disabled) {
+            return;
+        }
+        if (index < 0 || index >= itemCount) {
+            throw new IllegalArgumentException("remove index is out of range");
+        }
+        itemCount--;
+        if (index < measured.size()) {
+            measured.remove(index);
+        }
+        if (index < firstVisible) {
+            firstVisible--;
+        }
+        clampWindow();
+    }
+
+    /// Returns the first materialized index, including leading overscan.
+    ///
+    /// @return the index
+    public int materializedFirst() {
+        return Math.max(0, firstVisible - overscan);
+    }
+
+    /// Returns the exclusive last materialized index, including trailing overscan.
+    ///
+    /// @return the exclusive index
+    public int materializedLast() {
+        return Math.min(itemCount, firstVisible + windowSize + overscan);
+    }
+
+    /// Clamps [`#firstVisible`] after a count change.
+    private void clampWindow() {
+        int maximum = Math.max(0, itemCount - windowSize);
+        firstVisible = Math.min(maximum, Math.max(0, firstVisible));
     }
 
     /// Pages the window by `pages` windows of [windowSize] items.
@@ -158,6 +308,9 @@ public final class LazyList {
     ///
     /// @param delta `1` or `-1`
     private void adjust(int delta) {
+        if (disabled) {
+            return;
+        }
         int next = firstVisible + delta;
         int maximum = Math.max(0, itemCount - windowSize);
         firstVisible = Math.min(maximum, Math.max(0, next));

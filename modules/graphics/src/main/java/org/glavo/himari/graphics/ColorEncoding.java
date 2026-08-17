@@ -30,5 +30,23 @@ public enum ColorEncoding {
     BT2100_HLG,
 
     /// First-stable extended-linear working encoding. Components may be finite and outside `[0, 1]`.
-    EXTENDED_LINEAR
+    EXTENDED_LINEAR,
+
+    /// Encoded Adobe RGB (1998) with the 563/256 gamma.
+    A98,
+
+    /// Linear-light Adobe RGB (1998) primaries.
+    LINEAR_A98,
+
+    /// Encoded ProPhoto RGB / ROMM with gamma 1.8.
+    PROPHOTO,
+
+    /// Linear-light ProPhoto RGB primaries.
+    LINEAR_PROPHOTO,
+
+    /// Encoded Rec.709 / BT.709 with the BT.709 OETF on BT.709 primaries.
+    BT709,
+
+    /// Linear-light Rec.709 / BT.709 primaries, identical to linear sRGB.
+    LINEAR_BT709
 }

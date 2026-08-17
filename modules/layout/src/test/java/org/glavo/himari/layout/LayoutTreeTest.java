@@ -242,6 +242,10 @@ final class LayoutTreeTest {
                 null
         );
         status.setLiveRegion(SemanticsLiveRegion.ASSERTIVE);
+        AtomicInteger announced = new AtomicInteger();
+        status.addLabelListener(announced::incrementAndGet);
+        status.setLabel("Updated");
+        assertEquals(1, announced.get());
         tree.setRoot(factory.column("root", Alignment.START, java.util.List.of(), status));
         tree.measure(Constraints.loose(100.0f, 100.0f));
         tree.place();
@@ -250,6 +254,7 @@ final class LayoutTreeTest {
                 .findFirst()
                 .orElseThrow();
         assertEquals(SemanticsLiveRegion.ASSERTIVE, snapshot.liveRegion());
+        assertEquals("Updated", snapshot.label());
         assertEquals(SemanticsLiveRegion.OFF, tree.semantics().nodes().getFirst().liveRegion());
     }
 
@@ -277,6 +282,67 @@ final class LayoutTreeTest {
                 .findFirst()
                 .orElseThrow();
         assertEquals(new SemanticsTextRange(1, 4, 4), snapshot.textRange());
+        assertFalse(snapshot.disabled());
+        assertFalse(snapshot.readOnly());
+        field.setDisabled(true);
+        field.setReadOnly(true);
+        SemanticsNode gated = tree.semantics().nodes().stream()
+                .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
+                .findFirst()
+                .orElseThrow();
+        assertTrue(gated.disabled());
+        assertTrue(gated.readOnly());
+        field.setHint("Greeting");
+        SemanticsNode hinted = tree.semantics().nodes().stream()
+                .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
+                .findFirst()
+                .orElseThrow();
+        assertEquals("Greeting", hinted.hint());
+        assertTrue(hinted.focusable());
+        assertFalse(hinted.password());
+        field.setPassword(true);
+        SemanticsNode secret = tree.semantics().nodes().stream()
+                .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
+                .findFirst()
+                .orElseThrow();
+        assertTrue(secret.password());
+        field.setAccessKey("G");
+        field.setAcceleratorKey("Ctrl+G");
+        SemanticsNode keyed = tree.semantics().nodes().stream()
+                .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
+                .findFirst()
+                .orElseThrow();
+        assertEquals("G", keyed.accessKey());
+        assertEquals("Ctrl+G", keyed.acceleratorKey());
+        field.setRequired(true);
+        field.setItemStatus("invalid");
+        field.setLocale("en-US");
+        SemanticsNode form = tree.semantics().nodes().stream()
+                .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
+                .findFirst()
+                .orElseThrow();
+        assertTrue(form.required());
+        assertEquals("invalid", form.itemStatus());
+        assertEquals("en-US", form.locale());
+        field.setLevel(2);
+        field.setPositionInSet(1);
+        field.setSizeOfSet(3);
+        field.setDescription("Guest name");
+        SemanticsNode set = tree.semantics().nodes().stream()
+                .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
+                .findFirst()
+                .orElseThrow();
+        assertEquals(2, set.level());
+        assertEquals(1, set.positionInSet());
+        assertEquals(3, set.sizeOfSet());
+        assertEquals("Guest name", set.description());
+        field.setError(true);
+        SemanticsNode invalid = tree.semantics().nodes().stream()
+                .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
+                .findFirst()
+                .orElseThrow();
+        assertTrue(invalid.error());
+        assertEquals("", tree.semantics().nodes().getFirst().hint());
         assertEquals(null, tree.semantics().nodes().getFirst().textRange());
         assertThrows(IllegalArgumentException.class, () -> new SemanticsTextRange(2, 1, 2));
     }

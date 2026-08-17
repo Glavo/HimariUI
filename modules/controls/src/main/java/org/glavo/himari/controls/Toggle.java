@@ -25,6 +25,9 @@ public final class Toggle {
     /// Whether the switch is on.
     private boolean on;
 
+    /// Whether the switch ignores activation.
+    private boolean disabled;
+
     /// Mounted leaf that receives the published toggle state.
     private @Nullable LayoutNode node;
 
@@ -40,6 +43,33 @@ public final class Toggle {
     /// @return the state
     public boolean isOn() {
         return on;
+    }
+
+    /// Sets the switch state and publishes it to the mounted leaf when present.
+    ///
+    /// @param on the new state
+    public void setOn(boolean on) {
+        this.on = on;
+        if (node != null) {
+            node.setSelected(on);
+        }
+    }
+
+    /// Returns whether the switch is disabled.
+    ///
+    /// @return whether the switch is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the mounted leaf when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (node != null) {
+            node.setDisabled(disabled);
+        }
     }
 
     /// Builds the switch leaf.
@@ -61,12 +91,16 @@ public final class Toggle {
                 this::flip
         );
         created.setSelected(on);
+        created.setDisabled(disabled);
         this.node = created;
         return created;
     }
 
     /// Flips the switch.
     private void flip() {
+        if (disabled) {
+            return;
+        }
         on = !on;
         if (node != null) {
             node.setSelected(on);

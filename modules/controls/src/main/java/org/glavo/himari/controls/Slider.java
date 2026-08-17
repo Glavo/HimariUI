@@ -34,6 +34,9 @@ public final class Slider {
     /// Current value.
     private float value;
 
+    /// Whether the slider ignores adjustment.
+    private boolean disabled;
+
     /// Mounted leaf that receives the published range value.
     private @Nullable LayoutNode node;
 
@@ -68,6 +71,23 @@ public final class Slider {
         return value;
     }
 
+    /// Returns whether the slider is disabled.
+    ///
+    /// @return whether the slider is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the mounted leaf when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (node != null) {
+            node.setDisabled(disabled);
+        }
+    }
+
     /// Builds the slider leaf.
     ///
     /// @param factory the node factory
@@ -88,6 +108,7 @@ public final class Slider {
                 this::adjust
         );
         created.setRangeValue(value);
+        created.setDisabled(disabled);
         this.node = created;
         return created;
     }
@@ -96,6 +117,9 @@ public final class Slider {
     ///
     /// @param delta `1` or `-1`
     private void adjust(int delta) {
+        if (disabled) {
+            return;
+        }
         value = clamp(value + delta * step);
         if (node != null) {
             node.setRangeValue(value);

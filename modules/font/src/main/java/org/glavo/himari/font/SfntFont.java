@@ -16,7 +16,8 @@ import java.util.Objects;
 
 /// Reads a checked SFNT, TTC first face, WOFF1, or WOFF2 directory, `cmap` format 4/12, `hmtx`, TrueType `loca`/`glyf` or
 /// CFF/CFF2 Type 2 outlines, optional GSUB, GDEF, GPOS/`kern`, COLR v0/v1/CPAL, `fvar`, `avar`, `gvar`,
-/// `HVAR`, `VVAR`, `MVAR`, `sbix`, CBLC/CBDT, EBLC/EBDT, and `gasp`.
+/// `HVAR`, `VVAR`, `MVAR`, `sbix`, CBLC/CBDT, EBLC/EBDT, `gasp`, uncompressed `SVG `, `OS/2`,
+/// `name` family and style, and `post` italic/pitch.
 ///
 /// The font file is retained as a read-only [MemorySegment] so the same view can back a heap array
 /// or a later mapped file. Sequential table decoding uses [ByteBuffer] cursors over those slices.
@@ -114,6 +115,18 @@ public final class SfntFont {
 
     /// `gasp` grayscale ranges, empty when the table is absent.
     private final GaspTable gasp;
+
+    /// OpenType `SVG ` documents, empty when the table is absent.
+    private final SvgTable svg;
+
+    /// `OS/2` metrics, empty when the table is absent.
+    private final Os2Table os2;
+
+    /// `name` family string, empty when the table is absent.
+    private final NameTable names;
+
+    /// `post` header, empty when the table is absent.
+    private final PostTable post;
 
     /// Shared empty normalized instance used for the default outline.
     private static final float[] DEFAULT_NORMALIZED = new float[0];
@@ -214,6 +227,10 @@ public final class SfntFont {
         this.cbdt = CbdtCblc.parse(findTable("CBLC"), findTable("CBDT"), CbdtCblc.TAG_CBDT);
         this.ebdt = CbdtCblc.parse(findTable("EBLC"), findTable("EBDT"), CbdtCblc.TAG_EBDT);
         this.gasp = GaspTable.parse(findTable("gasp"));
+        this.svg = SvgTable.parse(findTable("SVG "));
+        this.os2 = Os2Table.parse(findTable("OS/2"));
+        this.names = NameTable.parse(findTable("name"));
+        this.post = PostTable.parse(findTable("post"));
     }
 
     /// Returns the retained font file.
@@ -926,6 +943,455 @@ public final class SfntFont {
     /// @return the bitmap, or `null` when the slot is empty or the tables are absent
     public @Nullable EmbeddedBitmap grayscaleBitmap(int glyphId) {
         return ebdt.glyph(glyphId);
+    }
+
+    /// Returns the first uncompressed SVG document covering `glyphId`.
+    ///
+    /// @param glyphId the glyph
+    /// @return the UTF-8 SVG document, or `null` when the table is absent or the glyph has no entry
+    public @Nullable String svgDocument(int glyphId) {
+        return svg.document(glyphId);
+    }
+
+    /// Returns `OS/2.usWeightClass`, or Regular when the table is absent.
+    ///
+    /// @return the weight class
+    public int weightClass() {
+        return os2.weightClass();
+    }
+
+    /// Returns `OS/2.usWidthClass`, or Medium when the table is absent.
+    ///
+    /// @return the width class
+    public int widthClass() {
+        return os2.widthClass();
+    }
+
+    /// Returns `OS/2.xAvgCharWidth`, or `0` when the table is absent.
+    ///
+    /// @return the average character width
+    public int avgCharWidth() {
+        return os2.avgCharWidth();
+    }
+
+    /// Returns `OS/2.usFirstCharIndex`, or `0` when the table is absent.
+    ///
+    /// @return the first Unicode BMP index
+    public int firstCharIndex() {
+        return os2.firstCharIndex();
+    }
+
+    /// Returns `OS/2.usLastCharIndex`, or `0` when the table is absent.
+    ///
+    /// @return the last Unicode BMP index
+    public int lastCharIndex() {
+        return os2.lastCharIndex();
+    }
+
+    /// Returns `OS/2.sxHeight`, or `0` when the table is absent or older than version 2.
+    ///
+    /// @return the x-height
+    public int xHeight() {
+        return os2.xHeight();
+    }
+
+    /// Returns `OS/2.sCapHeight`, or `0` when the table is absent or older than version 2.
+    ///
+    /// @return the cap height
+    public int capHeight() {
+        return os2.capHeight();
+    }
+
+    /// Returns `OS/2.usDefaultChar`, or `0` when the table is absent or older than version 2.
+    ///
+    /// @return the default character
+    public int defaultChar() {
+        return os2.defaultChar();
+    }
+
+    /// Returns `OS/2.usBreakChar`, or `0` when the table is absent or older than version 2.
+    ///
+    /// @return the break character
+    public int breakChar() {
+        return os2.breakChar();
+    }
+
+    /// Returns `OS/2.usMaxContext`, or `0` when the table is absent or older than version 2.
+    ///
+    /// @return the maximum lookup context
+    public int maxContext() {
+        return os2.maxContext();
+    }
+
+    /// Returns `OS/2.ulUnicodeRange1`, or `0` when the table is absent.
+    ///
+    /// @return the first Unicode range bits
+    public int unicodeRange1() {
+        return os2.unicodeRange1();
+    }
+
+    /// Returns `OS/2.ulUnicodeRange2`, or `0` when the table is absent.
+    ///
+    /// @return the second Unicode range bits
+    public int unicodeRange2() {
+        return os2.unicodeRange2();
+    }
+
+    /// Returns `OS/2.ulUnicodeRange3`, or `0` when the table is absent.
+    ///
+    /// @return the third Unicode range bits
+    public int unicodeRange3() {
+        return os2.unicodeRange3();
+    }
+
+    /// Returns `OS/2.ulUnicodeRange4`, or `0` when the table is absent.
+    ///
+    /// @return the fourth Unicode range bits
+    public int unicodeRange4() {
+        return os2.unicodeRange4();
+    }
+
+    /// Returns `OS/2.ulCodePageRange1`, or `0` when the table is absent or older than version 1.
+    ///
+    /// @return the first code-page range bits
+    public int codePageRange1() {
+        return os2.codePageRange1();
+    }
+
+    /// Returns `OS/2.ulCodePageRange2`, or `0` when the table is absent or older than version 1.
+    ///
+    /// @return the second code-page range bits
+    public int codePageRange2() {
+        return os2.codePageRange2();
+    }
+
+    /// Returns `OS/2.ySubscriptXSize`, or `0` when the table is absent.
+    ///
+    /// @return the subscript x size
+    public int subscriptXSize() {
+        return os2.subscriptXSize();
+    }
+
+    /// Returns `OS/2.ySubscriptYSize`, or `0` when the table is absent.
+    ///
+    /// @return the subscript y size
+    public int subscriptYSize() {
+        return os2.subscriptYSize();
+    }
+
+    /// Returns `OS/2.ySubscriptXOffset`, or `0` when the table is absent.
+    ///
+    /// @return the subscript x offset
+    public int subscriptXOffset() {
+        return os2.subscriptXOffset();
+    }
+
+    /// Returns `OS/2.ySubscriptYOffset`, or `0` when the table is absent.
+    ///
+    /// @return the subscript y offset
+    public int subscriptYOffset() {
+        return os2.subscriptYOffset();
+    }
+
+    /// Returns `OS/2.ySuperscriptXSize`, or `0` when the table is absent.
+    ///
+    /// @return the superscript x size
+    public int superscriptXSize() {
+        return os2.superscriptXSize();
+    }
+
+    /// Returns `OS/2.ySuperscriptYSize`, or `0` when the table is absent.
+    ///
+    /// @return the superscript y size
+    public int superscriptYSize() {
+        return os2.superscriptYSize();
+    }
+
+    /// Returns `OS/2.ySuperscriptXOffset`, or `0` when the table is absent.
+    ///
+    /// @return the superscript x offset
+    public int superscriptXOffset() {
+        return os2.superscriptXOffset();
+    }
+
+    /// Returns `OS/2.ySuperscriptYOffset`, or `0` when the table is absent.
+    ///
+    /// @return the superscript y offset
+    public int superscriptYOffset() {
+        return os2.superscriptYOffset();
+    }
+
+    /// Returns `OS/2.yStrikeoutSize`, or `0` when the table is absent.
+    ///
+    /// @return the strikeout size
+    public int strikeoutSize() {
+        return os2.strikeoutSize();
+    }
+
+    /// Returns `OS/2.yStrikeoutPosition`, or `0` when the table is absent.
+    ///
+    /// @return the strikeout position
+    public int strikeoutPosition() {
+        return os2.strikeoutPosition();
+    }
+
+    /// Returns `OS/2.sFamilyClass`, or `0` when the table is absent.
+    ///
+    /// @return the IBM family class
+    public int familyClass() {
+        return os2.familyClass();
+    }
+
+    /// Returns `OS/2.fsType`, or `0` when the table is absent.
+    ///
+    /// @return the embedding bits
+    public int fsType() {
+        return os2.fsType();
+    }
+
+    /// Returns `OS/2` PANOSE bytes, or ten zeros when the table is absent.
+    ///
+    /// @return the PANOSE classification
+    public byte @Unmodifiable [] panose() {
+        return os2.panose();
+    }
+
+    /// Returns `OS/2.achVendID`, or empty when the table is absent.
+    ///
+    /// @return the vendor tag
+    public String vendorId() {
+        return os2.vendorId();
+    }
+
+    /// Returns `OS/2.fsSelection`, or `0` when the table is absent.
+    ///
+    /// @return the selection bits
+    public int fsSelection() {
+        return os2.fsSelection();
+    }
+
+    /// Returns `OS/2.sTypoAscender`, or `0` when the table is absent.
+    ///
+    /// @return the typographic ascender
+    public int typoAscender() {
+        return os2.typoAscender();
+    }
+
+    /// Returns `OS/2.sTypoDescender`, or `0` when the table is absent.
+    ///
+    /// @return the typographic descender
+    public int typoDescender() {
+        return os2.typoDescender();
+    }
+
+    /// Returns `OS/2.sTypoLineGap`, or `0` when the table is absent.
+    ///
+    /// @return the typographic line gap
+    public int typoLineGap() {
+        return os2.typoLineGap();
+    }
+
+    /// Returns `OS/2.usWinAscent`, or `0` when the table is absent.
+    ///
+    /// @return the Windows ascender
+    public int winAscent() {
+        return os2.winAscent();
+    }
+
+    /// Returns `OS/2.usWinDescent`, or `0` when the table is absent.
+    ///
+    /// @return the Windows descender
+    public int winDescent() {
+        return os2.winDescent();
+    }
+
+    /// Returns the Windows Unicode or Macintosh copyright string.
+    ///
+    /// @return the copyright, or `null` when `name` has no `nameID 0` record
+    public @Nullable String copyright() {
+        return names.copyright();
+    }
+
+    /// Returns the Windows Unicode or Macintosh unique font identifier.
+    ///
+    /// @return the unique identifier, or `null` when `name` has no `nameID 3` record
+    public @Nullable String uniqueId() {
+        return names.uniqueId();
+    }
+
+    /// Returns the Windows Unicode or Macintosh family name.
+    ///
+    /// @return the family, or `null` when `name` has no `nameID 1` record
+    public @Nullable String familyName() {
+        return names.familyName();
+    }
+
+    /// Returns the Windows Unicode or Macintosh style name.
+    ///
+    /// @return the style, or `null` when `name` has no `nameID 2` record
+    public @Nullable String styleName() {
+        return names.styleName();
+    }
+
+    /// Returns the Windows Unicode or Macintosh full name.
+    ///
+    /// @return the full name, or `null` when `name` has no `nameID 4` record
+    public @Nullable String fullName() {
+        return names.fullName();
+    }
+
+    /// Returns the Windows Unicode or Macintosh version string.
+    ///
+    /// @return the version, or `null` when `name` has no `nameID 5` record
+    public @Nullable String versionString() {
+        return names.versionString();
+    }
+
+    /// Returns the Windows Unicode or Macintosh PostScript name.
+    ///
+    /// @return the PostScript name, or `null` when `name` has no `nameID 6` record
+    public @Nullable String postScriptName() {
+        return names.postScriptName();
+    }
+
+    /// Returns the Windows Unicode or Macintosh trademark string.
+    ///
+    /// @return the trademark, or `null` when `name` has no `nameID 7` record
+    public @Nullable String trademark() {
+        return names.trademark();
+    }
+
+    /// Returns the Windows Unicode or Macintosh manufacturer string.
+    ///
+    /// @return the manufacturer, or `null` when `name` has no `nameID 8` record
+    public @Nullable String manufacturer() {
+        return names.manufacturer();
+    }
+
+    /// Returns the Windows Unicode or Macintosh designer string.
+    ///
+    /// @return the designer, or `null` when `name` has no `nameID 9` record
+    public @Nullable String designer() {
+        return names.designer();
+    }
+
+    /// Returns the Windows Unicode or Macintosh description string.
+    ///
+    /// @return the description, or `null` when `name` has no `nameID 10` record
+    public @Nullable String description() {
+        return names.description();
+    }
+
+    /// Returns the Windows Unicode or Macintosh typographic family name.
+    ///
+    /// @return the typographic family, or `null` when `name` has no `nameID 16` record
+    public @Nullable String typographicFamily() {
+        return names.typographicFamily();
+    }
+
+    /// Returns the Windows Unicode or Macintosh typographic subfamily name.
+    ///
+    /// @return the typographic subfamily, or `null` when `name` has no `nameID 17` record
+    public @Nullable String typographicSubfamily() {
+        return names.typographicSubfamily();
+    }
+
+    /// Returns the Windows Unicode or Macintosh vendor URL.
+    ///
+    /// @return the vendor URL, or `null` when `name` has no `nameID 11` record
+    public @Nullable String vendorUrl() {
+        return names.vendorUrl();
+    }
+
+    /// Returns the Windows Unicode or Macintosh license string.
+    ///
+    /// @return the license, or `null` when `name` has no `nameID 13` record
+    public @Nullable String license() {
+        return names.license();
+    }
+
+    /// Returns the Windows Unicode or Macintosh designer URL.
+    ///
+    /// @return the designer URL, or `null` when `name` has no `nameID 12` record
+    public @Nullable String designerUrl() {
+        return names.designerUrl();
+    }
+
+    /// Returns the Windows Unicode or Macintosh license URL.
+    ///
+    /// @return the license URL, or `null` when `name` has no `nameID 14` record
+    public @Nullable String licenseUrl() {
+        return names.licenseUrl();
+    }
+
+    /// Returns the Windows Unicode or Macintosh WWS family name.
+    ///
+    /// @return the WWS family, or `null` when `name` has no `nameID 21` record
+    public @Nullable String wwsFamily() {
+        return names.wwsFamily();
+    }
+
+    /// Returns the Windows Unicode or Macintosh WWS subfamily name.
+    ///
+    /// @return the WWS subfamily, or `null` when `name` has no `nameID 22` record
+    public @Nullable String wwsSubfamily() {
+        return names.wwsSubfamily();
+    }
+
+    /// Returns the Windows Unicode or Macintosh sample text.
+    ///
+    /// @return the sample text, or `null` when `name` has no `nameID 19` record
+    public @Nullable String sampleText() {
+        return names.sampleText();
+    }
+
+    /// Returns the Windows Unicode or Macintosh compatible full name.
+    ///
+    /// @return the compatible full name, or `null` when `name` has no `nameID 18` record
+    public @Nullable String compatibleFull() {
+        return names.compatibleFull();
+    }
+
+    /// Returns the Windows Unicode or Macintosh PostScript CID findfont name.
+    ///
+    /// @return the CID name, or `null` when `name` has no `nameID 20` record
+    public @Nullable String postScriptCid() {
+        return names.postScriptCid();
+    }
+
+    /// Returns the Windows Unicode or Macintosh Variations PostScript name prefix.
+    ///
+    /// @return the prefix, or `null` when `name` has no `nameID 25` record
+    public @Nullable String variationsPostScriptPrefix() {
+        return names.variationsPostScriptPrefix();
+    }
+
+    /// Returns `post.italicAngle` in degrees, or `0` when the table is absent.
+    ///
+    /// @return the italic angle
+    public float italicAngle() {
+        return post.italicAngle();
+    }
+
+    /// Returns `post.underlinePosition` in font units, or `0` when the table is absent.
+    ///
+    /// @return the underline position
+    public int underlinePosition() {
+        return post.underlinePosition();
+    }
+
+    /// Returns `post.underlineThickness` in font units, or `0` when the table is absent.
+    ///
+    /// @return the underline thickness
+    public int underlineThickness() {
+        return post.underlineThickness();
+    }
+
+    /// Returns whether `post.isFixedPitch` is set.
+    ///
+    /// @return whether the face is monospaced
+    public boolean fixedPitch() {
+        return post.fixedPitch();
     }
 
     /// Returns a big-endian glyf cursor, empty for a space or `.notdef` with no outline.

@@ -4,9 +4,10 @@ import org.jetbrains.annotations.NotNullByDefault;
 
 /// Chromatically adapts CIE XYZ between illuminants.
 ///
-/// Bradford is the M3 D50/D65 baseline already used by [`IccProfile`]. CAT02 is the additional
-/// first-stable method required by `COLOR-REF-001` beyond that baseline. Both methods scale
-/// cone responses and invert the same published matrices.
+/// Bradford is the M3 D50/D65 baseline already used by [`IccProfile`]. CAT02, CAT16, and
+/// Hunt-Pointer-Estevez von Kries are the additional first-stable methods required by
+/// `COLOR-REF-001` beyond that baseline. Each method scales cone responses and inverts its
+/// published matrix.
 @NotNullByDefault
 public final class ChromaticAdaptation {
     /// CIE XYZ of illuminant D65 with `Y = 1`.
@@ -91,6 +92,156 @@ public final class ChromaticAdaptation {
                 -0.0085287f,
                 0.0400428f,
                 0.9684867f
+        );
+    }
+
+    /// Adapts `x,y,z` from one white point to another with CIECAM16 CAT16.
+    ///
+    /// @param x the source X
+    /// @param y the source Y
+    /// @param z the source Z
+    /// @param sourceX the source white X
+    /// @param sourceY the source white Y
+    /// @param sourceZ the source white Z
+    /// @param destinationX the destination white X
+    /// @param destinationY the destination white Y
+    /// @param destinationZ the destination white Z
+    /// @return `{X, Y, Z}` in the destination white
+    public static float[] cat16(
+            float x,
+            float y,
+            float z,
+            float sourceX,
+            float sourceY,
+            float sourceZ,
+            float destinationX,
+            float destinationY,
+            float destinationZ
+    ) {
+        float[] inverse = invert3(
+                0.401288f, 0.650173f, -0.051461f,
+                -0.250268f, 1.204414f, 0.045854f,
+                -0.002079f, 0.048952f, 0.953127f
+        );
+        return adapt(
+                x,
+                y,
+                z,
+                sourceX,
+                sourceY,
+                sourceZ,
+                destinationX,
+                destinationY,
+                destinationZ,
+                0.401288f,
+                0.650173f,
+                -0.051461f,
+                -0.250268f,
+                1.204414f,
+                0.045854f,
+                -0.002079f,
+                0.048952f,
+                0.953127f,
+                inverse[0],
+                inverse[1],
+                inverse[2],
+                inverse[3],
+                inverse[4],
+                inverse[5],
+                inverse[6],
+                inverse[7],
+                inverse[8]
+        );
+    }
+
+    /// Inverts a row-major 3×3 matrix.
+    private static float[] invert3(
+            float m00,
+            float m01,
+            float m02,
+            float m10,
+            float m11,
+            float m12,
+            float m20,
+            float m21,
+            float m22
+    ) {
+        float det = m00 * (m11 * m22 - m12 * m21)
+                - m01 * (m10 * m22 - m12 * m20)
+                + m02 * (m10 * m21 - m11 * m20);
+        if (det == 0.0f || !Float.isFinite(det)) {
+            throw new IllegalArgumentException("CAT matrix is not invertible");
+        }
+        float scale = 1.0f / det;
+        return new float[] {
+                scale * (m11 * m22 - m12 * m21),
+                scale * (m02 * m21 - m01 * m22),
+                scale * (m01 * m12 - m02 * m11),
+                scale * (m12 * m20 - m10 * m22),
+                scale * (m00 * m22 - m02 * m20),
+                scale * (m02 * m10 - m00 * m12),
+                scale * (m10 * m21 - m11 * m20),
+                scale * (m01 * m20 - m00 * m21),
+                scale * (m00 * m11 - m01 * m10)
+        };
+    }
+
+    /// Adapts `x,y,z` from one white point to another with Hunt-Pointer-Estevez von Kries.
+    ///
+    /// @param x the source X
+    /// @param y the source Y
+    /// @param z the source Z
+    /// @param sourceX the source white X
+    /// @param sourceY the source white Y
+    /// @param sourceZ the source white Z
+    /// @param destinationX the destination white X
+    /// @param destinationY the destination white Y
+    /// @param destinationZ the destination white Z
+    /// @return `{X, Y, Z}` in the destination white
+    public static float[] vonKries(
+            float x,
+            float y,
+            float z,
+            float sourceX,
+            float sourceY,
+            float sourceZ,
+            float destinationX,
+            float destinationY,
+            float destinationZ
+    ) {
+        float[] inverse = invert3(
+                0.40024f, 0.70760f, -0.08081f,
+                -0.22630f, 1.16532f, 0.04570f,
+                0.00000f, 0.00000f, 0.91822f
+        );
+        return adapt(
+                x,
+                y,
+                z,
+                sourceX,
+                sourceY,
+                sourceZ,
+                destinationX,
+                destinationY,
+                destinationZ,
+                0.40024f,
+                0.70760f,
+                -0.08081f,
+                -0.22630f,
+                1.16532f,
+                0.04570f,
+                0.00000f,
+                0.00000f,
+                0.91822f,
+                inverse[0],
+                inverse[1],
+                inverse[2],
+                inverse[3],
+                inverse[4],
+                inverse[5],
+                inverse[6],
+                inverse[7],
+                inverse[8]
         );
     }
 

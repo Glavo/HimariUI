@@ -30,6 +30,9 @@ public final class Progress {
     /// Current value.
     private float value;
 
+    /// Whether the indicator is disabled.
+    private boolean disabled;
+
     /// Mounted leaf that receives the published range value.
     private @Nullable LayoutNode node;
 
@@ -57,6 +60,23 @@ public final class Progress {
     /// @return the value
     public float value() {
         return value;
+    }
+
+    /// Returns whether the indicator is disabled.
+    ///
+    /// @return whether the indicator is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the mounted leaf when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (node != null) {
+            node.setDisabled(disabled);
+        }
     }
 
     /// Replaces the current value.
@@ -91,6 +111,7 @@ public final class Progress {
                 null
         );
         created.setRangeValue(value);
+        created.setDisabled(disabled);
         this.node = created;
         return created;
     }

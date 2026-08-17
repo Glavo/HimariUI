@@ -38,6 +38,14 @@ final class HangulSyllableTest {
         ));
         assertTrue(HangulSyllable.isCompatibility(0x3131));
         assertEquals(0, HangulSyllable.asLead(0x3133));
+        assertEquals(0x1100, HangulSyllable.asLead(0xFFA1));
+        assertEquals(0x1161, HangulSyllable.asVowel(0xFFC2));
+        assertEquals(0x11A8, HangulSyllable.asTrail(0xFFA1));
+        assertEquals(0xAC00, HangulSyllable.compose(
+                HangulSyllable.asLead(0xFFA1),
+                HangulSyllable.asVowel(0xFFC2),
+                0
+        ));
     }
 
     /// Decomposes 가 and 각 back into modern L/V/T.

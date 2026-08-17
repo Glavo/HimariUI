@@ -1,5 +1,6 @@
 package org.glavo.himari.platform.windows;
 
+import org.glavo.himari.layout.LayoutNode;
 import org.glavo.himari.layout.input.KeyEvent;
 import org.glavo.himari.layout.input.PointerEvent;
 import org.glavo.himari.layout.semantics.SemanticsNode;
@@ -94,6 +95,18 @@ public final class WindowsWindow implements PlatformWindow {
         return nativeWindow.dpi();
     }
 
+    /// Delivers `WM_DPICHANGED` through the production WndProc.
+    ///
+    /// @param nextDpi the new DPI for both axes
+    /// @param left the suggested left
+    /// @param top the suggested top
+    /// @param right the suggested right
+    /// @param bottom the suggested bottom
+    /// @return the `WndProc` result
+    public long applyDpiChange(int nextDpi, int left, int top, int right, int bottom) {
+        return nativeWindow.applyDpiChange(nextDpi, left, top, right, bottom);
+    }
+
     /// Returns the IME session attached to this window.
     ///
     /// @return the session
@@ -124,6 +137,34 @@ public final class WindowsWindow implements PlatformWindow {
     /// @return the axes
     public WindowsNativeWindow.PenAxes queryPenInfo(int pointerId) {
         return nativeWindow.queryPenInfo(pointerId);
+    }
+
+    /// Returns the physical-pixels-per-logical-pixel scale implied by [#dpi()].
+    ///
+    /// @return the positive scale
+    public double scaleFactor() {
+        return nativeWindow.scaleFactor();
+    }
+
+    /// Posts a pen `WM_POINTER*` through the production WndProc with the supplied axes.
+    ///
+    /// When the host has no live stylus contact, [`WindowsNativeWindow#queryPenInfo(int)`] uses
+    /// `axes` so the delivered [`PointerEvent`] carries pressure, tilt, and rotation.
+    ///
+    /// @param type the pointer kind
+    /// @param x the client x
+    /// @param y the client y
+    /// @param pointerId the host pointer identity
+    /// @param axes the pen axes
+    public void postPen(
+            org.glavo.himari.layout.input.PointerEventType type,
+            int x,
+            int y,
+            int pointerId,
+            WindowsNativeWindow.PenAxes axes
+    ) {
+        nativeWindow.installPenAxes(pointerId, axes);
+        postPointer(type, x, y, org.glavo.himari.layout.input.PointerDeviceKind.PEN, pointerId);
     }
 
     /// Posts one wheel notch through the production WndProc.
@@ -175,6 +216,95 @@ public final class WindowsWindow implements PlatformWindow {
         return WindowsClipboard.readUnicode(platform.libraries(), nativeHandle());
     }
 
+    /// Writes ANSI `CF_TEXT` to the system clipboard.
+    ///
+    /// @param text the text
+    public void writeAnsiClipboard(String text) {
+        WindowsClipboard.writeAnsi(platform.libraries(), nativeHandle(), text);
+    }
+
+    /// Reads ANSI `CF_TEXT` from the system clipboard.
+    ///
+    /// @return the text, or `null` when the format is absent
+    public @Nullable String readAnsiClipboard() {
+        return WindowsClipboard.readAnsi(platform.libraries(), nativeHandle());
+    }
+
+    /// Writes `HTML Format` to the system clipboard.
+    ///
+    /// @param fragment the HTML fragment
+    public void writeHtmlClipboard(String fragment) {
+        WindowsClipboard.writeHtml(platform.libraries(), nativeHandle(), fragment);
+    }
+
+    /// Writes `CF_DIB` to the system clipboard.
+    ///
+    /// @param dib the BITMAPINFO plus pixel bytes
+    public void writeDibClipboard(byte[] dib) {
+        WindowsClipboard.writeDib(platform.libraries(), nativeHandle(), dib);
+    }
+
+    /// Reads `CF_DIB` from the system clipboard.
+    ///
+    /// @return the DIB bytes, or `null` when the format is absent
+    public byte @Nullable [] readDibClipboard() {
+        return WindowsClipboard.readDib(platform.libraries(), nativeHandle());
+    }
+
+    /// Writes `CF_HDROP` to the system clipboard.
+    ///
+    /// @param paths the absolute file paths
+    public void writeDropFilesClipboard(List<String> paths) {
+        WindowsClipboard.writeDropFiles(platform.libraries(), nativeHandle(), paths);
+    }
+
+    /// Reads `CF_HDROP` from the system clipboard.
+    ///
+    /// @return the paths, or `null` when the format is absent
+    public @Nullable @Unmodifiable List<String> readDropFilesClipboard() {
+        return WindowsClipboard.readDropFiles(platform.libraries(), nativeHandle());
+    }
+
+    /// Writes `Rich Text Format` to the system clipboard.
+    ///
+    /// @param rtf the RTF document
+    public void writeRtfClipboard(String rtf) {
+        WindowsClipboard.writeRtf(platform.libraries(), nativeHandle(), rtf);
+    }
+
+    /// Reads the `Rich Text Format` document from the system clipboard.
+    ///
+    /// @return the document, or `null` when the format is absent
+    public @Nullable String readRtfClipboard() {
+        return WindowsClipboard.readRtf(platform.libraries(), nativeHandle());
+    }
+
+    /// Returns the registered `Rich Text Format` clipboard identifier.
+    ///
+    /// @return the positive format id
+    public int rtfClipboardFormat() {
+        return WindowsClipboard.rtfFormat(platform.libraries());
+    }
+
+    /// Reads the `HTML Format` fragment from the system clipboard.
+    ///
+    /// @return the fragment, or `null` when the format is absent
+    public @Nullable String readHtmlClipboard() {
+        return WindowsClipboard.readHtml(platform.libraries(), nativeHandle());
+    }
+
+    /// Returns the registered `HTML Format` clipboard identifier.
+    ///
+    /// @return the positive format id
+    public int htmlClipboardFormat() {
+        return WindowsClipboard.htmlFormat(platform.libraries());
+    }
+
+    /// Empties the system clipboard.
+    public void clearClipboard() {
+        WindowsClipboard.clear(platform.libraries(), nativeHandle());
+    }
+
     /// Registers an OLE drop target on this HWND.
     ///
     /// @return the registered target
@@ -188,6 +318,14 @@ public final class WindowsWindow implements PlatformWindow {
     /// @return the data object
     public WindowsDataObject createUnicodeDataObject(String text) {
         return WindowsDataObject.unicode(platform.libraries(), text);
+    }
+
+    /// Creates a `CF_HDROP` `IDataObject` owned by this session.
+    ///
+    /// @param paths the absolute file paths
+    /// @return the data object
+    public WindowsDataObject createDropFilesDataObject(List<String> paths) {
+        return WindowsDataObject.files(platform.libraries(), paths);
     }
 
     /// Pushes the IME candidate rectangle through IMM32.
@@ -216,7 +354,15 @@ public final class WindowsWindow implements PlatformWindow {
     /// @param node the projected node
     /// @return the provider
     public WindowsAutomationProvider automationProvider(SemanticsNode node) {
-        return WindowsAutomationProvider.of(platform.libraries(), node);
+        return WindowsAutomationProvider.of(platform.libraries(), node, nativeHandle());
+    }
+
+    /// Creates an `IRawElementProviderSimple` whose text ranges follow `live`.
+    ///
+    /// @param live the live layout node
+    /// @return the provider
+    public WindowsAutomationProvider automationProvider(LayoutNode live) {
+        return WindowsAutomationProvider.of(platform.libraries(), live, nativeHandle());
     }
 
     /// Returns the module handle used to create this HWND.
@@ -309,8 +455,28 @@ public final class WindowsWindow implements PlatformWindow {
             int y,
             org.glavo.himari.layout.input.PointerDeviceKind device
     ) {
+        postPointer(type, x, y, device, 0);
+    }
+
+    /// Posts a pointer sequence with an explicit host pointer identity.
+    ///
+    /// Touch and pen `WM_POINTER*` place `pointerId` in the low word of `wParam`.
+    ///
+    /// @param type the pointer kind
+    /// @param x the client x
+    /// @param y the client y
+    /// @param device the physical pointer
+    /// @param pointerId the host pointer identity
+    public void postPointer(
+            org.glavo.himari.layout.input.PointerEventType type,
+            int x,
+            int y,
+            org.glavo.himari.layout.input.PointerDeviceKind device,
+            int pointerId
+    ) {
         Objects.requireNonNull(device, "device");
         long packed = WindowsNativeWindow.packPointer(x, y);
+        int identity = Math.max(0, pointerId);
         switch (device) {
             case MOUSE -> {
                 int message = switch (type) {
@@ -318,14 +484,16 @@ public final class WindowsWindow implements PlatformWindow {
                     case DOWN -> 0x0201;
                     case UP -> 0x0202;
                     case WHEEL -> 0x020A;
+                    case WHEEL_HORIZONTAL -> 0x020E;
                     case SECONDARY_DOWN -> 0x0204;
                     case SECONDARY_UP -> 0x0205;
                     case MIDDLE_DOWN -> 0x0207;
                     case MIDDLE_UP -> 0x0208;
                 };
                 long wParam = type == org.glavo.himari.layout.input.PointerEventType.WHEEL
+                        || type == org.glavo.himari.layout.input.PointerEventType.WHEEL_HORIZONTAL
                         ? ((long) WindowsNativeWindow.WHEEL_DELTA) << 16
-                        : 0L;
+                        : mouseWParam(type);
                 nativeWindow.postMessage(message, wParam, packed);
             }
             case TOUCH, PEN -> {
@@ -334,14 +502,45 @@ public final class WindowsWindow implements PlatformWindow {
                     case DOWN -> 0x0246;
                     case UP -> 0x0247;
                     case WHEEL -> 0x0248;
+                    case WHEEL_HORIZONTAL -> 0x0249;
                     case SECONDARY_DOWN, SECONDARY_UP, MIDDLE_DOWN, MIDDLE_UP -> 0x0246;
                 };
                 long wParam = type == org.glavo.himari.layout.input.PointerEventType.WHEEL
+                        || type == org.glavo.himari.layout.input.PointerEventType.WHEEL_HORIZONTAL
                         ? ((long) WindowsNativeWindow.WHEEL_DELTA) << 16
-                        : 0L;
+                        : pointerWParam(identity, type);
                 nativeWindow.sendMessage(message, wParam, packed);
             }
         }
+    }
+
+    /// Packs `MK_*` bits for a posted `WM_MOUSE*` message.
+    ///
+    /// @param type the pointer kind
+    /// @return the `wParam`
+    private static long mouseWParam(org.glavo.himari.layout.input.PointerEventType type) {
+        return switch (type) {
+            case DOWN, MOVE -> 0x0001L;
+            case SECONDARY_DOWN -> 0x0002L;
+            case MIDDLE_DOWN -> 0x0010L;
+            case UP, SECONDARY_UP, MIDDLE_UP, WHEEL, WHEEL_HORIZONTAL -> 0L;
+        };
+    }
+
+    /// Packs pointer identity and `POINTER_MESSAGE_FLAG_*` for a posted `WM_POINTER*`.
+    ///
+    /// @param pointerId the host pointer identity
+    /// @param type the pointer kind
+    /// @return the `wParam`
+    private static long pointerWParam(int pointerId, org.glavo.himari.layout.input.PointerEventType type) {
+        long wParam = Integer.toUnsignedLong(pointerId);
+        int flags = switch (type) {
+            case DOWN -> 0x0010;
+            case SECONDARY_DOWN -> 0x0020;
+            case MIDDLE_DOWN -> 0x0040;
+            case MOVE, UP, WHEEL, WHEEL_HORIZONTAL, SECONDARY_UP, MIDDLE_UP -> 0;
+        };
+        return wParam | ((long) flags << 16);
     }
 
     /// Posts a virtual-key event through the production WndProc.
@@ -349,7 +548,56 @@ public final class WindowsWindow implements PlatformWindow {
     /// @param down whether this is `WM_KEYDOWN`
     /// @param virtualKey the virtual-key code
     public void postVirtualKey(boolean down, int virtualKey) {
-        nativeWindow.postMessage(down ? 0x0100 : 0x0101, Integer.toUnsignedLong(virtualKey), 0L);
+        postVirtualKey(down, virtualKey, 0, false);
+    }
+
+    /// Posts a virtual-key event with a physical scan code and auto-repeat bit.
+    ///
+    /// @param down whether this is `WM_KEYDOWN`
+    /// @param virtualKey the virtual-key code
+    /// @param scanCode the OEM scan code placed in bits 16–23 of `lParam`
+    /// @param repeat whether bit 30 (`KF_REPEAT` previous-state) is set
+    public void postVirtualKey(boolean down, int virtualKey, int scanCode, boolean repeat) {
+        long lParam = 1L;
+        lParam |= Integer.toUnsignedLong(scanCode & 0xFF) << 16;
+        if (repeat) {
+            lParam |= 1L << 30;
+        }
+        nativeWindow.postMessage(down ? 0x0100 : 0x0101, Integer.toUnsignedLong(virtualKey), lParam);
+    }
+
+    /// Posts a virtual-key event with scan code, auto-repeat, and `KF_EXTENDED`.
+    ///
+    /// @param down whether this is `WM_KEYDOWN`
+    /// @param virtualKey the virtual-key code
+    /// @param scanCode the OEM scan code placed in bits 16–23 of `lParam`
+    /// @param repeat whether bit 30 is set
+    /// @param extended whether bit 24 (`KF_EXTENDED`) is set
+    public void postVirtualKey(boolean down, int virtualKey, int scanCode, boolean repeat, boolean extended) {
+        long lParam = 1L;
+        lParam |= Integer.toUnsignedLong(scanCode & 0xFF) << 16;
+        if (extended) {
+            lParam |= 1L << 24;
+        }
+        if (repeat) {
+            lParam |= 1L << 30;
+        }
+        nativeWindow.postMessage(down ? 0x0100 : 0x0101, Integer.toUnsignedLong(virtualKey), lParam);
+    }
+
+    /// Posts a `WM_XBUTTON*` through the production WndProc.
+    ///
+    /// @param down whether this is `WM_XBUTTONDOWN`
+    /// @param x the client x
+    /// @param y the client y
+    /// @param button `1` for `XBUTTON1`, `2` for `XBUTTON2`
+    public void postXButton(boolean down, int x, int y, int button) {
+        if (button != 1 && button != 2) {
+            throw new IllegalArgumentException("X button must be 1 or 2");
+        }
+        long packed = WindowsNativeWindow.packPointer(x, y);
+        long wParam = Integer.toUnsignedLong(button) << 16;
+        nativeWindow.postMessage(down ? 0x020B : 0x020C, wParam, packed);
     }
 
     /// Posts a `WM_CHAR` through the production WndProc.

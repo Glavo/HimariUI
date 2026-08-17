@@ -8,6 +8,7 @@ import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
@@ -26,6 +27,12 @@ public final class Radio {
 
     /// Selected option index.
     private int selected;
+
+    /// Whether the group ignores selection.
+    private boolean disabled;
+
+    /// Mounted option leaves that receive the published disabled state.
+    private @Nullable List<LayoutNode> nodes;
 
     /// Creates a radio group with the first option selected.
     ///
@@ -64,7 +71,34 @@ public final class Radio {
         if (index < 0 || index >= options.size()) {
             throw new IllegalArgumentException("Radio index is out of range");
         }
+        if (disabled) {
+            return;
+        }
         selected = index;
+        if (nodes != null) {
+            for (int option = 0; option < nodes.size(); option++) {
+                nodes.get(option).setSelected(option == selected);
+            }
+        }
+    }
+
+    /// Returns whether the group is disabled.
+    ///
+    /// @return whether the group is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to mounted option leaves when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (nodes != null) {
+            for (LayoutNode option : nodes) {
+                option.setDisabled(disabled);
+            }
+        }
     }
 
     /// Builds a column of exclusive radio options.
@@ -89,8 +123,10 @@ public final class Radio {
                     () -> select(target)
             );
             option.setSelected(index == selected);
+            option.setDisabled(disabled);
             nodes.add(option);
         }
+        this.nodes = List.copyOf(nodes);
         return factory.column(
                 name,
                 Alignment.START,

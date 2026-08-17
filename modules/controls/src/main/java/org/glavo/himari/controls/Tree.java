@@ -8,6 +8,7 @@ import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
@@ -32,6 +33,12 @@ public final class Tree {
 
     /// Selected source index, or `-1`.
     private int selected = -1;
+
+    /// Whether the outline ignores toggle and selection.
+    private boolean disabled;
+
+    /// Mounted row leaves that receive the published disabled state.
+    private @Nullable List<LayoutNode> nodes;
 
     /// Creates a tree.
     ///
@@ -83,6 +90,9 @@ public final class Tree {
         if (!item.expandable()) {
             throw new IllegalArgumentException("Tree item is not expandable");
         }
+        if (disabled) {
+            return;
+        }
         expanded[index] = !expanded[index];
     }
 
@@ -93,7 +103,29 @@ public final class Tree {
         if (!isVisible(index)) {
             throw new IllegalArgumentException("Tree item is not visible");
         }
+        if (disabled) {
+            return;
+        }
         selected = index;
+    }
+
+    /// Returns whether the outline is disabled.
+    ///
+    /// @return whether the outline is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to mounted row leaves when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (nodes != null) {
+            for (LayoutNode row : nodes) {
+                row.setDisabled(disabled);
+            }
+        }
     }
 
     /// Returns visible source indices in document order.
@@ -136,8 +168,10 @@ public final class Tree {
                     item.expandable() ? ignored -> toggle(target) : null
             );
             row.setSelected(index == selected);
+            row.setDisabled(disabled);
             rows.add(row);
         }
+        this.nodes = List.copyOf(rows);
         return factory.column(
                 name,
                 Alignment.START,

@@ -5,8 +5,10 @@ import org.jetbrains.annotations.NotNullByDefault;
 /// Composes first-stable Hebrew letter-plus-mark sequences onto Presentation Forms-A.
 ///
 /// Pair and shin triple forms that have a dedicated presentation code point are composed,
-/// including yod plus hiriq (`U+FB1D`), alef plus patah or qamats (`U+FB2E` / `U+FB2F`),
-/// bet/kaf/pe plus rafe (`U+FB4C` / `U+FB4D` / `U+FB4E`), and alef plus lamed (`U+FB4F`).
+/// including yod plus hiriq (`U+FB1D`), alef plus patah or qamats/qamats-qatan
+/// (`U+FB2E` / `U+FB2F`), vav plus holam or holam haser (`U+FB4B`), bet/kaf/pe plus rafe
+/// (`U+FB4C` / `U+FB4D` / `U+FB4E`), final nun or tsadi plus dagesh (`U+FB3F` / `U+FB45`),
+/// and alef plus lamed (`U+FB4F`).
 /// The shaper applies a composition only when the font maps that form.
 @NotNullByDefault
 public final class HebrewPresentation {
@@ -26,13 +28,13 @@ public final class HebrewPresentation {
         if (letter == 0x05D0 && mark == 0x05B7) {
             return 0xFB2E;
         }
-        if (letter == 0x05D0 && mark == 0x05B8) {
+        if (letter == 0x05D0 && (mark == 0x05B8 || mark == 0x05C7)) {
             return 0xFB2F;
         }
         if (letter == 0x05D0 && mark == 0x05DC) {
             return 0xFB4F;
         }
-        if (letter == 0x05D5 && mark == 0x05B9) {
+        if (letter == 0x05D5 && (mark == 0x05B9 || mark == 0x05BA)) {
             return 0xFB4B;
         }
         if (mark == 0x05BF) {
@@ -66,10 +68,12 @@ public final class HebrewPresentation {
             case 0x05DB -> 0xFB3B;
             case 0x05DC -> 0xFB3C;
             case 0x05DE -> 0xFB3E;
+            case 0x05DF -> 0xFB3F;
             case 0x05E0 -> 0xFB40;
             case 0x05E1 -> 0xFB41;
             case 0x05E3 -> 0xFB43;
             case 0x05E4 -> 0xFB44;
+            case 0x05E5 -> 0xFB45;
             case 0x05E6 -> 0xFB46;
             case 0x05E7 -> 0xFB47;
             case 0x05E8 -> 0xFB48;
@@ -162,5 +166,30 @@ public final class HebrewPresentation {
             return 0x05F2;
         }
         return 0;
+    }
+
+    /// Returns the wide Presentation Forms-A letter, or `0` when none exists.
+    ///
+    /// @param letter the Hebrew letter
+    /// @return `U+FB21`–`U+FB28`, or `0`
+    public static int wideForm(int letter) {
+        return switch (letter) {
+            case 0x05D0 -> 0xFB21;
+            case 0x05D3 -> 0xFB22;
+            case 0x05D4 -> 0xFB23;
+            case 0x05DB -> 0xFB24;
+            case 0x05DC -> 0xFB25;
+            case 0x05DD -> 0xFB26;
+            case 0x05E8 -> 0xFB27;
+            case 0x05EA -> 0xFB28;
+            default -> 0;
+        };
+    }
+
+    /// Returns the alternative ayin presentation form.
+    ///
+    /// @return `U+FB20`
+    public static int alternativeAyin() {
+        return 0xFB20;
     }
 }

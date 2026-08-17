@@ -13,13 +13,15 @@ import java.util.Objects;
 /// @param startCluster the first source cluster on the line
 /// @param endClusterExclusive the first cluster after the line
 /// @param bidiLevels resolved embedding levels in visual order, empty when the line is all LTR
+/// @param indent leftover-width indent from [`LineAlignment#CENTER`] or [`LineAlignment#END`]
 @NotNullByDefault
 public record LaidLine(
         @Unmodifiable List<ShapedGlyph> glyphs,
         int width,
         int startCluster,
         int endClusterExclusive,
-        int @Unmodifiable [] bidiLevels
+        int @Unmodifiable [] bidiLevels,
+        int indent
 ) {
     /// Shared empty level array for LTR lines.
     private static final int[] EMPTY_LEVELS = new int[0];
@@ -28,7 +30,7 @@ public record LaidLine(
     public LaidLine {
         Objects.requireNonNull(glyphs, "glyphs");
         Objects.requireNonNull(bidiLevels, "bidiLevels");
-        if (width < 0 || startCluster < 0 || endClusterExclusive < startCluster) {
+        if (width < 0 || startCluster < 0 || endClusterExclusive < startCluster || indent < 0) {
             throw new IllegalArgumentException("Laid line extents must be nonnegative and ordered");
         }
         if (bidiLevels.length != 0 && bidiLevels.length != glyphs.size()) {
@@ -50,7 +52,32 @@ public record LaidLine(
             int startCluster,
             int endClusterExclusive
     ) {
-        this(glyphs, width, startCluster, endClusterExclusive, EMPTY_LEVELS);
+        this(glyphs, width, startCluster, endClusterExclusive, EMPTY_LEVELS, 0);
+    }
+
+    /// Creates a line with resolved bidi levels and no indent.
+    ///
+    /// @param glyphs visual glyphs
+    /// @param width the advance sum
+    /// @param startCluster the first cluster
+    /// @param endClusterExclusive the first cluster after the line
+    /// @param bidiLevels resolved embedding levels
+    public LaidLine(
+            @Unmodifiable List<ShapedGlyph> glyphs,
+            int width,
+            int startCluster,
+            int endClusterExclusive,
+            int @Unmodifiable [] bidiLevels
+    ) {
+        this(glyphs, width, startCluster, endClusterExclusive, bidiLevels, 0);
+    }
+
+    /// Returns this line with `indent` applied.
+    ///
+    /// @param indent the leftover-width indent
+    /// @return the indented line
+    public LaidLine withIndent(int indent) {
+        return new LaidLine(glyphs, width, startCluster, endClusterExclusive, bidiLevels, indent);
     }
 
     /// Returns the X origin of the caret before `cluster`, in font units from the line start.
@@ -64,29 +91,29 @@ public record LaidLine(
     /// @return the nonnegative caret X
     public int caretX(int cluster) {
         if (glyphs.isEmpty()) {
-            return 0;
+            return indent;
         }
         if (!hasRtl()) {
             if (cluster <= startCluster) {
-                return 0;
+                return indent;
             }
-            int x = 0;
+            int x = indent;
             for (ShapedGlyph glyph : glyphs) {
                 if (glyph.cluster() >= cluster) {
                     return x;
                 }
                 x += glyph.xAdvance();
             }
-            return width;
+            return indent + width;
         }
         int[] origins = visualOrigins();
         if (cluster <= startCluster) {
-            return edgeBefore(startCluster, origins);
+            return indent + edgeBefore(startCluster, origins);
         }
         if (cluster >= endClusterExclusive) {
-            return edgeAfter(endClusterExclusive - 1, origins);
+            return indent + edgeAfter(endClusterExclusive - 1, origins);
         }
-        return edgeBefore(cluster, origins);
+        return indent + edgeBefore(cluster, origins);
     }
 
     /// Returns the visual left edge of the selection covering `[fromCluster, toCluster)`.
@@ -112,7 +139,7 @@ public record LaidLine(
             }
             x += glyph.xAdvance();
         }
-        return left == Integer.MAX_VALUE ? caretX(fromCluster) : left;
+        return left == Integer.MAX_VALUE ? caretX(fromCluster) : indent + left;
     }
 
     /// Returns the visual width of the selection covering `[fromCluster, toCluster)`.

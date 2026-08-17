@@ -39,6 +39,7 @@ val productionModules = listOf(
     project(":modules:rhi-metal"),
     project(":modules:objc"),
     project(":modules:render-software"),
+    project(":modules:render-vector"),
     project(":modules:runtime"),
     project(":modules:state"),
     project(":modules:text"),

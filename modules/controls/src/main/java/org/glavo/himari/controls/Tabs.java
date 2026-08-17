@@ -8,6 +8,7 @@ import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
@@ -23,6 +24,12 @@ public final class Tabs {
 
     /// Selected tab index.
     private int selected;
+
+    /// Whether the strip ignores selection.
+    private boolean disabled;
+
+    /// Mounted tab leaves that receive the published disabled state.
+    private @Nullable List<LayoutNode> nodes;
 
     /// Creates a tab set.
     ///
@@ -61,7 +68,34 @@ public final class Tabs {
         if (index < 0 || index >= titles.size()) {
             throw new IllegalArgumentException("Tab index is out of range");
         }
+        if (disabled) {
+            return;
+        }
         selected = index;
+        if (nodes != null) {
+            for (int tab = 0; tab < nodes.size(); tab++) {
+                nodes.get(tab).setSelected(tab == selected);
+            }
+        }
+    }
+
+    /// Returns whether the strip is disabled.
+    ///
+    /// @return whether the strip is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to mounted tab leaves when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (nodes != null) {
+            for (LayoutNode tab : nodes) {
+                tab.setDisabled(disabled);
+            }
+        }
     }
 
     /// Builds the tab list and the selected panel.
@@ -86,8 +120,10 @@ public final class Tabs {
                     () -> select(target)
             );
             tab.setSelected(index == selected);
+            tab.setDisabled(disabled);
             tabs.add(tab);
         }
+        this.nodes = List.copyOf(tabs);
         LayoutNode strip = factory.row(
                 name + "-strip",
                 Alignment.START,

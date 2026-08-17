@@ -43,7 +43,7 @@ public final class ControlsConformance {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 1200.0f));
         tree.place();
         SemanticsNode button = first(tree, SemanticsRole.BUTTON);
         tree.dispatch(new PointerEvent(PointerEventType.DOWN, button.bounds().x() + 1.0f, button.bounds().y() + 1.0f));
@@ -151,6 +151,10 @@ public final class ControlsConformance {
                 || gallery.radio().selected() != 1
                 || first(tree, SemanticsRole.CHECKBOX).bounds().height() <= 0.0f
                 || gallery.iconButton().icon().isEmpty()
+                || first(tree, SemanticsRole.IMAGE).bounds().height() <= 0.0f
+                || !"logo".equals(gallery.image().source())
+                || first(tree, SemanticsRole.CANVAS).bounds().height() <= 0.0f
+                || gallery.spacer().size().width() != 8.0f
                 || gallery.tabs().selected() != 1
                 || gallery.split().fraction() != 0.6f
                 || gallery.tree().isExpanded(0)
@@ -221,6 +225,24 @@ public final class ControlsConformance {
         gallery.setTheme(gallery.theme().withReducedMotion(true));
         if (!gallery.theme().reducedMotion()) {
             throw new IllegalStateException("Reduced-motion theme was not applied");
+        }
+        org.glavo.himari.runtime.reload.ResourceReload resources =
+                new org.glavo.himari.runtime.reload.ResourceReload();
+        resources.publish(
+                org.glavo.himari.runtime.reload.ResourceKind.IMAGE,
+                "gallery",
+                java.lang.foreign.MemorySegment.ofArray("star".getBytes(StandardCharsets.UTF_8))
+        );
+        resources.publish(
+                org.glavo.himari.runtime.reload.ResourceKind.FONT,
+                "gallery",
+                java.lang.foreign.MemorySegment.ofArray("HimariSans".getBytes(StandardCharsets.UTF_8))
+        );
+        if (!gallery.applyImageReload(resources, "gallery")
+                || !"star".equals(gallery.iconButton().icon())
+                || !gallery.applyFontReload(resources, "gallery")
+                || !"HimariSans".equals(gallery.fontFamily())) {
+            throw new IllegalStateException("Image or font reload did not install the published payload");
         }
         TweenSpec requestedMotion = TweenSpec.linear(1_000_000_000L);
         AnimationTransaction snapped = gallery.resolveMotion(1L, requestedMotion, MotionImportance.NONESSENTIAL);
@@ -317,7 +339,7 @@ public final class ControlsConformance {
     /// @param gallery the gallery
     private static void rebuild(LayoutTree tree, ControlGallery gallery) {
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 1200.0f));
         tree.place();
     }
 }

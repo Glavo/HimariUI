@@ -30,6 +30,13 @@ final class TabsSplitTreeTest {
         assertTrue(tree.semantics().nodes().stream().anyMatch(node -> node.role() == SemanticsRole.TAB_LIST));
         assertTrue(tree.semantics().nodes().stream().anyMatch(node ->
                 node.role() == SemanticsRole.TAB_PANEL && node.label().equals("Two")));
+        tabs.setDisabled(true);
+        tabs.select(0);
+        assertEquals(1, tabs.selected());
+        assertTrue(tabs.disabled());
+        assertTrue(tree.semantics().nodes().stream().anyMatch(node ->
+                node.role() == SemanticsRole.TAB && node.disabled()));
+        tabs.setDisabled(false);
     }
 
     /// Stores a first-pane fraction used by the shipped split row.
@@ -44,6 +51,12 @@ final class TabsSplitTreeTest {
         tree.measure(Constraints.loose(400.0f, 400.0f));
         tree.place();
         assertEquals(SemanticsRole.SPLIT_PANE, tree.root().role());
+        split.setDisabled(true);
+        split.setFraction(0.25f);
+        assertEquals(0.75f, split.fraction());
+        assertTrue(split.disabled());
+        assertTrue(tree.root().disabled());
+        split.setDisabled(false);
     }
 
     /// Collapses an expandable root and hides the child.
@@ -66,5 +79,14 @@ final class TabsSplitTreeTest {
         tree.place();
         assertEquals(SemanticsRole.TREE, tree.root().role());
         assertTrue(tree.semantics().nodes().stream().anyMatch(node -> node.role() == SemanticsRole.TREE_ITEM));
+        outline.setDisabled(true);
+        outline.toggle(0);
+        outline.select(1);
+        assertTrue(outline.isExpanded(0));
+        assertEquals(1, outline.selected());
+        assertTrue(outline.disabled());
+        assertTrue(tree.semantics().nodes().stream().anyMatch(node ->
+                node.role() == SemanticsRole.TREE_ITEM && node.disabled()));
+        outline.setDisabled(false);
     }
 }

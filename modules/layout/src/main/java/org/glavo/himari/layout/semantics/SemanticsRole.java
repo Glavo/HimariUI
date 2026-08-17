@@ -11,6 +11,12 @@ public enum SemanticsRole {
     /// Static text.
     TEXT,
 
+    /// A non-activatable image.
+    IMAGE,
+
+    /// A drawing surface.
+    CANVAS,
+
     /// An activatable control.
     BUTTON,
 

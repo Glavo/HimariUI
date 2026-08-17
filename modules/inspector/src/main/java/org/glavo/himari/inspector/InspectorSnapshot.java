@@ -28,7 +28,45 @@ public record InspectorSnapshot(
     /// @param json the document produced by [`#toCanonicalJson()`]
     /// @return the snapshot
     public static InspectorSnapshot parse(String json) {
-        return new InspectorSnapshotParser(Objects.requireNonNull(json, "json")).parse();
+        Objects.requireNonNull(json, "json");
+        String lower = json.toLowerCase();
+        if (lower.contains("hwnd")
+                || lower.contains("memorysegment")
+                || lower.contains("nativehandle")
+                || lower.contains("systemfont")
+                || lower.contains("hdc")
+                || lower.contains("hmonitor")
+                || lower.contains("id3d12")
+                || lower.contains("vkdevice")
+                || lower.contains("hbitmap")
+                || lower.contains("hfont")
+                || lower.contains("hicon")
+                || lower.contains("himc")
+                || lower.contains("hcursor")
+                || lower.contains("hmenu")
+                || lower.contains("hbrush")
+                || lower.contains("hrgn")
+                || lower.contains("hpalette")
+                || lower.contains("hpen")
+                || lower.contains("haccel")
+                || lower.contains("hinstance")
+                || lower.contains("hhook")
+                || lower.contains("hkl")
+                || lower.contains("hglobal")
+                || lower.contains("hmodule")
+                || lower.contains("hthread")
+                || lower.contains("hprocess")
+                || lower.contains("hfile")
+                || lower.contains("hkey")
+                || lower.contains("hdrop")
+                || lower.contains("hdcmem")
+                || lower.contains("hdesk")
+                || lower.contains("htoken")
+                || lower.contains("hmutex")
+                || lower.contains("idxgi")) {
+            throw new IllegalArgumentException("Inspector snapshot rejects producer-process handles");
+        }
+        return new InspectorSnapshotParser(json).parse();
     }
 
     /// Encodes this snapshot as canonical JSON.

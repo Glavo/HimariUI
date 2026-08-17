@@ -36,6 +36,9 @@ public final class LazyTable {
     /// Extra rows materialized above and below the viewport.
     private final int overscan;
 
+    /// Per-column cell widths, defaulting to [`#CELL_WIDTH`].
+    private final float[] columnWidths;
+
     /// Row keys and estimates, in document order.
     private final ArrayList<RowSpec> rows = new ArrayList<>();
 
@@ -47,6 +50,12 @@ public final class LazyTable {
 
     /// Viewport height in logical pixels.
     private float viewportHeight;
+
+    /// Whether the table ignores scroll and mutation.
+    private boolean disabled;
+
+    /// Mounted table that receives the published disabled state.
+    private @Nullable LayoutNode node;
 
     /// Creates an empty table.
     ///
@@ -61,6 +70,8 @@ public final class LazyTable {
         }
         this.columnCount = columnCount;
         this.overscan = overscan;
+        this.columnWidths = new float[columnCount];
+        java.util.Arrays.fill(this.columnWidths, CELL_WIDTH);
         this.viewportHeight = DEFAULT_ROW_HEIGHT;
     }
 
@@ -69,6 +80,31 @@ public final class LazyTable {
     /// @return the count
     public int columnCount() {
         return columnCount;
+    }
+
+    /// Returns the width of `column`.
+    ///
+    /// @param column the column index
+    /// @return the width
+    public float columnWidth(int column) {
+        if (column < 0 || column >= columnCount) {
+            throw new IllegalArgumentException("Column index is out of range");
+        }
+        return columnWidths[column];
+    }
+
+    /// Sets the width of `column` used when materializing cells.
+    ///
+    /// @param column the column index
+    /// @param width the positive width
+    public void setColumnWidth(int column, float width) {
+        if (column < 0 || column >= columnCount) {
+            throw new IllegalArgumentException("Column index is out of range");
+        }
+        if (!(width > 0.0f) || !Float.isFinite(width)) {
+            throw new IllegalArgumentException("Column width must be finite and positive");
+        }
+        columnWidths[column] = width;
     }
 
     /// Returns the overscan in rows.
@@ -83,6 +119,23 @@ public final class LazyTable {
     /// @return the count
     public int rowCount() {
         return rows.size();
+    }
+
+    /// Returns whether the table is disabled.
+    ///
+    /// @return whether the table is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the mounted table when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (node != null) {
+            node.setDisabled(disabled);
+        }
     }
 
     /// Returns the row key at `index`.
@@ -116,6 +169,9 @@ public final class LazyTable {
     /// @param key the stable key
     /// @param estimatedHeight the positive estimated height
     public void insertRow(int index, String key, float estimatedHeight) {
+        if (disabled) {
+            return;
+        }
         Objects.requireNonNull(key, "key");
         if (index < 0 || index > rows.size()) {
             throw new IllegalArgumentException("Row index is out of range");
@@ -133,6 +189,9 @@ public final class LazyTable {
     ///
     /// @param index the row index
     public void removeRow(int index) {
+        if (disabled) {
+            return;
+        }
         if (index < 0 || index >= rows.size()) {
             throw new IllegalArgumentException("Row index is out of range");
         }
@@ -159,6 +218,77 @@ public final class LazyTable {
         @Nullable String anchor = firstMaterializedKey();
         measured.set(index, measuredHeight);
         restoreAnchor(anchor);
+    }
+
+    /// Scrolls so `index` is the first visible row, clamped to the valid range.
+    ///
+    /// Updates [`#viewportOffset()`] to the sum of row heights before `index`.
+    ///
+    /// @param index the requested first-visible row
+    public void scrollTo(int index) {
+        if (disabled) {
+            return;
+        }
+        if (rows.isEmpty()) {
+            viewportOffset = 0.0f;
+            return;
+        }
+        int maximum = Math.max(0, rows.size() - 1);
+        int clamped = Math.min(maximum, Math.max(0, index));
+        float offset = 0.0f;
+        for (int row = 0; row < clamped; row++) {
+            offset += heightAt(row);
+        }
+        viewportOffset = offset;
+    }
+
+    /// Pages the viewport by `pages` windows of the current viewport height.
+    ///
+    /// @param pages signed page count; negative pages backward
+    public void page(int pages) {
+        int first = firstVisible();
+        int visibleCount = 0;
+        float covered = 0.0f;
+        while (first + visibleCount < rows.size() && covered < viewportHeight) {
+            covered += heightAt(first + visibleCount);
+            visibleCount++;
+        }
+        if (visibleCount < 1) {
+            visibleCount = 1;
+        }
+        scrollTo(first + pages * visibleCount);
+    }
+
+    /// Returns the viewport origin in table-local logical pixels.
+    ///
+    /// @return the origin
+    public float viewportOffset() {
+        return viewportOffset;
+    }
+
+    /// Returns keys for every logical row, including unmounted rows.
+    ///
+    /// @return the keys in document order
+    public @Unmodifiable List<String> logicalLabels() {
+        ArrayList<String> labels = new ArrayList<>(rows.size());
+        for (int index = 0; index < rows.size(); index++) {
+            labels.add(rows.get(index).key());
+        }
+        return List.copyOf(labels);
+    }
+
+    /// Returns keys for rows outside the materialized window.
+    ///
+    /// @return the unmounted keys in document order
+    public @Unmodifiable List<String> unmountedLabels() {
+        Window window = window();
+        ArrayList<String> labels = new ArrayList<>();
+        for (int index = 0; index < rows.size(); index++) {
+            if (index < window.first() || index >= window.last()) {
+                labels.add(rows.get(index).key());
+            }
+        }
+        return List.copyOf(labels);
     }
 
     /// Replaces the viewport used for materialization.
@@ -235,7 +365,7 @@ public final class LazyTable {
             for (int column = 0; column < columnCount; column++) {
                 LayoutNode cell = factory.leaf(
                         name + "-cell-" + row.key() + "-" + column,
-                        new Size(CELL_WIDTH, heightAt(index)),
+                        new Size(columnWidths[column], heightAt(index)),
                         List.of(),
                         false,
                         SemanticsRole.TABLE_CELL,
@@ -264,6 +394,8 @@ public final class LazyTable {
                 rowNodes.toArray(LayoutNode[]::new)
         );
         table.setGrid(new SemanticsGrid(rows.size(), columnCount));
+        table.setDisabled(disabled);
+        this.node = table;
         return table;
     }
 

@@ -43,6 +43,20 @@ public final class Tooltip {
         popup.show();
     }
 
+    /// Returns whether the tooltip is disabled.
+    ///
+    /// @return whether the tooltip is disabled
+    public boolean disabled() {
+        return popup.disabled();
+    }
+
+    /// Sets the disabled state on the overlay.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        popup.setDisabled(disabled);
+    }
+
     /// Dismisses the tooltip.
     public void dismiss() {
         popup.dismiss();
@@ -74,7 +88,7 @@ public final class Tooltip {
         Objects.requireNonNull(factory, "factory");
         Objects.requireNonNull(name, "name");
         float height = popup.isOpen() ? 20.0f : 0.0f;
-        return factory.leaf(
+        LayoutNode created = factory.leaf(
                 name,
                 new Size(Math.max(48.0f, text.length() * 8.0f), height),
                 List.of(new LayoutModifier.Padding(popup.isOpen() ? 2.0f : 0.0f)),
@@ -84,5 +98,7 @@ public final class Tooltip {
                 Set.of(),
                 null
         );
+        created.setDisabled(popup.disabled());
+        return created;
     }
 }

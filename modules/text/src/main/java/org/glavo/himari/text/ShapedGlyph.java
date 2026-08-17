@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNullByDefault;
 /// @param xOffset the signed GPOS X offset in layout units
 /// @param yOffset the signed GPOS Y offset in layout units
 /// @param fontIndex the [`FontCollection`] index that supplied this glyph
+/// @param unsafeToBreak whether a line break before this glyph would split a ligature or composed cluster
 @NotNullByDefault
 public record ShapedGlyph(
         int codePoint,
@@ -19,7 +20,8 @@ public record ShapedGlyph(
         int xAdvance,
         int xOffset,
         int yOffset,
-        int fontIndex
+        int fontIndex,
+        boolean unsafeToBreak
 ) {
     /// Validates the glyph.
     public ShapedGlyph {
@@ -37,7 +39,7 @@ public record ShapedGlyph(
     /// @param cluster the cluster
     /// @param xAdvance the advance
     public ShapedGlyph(int codePoint, int glyphId, int cluster, int xAdvance) {
-        this(codePoint, glyphId, cluster, xAdvance, 0, 0, 0);
+        this(codePoint, glyphId, cluster, xAdvance, 0, 0, 0, false);
     }
 
     /// Creates a glyph on the primary font.
@@ -49,6 +51,27 @@ public record ShapedGlyph(
     /// @param xOffset the signed X offset
     /// @param yOffset the signed Y offset
     public ShapedGlyph(int codePoint, int glyphId, int cluster, int xAdvance, int xOffset, int yOffset) {
-        this(codePoint, glyphId, cluster, xAdvance, xOffset, yOffset, 0);
+        this(codePoint, glyphId, cluster, xAdvance, xOffset, yOffset, 0, false);
+    }
+
+    /// Creates a breakable glyph on a specific fallback font.
+    ///
+    /// @param codePoint the mapped code point
+    /// @param glyphId the glyph identity
+    /// @param cluster the cluster
+    /// @param xAdvance the advance
+    /// @param xOffset the signed X offset
+    /// @param yOffset the signed Y offset
+    /// @param fontIndex the font index
+    public ShapedGlyph(
+            int codePoint,
+            int glyphId,
+            int cluster,
+            int xAdvance,
+            int xOffset,
+            int yOffset,
+            int fontIndex
+    ) {
+        this(codePoint, glyphId, cluster, xAdvance, xOffset, yOffset, fontIndex, false);
     }
 }

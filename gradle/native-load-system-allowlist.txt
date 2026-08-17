@@ -31,7 +31,9 @@ net.dll
 QuartzCore
 nio.dll
 ole32.dll
+oleaut32.dll
 ucrtbase.dll
+UIAutomationCore.dll
 user32.dll
 vulkan-1.dll
 zip.dll

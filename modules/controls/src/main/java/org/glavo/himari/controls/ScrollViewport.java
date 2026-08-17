@@ -20,6 +20,9 @@ public final class ScrollViewport {
     /// The viewport node after [#create], or unused before then.
     private LayoutNode viewport;
 
+    /// Whether the viewport ignores scroll deltas.
+    private boolean disabled;
+
     /// Creates a viewport.
     ///
     /// @param step the positive scroll step
@@ -49,7 +52,25 @@ public final class ScrollViewport {
         Objects.requireNonNull(content, "content");
         viewport = factory.scroll(name, List.of(new LayoutModifier.ExactSize(200.0f, 80.0f)), content);
         viewport.setScrollOffset(offset);
+        viewport.setDisabled(disabled);
         return viewport;
+    }
+
+    /// Returns whether the viewport is disabled.
+    ///
+    /// @return whether the viewport is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the mounted viewport when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (viewport != null) {
+            viewport.setDisabled(disabled);
+        }
     }
 
     /// Advances the viewport by one step.
@@ -61,6 +82,9 @@ public final class ScrollViewport {
     ///
     /// @param delta the signed delta
     public void scrollBy(float delta) {
+        if (disabled) {
+            return;
+        }
         if (!Float.isFinite(delta)) {
             throw new IllegalArgumentException("Scroll delta must be finite");
         }
@@ -73,6 +97,9 @@ public final class ScrollViewport {
 
     /// Rewinds the viewport by one step, stopping at zero.
     public void scrollBackward() {
+        if (disabled) {
+            return;
+        }
         requireCreated();
         offset = Math.max(0.0f, viewport.scrollOffset() - step);
         viewport.setScrollOffset(offset);

@@ -76,6 +76,12 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// Middle button up.
     private static final int WM_MBUTTONUP = 0x0208;
 
+    /// Extra button down.
+    private static final int WM_XBUTTONDOWN = 0x020B;
+
+    /// Extra button up.
+    private static final int WM_XBUTTONUP = 0x020C;
+
     /// `VK_SHIFT`.
     private static final int VK_SHIFT = 0x10;
 
@@ -84,6 +90,12 @@ public final class WindowsNativeWindow implements AutoCloseable {
 
     /// `VK_MENU` (Alt).
     private static final int VK_MENU = 0x12;
+
+    /// `VK_LWIN`.
+    private static final int VK_LWIN = 0x5B;
+
+    /// `VK_RWIN`.
+    private static final int VK_RWIN = 0x5C;
 
     /// Vertical mouse wheel.
     private static final int WM_MOUSEWHEEL = 0x020A;
@@ -193,6 +205,15 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// Pointer events received through WndProc since the last drain.
     private final ArrayList<PointerEvent> pointerEvents = new ArrayList<>();
 
+    /// Synthetic pen axes used when `GetPointerPenInfo` has no live contact.
+    private @Nullable PenAxes syntheticPenAxes;
+
+    /// Pointer identity that [`#syntheticPenAxes`] applies to.
+    private int syntheticPenPointerId = -1;
+
+    /// Host delivery sequence assigned to the next pointer event.
+    private int pointerSequence;
+
     /// Key events received through WndProc since the last drain.
     private final ArrayList<KeyEvent> keyEvents = new ArrayList<>();
 
@@ -207,6 +228,9 @@ public final class WindowsNativeWindow implements AutoCloseable {
 
     /// Whether `VK_MENU` is latched from `WM_KEYDOWN`/`WM_KEYUP`.
     private boolean altDown;
+
+    /// Whether `VK_LWIN` or `VK_RWIN` is latched from `WM_KEYDOWN`/`WM_KEYUP`.
+    private boolean metaDown;
 
     /// Whether the class is registered.
     private boolean classRegistered;
@@ -425,6 +449,27 @@ public final class WindowsNativeWindow implements AutoCloseable {
         return wakeEvents;
     }
 
+    /// Delivers `WM_DPICHANGED` through the production WndProc with a suggested `RECT`.
+    ///
+    /// @param nextDpi the new DPI for both axes
+    /// @param left the suggested left
+    /// @param top the suggested top
+    /// @param right the suggested right
+    /// @param bottom the suggested bottom
+    /// @return the `WndProc` result
+    public long applyDpiChange(int nextDpi, int left, int top, int right, int bottom) {
+        if (nextDpi <= 0) {
+            throw new IllegalArgumentException("DPI must be positive");
+        }
+        MemorySegment rect = arena.allocate(Win32Layouts.RECT);
+        rect.set(ValueLayout.JAVA_INT, Win32Layouts.RECT_LEFT_OFFSET, left);
+        rect.set(ValueLayout.JAVA_INT, Win32Layouts.RECT_TOP_OFFSET, top);
+        rect.set(ValueLayout.JAVA_INT, Win32Layouts.RECT_RIGHT_OFFSET, right);
+        rect.set(ValueLayout.JAVA_INT, Win32Layouts.RECT_BOTTOM_OFFSET, bottom);
+        long packed = (nextDpi & 0xFFFFL) | ((long) nextDpi << 16);
+        return sendMessage(WM_DPICHANGED, packed, rect.address());
+    }
+
     /// Sends one message synchronously through the production WndProc.
     ///
     /// @param message the Win32 message identifier
@@ -507,21 +552,113 @@ public final class WindowsNativeWindow implements AutoCloseable {
         return bindings.getCapture().address() == window.address();
     }
 
+    /// `MK_LBUTTON`.
+    private static final int MK_LBUTTON = 0x0001;
+
+    /// `MK_RBUTTON`.
+    private static final int MK_RBUTTON = 0x0002;
+
+    /// `MK_MBUTTON`.
+    private static final int MK_MBUTTON = 0x0010;
+
+    /// `POINTER_MESSAGE_FLAG_FIRSTBUTTON`.
+    private static final int POINTER_MESSAGE_FLAG_FIRSTBUTTON = 0x0010;
+
+    /// `POINTER_MESSAGE_FLAG_SECONDBUTTON`.
+    private static final int POINTER_MESSAGE_FLAG_SECONDBUTTON = 0x0020;
+
+    /// `POINTER_MESSAGE_FLAG_THIRDBUTTON`.
+    private static final int POINTER_MESSAGE_FLAG_THIRDBUTTON = 0x0040;
+
     /// Builds one wheel event from `wParam`/`lParam`.
     ///
+    /// @param type `WHEEL` or `WHEEL_HORIZONTAL`
     /// @param wParam the message `wParam`
     /// @param lParam the message `lParam`
     /// @param device the physical pointer
     /// @return the event
-    private static PointerEvent wheelEvent(long wParam, long lParam, PointerDeviceKind device) {
+    private PointerEvent wheelEvent(
+            PointerEventType type,
+            long wParam,
+            long lParam,
+            PointerDeviceKind device
+    ) {
         short delta = (short) ((wParam >>> 16) & 0xFFFFL);
         return new PointerEvent(
-                PointerEventType.WHEEL,
+                type,
                 lowWord(lParam),
                 highWord(lParam),
                 device,
-                delta / (float) WHEEL_DELTA
+                delta / (float) WHEEL_DELTA,
+                0,
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f,
+                messageTime(),
+                mouseButtons(PointerEventType.WHEEL, wParam),
+                nextPointerSequence(),
+                false
         );
+    }
+
+    /// Returns `GetMessageTime` for the message currently dispatched to WndProc.
+    ///
+    /// @return milliseconds since boot, or `0` when the host reports none
+    private long messageTime() {
+        int time = bindings.getMessageTime();
+        if (time == 0) {
+            time = bindings.getTickCount();
+        }
+        return Integer.toUnsignedLong(time);
+    }
+
+    /// Assigns the next per-window pointer sequence identifier.
+    ///
+    /// @return the positive sequence
+    private int nextPointerSequence() {
+        pointerSequence++;
+        return pointerSequence;
+    }
+
+    /// Decodes `MK_*` mouse buttons plus the message kind.
+    ///
+    /// @param type the normalized type
+    /// @param wParam the message `wParam`
+    /// @return the button mask
+    static int mouseButtons(PointerEventType type, long wParam) {
+        int mk = (int) (wParam & 0xFFFFL);
+        int buttons = 0;
+        if ((mk & MK_LBUTTON) != 0 || type == PointerEventType.DOWN) {
+            buttons |= PointerEvent.BUTTON_PRIMARY;
+        }
+        if ((mk & MK_RBUTTON) != 0 || type == PointerEventType.SECONDARY_DOWN) {
+            buttons |= PointerEvent.BUTTON_SECONDARY;
+        }
+        if ((mk & MK_MBUTTON) != 0 || type == PointerEventType.MIDDLE_DOWN) {
+            buttons |= PointerEvent.BUTTON_MIDDLE;
+        }
+        return buttons;
+    }
+
+    /// Decodes `POINTER_MESSAGE_FLAG_*` from the high word of a `WM_POINTER*` `wParam`.
+    ///
+    /// @param type the normalized type
+    /// @param wParam the message `wParam`
+    /// @return the button mask
+    static int pointerButtons(PointerEventType type, long wParam) {
+        int flags = highWord(wParam);
+        int buttons = 0;
+        if ((flags & POINTER_MESSAGE_FLAG_FIRSTBUTTON) != 0 || type == PointerEventType.DOWN) {
+            buttons |= PointerEvent.BUTTON_PRIMARY;
+        }
+        if ((flags & POINTER_MESSAGE_FLAG_SECONDBUTTON) != 0 || type == PointerEventType.SECONDARY_DOWN) {
+            buttons |= PointerEvent.BUTTON_SECONDARY;
+        }
+        if ((flags & POINTER_MESSAGE_FLAG_THIRDBUTTON) != 0 || type == PointerEventType.MIDDLE_DOWN) {
+            buttons |= PointerEvent.BUTTON_MIDDLE;
+        }
+        return buttons;
     }
 
     /// Queries `GetPointerType` for `pointerId`.
@@ -541,6 +678,15 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// `PEN_MASK_PRESSURE`.
     public static final int PEN_MASK_PRESSURE = 0x00000001;
 
+    /// `PEN_FLAG_INVERTED`.
+    public static final int PEN_FLAG_INVERTED = 0x00000002;
+
+    /// `PEN_FLAG_ERASER`.
+    public static final int PEN_FLAG_ERASER = 0x00000004;
+
+    /// `PEN_MASK_ROTATION`.
+    public static final int PEN_MASK_ROTATION = 0x00000002;
+
     /// `PEN_MASK_TILT_X`.
     public static final int PEN_MASK_TILT_X = 0x00000004;
 
@@ -555,12 +701,52 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// @param pressure normalized pressure in `[0, 1]`
     /// @param tiltX tilt from the YZ plane in degrees
     /// @param tiltY tilt from the XZ plane in degrees
-    public record PenAxes(float pressure, float tiltX, float tiltY) {
+    /// @param rotation clockwise barrel rotation in degrees in `[0, 359]`
+    /// @param inverted whether `PEN_FLAG_INVERTED` is set
+    /// @param eraser whether `PEN_FLAG_ERASER` is set
+    public record PenAxes(
+            float pressure,
+            float tiltX,
+            float tiltY,
+            float rotation,
+            boolean inverted,
+            boolean eraser
+    ) {
+        /// Creates axes with no invert or eraser bit.
+        ///
+        /// @param pressure normalized pressure
+        /// @param tiltX tilt from the YZ plane
+        /// @param tiltY tilt from the XZ plane
+        /// @param rotation clockwise barrel rotation
+        public PenAxes(float pressure, float tiltX, float tiltY, float rotation) {
+            this(pressure, tiltX, tiltY, rotation, false, false);
+        }
+
+        /// Creates axes with invert and no eraser bit.
+        ///
+        /// @param pressure normalized pressure
+        /// @param tiltX tilt from the YZ plane
+        /// @param tiltY tilt from the XZ plane
+        /// @param rotation clockwise barrel rotation
+        /// @param inverted whether the stylus is inverted
+        public PenAxes(float pressure, float tiltX, float tiltY, float rotation, boolean inverted) {
+            this(pressure, tiltX, tiltY, rotation, inverted, false);
+        }
+    }
+
+    /// Installs pen axes used by the next [`#queryPenInfo(int)`] when the host has no contact.
+    ///
+    /// @param pointerId the pointer identity
+    /// @param axes the axes
+    public void installPenAxes(int pointerId, PenAxes axes) {
+        Objects.requireNonNull(axes, "axes");
+        this.syntheticPenPointerId = pointerId;
+        this.syntheticPenAxes = axes;
     }
 
     /// Queries generated `GetPointerPenInfo` for `pointerId`.
     ///
-    /// A failed query returns zeroed axes. That is the host path when no pen contact exists.
+    /// A failed query returns [#installPenAxes] axes for `pointerId`, or zeros when none exist.
     ///
     /// @param pointerId the pointer identity
     /// @return the axes
@@ -570,7 +756,10 @@ public final class WindowsNativeWindow implements AutoCloseable {
         info.fill((byte) 0);
         Win32FfmBindings.GetPointerPenInfoResult result = bindings.getPointerPenInfo(pointerId, info);
         if (result.value() == 0) {
-            return new PenAxes(0.0f, 0.0f, 0.0f);
+            if (syntheticPenAxes != null && pointerId == syntheticPenPointerId) {
+                return syntheticPenAxes;
+            }
+            return new PenAxes(0.0f, 0.0f, 0.0f, 0.0f);
         }
         return decodePenInfo(info);
     }
@@ -603,12 +792,24 @@ public final class WindowsNativeWindow implements AutoCloseable {
                     90.0f
             );
         }
-        return new PenAxes(pressure, tiltX, tiltY);
+        float rotation = 0.0f;
+        if ((mask & PEN_MASK_ROTATION) != 0) {
+            int raw = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_PEN_INFO_ROTATION_OFFSET);
+            rotation = Math.clamp(raw, 0.0f, 359.0f);
+        }
+        int flags = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_PEN_INFO_PENFLAGS_OFFSET);
+        boolean inverted = (flags & PEN_FLAG_INVERTED) != 0;
+        boolean eraser = (flags & PEN_FLAG_ERASER) != 0;
+        return new PenAxes(pressure, tiltX, tiltY, rotation, inverted, eraser);
     }
 
     /// Resolves the device for one `WM_POINTER*` `wParam`.
     private PointerDeviceKind pointerDevice(long wParam) {
-        int type = queryPointerType(lowWord(wParam));
+        int pointerId = lowWord(wParam);
+        if (syntheticPenAxes != null && pointerId == syntheticPenPointerId) {
+            return PointerDeviceKind.PEN;
+        }
+        int type = queryPointerType(pointerId);
         if (type == 0) {
             return PointerDeviceKind.TOUCH;
         }
@@ -627,11 +828,17 @@ public final class WindowsNativeWindow implements AutoCloseable {
         float pressure = 0.0f;
         float tiltX = 0.0f;
         float tiltY = 0.0f;
+        float rotation = 0.0f;
+        boolean inverted = false;
+        boolean eraser = false;
         if (device == PointerDeviceKind.PEN) {
             PenAxes axes = queryPenInfo(pointerId);
             pressure = axes.pressure();
             tiltX = axes.tiltX();
             tiltY = axes.tiltY();
+            rotation = axes.rotation();
+            inverted = axes.inverted();
+            eraser = axes.eraser();
         }
         return new PointerEvent(
                 type,
@@ -642,8 +849,85 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 pointerId,
                 pressure,
                 tiltX,
-                tiltY
+                tiltY,
+                rotation,
+                messageTime(),
+                pointerButtons(type, wParam),
+                nextPointerSequence(),
+                false,
+                inverted,
+                eraser
         );
+    }
+
+    /// Builds one `WM_XBUTTON*` event with `BUTTON_X1` or `BUTTON_X2`.
+    ///
+    /// @param down whether the extra button pressed
+    /// @param wParam the message `wParam`
+    /// @param lParam the message `lParam`
+    /// @return the event
+    private PointerEvent xButtonEvent(boolean down, long wParam, long lParam) {
+        int which = highWord(wParam);
+        int buttons = 0;
+        if (down && which == 1) {
+            buttons = PointerEvent.BUTTON_X1;
+        } else if (down && which == 2) {
+            buttons = PointerEvent.BUTTON_X2;
+        }
+        return new PointerEvent(
+                down ? PointerEventType.DOWN : PointerEventType.UP,
+                lowWord(lParam),
+                highWord(lParam),
+                PointerDeviceKind.MOUSE,
+                0.0f,
+                0,
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f,
+                messageTime(),
+                buttons,
+                nextPointerSequence(),
+                false
+        );
+    }
+
+    /// Builds one `WM_MOUSE*` event with host timestamp, buttons, and sequence.
+    ///
+    /// @param type the normalized type
+    /// @param wParam the message `wParam`
+    /// @param lParam the message `lParam`
+    /// @return the event
+    private PointerEvent mouseEvent(PointerEventType type, long wParam, long lParam) {
+        return new PointerEvent(
+                type,
+                lowWord(lParam),
+                highWord(lParam),
+                PointerDeviceKind.MOUSE,
+                0.0f,
+                0,
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f,
+                messageTime(),
+                mouseButtons(type, wParam),
+                nextPointerSequence(),
+                false
+        );
+    }
+
+    /// Builds one `WM_KEY*` event from `lParam` scan-code and previous-state bits.
+    ///
+    /// @param type the normalized type
+    /// @param key the logical key
+    /// @param lParam the message `lParam`
+    /// @return the event
+    private KeyEvent keyEvent(KeyEventType type, LogicalKey key, long lParam) {
+        int scanCode = (int) ((lParam >>> 16) & 0xFFL);
+        boolean repeat = type == KeyEventType.DOWN && (lParam & (1L << 30)) != 0L;
+        boolean extended = (lParam & (1L << 24)) != 0L;
+        return new KeyEvent(type, key, shiftDown, ctrlDown, altDown, scanCode, repeat, extended, metaDown);
     }
 
     /// Posts one message to this HWND so the production WndProc delivers it.
@@ -788,76 +1072,57 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 yield 0L;
             }
             case WM_MOUSEMOVE -> {
-                pointerEvents.add(new PointerEvent(
-                        PointerEventType.MOVE,
-                        lowWord(lParam),
-                        highWord(lParam),
-                        PointerDeviceKind.MOUSE
-                ));
+                pointerEvents.add(mouseEvent(PointerEventType.MOVE, wParam, lParam));
                 yield 0L;
             }
             case WM_LBUTTONDOWN -> {
                 bindings.setCapture(window);
-                pointerEvents.add(new PointerEvent(
-                        PointerEventType.DOWN,
-                        lowWord(lParam),
-                        highWord(lParam),
-                        PointerDeviceKind.MOUSE
-                ));
+                pointerEvents.add(mouseEvent(PointerEventType.DOWN, wParam, lParam));
                 yield 0L;
             }
             case WM_LBUTTONUP -> {
                 bindings.releaseCapture();
-                pointerEvents.add(new PointerEvent(
-                        PointerEventType.UP,
-                        lowWord(lParam),
-                        highWord(lParam),
-                        PointerDeviceKind.MOUSE
-                ));
+                pointerEvents.add(mouseEvent(PointerEventType.UP, wParam, lParam));
                 yield 0L;
             }
             case WM_RBUTTONDOWN -> {
-                pointerEvents.add(new PointerEvent(
-                        PointerEventType.SECONDARY_DOWN,
-                        lowWord(lParam),
-                        highWord(lParam),
-                        PointerDeviceKind.MOUSE
-                ));
+                pointerEvents.add(mouseEvent(PointerEventType.SECONDARY_DOWN, wParam, lParam));
                 yield 0L;
             }
             case WM_RBUTTONUP -> {
-                pointerEvents.add(new PointerEvent(
-                        PointerEventType.SECONDARY_UP,
-                        lowWord(lParam),
-                        highWord(lParam),
-                        PointerDeviceKind.MOUSE
-                ));
+                pointerEvents.add(mouseEvent(PointerEventType.SECONDARY_UP, wParam, lParam));
                 yield 0L;
             }
             case WM_MBUTTONDOWN -> {
-                pointerEvents.add(new PointerEvent(
-                        PointerEventType.MIDDLE_DOWN,
-                        lowWord(lParam),
-                        highWord(lParam),
-                        PointerDeviceKind.MOUSE
-                ));
+                pointerEvents.add(mouseEvent(PointerEventType.MIDDLE_DOWN, wParam, lParam));
                 yield 0L;
             }
             case WM_MBUTTONUP -> {
-                pointerEvents.add(new PointerEvent(
-                        PointerEventType.MIDDLE_UP,
-                        lowWord(lParam),
-                        highWord(lParam),
-                        PointerDeviceKind.MOUSE
-                ));
+                pointerEvents.add(mouseEvent(PointerEventType.MIDDLE_UP, wParam, lParam));
                 yield 0L;
             }
-            case WM_MOUSEWHEEL, WM_MOUSEHWHEEL -> {
-                pointerEvents.add(wheelEvent(wParam, lParam, PointerDeviceKind.MOUSE));
+            case WM_XBUTTONDOWN -> {
+                pointerEvents.add(xButtonEvent(true, wParam, lParam));
                 yield 0L;
             }
-            case WM_POINTERWHEEL, WM_POINTERHWHEEL -> {
-                pointerEvents.add(wheelEvent(wParam, lParam, pointerDevice(wParam)));
+            case WM_XBUTTONUP -> {
+                pointerEvents.add(xButtonEvent(false, wParam, lParam));
+                yield 0L;
+            }
+            case WM_MOUSEWHEEL -> {
+                pointerEvents.add(wheelEvent(PointerEventType.WHEEL, wParam, lParam, PointerDeviceKind.MOUSE));
+                yield 0L;
+            }
+            case WM_MOUSEHWHEEL -> {
+                pointerEvents.add(wheelEvent(PointerEventType.WHEEL_HORIZONTAL, wParam, lParam, PointerDeviceKind.MOUSE));
+                yield 0L;
+            }
+            case WM_POINTERWHEEL -> {
+                pointerEvents.add(wheelEvent(PointerEventType.WHEEL, wParam, lParam, pointerDevice(wParam)));
+                yield 0L;
+            }
+            case WM_POINTERHWHEEL -> {
+                pointerEvents.add(wheelEvent(PointerEventType.WHEEL_HORIZONTAL, wParam, lParam, pointerDevice(wParam)));
                 yield 0L;
             }
             case WM_POINTERUPDATE -> {
@@ -877,7 +1142,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 latchModifier(virtualKey, true);
                 @Nullable LogicalKey key = logicalKey(virtualKey);
                 if (key != null) {
-                    keyEvents.add(new KeyEvent(KeyEventType.DOWN, key, shiftDown, ctrlDown, altDown));
+                    keyEvents.add(keyEvent(KeyEventType.DOWN, key, lParam));
                 }
                 yield 0L;
             }
@@ -886,7 +1151,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 latchModifier(virtualKey, false);
                 @Nullable LogicalKey key = logicalKey(virtualKey);
                 if (key != null) {
-                    keyEvents.add(new KeyEvent(KeyEventType.UP, key, shiftDown, ctrlDown, altDown));
+                    keyEvents.add(keyEvent(KeyEventType.UP, key, lParam));
                 }
                 yield 0L;
             }
@@ -1021,6 +1286,8 @@ public final class WindowsNativeWindow implements AutoCloseable {
             ctrlDown = down;
         } else if (virtualKey == VK_MENU) {
             altDown = down;
+        } else if (virtualKey == VK_LWIN || virtualKey == VK_RWIN) {
+            metaDown = down;
         }
     }
 
@@ -1044,6 +1311,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
             case 0x27 -> LogicalKey.ARROW_RIGHT;
             case 0x28 -> LogicalKey.ARROW_DOWN;
             case 0x2E -> LogicalKey.DELETE;
+            case 0x5B, 0x5C -> LogicalKey.META;
             default -> null;
         };
     }

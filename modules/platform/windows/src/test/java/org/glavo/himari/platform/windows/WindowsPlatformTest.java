@@ -40,6 +40,7 @@ import org.junit.jupiter.api.condition.OS;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -71,7 +72,9 @@ final class WindowsPlatformTest {
             assertEquals(WindowLifecycle.OPEN, window.snapshot().lifecycle());
             assertTrue(window.nativeHandle().address() != 0L);
             assertTrue(window.dpi() >= 96);
-            assertTrue(window.snapshot().scaleFactor() > 0.0);
+            window.applyDpiChange(144, 32, 32, 200, 160);
+            assertEquals(144, window.dpi());
+            assertEquals(1.5, window.scaleFactor(), 0.001);
             assertTrue(window.snapshot().surfaceSize().width() > 0);
             WindowConfiguration next = new WindowConfiguration(
                     "HimariUI Windows",
@@ -211,22 +214,50 @@ final class WindowsPlatformTest {
             platform.pump();
             window.postPointer(PointerEventType.DOWN, 12, 18);
             window.postPointer(PointerEventType.UP, 12, 18);
-            window.postVirtualKey(true, 0x0D);
-            window.postVirtualKey(true, 0x1B);
+            window.postVirtualKey(true, 0x0D, 0x1C, false);
+            window.postVirtualKey(true, 0x1B, 0x01, true, true);
+            window.postXButton(true, 8, 9, 1);
             window.postChar('n');
             window.postChar('i');
             platform.pump();
             List<PointerEvent> pointers = window.takePointerEvents();
-            assertEquals(2, pointers.size());
+            assertEquals(3, pointers.size());
             assertEquals(PointerEventType.DOWN, pointers.getFirst().type());
             assertEquals(12.0f, pointers.getFirst().x());
             assertEquals(18.0f, pointers.getFirst().y());
             assertEquals(PointerDeviceKind.MOUSE, pointers.getFirst().device());
+            assertEquals(PointerEvent.BUTTON_PRIMARY, pointers.getFirst().buttons());
+            assertTrue(pointers.getFirst().timestampMillis() > 0L);
+            assertEquals(1, pointers.getFirst().sequenceId());
+            assertFalse(pointers.getFirst().synthetic());
             assertEquals(PointerEventType.UP, pointers.get(1).type());
+            assertEquals(0, pointers.get(1).buttons());
+            assertEquals(2, pointers.get(1).sequenceId());
+            assertTrue(pointers.get(1).timestampMillis() >= pointers.getFirst().timestampMillis());
             List<org.glavo.himari.layout.input.KeyEvent> keys = window.takeKeyEvents();
             assertEquals(2, keys.size());
             assertEquals(LogicalKey.ENTER, keys.get(0).key());
+            assertEquals(0x1C, keys.get(0).scanCode());
+            assertFalse(keys.get(0).repeat());
             assertEquals(LogicalKey.ESCAPE, keys.get(1).key());
+            assertEquals(0x01, keys.get(1).scanCode());
+            assertTrue(keys.get(1).repeat());
+            assertTrue(keys.get(1).extended());
+            assertFalse(keys.get(0).extended());
+            assertFalse(keys.get(0).meta());
+            window.postVirtualKey(true, 0x5B);
+            window.postVirtualKey(true, 0x09);
+            platform.pump();
+            List<org.glavo.himari.layout.input.KeyEvent> metaKeys = window.takeKeyEvents();
+            assertEquals(2, metaKeys.size());
+            assertEquals(LogicalKey.META, metaKeys.get(0).key());
+            assertTrue(metaKeys.get(0).meta());
+            assertEquals(LogicalKey.TAB, metaKeys.get(1).key());
+            assertTrue(metaKeys.get(1).meta());
+            assertEquals(PointerEventType.DOWN, pointers.get(2).type());
+            assertEquals(PointerEvent.BUTTON_X1, pointers.get(2).buttons());
+            assertEquals(8.0f, pointers.get(2).x());
+            assertEquals(9.0f, pointers.get(2).y());
             assertEquals("ni", window.ime().surroundingText());
             assertTrue(window.ime().committed());
         } finally {
@@ -252,6 +283,12 @@ final class WindowsPlatformTest {
             assertEquals(1.0f, pointers.getFirst().wheelDelta());
             assertEquals(PointerEventType.WHEEL, pointers.get(1).type());
             assertEquals(1.0f, pointers.get(1).wheelDelta());
+            window.postPointer(PointerEventType.WHEEL_HORIZONTAL, 10, 14);
+            platform.pump();
+            List<PointerEvent> horizontal = window.takePointerEvents();
+            assertEquals(1, horizontal.size());
+            assertEquals(PointerEventType.WHEEL_HORIZONTAL, horizontal.getFirst().type());
+            assertEquals(1.0f, horizontal.getFirst().wheelDelta());
         } finally {
             platform.close();
         }
@@ -408,6 +445,7 @@ final class WindowsPlatformTest {
             assertEquals(0.0f, missing.pressure());
             assertEquals(0.0f, missing.tiltX());
             assertEquals(0.0f, missing.tiltY());
+            assertEquals(0.0f, missing.rotation());
             java.lang.foreign.MemorySegment packed = java.lang.foreign.Arena.ofAuto().allocate(
                     org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_PEN_INFO
             );
@@ -416,6 +454,7 @@ final class WindowsPlatformTest {
                     java.lang.foreign.ValueLayout.JAVA_INT,
                     org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_PEN_INFO_PENMASK_OFFSET,
                     WindowsNativeWindow.PEN_MASK_PRESSURE
+                            | WindowsNativeWindow.PEN_MASK_ROTATION
                             | WindowsNativeWindow.PEN_MASK_TILT_X
                             | WindowsNativeWindow.PEN_MASK_TILT_Y
             );
@@ -434,10 +473,24 @@ final class WindowsPlatformTest {
                     org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_PEN_INFO_TILTY_OFFSET,
                     -15
             );
+            packed.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_PEN_INFO_ROTATION_OFFSET,
+                    90
+            );
+            packed.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_PEN_INFO_PENFLAGS_OFFSET,
+                    WindowsNativeWindow.PEN_FLAG_INVERTED
+                            | WindowsNativeWindow.PEN_FLAG_ERASER
+            );
             WindowsNativeWindow.PenAxes axes = WindowsNativeWindow.decodePenInfo(packed);
             assertEquals(0.5f, axes.pressure(), 0.001f);
             assertEquals(30.0f, axes.tiltX(), 0.001f);
             assertEquals(-15.0f, axes.tiltY(), 0.001f);
+            assertEquals(90.0f, axes.rotation(), 0.001f);
+            assertTrue(axes.inverted());
+            assertTrue(axes.eraser());
             PointerEvent event = new PointerEvent(
                     PointerEventType.DOWN,
                     4.0f,
@@ -447,12 +500,37 @@ final class WindowsPlatformTest {
                     7,
                     0.5f,
                     30.0f,
-                    -15.0f
+                    -15.0f,
+                    90.0f
             );
             assertEquals(0.5f, event.pressure());
             assertEquals(30.0f, event.tiltX());
             assertEquals(-15.0f, event.tiltY());
+            assertEquals(90.0f, event.rotation());
             assertEquals(7, event.pointerId());
+            window.postPen(
+                    PointerEventType.DOWN,
+                    4,
+                    5,
+                    7,
+                    axes
+            );
+            platform.pump();
+            List<PointerEvent> posted = window.takePointerEvents();
+            assertFalse(posted.isEmpty());
+            PointerEvent delivered = posted.getLast();
+            assertEquals(PointerDeviceKind.PEN, delivered.device());
+            assertEquals(7, delivered.pointerId());
+            assertEquals(0.5f, delivered.pressure(), 0.001f);
+            assertEquals(30.0f, delivered.tiltX(), 0.001f);
+            assertEquals(-15.0f, delivered.tiltY(), 0.001f);
+            assertEquals(90.0f, delivered.rotation(), 0.001f);
+            assertTrue(delivered.inverted());
+            assertTrue(delivered.eraser());
+            assertEquals(PointerEvent.BUTTON_PRIMARY, delivered.buttons());
+            assertTrue(delivered.sequenceId() > 0);
+            assertTrue(delivered.timestampMillis() > 0L);
+            assertFalse(delivered.synthetic());
         } finally {
             platform.close();
         }
@@ -481,8 +559,8 @@ final class WindowsPlatformTest {
         try {
             WindowsWindow window = openToplevel(platform, "Touch", 32.0, 32.0);
             platform.pump();
-            window.postPointer(PointerEventType.DOWN, 20, 24, PointerDeviceKind.TOUCH);
-            window.postPointer(PointerEventType.UP, 20, 24, PointerDeviceKind.TOUCH);
+            window.postPointer(PointerEventType.DOWN, 20, 24, PointerDeviceKind.TOUCH, 3);
+            window.postPointer(PointerEventType.UP, 20, 24, PointerDeviceKind.TOUCH, 3);
             platform.pump();
             List<PointerEvent> pointers = window.takePointerEvents();
             assertEquals(2, pointers.size());
@@ -490,7 +568,9 @@ final class WindowsPlatformTest {
             assertEquals(PointerDeviceKind.TOUCH, pointers.getFirst().device());
             assertEquals(20.0f, pointers.getFirst().x());
             assertEquals(24.0f, pointers.getFirst().y());
+            assertEquals(3, pointers.getFirst().pointerId());
             assertEquals(PointerDeviceKind.TOUCH, pointers.get(1).device());
+            assertEquals(3, pointers.get(1).pointerId());
         } finally {
             platform.close();
         }
@@ -688,6 +768,50 @@ final class WindowsPlatformTest {
                 throw unavailable;
             }
             assertEquals(marker, window.readClipboard());
+            WindowsWindow other = openToplevel(platform, "ClipboardPeer", 48.0, 48.0);
+            platform.pump();
+            assertEquals(marker, other.readClipboard());
+            String ansi = "HimariUI-ansi-" + Long.toUnsignedString(System.nanoTime());
+            window.writeAnsiClipboard(ansi);
+            assertEquals(ansi, window.readAnsiClipboard());
+            String html = "<div>HimariUI-html-" + Long.toUnsignedString(System.nanoTime()) + "</div>";
+            window.writeHtmlClipboard(html);
+            assertEquals(html, window.readHtmlClipboard());
+            assertTrue(window.htmlClipboardFormat() > 0);
+            String rtf = "{\\rtf1 HimariUI-rtf-" + Long.toUnsignedString(System.nanoTime()) + "}";
+            window.writeRtfClipboard(rtf);
+            assertEquals(rtf, window.readRtfClipboard());
+            assertTrue(window.rtfClipboardFormat() > 0);
+            byte[] dib = new byte[44];
+            dib[0] = 40;
+            dib[4] = 1;
+            dib[8] = 1;
+            dib[12] = 1;
+            dib[14] = 32;
+            dib[20] = 4;
+            dib[40] = (byte) 30;
+            dib[41] = (byte) 20;
+            dib[42] = (byte) 10;
+            dib[43] = (byte) 40;
+            window.writeDibClipboard(dib);
+            byte[] read = window.readDibClipboard();
+            assertEquals(44, read.length);
+            assertEquals(40, read[0]);
+            assertEquals(30, read[40] & 0xFF);
+            assertEquals(20, read[41] & 0xFF);
+            assertEquals(10, read[42] & 0xFF);
+            assertEquals(40, read[43] & 0xFF);
+            String drop = "C:\\HimariUI\\clip-" + Long.toUnsignedString(System.nanoTime()) + ".txt";
+            window.writeDropFilesClipboard(List.of(drop));
+            List<String> dropped = window.readDropFilesClipboard();
+            assertEquals(List.of(drop), dropped);
+            window.clearClipboard();
+            assertEquals(null, window.readClipboard());
+            assertEquals(null, window.readAnsiClipboard());
+            assertEquals(null, window.readHtmlClipboard());
+            assertEquals(null, window.readRtfClipboard());
+            assertEquals(null, window.readDibClipboard());
+            assertEquals(null, window.readDropFilesClipboard());
         } finally {
             platform.close();
         }
@@ -749,6 +873,15 @@ final class WindowsPlatformTest {
                 assertEquals(1, target.dropCount());
                 assertEquals("HimariUI-drop", target.lastDroppedText());
             }
+            try (
+                    WindowsDropTarget files = window.registerDropTarget();
+                    WindowsDataObject drop = window.createDropFilesDataObject(
+                            List.of("C:\\HimariUI\\dropped.txt")
+                    )
+            ) {
+                files.invokeDrop(drop.nativeObject(), 8, 12);
+                assertEquals(List.of("C:\\HimariUI\\dropped.txt"), files.lastDroppedFiles());
+            }
         } finally {
             platform.close();
         }
@@ -805,6 +938,303 @@ final class WindowsPlatformTest {
                         WindowsAutomationProvider.UIA_BUTTON_CONTROL_TYPE_ID,
                         provider.invokePropertyValue(WindowsAutomationProvider.UIA_CONTROL_TYPE_PROPERTY_ID)
                 );
+                assertEquals(
+                        increment.focused() ? 1 : 0,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_HAS_KEYBOARD_FOCUS_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        increment.focusable() && !increment.disabled() ? 1 : 0,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_KEYBOARD_FOCUSABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        increment.role().name(),
+                        provider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_CLASS_NAME_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        increment.role().name(),
+                        provider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_LOCALIZED_CONTROL_TYPE_PROPERTY_ID
+                        )
+                );
+                assertTrue(provider.raiseTextChanged() >= 0);
+                assertTrue(provider.raiseTextSelectionChanged() >= 0);
+                assertEquals(
+                        increment.password() ? 1 : 0,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_PASSWORD_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        increment.bounds().width() <= 0.0f || increment.bounds().height() <= 0.0f ? 1 : 0,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_OFFSCREEN_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        "HimariUI",
+                        provider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_FRAMEWORK_ID_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        1,
+                        provider.invokePropertyValue(WindowsAutomationProvider.UIA_IS_ENABLED_PROPERTY_ID)
+                );
+                LayoutNode incrementLive = findActivate(tree.root());
+                incrementLive.setDisabled(true);
+                try (WindowsAutomationProvider disabled = window.automationProvider(incrementLive)) {
+                    assertEquals(
+                            0,
+                            disabled.invokePropertyValue(WindowsAutomationProvider.UIA_IS_ENABLED_PROPERTY_ID)
+                    );
+                    assertEquals(
+                            0,
+                            disabled.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_IS_KEYBOARD_FOCUSABLE_PROPERTY_ID
+                            )
+                    );
+                }
+                incrementLive.setDisabled(false);
+                incrementLive.setReadOnly(true);
+                try (WindowsAutomationProvider readOnly = window.automationProvider(incrementLive)) {
+                    assertEquals(
+                            1,
+                            readOnly.invokePropertyValue(WindowsAutomationProvider.UIA_IS_READ_ONLY_PROPERTY_ID)
+                    );
+                }
+                incrementLive.setReadOnly(false);
+                incrementLive.setHint("Increases the counter");
+                try (WindowsAutomationProvider named = window.automationProvider(incrementLive)) {
+                    assertEquals(
+                            incrementLive.label(),
+                            named.invokePropertyValueString(WindowsAutomationProvider.UIA_NAME_PROPERTY_ID)
+                    );
+                    assertEquals(
+                            incrementLive.name(),
+                            named.invokePropertyValueString(WindowsAutomationProvider.UIA_AUTOMATION_ID_PROPERTY_ID)
+                    );
+                    assertEquals(
+                            "Increases the counter",
+                            named.invokePropertyValueString(WindowsAutomationProvider.UIA_HELP_TEXT_PROPERTY_ID)
+                    );
+                }
+                incrementLive.setHint("");
+                incrementLive.setPassword(true);
+                try (WindowsAutomationProvider secret = window.automationProvider(incrementLive)) {
+                    assertEquals(
+                            1,
+                            secret.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_IS_PASSWORD_PROPERTY_ID
+                            )
+                    );
+                }
+                incrementLive.setPassword(false);
+                incrementLive.setAccessKey("I");
+                incrementLive.setAcceleratorKey("Ctrl+I");
+                incrementLive.setRequired(true);
+                incrementLive.setItemStatus("busy");
+                incrementLive.setLocale("en-US");
+                incrementLive.setLevel(2);
+                incrementLive.setPositionInSet(1);
+                incrementLive.setSizeOfSet(3);
+                incrementLive.setDescription("Increases the counter");
+                incrementLive.setError(true);
+                try (WindowsAutomationProvider keys = window.automationProvider(incrementLive)) {
+                    assertEquals(
+                            "I",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_ACCESS_KEY_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "Ctrl+I",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_ACCELERATOR_KEY_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            incrementLive.label(),
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_VALUE_VALUE_PROPERTY_ID
+                            )
+                    );
+                    float[] box = keys.invokeBoundingRectangle();
+                    assertEquals(increment.bounds().x(), box[0], 0.01f);
+                    assertEquals(increment.bounds().y(), box[1], 0.01f);
+                    assertEquals(increment.bounds().width(), box[2], 0.01f);
+                    assertEquals(increment.bounds().height(), box[3], 0.01f);
+                    assertEquals(
+                            1,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_IS_CONTROL_ELEMENT_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            1,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_IS_CONTENT_ELEMENT_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            WindowsAutomationProvider.ORIENTATION_NONE,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_ORIENTATION_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            1,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_IS_REQUIRED_FOR_FORM_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "busy",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_ITEM_STATUS_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            WindowsAutomationProvider.LCID_EN_US,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_CULTURE_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            2,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_LEVEL_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            1,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_POSITION_IN_SET_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            3,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_SIZE_OF_SET_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "Increases the counter",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_FULL_DESCRIPTION_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            0,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_IS_DATA_VALID_FOR_FORM_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "HimariUI.BUTTON",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_PROVIDER_DESCRIPTION_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            0,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_IS_DIALOG_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            (int) ProcessHandle.current().pid(),
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_PROCESS_ID_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            (int) window.nativeHandle().address(),
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_NATIVE_WINDOW_HANDLE_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            WindowsAutomationProvider.HEADING_LEVEL_NONE + 2,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_HEADING_LEVEL_PROPERTY_ID
+                            )
+                    );
+                    float[] click = keys.invokeClickablePoint();
+                    assertEquals(
+                            increment.bounds().x() + increment.bounds().width() * 0.5f,
+                            click[0],
+                            0.01f
+                    );
+                    assertEquals(
+                            increment.bounds().y() + increment.bounds().height() * 0.5f,
+                            click[1],
+                            0.01f
+                    );
+                }
+                LayoutFactory factory = new LayoutFactory(tree);
+                LayoutNode slider = factory.leaf(
+                        "slider",
+                        new Size(160.0f, 24.0f),
+                        List.of(),
+                        true,
+                        SemanticsRole.SLIDER,
+                        "Volume",
+                        Set.of(SemanticsAction.INCREMENT, SemanticsAction.DECREMENT),
+                        null
+                );
+                LayoutNode bar = factory.leaf(
+                        "bar",
+                        new Size(16.0f, 80.0f),
+                        List.of(),
+                        true,
+                        SemanticsRole.SCROLLBAR,
+                        "Scroll",
+                        Set.of(SemanticsAction.INCREMENT, SemanticsAction.DECREMENT),
+                        null
+                );
+                tree.setRoot(factory.column("oriented", Alignment.START, List.of(), slider, bar));
+                tree.measure(Constraints.loose(200.0f, 200.0f));
+                tree.place();
+                try (WindowsAutomationProvider slide = window.automationProvider(slider)) {
+                    assertEquals(
+                            WindowsAutomationProvider.ORIENTATION_HORIZONTAL,
+                            slide.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_ORIENTATION_PROPERTY_ID
+                            )
+                    );
+                }
+                try (WindowsAutomationProvider scroll = window.automationProvider(bar)) {
+                    assertEquals(
+                            WindowsAutomationProvider.ORIENTATION_VERTICAL,
+                            scroll.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_ORIENTATION_PROPERTY_ID
+                            )
+                    );
+                }
+                LayoutNode dialog = factory.leaf(
+                        "dialog",
+                        new Size(80.0f, 40.0f),
+                        List.of(),
+                        false,
+                        SemanticsRole.DIALOG,
+                        "Confirm",
+                        Set.of(),
+                        null
+                );
+                try (WindowsAutomationProvider modal = window.automationProvider(dialog)) {
+                    assertEquals(
+                            1,
+                            modal.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_IS_DIALOG_PROPERTY_ID
+                            )
+                    );
+                }
                 assertTrue(provider.invokePatternProvider(WindowsAutomationProvider.UIA_INVOKE_PATTERN_ID));
                 assertEquals(1, provider.invoke());
                 assertTrue(provider.invokePatternProvider(
@@ -904,6 +1334,17 @@ final class WindowsPlatformTest {
                     null
             );
             status.setLiveRegion(SemanticsLiveRegion.POLITE);
+            LayoutNode alert = factory.leaf(
+                    "alert",
+                    new Size(120.0f, 20.0f),
+                    List.of(),
+                    false,
+                    SemanticsRole.STATUS,
+                    "Alert",
+                    java.util.Set.of(),
+                    null
+            );
+            alert.setLiveRegion(SemanticsLiveRegion.ASSERTIVE);
             LayoutNode field = factory.leaf(
                     "field",
                     new Size(160.0f, 24.0f),
@@ -974,6 +1415,7 @@ final class WindowsPlatformTest {
                     cell,
                     list,
                     status,
+                    alert,
                     field,
                     dialog
             ));
@@ -996,9 +1438,17 @@ final class WindowsPlatformTest {
                     .findFirst()
                     .orElseThrow();
             SemanticsNode statusNode = valueTree.semantics().nodes().stream()
-                    .filter(node -> node.role() == SemanticsRole.STATUS)
+                    .filter(node -> node.role() == SemanticsRole.STATUS
+                            && node.liveRegion() == SemanticsLiveRegion.POLITE)
                     .findFirst()
                     .orElseThrow();
+            SemanticsNode alertNode = valueTree.semantics().nodes().stream()
+                    .filter(node -> node.role() == SemanticsRole.STATUS
+                            && node.liveRegion() == SemanticsLiveRegion.ASSERTIVE)
+                    .findFirst()
+                    .orElseThrow();
+            assertEquals(SemanticsLiveRegion.POLITE, statusNode.liveRegion());
+            assertEquals(SemanticsLiveRegion.ASSERTIVE, alertNode.liveRegion());
             try (WindowsAutomationProvider toggleProvider = window.automationProvider(toggleNode)) {
                 assertTrue(toggleProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TOGGLE_PATTERN_ID));
                 assertEquals(WindowsAutomationProvider.TOGGLE_STATE_OFF, toggleProvider.toggleState());
@@ -1169,7 +1619,8 @@ final class WindowsPlatformTest {
                 ));
                 assertTrue(windowProvider.invokeObjectModel());
             }
-            try (WindowsAutomationProvider statusProvider = window.automationProvider(statusNode)) {
+            try (WindowsAutomationProvider statusProvider = window.automationProvider(status);
+                    WindowsAutomationProvider alertProvider = window.automationProvider(alert)) {
                 assertEquals(
                         WindowsAutomationProvider.UIA_STATUS_BAR_CONTROL_TYPE_ID,
                         statusProvider.invokePropertyValue(WindowsAutomationProvider.UIA_CONTROL_TYPE_PROPERTY_ID)
@@ -1178,6 +1629,18 @@ final class WindowsPlatformTest {
                         WindowsAutomationProvider.LIVE_SETTING_POLITE,
                         statusProvider.invokePropertyValue(WindowsAutomationProvider.UIA_LIVE_SETTING_PROPERTY_ID)
                 );
+                assertEquals(
+                        WindowsAutomationProvider.LIVE_SETTING_ASSERTIVE,
+                        alertProvider.invokePropertyValue(WindowsAutomationProvider.UIA_LIVE_SETTING_PROPERTY_ID)
+                );
+                status.setLabel("Updated");
+                assertEquals("Updated", status.label());
+                assertEquals(1, statusProvider.liveRegionChangedCount());
+                assertTrue(
+                        statusProvider.lastLiveRegionEventResult() >= 0,
+                        "UiaRaiseAutomationEvent HRESULT=" + statusProvider.lastLiveRegionEventResult()
+                );
+                statusProvider.clientsAreListening();
                 assertTrue(statusProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_ANNOTATION_PATTERN_ID
                 ));
@@ -1203,6 +1666,27 @@ final class WindowsPlatformTest {
                 assertEquals("world", textProvider.setValue("world"));
                 assertEquals("world", textProvider.value());
                 assertFalse(textProvider.valueReadOnly());
+                field.setReadOnly(true);
+                try (WindowsAutomationProvider readOnly = window.automationProvider(field)) {
+                    assertTrue(readOnly.valueReadOnly());
+                    assertEquals(
+                            1,
+                            readOnly.invokePropertyValue(WindowsAutomationProvider.UIA_IS_READ_ONLY_PROPERTY_ID)
+                    );
+                }
+                field.setReadOnly(false);
+                field.setHint("Type a greeting");
+                try (WindowsAutomationProvider hinted = window.automationProvider(field)) {
+                    assertEquals(
+                            field.label(),
+                            hinted.invokePropertyValueString(WindowsAutomationProvider.UIA_NAME_PROPERTY_ID)
+                    );
+                    assertEquals(
+                            "Type a greeting",
+                            hinted.invokePropertyValueString(WindowsAutomationProvider.UIA_HELP_TEXT_PROPERTY_ID)
+                    );
+                }
+                field.setHint("");
                 assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_CHILD_PATTERN_ID));
                 assertTrue(textProvider.invokeTextContainer());
                 assertTrue(textProvider.invokeTextChildRange());
@@ -1214,6 +1698,13 @@ final class WindowsPlatformTest {
                 assertTrue(textProvider.invokeRangeFromAnnotation());
                 assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_PATTERN_ID));
                 assertTrue(textProvider.invokeDocumentRange());
+                assertTrue(textProvider.invokeGetVisibleRanges());
+                assertTrue(textProvider.invokeRangeFromChild());
+                assertTrue(textProvider.invokeRangeFromPoint(
+                        fieldNode.bounds().x() + 1.0,
+                        fieldNode.bounds().y() + 1.0
+                ));
+                assertFalse(textProvider.invokeRangeFromPoint(-1000.0, -1000.0));
                 assertEquals(
                         WindowsAutomationProvider.SUPPORTED_TEXT_SELECTION_SINGLE,
                         textProvider.invokeSupportedTextSelection()
@@ -1270,6 +1761,11 @@ final class WindowsPlatformTest {
                 assertEquals(1, textProvider.invokeShowContextMenu());
                 assertEquals(1, textProvider.invokeSimpleShowContextMenu());
             }
+            try (WindowsAutomationProvider liveField = window.automationProvider(field)) {
+                assertEquals("hello", liveField.invokeGetText(-1));
+                field.setLabel("updated-hello");
+                assertEquals("updated-hello", liveField.invokeGetText(-1));
+            }
         } finally {
             platform.close();
         }
@@ -1317,6 +1813,21 @@ final class WindowsPlatformTest {
                 candidate.closeAsync();
             }
         }
+    }
+
+    /// Finds the first activatable leaf.
+    private static LayoutNode findActivate(LayoutNode node) {
+        if (node.actions().contains(SemanticsAction.ACTIVATE)) {
+            return node;
+        }
+        for (LayoutNode child : node.children()) {
+            try {
+                return findActivate(child);
+            } catch (IllegalStateException ignored) {
+                // try the next sibling
+            }
+        }
+        throw new IllegalStateException("no activatable node");
     }
 
     /// Opens one visible top-level window.

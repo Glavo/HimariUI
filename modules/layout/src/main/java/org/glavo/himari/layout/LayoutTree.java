@@ -125,7 +125,7 @@ public final class LayoutTree {
             return false;
         }
         LayoutNode target = path.getLast();
-        if (event.type() == PointerEventType.DOWN && target.focusable()) {
+        if (event.type() == PointerEventType.DOWN && target.focusable() && !target.disabled()) {
             focus.request(target);
             focus.setFocusVisible(false);
         }
@@ -207,7 +207,22 @@ public final class LayoutTree {
                 node.textRange(),
                 node.grid(),
                 node.scroll(),
-                node.gridItem()
+                node.gridItem(),
+                node.disabled(),
+                node.readOnly(),
+                node.hint(),
+                node.focusable(),
+                node.password(),
+                node.accessKey(),
+                node.acceleratorKey(),
+                node.required(),
+                node.itemStatus(),
+                node.locale(),
+                node.level(),
+                node.positionInSet(),
+                node.sizeOfSet(),
+                node.description(),
+                node.error()
         ));
         for (LayoutNode child : node.children()) {
             collectSemantics(child, nodes);

@@ -80,12 +80,36 @@ public final class HangulSyllable {
         return isLead(codePoint) || isVowel(codePoint) || isTrail(codePoint) || isCompatibility(codePoint);
     }
 
-    /// Returns whether `codePoint` is a Hangul Compatibility Jamo letter used by first-stable composition.
+    /// Halfwidth Hangul vowel code points in `U+314F`–`U+3163` order.
+    ///
+    /// The halfwidth block skips `U+FFC0`/`U+FFC1`, `U+FFC8`/`U+FFC9`, `U+FFD0`/`U+FFD1`,
+    /// and `U+FFD8`/`U+FFD9`.
+    private static final int[] HALFWIDTH_VOWELS = {
+            0xFFC2, 0xFFC3, 0xFFC4, 0xFFC5, 0xFFC6, 0xFFC7,
+            0xFFCA, 0xFFCB, 0xFFCC, 0xFFCD, 0xFFCE, 0xFFCF,
+            0xFFD2, 0xFFD3, 0xFFD4, 0xFFD5, 0xFFD6, 0xFFD7,
+            0xFFDA, 0xFFDB, 0xFFDC
+    };
+
+    /// Returns whether `codePoint` is a Hangul Compatibility or halfwidth jamo letter.
     ///
     /// @param codePoint the code point
-    /// @return whether the code point is `U+3131`–`U+3163`
+    /// @return whether the code point is `U+3131`–`U+3163` or `U+FFA1`–`U+FFDC`
     public static boolean isCompatibility(int codePoint) {
-        return codePoint >= 0x3131 && codePoint <= 0x3163;
+        return (codePoint >= 0x3131 && codePoint <= 0x3163) || halfwidthCompat(codePoint) != 0;
+    }
+
+    /// Maps a halfwidth Hangul letter onto its compatibility-jamo identity, or `0`.
+    private static int halfwidthCompat(int codePoint) {
+        if (codePoint >= 0xFFA1 && codePoint <= 0xFFBE) {
+            return 0x3131 + (codePoint - 0xFFA1);
+        }
+        for (int index = 0; index < HALFWIDTH_VOWELS.length; index++) {
+            if (HALFWIDTH_VOWELS[index] == codePoint) {
+                return 0x314F + index;
+            }
+        }
+        return 0;
     }
 
     /// Maps a source code point onto a modern choseong, or `0` when it is not a lead.
@@ -93,11 +117,13 @@ public final class HangulSyllable {
     /// @param codePoint the source code point
     /// @return the modern choseong, or `0`
     public static int asLead(int codePoint) {
-        if (isLead(codePoint)) {
-            return codePoint;
+        int mapped = halfwidthCompat(codePoint);
+        int source = mapped == 0 ? codePoint : mapped;
+        if (isLead(source)) {
+            return source;
         }
-        if (codePoint >= 0x3131 && codePoint <= 0x314E) {
-            return COMPAT_LEAD[codePoint - 0x3131];
+        if (source >= 0x3131 && source <= 0x314E) {
+            return COMPAT_LEAD[source - 0x3131];
         }
         return 0;
     }
@@ -107,11 +133,13 @@ public final class HangulSyllable {
     /// @param codePoint the source code point
     /// @return the modern jungseong, or `0`
     public static int asVowel(int codePoint) {
-        if (isVowel(codePoint)) {
-            return codePoint;
+        int mapped = halfwidthCompat(codePoint);
+        int source = mapped == 0 ? codePoint : mapped;
+        if (isVowel(source)) {
+            return source;
         }
-        if (codePoint >= 0x314F && codePoint <= 0x3163) {
-            return VOWEL_BASE + (codePoint - 0x314F);
+        if (source >= 0x314F && source <= 0x3163) {
+            return VOWEL_BASE + (source - 0x314F);
         }
         return 0;
     }
@@ -121,11 +149,13 @@ public final class HangulSyllable {
     /// @param codePoint the source code point
     /// @return the modern jongseong, or `0`
     public static int asTrail(int codePoint) {
-        if (isTrail(codePoint)) {
-            return codePoint;
+        int mapped = halfwidthCompat(codePoint);
+        int source = mapped == 0 ? codePoint : mapped;
+        if (isTrail(source)) {
+            return source;
         }
-        if (codePoint >= 0x3131 && codePoint <= 0x314E) {
-            return COMPAT_TRAIL[codePoint - 0x3131];
+        if (source >= 0x3131 && source <= 0x314E) {
+            return COMPAT_TRAIL[source - 0x3131];
         }
         return 0;
     }

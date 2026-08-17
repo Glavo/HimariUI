@@ -7,6 +7,7 @@ import org.glavo.himari.layout.LayoutNode;
 import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,6 +24,12 @@ public final class SplitPane {
 
     /// First-pane share in `(0, 1)`.
     private float fraction;
+
+    /// Whether the split ignores fraction changes.
+    private boolean disabled;
+
+    /// Mounted row that receives the published disabled state.
+    private @Nullable LayoutNode node;
 
     /// Creates a split.
     ///
@@ -42,7 +49,27 @@ public final class SplitPane {
     ///
     /// @param fraction the next share
     public void setFraction(float fraction) {
+        if (disabled) {
+            return;
+        }
         this.fraction = clamp(fraction);
+    }
+
+    /// Returns whether the split is disabled.
+    ///
+    /// @return whether the split is disabled
+    public boolean disabled() {
+        return disabled;
+    }
+
+    /// Sets the disabled state and publishes it to the mounted row when present.
+    ///
+    /// @param disabled the state
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+        if (node != null) {
+            node.setDisabled(disabled);
+        }
     }
 
     /// Builds a row of first pane, divider, and second pane.
@@ -85,7 +112,7 @@ public final class SplitPane {
                 Set.of(),
                 null
         );
-        return factory.row(
+        LayoutNode created = factory.row(
                 name,
                 Alignment.START,
                 List.of(new LayoutModifier.Padding(0.0f)),
@@ -95,6 +122,9 @@ public final class SplitPane {
                 divider,
                 second
         );
+        created.setDisabled(disabled);
+        this.node = created;
+        return created;
     }
 
     /// Clamps a share into `(0, 1)`.

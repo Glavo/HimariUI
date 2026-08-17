@@ -14,8 +14,11 @@ public enum PointerEventType {
     /// The pointer moved.
     MOVE,
 
-    /// The pointer reported a vertical or horizontal wheel notch.
+    /// The pointer reported a vertical wheel notch.
     WHEEL,
+
+    /// The pointer reported a horizontal wheel notch.
+    WHEEL_HORIZONTAL,
 
     /// The secondary (right) button pressed.
     SECONDARY_DOWN,

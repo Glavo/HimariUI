@@ -22,6 +22,8 @@ import org.glavo.himari.runtime.animation.MotionImportance;
 import org.glavo.himari.runtime.animation.MotionPolicy;
 import org.glavo.himari.runtime.animation.SnapMotionSpec;
 import org.glavo.himari.runtime.animation.TweenSpec;
+import org.glavo.himari.runtime.reload.ResourceKind;
+import org.glavo.himari.runtime.reload.ResourceReload;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +50,13 @@ final class ControlGalleryTest {
         assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ENTER)));
         assertEquals(2, gallery.button().activations());
         assertEquals(2, gallery.externalClicks());
+        gallery.button().setDisabled(true);
+        gallery.button().press();
+        assertEquals(2, gallery.button().activations());
+        click(tree, first(tree, SemanticsRole.BUTTON));
+        assertEquals(2, gallery.button().activations());
+        assertTrue(first(tree, SemanticsRole.BUTTON).disabled());
+        gallery.button().setDisabled(false);
         SemanticsNode toggle = first(tree, SemanticsRole.TOGGLE);
         assertEquals(Boolean.FALSE, toggle.selected());
         click(tree, toggle);
@@ -55,6 +64,36 @@ final class ControlGalleryTest {
         assertEquals(Boolean.TRUE, first(tree, SemanticsRole.TOGGLE).selected());
         tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.SPACE));
         assertFalse(gallery.toggle().isOn());
+        gallery.toggle().setOn(true);
+        assertTrue(gallery.toggle().isOn());
+        assertEquals(Boolean.TRUE, first(tree, SemanticsRole.TOGGLE).selected());
+        gallery.toggle().setOn(false);
+        assertFalse(gallery.toggle().isOn());
+        assertEquals(Boolean.FALSE, first(tree, SemanticsRole.TOGGLE).selected());
+        gallery.toggle().setDisabled(true);
+        gallery.toggle().setOn(true);
+        assertTrue(gallery.toggle().isOn());
+        click(tree, first(tree, SemanticsRole.TOGGLE));
+        assertTrue(gallery.toggle().isOn());
+        assertTrue(first(tree, SemanticsRole.TOGGLE).disabled());
+        gallery.toggle().setDisabled(false);
+        gallery.toggle().setOn(false);
+        gallery.checkbox().setChecked(true);
+        assertTrue(gallery.checkbox().isChecked());
+        gallery.checkbox().setDisabled(true);
+        assertTrue(gallery.checkbox().disabled());
+        assertEquals("logo", first(tree, SemanticsRole.IMAGE).label());
+        assertEquals("Sketch", first(tree, SemanticsRole.CANVAS).label());
+        gallery.image().setDisabled(true);
+        gallery.canvas().setDisabled(true);
+        assertTrue(gallery.image().disabled());
+        assertTrue(gallery.canvas().disabled());
+        assertTrue(first(tree, SemanticsRole.IMAGE).disabled());
+        assertTrue(first(tree, SemanticsRole.CANVAS).disabled());
+        gallery.image().setDisabled(false);
+        gallery.canvas().setDisabled(false);
+        assertEquals(8.0f, gallery.spacer().size().width());
+        assertEquals(48.0f, gallery.canvas().size().width());
     }
 
     /// Steps the slider through keyboard increment and decrement.
@@ -77,6 +116,11 @@ final class ControlGalleryTest {
         assertEquals(4.0, first(tree, SemanticsRole.SLIDER).rangeValue());
         tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ARROW_LEFT));
         assertEquals(3.0f, gallery.slider().value());
+        gallery.slider().setDisabled(true);
+        tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ARROW_RIGHT));
+        assertEquals(3.0f, gallery.slider().value());
+        assertTrue(first(tree, SemanticsRole.SLIDER).disabled());
+        gallery.slider().setDisabled(false);
     }
 
     /// Scrolls the viewport and advances the lazy-list window.
@@ -89,6 +133,11 @@ final class ControlGalleryTest {
         tree.place();
         gallery.scroll().scrollForward();
         assertEquals(16.0f, gallery.scroll().offset());
+        gallery.scroll().setDisabled(true);
+        gallery.scroll().scrollForward();
+        assertEquals(16.0f, gallery.scroll().offset());
+        assertTrue(gallery.scroll().disabled());
+        gallery.scroll().setDisabled(false);
         SemanticsNode list = first(tree, SemanticsRole.LIST);
         tree.dispatch(new PointerEvent(
                 PointerEventType.DOWN,
@@ -97,6 +146,13 @@ final class ControlGalleryTest {
         ));
         tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ARROW_DOWN));
         assertEquals(1, gallery.list().firstVisible());
+        gallery.list().setDisabled(true);
+        gallery.list().scrollTo(4);
+        gallery.list().insert(0);
+        assertEquals(1, gallery.list().firstVisible());
+        assertEquals(20, gallery.list().itemCount());
+        assertTrue(gallery.list().disabled());
+        gallery.list().setDisabled(false);
     }
 
     /// Materializes only a window of a 100,000-item list and scrolls by index.
@@ -110,6 +166,25 @@ final class ControlGalleryTest {
         tree.place();
         assertEquals(16, root.children().size());
         assertEquals(0, list.firstVisible());
+        assertEquals(0, list.overscan());
+        LazyList overscanned = new LazyList(100, 4, 2);
+        LayoutNode overscanRoot = overscanned.create(new LayoutFactory(tree), "overscan");
+        overscanned.scrollTo(10);
+        overscanRoot = overscanned.create(new LayoutFactory(tree), "overscan");
+        assertEquals(10, overscanned.firstVisible());
+        assertEquals(8, overscanned.materializedFirst());
+        assertEquals(16, overscanned.materializedLast());
+        assertEquals(8, overscanRoot.children().size());
+        overscanned.correctHeight(10, 40.0f);
+        assertEquals(40.0f, overscanned.heightAt(10));
+        assertEquals(20.0f, overscanned.heightAt(11));
+        LayoutNode tall = overscanned.create(new LayoutFactory(tree), "tall");
+        tree.setRoot(tall);
+        tree.measure(Constraints.loose(200.0f, 400.0f));
+        tree.place();
+        assertEquals(40.0f, tall.children().get(2).size().height());
+        assertFalse(overscanned.unmountedLabels().contains("Item 10"));
+        assertTrue(overscanned.unmountedLabels().contains("Item 0"));
         list.scrollTo(99_990);
         LayoutNode scrolled = list.create(new LayoutFactory(tree), "huge-end");
         assertEquals(16, scrolled.children().size());
@@ -120,6 +195,15 @@ final class ControlGalleryTest {
         assertEquals(99_968, list.firstVisible());
         list.page(1);
         assertEquals(99_984, list.firstVisible());
+        list.insert(0);
+        assertEquals(99_985, list.firstVisible());
+        assertEquals(100_001, list.itemCount());
+        list.remove(0);
+        assertEquals(99_984, list.firstVisible());
+        assertEquals(100_000, list.itemCount());
+        list.remove(99_990);
+        assertEquals(99_983, list.firstVisible());
+        assertEquals(99_999, list.itemCount());
     }
 
     /// Publishes progress range semantics without increment actions.
@@ -161,6 +245,12 @@ final class ControlGalleryTest {
         assertTrue(table.bounds().height() > 0.0f);
         gallery.table().insertRow(0, "r-new", 20.0f);
         assertEquals("r0", gallery.table().firstMaterializedKey());
+        gallery.table().setDisabled(true);
+        gallery.table().insertRow(0, "r-blocked", 20.0f);
+        gallery.table().scrollTo(3);
+        assertEquals("r0", gallery.table().firstMaterializedKey());
+        assertTrue(gallery.table().disabled());
+        gallery.table().setDisabled(false);
     }
 
     /// Commits IME composition into the text field.
@@ -228,9 +318,26 @@ final class ControlGalleryTest {
         field.setSelection(0, 2);
         field.copy(clipboard);
         assertEquals("ab", clipboard.text());
+        assertEquals("<div>ab</div>", clipboard.html());
+        assertEquals("{\\rtf1 ab}", clipboard.rtf());
+        field.setReadOnly(true);
+        field.replaceRange(0, 2, "zz");
+        assertEquals("ab\ncd", field.text());
+        field.setReadOnly(false);
+        field.setDisabled(true);
+        field.replaceRange(0, 2, "zz");
+        assertEquals("ab\ncd", field.text());
+        assertTrue(field.disabled());
+        field.setDisabled(false);
+        LayoutNode fieldNode = field.create(new LayoutFactory(new LayoutTree()), "hint-field");
+        fieldNode.setHint("Type a greeting");
+        fieldNode.setReadOnly(true);
+        assertEquals("Type a greeting", fieldNode.hint());
+        assertTrue(fieldNode.readOnly());
         field.setSelection(3, 5);
         field.cut(clipboard);
         assertEquals("cd", clipboard.text());
+        assertEquals("<div>cd</div>", clipboard.html());
         assertEquals("ab\n", field.text());
         field.setSelection(3, 3);
         field.paste(clipboard);
@@ -239,14 +346,19 @@ final class ControlGalleryTest {
         field.replaceRange(0, field.text().length(), "secret");
         assertEquals("secret", field.text());
         assertEquals("••••••", field.displayedText());
-        assertEquals("Password", field.create(new LayoutFactory(new LayoutTree()), "secret-field").label());
+        LayoutNode secretNode = field.create(new LayoutFactory(new LayoutTree()), "secret-field");
+        assertEquals("Password", secretNode.label());
+        assertTrue(secretNode.password());
         EditorClipboard leak = new EditorClipboard();
         leak.setText("keep");
+        leak.setHtml("<div>keep</div>");
         field.setSelection(0, 6);
         field.copy(leak);
         assertEquals("keep", leak.text());
+        assertEquals("<div>keep</div>", leak.html());
         field.cut(leak);
         assertEquals("keep", leak.text());
+        assertEquals("<div>keep</div>", leak.html());
         assertEquals("secret", field.text());
         field.setPassword(false);
         TextArea areaHome = new TextArea();
@@ -260,6 +372,7 @@ final class ControlGalleryTest {
         areaHome.setSelection(0, 3);
         areaHome.copy(areaClip);
         assertEquals("xyz", areaClip.text());
+        assertEquals("<div>xyz</div>", areaClip.html());
         field.replaceRange(0, field.text().length(), "hao");
         field.updateComposition("!");
         assertEquals("!", field.rejectComposition());
@@ -286,10 +399,83 @@ final class ControlGalleryTest {
         assertTrue(gallery.popup().isOpen());
         gallery.popup().dismiss();
         assertFalse(gallery.popup().isOpen());
+        gallery.popup().setDisabled(true);
+        gallery.popup().show();
+        assertFalse(gallery.popup().isOpen());
+        assertTrue(gallery.popup().disabled());
+        gallery.popup().setDisabled(false);
+        gallery.menu().setDisabled(true);
+        gallery.menu().show();
+        assertFalse(gallery.menu().isOpen());
+        assertTrue(gallery.menu().disabled());
+        gallery.menu().setDisabled(false);
+        gallery.dialog().setDisabled(true);
+        gallery.dialog().show();
+        assertFalse(gallery.dialog().isOpen());
+        assertTrue(gallery.dialog().disabled());
+        gallery.dialog().setDisabled(false);
+        gallery.tooltip().setDisabled(true);
+        gallery.tooltip().show();
+        assertFalse(gallery.tooltip().isOpen());
+        assertTrue(gallery.tooltip().disabled());
+        gallery.tooltip().setDisabled(false);
         assertFalse(gallery.theme().highContrast());
         assertEquals(TextDirection.LTR, gallery.theme().textDirection());
         assertFalse(gallery.theme().reducedMotion());
+        assertEquals(0xFF9E9E9E, gallery.theme().disabledArgb());
+        assertEquals(0xFF1565C0, gallery.theme().focusArgb());
+        assertEquals(0xFFBBDEFB, gallery.theme().selectionArgb());
+        assertEquals(0xFFC62828, gallery.theme().errorArgb());
+        assertEquals(0xFFE3F2FD, gallery.theme().hoverArgb());
+        assertEquals(0xFFE0E0E0, gallery.theme().borderArgb());
+        assertEquals(1.0f, gallery.theme().fontScale(), 0.0001f);
+        assertEquals(1.0f, gallery.theme().density(), 0.0001f);
         assertTrue(ThemeTokens.highContrastTheme().highContrast());
+    }
+
+    /// Installs a published theme generation through [`ControlGallery#applyThemeReload`].
+    @Test
+    void applyThemeReloadInstallsPublishedTokens() {
+        ControlGallery gallery = new ControlGallery();
+        ResourceReload reload = new ResourceReload();
+        assertFalse(gallery.applyThemeReload(reload, "gallery"));
+        reload.publish(
+                ResourceKind.THEME,
+                "gallery",
+                java.lang.foreign.MemorySegment.ofArray(ThemeTokens.highContrastTheme().encode())
+        );
+        assertTrue(gallery.applyThemeReload(reload, "gallery"));
+        assertTrue(gallery.theme().highContrast());
+        assertEquals("high-contrast", gallery.theme().name());
+        assertEquals(ThemeTokens.highContrastTheme(), ThemeTokens.decode(ThemeTokens.highContrastTheme().encode()));
+        ResourceReload styles = new ResourceReload();
+        styles.publish(
+                ResourceKind.STYLE,
+                "gallery",
+                java.lang.foreign.MemorySegment.ofArray("reducedMotion=true;rtl=true".getBytes(java.nio.charset.StandardCharsets.UTF_8))
+        );
+        assertTrue(gallery.applyStyleReload(styles, "gallery"));
+        assertTrue(gallery.theme().reducedMotion());
+        assertEquals(TextDirection.RTL, gallery.theme().textDirection());
+        ResourceReload images = new ResourceReload();
+        assertFalse(gallery.applyImageReload(images, "gallery"));
+        images.publish(
+                ResourceKind.IMAGE,
+                "gallery",
+                java.lang.foreign.MemorySegment.ofArray("star".getBytes(java.nio.charset.StandardCharsets.UTF_8))
+        );
+        assertTrue(gallery.applyImageReload(images, "gallery"));
+        assertEquals("star", gallery.iconButton().icon());
+        assertEquals("star", gallery.image().source());
+        ResourceReload fonts = new ResourceReload();
+        assertFalse(gallery.applyFontReload(fonts, "gallery"));
+        fonts.publish(
+                ResourceKind.FONT,
+                "gallery",
+                java.lang.foreign.MemorySegment.ofArray("HimariSans".getBytes(java.nio.charset.StandardCharsets.UTF_8))
+        );
+        assertTrue(gallery.applyFontReload(fonts, "gallery"));
+        assertEquals("HimariSans", gallery.fontFamily());
     }
 
     /// Commits IME composition into the multiline text area.
@@ -306,6 +492,11 @@ final class ControlGalleryTest {
         area.setSelection(0, 5);
         area.replaceRange(0, 5, "hi");
         assertEquals("hi", area.text());
+        area.setDisabled(true);
+        area.replaceRange(0, 2, "zz");
+        assertEquals("hi", area.text());
+        assertTrue(area.disabled());
+        area.setDisabled(false);
         area.updateComposition("!");
         assertEquals("!", area.rejectComposition());
         assertEquals("hi", area.text());
@@ -317,12 +508,24 @@ final class ControlGalleryTest {
     void announcesPoliteLiveRegion() {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
+        LayoutNode published = gallery.status().create(new LayoutFactory(tree), "status");
         gallery.status().announce("Saved");
+        assertEquals("Saved", published.label());
         rebuild(tree, gallery);
         SemanticsNode status = first(tree, SemanticsRole.STATUS);
         assertEquals("Saved", status.label());
         assertEquals(SemanticsLiveRegion.POLITE, status.liveRegion());
+        gallery.status().setLiveRegion(SemanticsLiveRegion.ASSERTIVE);
+        gallery.status().announce("Alert");
+        rebuild(tree, gallery);
+        SemanticsNode alert = first(tree, SemanticsRole.STATUS);
+        assertEquals("Alert", alert.label());
+        assertEquals(SemanticsLiveRegion.ASSERTIVE, alert.liveRegion());
         assertEquals(SemanticsLiveRegion.OFF, first(tree, SemanticsRole.BUTTON).liveRegion());
+        gallery.status().setDisabled(true);
+        assertTrue(gallery.status().disabled());
+        assertTrue(first(tree, SemanticsRole.STATUS).disabled());
+        gallery.status().setDisabled(false);
     }
 
     /// Publishes UTF-16 selection and caret ranges on editor semantics.

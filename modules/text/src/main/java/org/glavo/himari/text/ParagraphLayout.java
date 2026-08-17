@@ -17,7 +17,9 @@ import java.util.Objects;
 /// paragraph; U+000A still ends the paragraph even when it sits inside a span. U+00AD is a
 /// soft-hyphen break: it never contributes width, and a taken break replaces it with U+002D
 /// from the same face. [`LatinHyphenator`] supplies additional letter-run breaks. [`LineAlignment#JUSTIFY`] distributes leftover width onto U+0020 on
-/// every non-last paragraph line. Each line is then reordered into visual order with
+/// every non-last paragraph line. U+0009 advances to the next multiple of four space widths.
+/// When ellipsis is requested, a paragraph that would wrap is truncated to the first line and
+/// ends with U+2026. Each line is then reordered into visual order with
 /// [`BidiOrder`] paragraph-LTR levels, and [`LaidLine#caretX(int)`] uses those levels.
 @NotNullByDefault
 public final class ParagraphLayout {
@@ -48,7 +50,97 @@ public final class ParagraphLayout {
             int maxWidth,
             LineAlignment alignment
     ) {
-        return layout(new FontCollection(font), text, maxWidth, alignment);
+        return layout(new FontCollection(font), text, maxWidth, alignment, false);
+    }
+
+    /// Shapes `text` and wraps it, optionally truncating overflow with U+2026.
+    ///
+    /// @param font the font
+    /// @param text the source text
+    /// @param maxWidth the positive maximum line advance
+    /// @param alignment leftover-width policy
+    /// @param ellipsis whether overflow is truncated to one line ending in U+2026
+    /// @return the wrapped lines, empty when `text` is empty
+    public static @Unmodifiable List<LaidLine> layout(
+            SfntFont font,
+            String text,
+            int maxWidth,
+            LineAlignment alignment,
+            boolean ellipsis
+    ) {
+        return layout(new FontCollection(font), text, maxWidth, alignment, ellipsis, 0);
+    }
+
+    /// Shapes `text` and wraps it with a first-line indent.
+    ///
+    /// @param font the font
+    /// @param text the source text
+    /// @param maxWidth the positive maximum line advance
+    /// @param firstLineIndent extra indent applied to the first line of each paragraph
+    /// @return the wrapped lines, empty when `text` is empty
+    public static @Unmodifiable List<LaidLine> layout(
+            SfntFont font,
+            String text,
+            int maxWidth,
+            int firstLineIndent
+    ) {
+        return layout(new FontCollection(font), text, maxWidth, LineAlignment.START, false, firstLineIndent, 0);
+    }
+
+    /// Shapes `text` and wraps it with a first-line indent and a hanging indent on later lines.
+    ///
+    /// @param font the font
+    /// @param text the source text
+    /// @param maxWidth the positive maximum line advance
+    /// @param firstLineIndent extra indent applied to the first line of each paragraph
+    /// @param hangingIndent extra indent applied to every subsequent line
+    /// @return the wrapped lines, empty when `text` is empty
+    public static @Unmodifiable List<LaidLine> layout(
+            SfntFont font,
+            String text,
+            int maxWidth,
+            int firstLineIndent,
+            int hangingIndent
+    ) {
+        return layout(
+                new FontCollection(font),
+                text,
+                maxWidth,
+                LineAlignment.START,
+                false,
+                firstLineIndent,
+                hangingIndent,
+                0
+        );
+    }
+
+    /// Shapes `text` and wraps it with first-line, hanging, and last-line indents.
+    ///
+    /// @param font the font
+    /// @param text the source text
+    /// @param maxWidth the positive maximum line advance
+    /// @param firstLineIndent extra indent applied to the first line of each paragraph
+    /// @param hangingIndent extra indent applied to every subsequent line
+    /// @param lastLineIndent extra indent applied to the last line of each paragraph
+    /// @return the wrapped lines, empty when `text` is empty
+    public static @Unmodifiable List<LaidLine> layout(
+            SfntFont font,
+            String text,
+            int maxWidth,
+            int firstLineIndent,
+            int hangingIndent,
+            int lastLineIndent
+    ) {
+        return layout(
+                new FontCollection(font),
+                text,
+                maxWidth,
+                LineAlignment.START,
+                false,
+                firstLineIndent,
+                hangingIndent,
+                lastLineIndent
+        );
     }
 
     /// Shapes `text` through `fonts` and wraps it to `maxWidth` primary-em units.
@@ -74,11 +166,106 @@ public final class ParagraphLayout {
             int maxWidth,
             LineAlignment alignment
     ) {
+        return layout(fonts, text, maxWidth, alignment, false);
+    }
+
+    /// Shapes `text` through `fonts` and wraps it, optionally truncating overflow with U+2026.
+    ///
+    /// @param fonts the ordered faces
+    /// @param text the source text
+    /// @param maxWidth the positive maximum line advance
+    /// @param alignment leftover-width policy
+    /// @param ellipsis whether overflow is truncated to one line ending in U+2026
+    /// @return the wrapped lines, empty when `text` is empty
+    public static @Unmodifiable List<LaidLine> layout(
+            FontCollection fonts,
+            String text,
+            int maxWidth,
+            LineAlignment alignment,
+            boolean ellipsis
+    ) {
+        return layout(fonts, text, maxWidth, alignment, ellipsis, 0);
+    }
+
+    /// Shapes `text` through `fonts` and wraps it, optionally truncating overflow with U+2026
+    /// and indenting the first line of each paragraph.
+    ///
+    /// @param fonts the ordered faces
+    /// @param text the source text
+    /// @param maxWidth the positive maximum line advance
+    /// @param alignment leftover-width policy
+    /// @param ellipsis whether overflow is truncated to one line ending in U+2026
+    /// @param firstLineIndent extra indent applied to the first line of each paragraph
+    /// @return the wrapped lines, empty when `text` is empty
+    public static @Unmodifiable List<LaidLine> layout(
+            FontCollection fonts,
+            String text,
+            int maxWidth,
+            LineAlignment alignment,
+            boolean ellipsis,
+            int firstLineIndent
+    ) {
+        return layout(fonts, text, maxWidth, alignment, ellipsis, firstLineIndent, 0);
+    }
+
+    /// Shapes `text` through `fonts` and wraps it, optionally truncating overflow with U+2026
+    /// and indenting the first line plus subsequent hanging lines of each paragraph.
+    ///
+    /// @param fonts the ordered faces
+    /// @param text the source text
+    /// @param maxWidth the positive maximum line advance
+    /// @param alignment leftover-width policy
+    /// @param ellipsis whether overflow is truncated to one line ending in U+2026
+    /// @param firstLineIndent extra indent applied to the first line of each paragraph
+    /// @param hangingIndent extra indent applied to every subsequent line
+    /// @return the wrapped lines, empty when `text` is empty
+    public static @Unmodifiable List<LaidLine> layout(
+            FontCollection fonts,
+            String text,
+            int maxWidth,
+            LineAlignment alignment,
+            boolean ellipsis,
+            int firstLineIndent,
+            int hangingIndent
+    ) {
+        return layout(fonts, text, maxWidth, alignment, ellipsis, firstLineIndent, hangingIndent, 0);
+    }
+
+    /// Shapes `text` through `fonts` and wraps it with first-line, hanging, and last-line indents.
+    ///
+    /// @param fonts the ordered faces
+    /// @param text the source text
+    /// @param maxWidth the positive maximum line advance
+    /// @param alignment leftover-width policy
+    /// @param ellipsis whether overflow is truncated to one line ending in U+2026
+    /// @param firstLineIndent extra indent applied to the first line of each paragraph
+    /// @param hangingIndent extra indent applied to every subsequent line
+    /// @param lastLineIndent extra indent applied to the last line of each paragraph
+    /// @return the wrapped lines, empty when `text` is empty
+    public static @Unmodifiable List<LaidLine> layout(
+            FontCollection fonts,
+            String text,
+            int maxWidth,
+            LineAlignment alignment,
+            boolean ellipsis,
+            int firstLineIndent,
+            int hangingIndent,
+            int lastLineIndent
+    ) {
         Objects.requireNonNull(fonts, "fonts");
         Objects.requireNonNull(text, "text");
         Objects.requireNonNull(alignment, "alignment");
         if (maxWidth <= 0) {
             throw new IllegalArgumentException("maxWidth must be positive");
+        }
+        if (firstLineIndent < 0) {
+            throw new IllegalArgumentException("firstLineIndent must be non-negative");
+        }
+        if (hangingIndent < 0) {
+            throw new IllegalArgumentException("hangingIndent must be non-negative");
+        }
+        if (lastLineIndent < 0) {
+            throw new IllegalArgumentException("lastLineIndent must be non-negative");
         }
         if (text.isEmpty()) {
             return List.of();
@@ -90,7 +277,18 @@ public final class ParagraphLayout {
         while (start <= utf16Length) {
             int newline = text.indexOf('\n', start);
             int end = newline < 0 ? utf16Length : newline;
-            wrapParagraph(fonts, text.substring(start, end), maxWidth, clusterBase, lines, alignment);
+            wrapParagraph(
+                    fonts,
+                    text.substring(start, end),
+                    maxWidth,
+                    clusterBase,
+                    lines,
+                    alignment,
+                    ellipsis,
+                    firstLineIndent,
+                    hangingIndent,
+                    lastLineIndent
+            );
             if (newline < 0) {
                 break;
             }
@@ -190,7 +388,7 @@ public final class ParagraphLayout {
             return clusters;
         }
         ShapedText shaped = StyledShaper.shape(nonempty.toArray(TextSpan[]::new));
-        wrapGlyphs(shaped.glyphs(), shaped.fonts(), maxWidth, clusterBase, lines, alignment);
+        wrapGlyphs(shaped.glyphs(), shaped.fonts(), maxWidth, clusterBase, lines, alignment, false, 0, 0, 0);
         return clusters;
     }
 
@@ -201,36 +399,58 @@ public final class ParagraphLayout {
             int maxWidth,
             int clusterBase,
             List<LaidLine> lines,
-            LineAlignment alignment
+            LineAlignment alignment,
+            boolean ellipsis,
+            int firstLineIndent,
+            int hangingIndent,
+            int lastLineIndent
     ) {
         SfntFont[] faces = new SfntFont[fonts.size()];
         for (int index = 0; index < faces.length; index++) {
             faces[index] = fonts.font(index);
         }
-        wrapGlyphs(FallbackShaper.shape(fonts, paragraph), faces, maxWidth, clusterBase, lines, alignment);
+        wrapGlyphs(
+                FallbackShaper.shape(fonts, paragraph),
+                faces,
+                maxWidth,
+                clusterBase,
+                lines,
+                alignment,
+                ellipsis,
+                firstLineIndent,
+                hangingIndent,
+                lastLineIndent
+        );
     }
 
-    /// Wraps already-shaped paragraph glyphs, applying soft-hyphen breaks and leftover alignment.
+    /// Wraps already-shaped paragraph glyphs, applying tabs, soft-hyphen breaks, leftover alignment,
+    /// and optional first-line ellipsis.
     private static void wrapGlyphs(
             List<ShapedGlyph> glyphs,
             SfntFont[] fonts,
             int maxWidth,
             int clusterBase,
             List<LaidLine> lines,
-            LineAlignment alignment
+            LineAlignment alignment,
+            boolean ellipsis,
+            int firstLineIndent,
+            int hangingIndent,
+            int lastLineIndent
     ) {
         int count = glyphs.size();
         int firstLine = lines.size();
         if (count == 0) {
-            lines.add(new LaidLine(List.of(), 0, clusterBase, clusterBase));
+            lines.add(new LaidLine(List.of(), 0, clusterBase, clusterBase).withIndent(firstLineIndent));
             return;
         }
+        ArrayList<ShapedGlyph> laid = new ArrayList<>(glyphs);
+        int tabStop = tabStop(fonts[0]);
         int lineStart = 0;
         int lastBreak = -1;
         boolean lastBreakHyphen = false;
         int width = 0;
         for (int index = 0; index < count; index++) {
-            ShapedGlyph glyph = glyphs.get(index);
+            ShapedGlyph glyph = laid.get(index);
             if (glyph.codePoint() == 0x00AD || BidiOrder.isControl(glyph.codePoint())) {
                 if (glyph.codePoint() == 0x00AD) {
                     int hyphen = hyphenAdvance(fonts, glyph);
@@ -241,11 +461,15 @@ public final class ParagraphLayout {
                 }
                 continue;
             }
-            int advance = glyph.xAdvance();
+            int advance = glyph.codePoint() == 0x09 ? tabAdvance(width, tabStop) : glyph.xAdvance();
+            if (glyph.codePoint() == 0x09 && advance != glyph.xAdvance()) {
+                laid.set(index, withAdvance(glyph, advance));
+                glyph = laid.get(index);
+            }
             if (width + advance > maxWidth && index > lineStart) {
                 int dictionary = lastBreak > lineStart
                         ? -1
-                        : dictionaryBreak(glyphs, fonts, lineStart, index, maxWidth);
+                        : dictionaryBreak(laid, fonts, lineStart, index, maxWidth);
                 int end;
                 boolean hyphenate;
                 if (lastBreak > lineStart) {
@@ -258,7 +482,7 @@ public final class ParagraphLayout {
                     end = index;
                     hyphenate = false;
                 }
-                lines.add(slice(glyphs, fonts, lineStart, end, clusterBase, hyphenate));
+                lines.add(slice(laid, fonts, lineStart, end, clusterBase, hyphenate));
                 lineStart = end;
                 lastBreak = -1;
                 lastBreakHyphen = false;
@@ -273,7 +497,14 @@ public final class ParagraphLayout {
             }
         }
         if (lineStart < count) {
-            lines.add(slice(glyphs, fonts, lineStart, count, clusterBase, false));
+            lines.add(slice(laid, fonts, lineStart, count, clusterBase, false));
+        }
+        if (ellipsis && lines.size() - firstLine > 1) {
+            LaidLine first = withEllipsis(lines.get(firstLine), fonts, maxWidth);
+            while (lines.size() > firstLine + 1) {
+                lines.remove(lines.size() - 1);
+            }
+            lines.set(firstLine, first);
         }
         if (alignment == LineAlignment.JUSTIFY) {
             int last = lines.size() - 1;
@@ -284,6 +515,94 @@ public final class ParagraphLayout {
         for (int index = firstLine; index < lines.size(); index++) {
             lines.set(index, visualize(lines.get(index)));
         }
+        if (alignment == LineAlignment.CENTER || alignment == LineAlignment.END) {
+            for (int index = firstLine; index < lines.size(); index++) {
+                lines.set(index, alignLine(lines.get(index), maxWidth, alignment));
+            }
+        }
+        if (firstLineIndent > 0 && firstLine < lines.size()) {
+            LaidLine first = lines.get(firstLine);
+            lines.set(firstLine, first.withIndent(first.indent() + firstLineIndent));
+        }
+        if (hangingIndent > 0) {
+            for (int index = firstLine + 1; index < lines.size(); index++) {
+                LaidLine line = lines.get(index);
+                lines.set(index, line.withIndent(line.indent() + hangingIndent));
+            }
+        }
+        if (lastLineIndent > 0 && firstLine < lines.size()) {
+            LaidLine last = lines.get(lines.size() - 1);
+            lines.set(lines.size() - 1, last.withIndent(last.indent() + lastLineIndent));
+        }
+    }
+
+    /// Applies leftover-width indent for center or end alignment.
+    private static LaidLine alignLine(LaidLine line, int maxWidth, LineAlignment alignment) {
+        int extra = maxWidth - line.width();
+        if (extra <= 0) {
+            return line;
+        }
+        int indent = alignment == LineAlignment.END ? extra : extra / 2;
+        return line.withIndent(indent);
+    }
+
+    /// Four space advances, or four units when the face has no space metric.
+    private static int tabStop(SfntFont font) {
+        int space = font.metrics(font.glyphId(' ')).advanceWidth();
+        if (space <= 0) {
+            space = Math.max(1, font.unitsPerEm() / 2);
+        }
+        return 4 * space;
+    }
+
+    /// Distance from `width` to the next tab stop.
+    private static int tabAdvance(int width, int tabStop) {
+        int used = width % tabStop;
+        return used == 0 ? tabStop : tabStop - used;
+    }
+
+    /// Returns `glyph` with `advance` as its X-advance.
+    private static ShapedGlyph withAdvance(ShapedGlyph glyph, int advance) {
+        return new ShapedGlyph(
+                glyph.codePoint(),
+                glyph.glyphId(),
+                glyph.cluster(),
+                advance,
+                glyph.xOffset(),
+                glyph.yOffset(),
+                glyph.fontIndex(),
+                glyph.unsafeToBreak()
+        );
+    }
+
+    /// Truncates `line` so U+2026 fits in `maxWidth`.
+    private static LaidLine withEllipsis(LaidLine line, SfntFont[] fonts, int maxWidth) {
+        ShapedGlyph sample = line.glyphs().isEmpty()
+                ? new ShapedGlyph(0x2026, fonts[0].glyphId('.'), line.startCluster(), 0)
+                : line.glyphs().getFirst();
+        int ellipsisId = ellipsisGlyph(fonts, sample);
+        int ellipsisAdvance = fonts[sample.fontIndex()].metrics(ellipsisId).advanceWidth();
+        ArrayList<ShapedGlyph> kept = new ArrayList<>(line.glyphs());
+        int width = line.width();
+        while (!kept.isEmpty() && width + ellipsisAdvance > maxWidth) {
+            ShapedGlyph last = kept.removeLast();
+            width -= last.xAdvance();
+        }
+        int cluster = kept.isEmpty() ? line.startCluster() : kept.getLast().cluster() + 1;
+        kept.add(new ShapedGlyph(0x2026, ellipsisId, cluster, ellipsisAdvance, 0, 0, sample.fontIndex()));
+        width += ellipsisAdvance;
+        return new LaidLine(kept, width, line.startCluster(), cluster + 1);
+    }
+
+    /// Returns a glyph that can stand in for U+2026 on `sample`'s face.
+    private static int ellipsisGlyph(SfntFont[] fonts, ShapedGlyph sample) {
+        SfntFont font = fonts[sample.fontIndex()];
+        int ellipsis = font.glyphId(0x2026);
+        if (ellipsis > 0) {
+            return ellipsis;
+        }
+        int period = font.glyphId('.');
+        return period > 0 ? period : font.glyphId('A');
     }
 
     /// Copies `glyphs[from, to)`, drops unused U+00AD, and replaces a trailing soft hyphen.

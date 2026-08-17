@@ -1097,6 +1097,19 @@ final class DefaultShaperTest {
         assertEquals(0, glyphs.get(1).xAdvance());
     }
 
+    /// NFC-composes `e` plus combining acute onto `U+00E9` before `cmap` mapping.
+    @Test
+    void nfcComposesLatinBeforeCmap() {
+        assertEquals("\u00E9", UnicodeNormalize.nfc("e\u0301"));
+        assertEquals("e\u0301", UnicodeNormalize.nfd("\u00E9"));
+        assertEquals("\u00E9", UnicodeNormalize.nfkc("\u0065\u0301"));
+        assertEquals("e\u0301", UnicodeNormalize.nfkd("\u00E9"));
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "e\u0301");
+        assertEquals(1, glyphs.size());
+        assertEquals(0x00E9, glyphs.getFirst().codePoint());
+    }
+
     /// Selects Hebrew final kaf at the end of a word.
     @Test
     void selectsHebrewFinalKaf() {
@@ -1114,6 +1127,71 @@ final class DefaultShaperTest {
         SfntFont font = ScriptSampleFont.create();
         List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05DB\u05D0");
         assertEquals(0x05DB, glyphs.get(0).codePoint());
+    }
+
+    /// Composes Arabic shadda plus fatha onto `U+FC60`.
+    @Test
+    void composesArabicShaddaFatha() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u0651\u064E");
+        assertEquals(1, glyphs.size());
+        assertEquals(0xFC60, glyphs.getFirst().codePoint());
+        assertTrue(glyphs.getFirst().glyphId() > 0);
+        List<ShapedGlyph> dammatan = DefaultShaper.shape(font, "\u0651\u064C");
+        assertEquals(1, dammatan.size());
+        assertEquals(0xFC5E, dammatan.getFirst().codePoint());
+        assertTrue(dammatan.getFirst().glyphId() > 0);
+    }
+
+    /// Composes Arabic Allah onto `U+FDF2`.
+    @Test
+    void composesArabicAllah() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u0644\u0644\u0647");
+        assertEquals(1, glyphs.size());
+        assertEquals(0xFDF2, glyphs.getFirst().codePoint());
+        assertTrue(glyphs.getFirst().glyphId() > 0);
+        List<ShapedGlyph> marked = DefaultShaper.shape(font, "\u0644\u0644\u0651\u0670\u0647");
+        assertEquals(1, marked.size());
+        assertEquals(0xFDF2, marked.getFirst().codePoint());
+        assertTrue(glyphs.getFirst().unsafeToBreak());
+    }
+
+    /// Selects alef-wasla presentation forms and marks ligature clusters unsafe to break.
+    @Test
+    void shapesArabicAlefWaslaAndMarksLigaturesUnsafeToBreak() {
+        SfntFont font = ScriptSampleFont.create();
+        List<ShapedGlyph> isolated = DefaultShaper.shape(font, "\u0671");
+        assertEquals(1, isolated.size());
+        assertEquals(0xFB50, isolated.getFirst().codePoint());
+        List<ShapedGlyph> finalForm = DefaultShaper.shape(font, "\u0628\u0671");
+        assertEquals(0xFB51, finalForm.get(1).codePoint());
+        List<ShapedGlyph> lamAlef = DefaultShaper.shape(font, "\u0644\u0627");
+        assertEquals(1, lamAlef.size());
+        assertTrue(lamAlef.getFirst().unsafeToBreak());
+        List<ShapedGlyph> peh = DefaultShaper.shape(font, "\u067E\u067E");
+        assertEquals(0xFB58, peh.get(0).codePoint());
+        assertEquals(0xFB57, peh.get(1).codePoint());
+        List<ShapedGlyph> tcheh = DefaultShaper.shape(font, "\u0686");
+        assertEquals(0xFB7A, tcheh.getFirst().codePoint());
+        List<ShapedGlyph> tteh = DefaultShaper.shape(font, "\u0679\u0679");
+        assertEquals(0xFB68, tteh.get(0).codePoint());
+        assertEquals(0xFB67, tteh.get(1).codePoint());
+        List<ShapedGlyph> jeh = DefaultShaper.shape(font, "\u0698");
+        assertEquals(0xFB8A, jeh.getFirst().codePoint());
+        List<ShapedGlyph> veh = DefaultShaper.shape(font, "\u06A4\u06A4");
+        assertEquals(0xFB6C, veh.get(0).codePoint());
+        assertEquals(0xFB6B, veh.get(1).codePoint());
+        List<ShapedGlyph> keheh = DefaultShaper.shape(font, "\u06A9");
+        assertEquals(0xFB8E, keheh.getFirst().codePoint());
+        List<ShapedGlyph> gaf = DefaultShaper.shape(font, "\u06AF");
+        assertEquals(0xFB92, gaf.getFirst().codePoint());
+        List<ShapedGlyph> farsi = DefaultShaper.shape(font, "\u06CC");
+        assertEquals(0xFBFC, farsi.getFirst().codePoint());
+        List<ShapedGlyph> noon = DefaultShaper.shape(font, "\u06BA");
+        assertEquals(0xFB9E, noon.getFirst().codePoint());
+        List<ShapedGlyph> barree = DefaultShaper.shape(font, "\u0628\u06D2");
+        assertEquals(0xFBAF, barree.get(1).codePoint());
     }
 
     /// Composes Yiddish double vav onto `U+05F0`.
@@ -1148,6 +1226,10 @@ final class DefaultShaperTest {
         assertEquals(1, glyphs.size());
         assertEquals(0x0EDC, glyphs.getFirst().codePoint());
         assertTrue(glyphs.getFirst().glyphId() > 0);
+        List<ShapedGlyph> homo = DefaultShaper.shape(font, "\u0EAB\u0EA1");
+        assertEquals(1, homo.size());
+        assertEquals(0x0EDD, homo.getFirst().codePoint());
+        assertTrue(homo.getFirst().glyphId() > 0);
     }
 
     /// Leaves unmarked Hebrew as one-to-one cmap mapping.
@@ -1171,6 +1253,12 @@ final class DefaultShaperTest {
         assertEquals(0xFB31, glyphs.getFirst().codePoint());
         assertNotEquals(font.glyphId('\u05D1'), glyphs.getFirst().glyphId());
         assertEquals(0, glyphs.getFirst().cluster());
+        List<ShapedGlyph> finalNun = DefaultShaper.shape(font, "\u05DF\u05BC");
+        assertEquals(1, finalNun.size());
+        assertEquals(0xFB3F, finalNun.getFirst().codePoint());
+        List<ShapedGlyph> finalTsadi = DefaultShaper.shape(font, "\u05E5\u05BC");
+        assertEquals(1, finalTsadi.size());
+        assertEquals(0xFB45, finalTsadi.getFirst().codePoint());
     }
 
     /// Composes Hangul choseong plus jungseong into `가`.
@@ -1182,6 +1270,9 @@ final class DefaultShaperTest {
         assertEquals(0xAC00, glyphs.getFirst().codePoint());
         assertNotEquals(font.glyphId('\u1100'), glyphs.getFirst().glyphId());
         assertEquals(0, glyphs.getFirst().cluster());
+        List<ShapedGlyph> halfwidth = DefaultShaper.shape(font, "\uFFA1\uFFC2");
+        assertEquals(1, halfwidth.size());
+        assertEquals(0xAC00, halfwidth.getFirst().codePoint());
     }
 
     /// Composes Hangul LVT into `각`.
@@ -1295,6 +1386,9 @@ final class DefaultShaperTest {
         assertEquals(1, glyphs.size());
         assertEquals(0xFB2F, glyphs.getFirst().codePoint());
         assertNotEquals(font.glyphId('\u05D0'), glyphs.getFirst().glyphId());
+        List<ShapedGlyph> qatan = DefaultShaper.shape(font, "\u05D0\u05C7");
+        assertEquals(1, qatan.size());
+        assertEquals(0xFB2F, qatan.getFirst().codePoint());
     }
 
     /// Composes bet plus rafe onto `U+FB4C`.
@@ -1353,6 +1447,9 @@ final class DefaultShaperTest {
         assertEquals(1, glyphs.size());
         assertEquals(0xFB4B, glyphs.getFirst().codePoint());
         assertNotEquals(font.glyphId('\u05D5'), glyphs.getFirst().glyphId());
+        List<ShapedGlyph> haser = DefaultShaper.shape(font, "\u05D5\u05BA");
+        assertEquals(1, haser.size());
+        assertEquals(0xFB4B, haser.getFirst().codePoint());
     }
 
     /// Composes shin plus shin-dot plus dagesh onto `U+FB2C`.
@@ -1371,6 +1468,10 @@ final class DefaultShaperTest {
         List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "\u05E9\u05C1");
         assertEquals(1, glyphs.size());
         assertEquals(0xFB2A, glyphs.getFirst().codePoint());
+        assertEquals(0xFB21, HebrewPresentation.wideForm(0x05D0));
+        assertEquals(0xFB28, HebrewPresentation.wideForm(0x05EA));
+        assertEquals(0, HebrewPresentation.wideForm(0x05D1));
+        assertEquals(0xFB20, HebrewPresentation.alternativeAyin());
     }
 
     /// Composes isolated LAM plus alef onto Presentation Forms-B lam-alef.

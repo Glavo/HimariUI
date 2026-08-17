@@ -4,15 +4,18 @@ import org.glavo.himari.ffi.CallbackFailureQueue;
 import org.glavo.himari.platform.windows.generated.Win32FfmBindings;
 import org.glavo.himari.platform.windows.generated.Win32Layouts;
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/// Implements OLE `IDataObject` for Unicode text through generated FFM bindings.
+/// Implements OLE `IDataObject` for Unicode text and `CF_HDROP` through generated FFM bindings.
 @SuppressWarnings("restricted")
 @NotNullByDefault
 public final class WindowsDataObject implements AutoCloseable {
@@ -24,6 +27,9 @@ public final class WindowsDataObject implements AutoCloseable {
 
     /// `CF_UNICODETEXT`.
     static final int CF_UNICODETEXT = 13;
+
+    /// `CF_HDROP`.
+    static final int CF_HDROP = 15;
 
     /// `TYMED_HGLOBAL`.
     static final int TYMED_HGLOBAL = 1;
@@ -55,8 +61,11 @@ public final class WindowsDataObject implements AutoCloseable {
     /// Contained callback failures.
     private final CallbackFailureQueue failures = new CallbackFailureQueue();
 
-    /// Published Unicode payload.
+    /// Published Unicode payload, or empty when this object publishes only files.
     private final String text;
+
+    /// Published `CF_HDROP` paths, or `null` when this object publishes only text.
+    private final @Nullable @Unmodifiable List<String> paths;
 
     /// COM object.
     private final MemorySegment object;
@@ -73,10 +82,12 @@ public final class WindowsDataObject implements AutoCloseable {
     /// Creates one data object.
     ///
     /// @param bindings the bindings
-    /// @param text the Unicode payload
-    private WindowsDataObject(Win32FfmBindings bindings, String text) {
+    /// @param text the Unicode payload, empty when only files are published
+    /// @param paths the file paths, or `null`
+    private WindowsDataObject(Win32FfmBindings bindings, String text, @Nullable List<String> paths) {
         this.bindings = bindings;
         this.text = text;
+        this.paths = paths == null ? null : List.copyOf(paths);
         this.arena = Arena.ofConfined();
         this.vtable = arena.allocate(ValueLayout.ADDRESS, 12);
         this.object = arena.allocate(ValueLayout.ADDRESS);
@@ -96,7 +107,18 @@ public final class WindowsDataObject implements AutoCloseable {
     public static WindowsDataObject unicode(WindowsLibraries libraries, String text) {
         Objects.requireNonNull(libraries, "libraries");
         Objects.requireNonNull(text, "text");
-        return new WindowsDataObject(libraries.bindings(), text);
+        return new WindowsDataObject(libraries.bindings(), text, null);
+    }
+
+    /// Creates a `CF_HDROP` `IDataObject`.
+    ///
+    /// @param libraries the session libraries
+    /// @param paths the absolute file paths
+    /// @return the data object
+    public static WindowsDataObject files(WindowsLibraries libraries, List<String> paths) {
+        Objects.requireNonNull(libraries, "libraries");
+        Objects.requireNonNull(paths, "paths");
+        return new WindowsDataObject(libraries.bindings(), "", paths);
     }
 
     /// Returns the native `IDataObject` pointer.
@@ -151,7 +173,7 @@ public final class WindowsDataObject implements AutoCloseable {
         return references;
     }
 
-    /// Implements `IDataObject::GetData` for `CF_UNICODETEXT`.
+    /// Implements `IDataObject::GetData` for `CF_UNICODETEXT` or `CF_HDROP`.
     private int getData(MemorySegment self, MemorySegment format, MemorySegment medium) {
         if (format.address() == 0L || medium.address() == 0L) {
             return E_POINTER;
@@ -159,7 +181,9 @@ public final class WindowsDataObject implements AutoCloseable {
         if (!supports(format)) {
             return DATA_E_FORMATETC;
         }
-        byte[] utf16 = (text + '\0').getBytes(StandardCharsets.UTF_16LE);
+        byte[] utf16 = clipFormat(format) == CF_HDROP && paths != null
+                ? WindowsClipboard.encodeDropFiles(paths)
+                : (text + '\0').getBytes(StandardCharsets.UTF_16LE);
         Win32FfmBindings.GlobalAllocResult allocation = bindings.globalAlloc(
                 GMEM_MOVEABLE,
                 Integer.toUnsignedLong(utf16.length)
@@ -189,15 +213,26 @@ public final class WindowsDataObject implements AutoCloseable {
         return supports(format) ? S_OK : DATA_E_FORMATETC;
     }
 
-    /// Returns whether `format` requests Unicode HGLOBAL text.
-    private static boolean supports(MemorySegment format) {
+    /// Returns whether `format` requests Unicode HGLOBAL text or `CF_HDROP`.
+    private boolean supports(MemorySegment format) {
         MemorySegment record = format.reinterpret(Win32Layouts.FORMATETC.byteSize());
         int clip = Short.toUnsignedInt(record.get(ValueLayout.JAVA_SHORT, Win32Layouts.FORMATETC_CF_FORMAT_OFFSET));
         int tymed = record.get(ValueLayout.JAVA_INT, Win32Layouts.FORMATETC_TYMED_OFFSET);
         int aspect = record.get(ValueLayout.JAVA_INT, Win32Layouts.FORMATETC_DW_ASPECT_OFFSET);
-        return clip == CF_UNICODETEXT
-                && (tymed & TYMED_HGLOBAL) != 0
-                && (aspect == 0 || aspect == DVASPECT_CONTENT);
+        boolean hglobal = (tymed & TYMED_HGLOBAL) != 0 && (aspect == 0 || aspect == DVASPECT_CONTENT);
+        if (!hglobal) {
+            return false;
+        }
+        if (clip == CF_HDROP) {
+            return paths != null;
+        }
+        return clip == CF_UNICODETEXT && paths == null;
+    }
+
+    /// Reads `cfFormat` from a `FORMATETC`.
+    private static int clipFormat(MemorySegment format) {
+        MemorySegment record = format.reinterpret(Win32Layouts.FORMATETC.byteSize());
+        return Short.toUnsignedInt(record.get(ValueLayout.JAVA_SHORT, Win32Layouts.FORMATETC_CF_FORMAT_OFFSET));
     }
 
     /// Verifies the object is open.

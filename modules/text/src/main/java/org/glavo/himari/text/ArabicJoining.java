@@ -31,6 +31,12 @@ public final class ArabicJoining {
         if (codePoint >= 0x0750 && codePoint <= 0x077F) {
             return JoiningType.DUAL;
         }
+        if (rightJoining(codePoint)) {
+            return JoiningType.RIGHT;
+        }
+        if (dualJoining(codePoint)) {
+            return JoiningType.DUAL;
+        }
         if (codePoint < 0x0621 || codePoint > 0x064A) {
             return JoiningType.NON_JOINING;
         }
@@ -108,6 +114,56 @@ public final class ArabicJoining {
             }
         }
         return JoiningType.NON_JOINING;
+    }
+
+    /// Returns whether `codePoint` is a first-stable right-joining extended letter.
+    private static boolean rightJoining(int codePoint) {
+        return codePoint == 0x0671
+                || codePoint == 0x0688
+                || codePoint == 0x068C
+                || codePoint == 0x068D
+                || codePoint == 0x068E
+                || codePoint == 0x0691
+                || codePoint == 0x0698
+                || codePoint == 0x06BA
+                || codePoint == 0x06C0
+                || codePoint == 0x06C5
+                || codePoint == 0x06C6
+                || codePoint == 0x06C7
+                || codePoint == 0x06C8
+                || codePoint == 0x06C9
+                || codePoint == 0x06CB
+                || codePoint == 0x06D2
+                || codePoint == 0x06D3
+                || codePoint == 0x06D5
+                || codePoint == 0x06EE
+                || codePoint == 0x06EF;
+    }
+
+    /// Returns whether `codePoint` is a first-stable dual-joining extended letter.
+    private static boolean dualJoining(int codePoint) {
+        return codePoint == 0x0679
+                || codePoint == 0x067A
+                || codePoint == 0x067B
+                || codePoint == 0x067E
+                || codePoint == 0x067F
+                || codePoint == 0x0680
+                || codePoint == 0x0683
+                || codePoint == 0x0684
+                || codePoint == 0x0686
+                || codePoint == 0x0687
+                || codePoint == 0x06A4
+                || codePoint == 0x06A6
+                || codePoint == 0x06A9
+                || codePoint == 0x06AF
+                || codePoint == 0x06B1
+                || codePoint == 0x06B3
+                || codePoint == 0x06BB
+                || codePoint == 0x06BE
+                || codePoint == 0x06C1
+                || codePoint == 0x06CC
+                || codePoint == 0x06D0
+                || codePoint == 0x06AD;
     }
 
     /// Returns whether `codePoint` is a joining-transparent mark.

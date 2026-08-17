@@ -446,7 +446,18 @@
         { "name": "get_desc1", "type": "idxgi_output6_get_desc1", "byteOffset": 216, "bitOffset": null, "bitWidth": null }
       ],
       "availability": { "introduced": "10.0", "deprecated": null, "unavailable": false }
-    }
+    },
+    {
+      "kind": "aggregate", "name": "safearraybound", "aggregateKind": "struct", "byteSize": 8, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "c_elements", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "l_lbound", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "safearraybound_ptr", "pointee": "safearraybound", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "handle", "name": "safearray", "representation": "void_ptr", "invalidValues": [0], "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    { "kind": "pointer", "name": "safearray_ptr", "pointee": "safearray", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } }
   ],
   "callbacks": [
     {
@@ -2644,6 +2655,20 @@
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }
     },
     {
+      "name": "getMessageTime", "symbol": "GetMessageTime",
+      "result": { "type": "u32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getTickCount", "symbol": "GetTickCount",
+      "result": { "type": "u32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
       "name": "monitorFromWindow", "symbol": "MonitorFromWindow",
       "result": { "type": "hmonitor", "nullability": "non_null", "ownership": "borrowed" },
       "parameters": [
@@ -2858,6 +2883,13 @@
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }
     },
     {
+      "name": "registerClipboardFormatW", "symbol": "RegisterClipboardFormatW",
+      "result": { "type": "u32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [{ "name": "formatName", "type": "const_wchar_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
       "name": "globalAlloc", "symbol": "GlobalAlloc",
       "result": { "type": "hglobal", "nullability": "nullable", "ownership": "owned" },
       "parameters": [
@@ -3035,6 +3067,97 @@
       "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
       "parameters": [],
       "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "uiaHostProviderFromHwnd", "symbol": "UiaHostProviderFromHwnd",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "provider", "type": "void_ptr_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": "6.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "uiaRaiseAutomationEvent", "symbol": "UiaRaiseAutomationEvent",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "provider", "type": "com_interface", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "eventId", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": "6.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "uiaClientsAreListening", "symbol": "UiaClientsAreListening",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any",
+      "availability": { "introduced": "6.0", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "safeArrayCreate", "symbol": "SafeArrayCreate",
+      "result": { "type": "safearray", "nullability": "nullable", "ownership": "owned" },
+      "parameters": [
+        { "name": "variantType", "type": "u16", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "dimensions", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "bounds", "type": "safearraybound_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "safeArrayDestroy", "symbol": "SafeArrayDestroy",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "array", "type": "safearray", "direction": "in", "nullability": "non_null", "ownership": "transferred" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "safeArrayPutElement", "symbol": "SafeArrayPutElement",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "array", "type": "safearray", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "indices", "type": "i32_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "element", "type": "void_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "safeArrayGetElement", "symbol": "SafeArrayGetElement",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "array", "type": "safearray", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "indices", "type": "i32_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "element", "type": "void_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "safeArrayGetUBound", "symbol": "SafeArrayGetUBound",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "array", "type": "safearray", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "dimension", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "bound", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "safeArrayGetLBound", "symbol": "SafeArrayGetLBound",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "array", "type": "safearray", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "dimension", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "bound", "type": "i32_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "any",
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }
     }
   ]

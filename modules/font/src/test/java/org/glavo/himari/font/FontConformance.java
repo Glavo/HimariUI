@@ -125,6 +125,76 @@ public final class FontConformance {
         if (woff2.colorLayers(ColrV1SampleFont.GLYPH_BASE).size() != 2) {
             throw new IllegalStateException("WOFF2 leftover did not unwrap COLR v1 layers");
         }
+        SfntFont svg = SvgSampleFont.create();
+        if (!SvgSampleFont.DOCUMENT.equals(svg.svgDocument(SvgSampleFont.GLYPH_A))) {
+            throw new IllegalStateException("SVG leftover did not return the stored document");
+        }
+        SfntFont os2 = Os2SampleFont.create();
+        if (os2.weightClass() != Os2SampleFont.WEIGHT_CLASS
+                || os2.widthClass() != Os2SampleFont.WIDTH_CLASS
+                || os2.avgCharWidth() != Os2SampleFont.AVG_CHAR_WIDTH
+                || os2.fsType() != Os2SampleFont.FS_TYPE
+                || java.util.Arrays.compare(Os2SampleFont.PANOSE, os2.panose()) != 0
+                || !Os2SampleFont.VENDOR.equals(os2.vendorId())
+                || os2.fsSelection() != Os2SampleFont.FS_SELECTION
+                || os2.typoAscender() != Os2SampleFont.TYPO_ASCENDER
+                || os2.typoDescender() != Os2SampleFont.TYPO_DESCENDER
+                || os2.typoLineGap() != Os2SampleFont.TYPO_LINE_GAP
+                || os2.winAscent() != Os2SampleFont.WIN_ASCENT
+                || os2.winDescent() != Os2SampleFont.WIN_DESCENT
+                || !Os2SampleFont.COPYRIGHT.equals(os2.copyright())
+                || !Os2SampleFont.UNIQUE.equals(os2.uniqueId())
+                || !Os2SampleFont.FAMILY.equals(os2.familyName())
+                || !Os2SampleFont.STYLE.equals(os2.styleName())
+                || !Os2SampleFont.FULL.equals(os2.fullName())
+                || !Os2SampleFont.VERSION.equals(os2.versionString())
+                || !Os2SampleFont.POSTSCRIPT.equals(os2.postScriptName())
+                || !Os2SampleFont.TRADEMARK.equals(os2.trademark())
+                || !Os2SampleFont.MANUFACTURER.equals(os2.manufacturer())
+                || !Os2SampleFont.DESIGNER.equals(os2.designer())
+                || !Os2SampleFont.DESCRIPTION.equals(os2.description())
+                || !Os2SampleFont.TYPOGRAPHIC_FAMILY.equals(os2.typographicFamily())
+                || !Os2SampleFont.TYPOGRAPHIC_SUBFAMILY.equals(os2.typographicSubfamily())
+                || !Os2SampleFont.VENDOR_URL.equals(os2.vendorUrl())
+                || !Os2SampleFont.LICENSE.equals(os2.license())
+                || !Os2SampleFont.DESIGNER_URL.equals(os2.designerUrl())
+                || !Os2SampleFont.LICENSE_URL.equals(os2.licenseUrl())
+                || !Os2SampleFont.WWS_FAMILY.equals(os2.wwsFamily())
+                || !Os2SampleFont.WWS_SUBFAMILY.equals(os2.wwsSubfamily())
+                || !Os2SampleFont.SAMPLE_TEXT.equals(os2.sampleText())
+                || !Os2SampleFont.COMPATIBLE_FULL.equals(os2.compatibleFull())
+                || !Os2SampleFont.POST_SCRIPT_CID.equals(os2.postScriptCid())
+                || !Os2SampleFont.VARIATIONS_POST_SCRIPT_PREFIX.equals(os2.variationsPostScriptPrefix())
+                || os2.subscriptXSize() != Os2SampleFont.SUBSCRIPT_X_SIZE
+                || os2.subscriptYSize() != Os2SampleFont.SUBSCRIPT_Y_SIZE
+                || os2.subscriptXOffset() != Os2SampleFont.SUBSCRIPT_X_OFFSET
+                || os2.subscriptYOffset() != Os2SampleFont.SUBSCRIPT_Y_OFFSET
+                || os2.superscriptXSize() != Os2SampleFont.SUPERSCRIPT_X_SIZE
+                || os2.superscriptYSize() != Os2SampleFont.SUPERSCRIPT_Y_SIZE
+                || os2.superscriptXOffset() != Os2SampleFont.SUPERSCRIPT_X_OFFSET
+                || os2.superscriptYOffset() != Os2SampleFont.SUPERSCRIPT_Y_OFFSET
+                || os2.strikeoutSize() != Os2SampleFont.STRIKEOUT_SIZE
+                || os2.strikeoutPosition() != Os2SampleFont.STRIKEOUT_POSITION
+                || os2.familyClass() != Os2SampleFont.FAMILY_CLASS
+                || os2.unicodeRange1() != Os2SampleFont.UNICODE_RANGE1
+                || os2.unicodeRange2() != Os2SampleFont.UNICODE_RANGE2
+                || os2.unicodeRange3() != Os2SampleFont.UNICODE_RANGE3
+                || os2.unicodeRange4() != Os2SampleFont.UNICODE_RANGE4
+                || os2.codePageRange1() != Os2SampleFont.CODE_PAGE_RANGE1
+                || os2.codePageRange2() != Os2SampleFont.CODE_PAGE_RANGE2
+                || os2.firstCharIndex() != Os2SampleFont.FIRST_CHAR_INDEX
+                || os2.lastCharIndex() != Os2SampleFont.LAST_CHAR_INDEX
+                || os2.xHeight() != Os2SampleFont.X_HEIGHT
+                || os2.capHeight() != Os2SampleFont.CAP_HEIGHT
+                || os2.defaultChar() != Os2SampleFont.DEFAULT_CHAR
+                || os2.breakChar() != Os2SampleFont.BREAK_CHAR
+                || os2.maxContext() != Os2SampleFont.MAX_CONTEXT
+                || Math.abs(os2.italicAngle() - Os2SampleFont.ITALIC_ANGLE) > 0.001f
+                || os2.underlinePosition() != Os2SampleFont.UNDERLINE_POSITION
+                || os2.underlineThickness() != Os2SampleFont.UNDERLINE_THICKNESS
+                || !os2.fixedPitch()) {
+            throw new IllegalStateException("OS/2 leftover did not return weight, family, or post");
+        }
         SfntFont cursive = GposCursiveSampleFont.create();
         int cursiveDelta = cursive.pairAdjustment(GposCursiveSampleFont.GLYPH_A, GposCursiveSampleFont.GLYPH_B);
         if (cursiveDelta != GposCursiveSampleFont.CURSIVE_DELTA) {

@@ -1,9 +1,11 @@
 package org.glavo.himari.platform.windows;
 
 import org.glavo.himari.ffi.CallbackFailureQueue;
+import org.glavo.himari.layout.LayoutNode;
 import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsGrid;
 import org.glavo.himari.layout.semantics.SemanticsGridItem;
+import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsNode;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.glavo.himari.layout.semantics.SemanticsScroll;
@@ -178,11 +180,122 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     private static final UUID ITEXT_RANGE_PROVIDER2 =
             UUID.fromString("9bbce42c-1921-4f18-89ca-dba1910a0386");
 
+    /// `UIA_BoundingRectanglePropertyId`.
+    static final int UIA_BOUNDING_RECTANGLE_PROPERTY_ID = 30001;
+
+    /// `UIA_ProcessIdPropertyId`.
+    static final int UIA_PROCESS_ID_PROPERTY_ID = 30002;
+
     /// `UIA_ControlTypePropertyId`.
     static final int UIA_CONTROL_TYPE_PROPERTY_ID = 30003;
 
+    /// `UIA_AcceleratorKeyPropertyId`.
+    static final int UIA_ACCELERATOR_KEY_PROPERTY_ID = 30006;
+
+    /// `UIA_AccessKeyPropertyId`.
+    static final int UIA_ACCESS_KEY_PROPERTY_ID = 30007;
+
+    /// `UIA_HasKeyboardFocusPropertyId`.
+    static final int UIA_HAS_KEYBOARD_FOCUS_PROPERTY_ID = 30008;
+
+    /// `UIA_ValueValuePropertyId`.
+    static final int UIA_VALUE_VALUE_PROPERTY_ID = 30045;
+
+    /// `UIA_IsKeyboardFocusablePropertyId`.
+    static final int UIA_IS_KEYBOARD_FOCUSABLE_PROPERTY_ID = 30009;
+
     /// `UIA_NamePropertyId`.
     static final int UIA_NAME_PROPERTY_ID = 30005;
+
+    /// `UIA_ClassNamePropertyId`.
+    static final int UIA_CLASS_NAME_PROPERTY_ID = 30012;
+
+    /// `UIA_NativeWindowHandlePropertyId`.
+    static final int UIA_NATIVE_WINDOW_HANDLE_PROPERTY_ID = 30020;
+
+    /// `UIA_IsPasswordPropertyId`.
+    static final int UIA_IS_PASSWORD_PROPERTY_ID = 30019;
+
+    /// `UIA_IsControlElementPropertyId`.
+    static final int UIA_IS_CONTROL_ELEMENT_PROPERTY_ID = 30016;
+
+    /// `UIA_IsContentElementPropertyId`.
+    static final int UIA_IS_CONTENT_ELEMENT_PROPERTY_ID = 30017;
+
+    /// `UIA_IsOffscreenPropertyId`.
+    static final int UIA_IS_OFFSCREEN_PROPERTY_ID = 30022;
+
+    /// `UIA_CulturePropertyId`.
+    static final int UIA_CULTURE_PROPERTY_ID = 30015;
+
+    /// `UIA_IsRequiredForFormPropertyId`.
+    static final int UIA_IS_REQUIRED_FOR_FORM_PROPERTY_ID = 30025;
+
+    /// `UIA_ItemStatusPropertyId`.
+    static final int UIA_ITEM_STATUS_PROPERTY_ID = 30026;
+
+    /// `UIA_PositionInSetPropertyId`.
+    static final int UIA_POSITION_IN_SET_PROPERTY_ID = 30152;
+
+    /// `UIA_SizeOfSetPropertyId`.
+    static final int UIA_SIZE_OF_SET_PROPERTY_ID = 30153;
+
+    /// `UIA_LevelPropertyId`.
+    static final int UIA_LEVEL_PROPERTY_ID = 30154;
+
+    /// `UIA_FullDescriptionPropertyId`.
+    static final int UIA_FULL_DESCRIPTION_PROPERTY_ID = 30159;
+
+    /// `UIA_IsDataValidForFormPropertyId`.
+    static final int UIA_IS_DATA_VALID_FOR_FORM_PROPERTY_ID = 30103;
+
+    /// `UIA_ProviderDescriptionPropertyId`.
+    static final int UIA_PROVIDER_DESCRIPTION_PROPERTY_ID = 30107;
+
+    /// `UIA_HeadingLevelPropertyId`.
+    static final int UIA_HEADING_LEVEL_PROPERTY_ID = 30173;
+
+    /// `HeadingLevel_None`.
+    static final int HEADING_LEVEL_NONE = 80050;
+
+    /// `HeadingLevel_1`.
+    static final int HEADING_LEVEL_1 = 80051;
+
+    /// `UIA_IsDialogPropertyId`.
+    static final int UIA_IS_DIALOG_PROPERTY_ID = 30174;
+
+    /// `UIA_OrientationPropertyId`.
+    static final int UIA_ORIENTATION_PROPERTY_ID = 30023;
+
+    /// First-stable `en-US` LCID used when a non-empty locale has no dedicated mapping.
+    static final int LCID_EN_US = 0x0409;
+
+    /// `OrientationType_None`.
+    static final int ORIENTATION_NONE = 0;
+
+    /// `OrientationType_Horizontal`.
+    static final int ORIENTATION_HORIZONTAL = 1;
+
+    /// `OrientationType_Vertical`.
+    static final int ORIENTATION_VERTICAL = 2;
+
+    /// `UIA_FrameworkIdPropertyId`.
+    static final int UIA_FRAMEWORK_ID_PROPERTY_ID = 30024;
+
+    /// `UIA_AutomationIdPropertyId`.
+    static final int UIA_AUTOMATION_ID_PROPERTY_ID = 30011;
+
+    /// `UIA_IsEnabledPropertyId`.
+    static final int UIA_IS_ENABLED_PROPERTY_ID = 30010;
+
+    /// `UIA_ClickablePointPropertyId`.
+    static final int UIA_CLICKABLE_POINT_PROPERTY_ID = 30014;
+
+    /// `UIA_HelpTextPropertyId`.
+    static final int UIA_HELP_TEXT_PROPERTY_ID = 30013;
+
+    /// `UIA_IsReadOnlyPropertyId`.
+    static final int UIA_IS_READ_ONLY_PROPERTY_ID = 30047;
 
     /// `UIA_LiveSettingPropertyId`.
     static final int UIA_LIVE_SETTING_PROPERTY_ID = 30135;
@@ -201,6 +314,18 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// `LiveSetting_Assertive`.
     static final int LIVE_SETTING_ASSERTIVE = 2;
+
+    /// `UIA_LiveRegionChangedEventId`.
+    static final int UIA_LIVE_REGION_CHANGED_EVENT_ID = 20024;
+
+    /// `UIA_Text_TextSelectionChangedEventId`.
+    static final int UIA_TEXT_SELECTION_CHANGED_EVENT_ID = 20014;
+
+    /// `UIA_Text_TextChangedEventId`.
+    static final int UIA_TEXT_CHANGED_EVENT_ID = 20015;
+
+    /// `UIA_LocalizedControlTypePropertyId`.
+    static final int UIA_LOCALIZED_CONTROL_TYPE_PROPERTY_ID = 30004;
 
     /// `UIA_InvokePatternId`.
     static final int UIA_INVOKE_PATTERN_ID = 10000;
@@ -409,6 +534,12 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `VT_BSTR`.
     private static final int VT_BSTR = 8;
 
+    /// `VT_R8`.
+    private static final int VT_R8 = 5;
+
+    /// `VT_ARRAY`.
+    private static final int VT_ARRAY = 0x2000;
+
     /// `S_OK`.
     private static final int S_OK = 0;
 
@@ -421,8 +552,20 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `E_INVALIDARG`.
     private static final int E_INVALIDARG = 0x8007_0057;
 
+    /// `E_OUTOFMEMORY`.
+    private static final int E_OUTOFMEMORY = 0x8007_000E;
+
+    /// `VT_UNKNOWN`.
+    private static final short VT_UNKNOWN = 13;
+
     /// `E_NOTIMPL`.
     private static final int E_NOTIMPL = 0x8000_4001;
+
+    /// Generated bindings used to raise UI Automation events.
+    private final Win32FfmBindings bindings;
+
+    /// HWND that owns this provider, used by `UiaHostProviderFromHwnd`.
+    private final MemorySegment hwnd;
 
     /// Arena owning the COM objects.
     private final Arena arena;
@@ -622,6 +765,12 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// Whether the viewport can move horizontally.
     private boolean horizontallyScrollable;
 
+    /// Live layout node whose label is authoritative for text ranges, or `null`.
+    private final @Nullable LayoutNode liveNode;
+
+    /// Document length when the current range last covered the full document.
+    private int previousDocumentLength;
+
     /// Inclusive UTF-16 start of the current text range.
     private int rangeStart;
 
@@ -645,6 +794,15 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// Number of `IRawElementProviderSimple2::ShowContextMenu` invocations.
     private int simpleContextMenuCount;
+
+    /// `UiaRaiseAutomationEvent` invocations for this provider.
+    private int liveRegionChangedCount;
+
+    /// Last HRESULT from [`#raiseLiveRegionChanged()`].
+    private int lastLiveRegionEventResult;
+
+    /// Raises `UIA_LiveRegionChangedEventId` when [`LayoutNode#setLabel(String)`] runs on [`#liveNode`].
+    private final Runnable liveLabelListener = this::onLiveLabelChanged;
 
     /// `IRawElementProviderFragment::SetFocus` invocations.
     private int fragmentFocusCount;
@@ -704,9 +862,17 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     private boolean closed;
 
     /// Creates one provider.
-    private WindowsAutomationProvider(Win32FfmBindings bindings, SemanticsNode node) {
+    private WindowsAutomationProvider(
+            Win32FfmBindings bindings,
+            SemanticsNode node,
+            MemorySegment hwnd,
+            @Nullable LayoutNode liveNode
+    ) {
+        this.bindings = bindings;
         this.node = node;
-        this.valueText = node.label();
+        this.hwnd = hwnd;
+        this.liveNode = liveNode;
+        this.valueText = documentText();
         this.windowVisualState = WINDOW_VISUAL_STATE_NORMAL;
         this.dockPosition = DOCK_POSITION_NONE;
         this.transformX = 0.0;
@@ -753,7 +919,8 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         this.fetchedRow = -1;
         this.fetchedColumn = -1;
         this.rangeStart = 0;
-        this.rangeEnd = node.label().length();
+        this.previousDocumentLength = documentText().length();
+        this.rangeEnd = previousDocumentLength;
         this.arena = Arena.ofConfined();
         this.simpleVtable = arena.allocate(ValueLayout.ADDRESS, 8);
         this.simpleObject = arena.allocate(ValueLayout.ADDRESS);
@@ -1502,8 +1669,16 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 4L,
                 bindings.createItextProviderGetRangeStub(this::selectionRange, failures, arena)
         );
-        textVtable.setAtIndex(ValueLayout.ADDRESS, 5L, emptyRange);
-        textVtable.setAtIndex(ValueLayout.ADDRESS, 6L, emptyRange);
+        textVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                5L,
+                bindings.createItextProviderGetRangeStub(this::getVisibleRanges, failures, arena)
+        );
+        textVtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                6L,
+                bindings.createItextProviderGetRangeStub(this::rangeFromChild, failures, arena)
+        );
         textVtable.setAtIndex(
                 ValueLayout.ADDRESS,
                 7L,
@@ -1613,6 +1788,9 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 21L,
                 bindings.createItextRangeProvider2ShowContextMenuStub(this::showTextRangeContextMenu, failures, arena)
         );
+        if (liveNode != null) {
+            liveNode.addLabelListener(liveLabelListener);
+        }
     }
 
     /// Creates a provider for one semantics node.
@@ -1621,9 +1799,184 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// @param node the projected node
     /// @return the provider
     public static WindowsAutomationProvider of(WindowsLibraries libraries, SemanticsNode node) {
+        return of(libraries, node, MemorySegment.NULL);
+    }
+
+    /// Creates a provider for one semantics node on `hwnd`.
+    ///
+    /// @param libraries the session libraries
+    /// @param node the projected node
+    /// @param hwnd the owning window
+    /// @return the provider
+    public static WindowsAutomationProvider of(
+            WindowsLibraries libraries,
+            SemanticsNode node,
+            MemorySegment hwnd
+    ) {
         Objects.requireNonNull(libraries, "libraries");
         Objects.requireNonNull(node, "node");
-        return new WindowsAutomationProvider(libraries.bindings(), node);
+        Objects.requireNonNull(hwnd, "hwnd");
+        return new WindowsAutomationProvider(libraries.bindings(), node, hwnd, null);
+    }
+
+    /// Creates a provider whose text ranges follow `live` after [`LayoutNode#setLabel(String)`].
+    ///
+    /// @param libraries the session libraries
+    /// @param live the live layout node
+    /// @param hwnd the owning window
+    /// @return the provider
+    public static WindowsAutomationProvider of(
+            WindowsLibraries libraries,
+            LayoutNode live,
+            MemorySegment hwnd
+    ) {
+        Objects.requireNonNull(libraries, "libraries");
+        Objects.requireNonNull(live, "live");
+        Objects.requireNonNull(hwnd, "hwnd");
+        SemanticsNode snapshot = new SemanticsNode(
+                live.id(),
+                live.role(),
+                live.label(),
+                live.actions(),
+                live.bounds(),
+                false,
+                live.selected(),
+                live.rangeValue(),
+                live.liveRegion(),
+                live.textRange(),
+                live.grid(),
+                live.scroll(),
+                live.gridItem(),
+                live.disabled(),
+                live.readOnly(),
+                live.hint(),
+                live.focusable(),
+                live.password(),
+                live.accessKey(),
+                live.acceleratorKey(),
+                live.required(),
+                live.itemStatus(),
+                live.locale(),
+                live.level(),
+                live.positionInSet(),
+                live.sizeOfSet(),
+                live.description(),
+                live.error()
+        );
+        return new WindowsAutomationProvider(libraries.bindings(), snapshot, hwnd, live);
+    }
+
+    /// Raises `UIA_LiveRegionChangedEventId` through generated `UiaRaiseAutomationEvent`.
+    ///
+    /// Raises `UIA_LiveRegionChangedEventId` after a live-region [`LayoutNode#setLabel(String)`].
+    ///
+    /// [`#of(WindowsLibraries, LayoutNode, MemorySegment)`] registers this method as the
+    /// live node's label listener so announcement `setLabel` callers raise without invoking
+    /// this method directly.
+    ///
+    /// @return the native HRESULT
+    public int raiseLiveRegionChanged() {
+        requireOpen();
+        syncDocumentRange();
+        liveRegionChangedCount++;
+        if (hwnd.address() == 0L) {
+            lastLiveRegionEventResult = E_POINTER;
+            return lastLiveRegionEventResult;
+        }
+        MemorySegment hostOut = arena.allocate(ValueLayout.ADDRESS);
+        hostOut.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        int hostResult = bindings.uiaHostProviderFromHwnd(hwnd, hostOut);
+        if (hostResult < 0) {
+            lastLiveRegionEventResult = hostResult;
+            return lastLiveRegionEventResult;
+        }
+        MemorySegment host = hostOut.get(ValueLayout.ADDRESS, 0L);
+        if (host.address() == 0L) {
+            lastLiveRegionEventResult = E_POINTER;
+            return lastLiveRegionEventResult;
+        }
+        lastLiveRegionEventResult = raiseOnHost(host, UIA_LIVE_REGION_CHANGED_EVENT_ID);
+        return lastLiveRegionEventResult;
+    }
+
+    /// Raises a live-region event after the live node's announcement text changes.
+    private void onLiveLabelChanged() {
+        if (closed || liveNode == null || liveNode.liveRegion() == SemanticsLiveRegion.OFF) {
+            return;
+        }
+        raiseLiveRegionChanged();
+    }
+
+    /// Raises `UIA_Text_TextChangedEventId` through generated `UiaRaiseAutomationEvent`.
+    ///
+    /// @return the native HRESULT
+    public int raiseTextChanged() {
+        return raiseHostEvent(UIA_TEXT_CHANGED_EVENT_ID);
+    }
+
+    /// Raises `UIA_Text_TextSelectionChangedEventId` through generated `UiaRaiseAutomationEvent`.
+    ///
+    /// @return the native HRESULT
+    public int raiseTextSelectionChanged() {
+        return raiseHostEvent(UIA_TEXT_SELECTION_CHANGED_EVENT_ID);
+    }
+
+    /// Raises one UIA event on the host provider for this HWND.
+    ///
+    /// @param eventId the UIA event identifier
+    /// @return the native HRESULT
+    private int raiseHostEvent(int eventId) {
+        requireOpen();
+        if (hwnd.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment hostOut = arena.allocate(ValueLayout.ADDRESS);
+        hostOut.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        int hostResult = bindings.uiaHostProviderFromHwnd(hwnd, hostOut);
+        if (hostResult < 0) {
+            return hostResult;
+        }
+        MemorySegment host = hostOut.get(ValueLayout.ADDRESS, 0L);
+        if (host.address() == 0L) {
+            return E_POINTER;
+        }
+        return raiseOnHost(host, eventId);
+    }
+
+    /// Raises `eventId` on `host` and releases the host provider.
+    ///
+    /// @param host the `UiaHostProviderFromHwnd` object
+    /// @param eventId the UIA event identifier
+    /// @return the native HRESULT
+    private int raiseOnHost(MemorySegment host, int eventId) {
+        int result = bindings.uiaRaiseAutomationEvent(host, eventId);
+        MemorySegment vtable = host.reinterpret(ValueLayout.ADDRESS.byteSize()).get(ValueLayout.ADDRESS, 0L);
+        MemorySegment release = vtable.reinterpret(ValueLayout.ADDRESS.byteSize() * 3L)
+                .getAtIndex(ValueLayout.ADDRESS, 2L);
+        Win32FfmBindings.invokeIunknownReleasePointer(release, host);
+        return result;
+    }
+
+    /// Returns whether generated `UiaClientsAreListening` reports an automation client.
+    ///
+    /// @return whether a client is listening
+    public boolean clientsAreListening() {
+        requireOpen();
+        return bindings.uiaClientsAreListening() != 0;
+    }
+
+    /// Returns how many times [`#raiseLiveRegionChanged()`] invoked the generated symbol.
+    ///
+    /// @return the count
+    public int liveRegionChangedCount() {
+        return liveRegionChangedCount;
+    }
+
+    /// Returns the last HRESULT from [`#raiseLiveRegionChanged()`].
+    ///
+    /// @return the HRESULT, or `0` before the first raise
+    public int lastLiveRegionEventResult() {
+        return lastLiveRegionEventResult;
     }
 
     /// Invokes `GetPropertyValue` through the generated COM vtable.
@@ -1643,6 +1996,87 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         );
         requireSuccess("GetPropertyValue", result);
         return value.get(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET);
+    }
+
+    /// Invokes `GetPropertyValue` for `UIA_BoundingRectanglePropertyId`.
+    ///
+    /// The first-stable payload is a packed `VT_ARRAY | VT_R8` of four doubles:
+    /// left, top, width, height.
+    ///
+    /// @return `{left, top, width, height}`
+    public float[] invokeBoundingRectangle() {
+        requireOpen();
+        MemorySegment getProperty = simpleVtable.getAtIndex(ValueLayout.ADDRESS, 5L);
+        MemorySegment value = arena.allocate(Win32Layouts.VARIANT);
+        value.fill((byte) 0);
+        int result = Win32FfmBindings.invokeIrawElementProviderGetPropertyValuePointer(
+                getProperty,
+                simpleObject,
+                UIA_BOUNDING_RECTANGLE_PROPERTY_ID,
+                value
+        );
+        requireSuccess("GetPropertyValue", result);
+        short vt = value.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET);
+        if (vt != (short) (VT_ARRAY | VT_R8)) {
+            throw new IllegalStateException("BoundingRectangle variant is " + vt);
+        }
+        MemorySegment rect = value.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET).reinterpret(32);
+        return new float[] {
+                (float) rect.get(ValueLayout.JAVA_DOUBLE, 0L),
+                (float) rect.get(ValueLayout.JAVA_DOUBLE, 8L),
+                (float) rect.get(ValueLayout.JAVA_DOUBLE, 16L),
+                (float) rect.get(ValueLayout.JAVA_DOUBLE, 24L)
+        };
+    }
+
+    /// Invokes `GetPropertyValue` for `UIA_ClickablePointPropertyId`.
+    ///
+    /// The first-stable payload is a packed `VT_ARRAY | VT_R8` of two doubles: center X, center Y.
+    ///
+    /// @return `{centerX, centerY}`
+    public float[] invokeClickablePoint() {
+        requireOpen();
+        MemorySegment getProperty = simpleVtable.getAtIndex(ValueLayout.ADDRESS, 5L);
+        MemorySegment value = arena.allocate(Win32Layouts.VARIANT);
+        value.fill((byte) 0);
+        int result = Win32FfmBindings.invokeIrawElementProviderGetPropertyValuePointer(
+                getProperty,
+                simpleObject,
+                UIA_CLICKABLE_POINT_PROPERTY_ID,
+                value
+        );
+        requireSuccess("GetPropertyValue", result);
+        short vt = value.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET);
+        if (vt != (short) (VT_ARRAY | VT_R8)) {
+            throw new IllegalStateException("ClickablePoint variant is " + vt);
+        }
+        MemorySegment point = value.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET).reinterpret(16);
+        return new float[] {
+                (float) point.get(ValueLayout.JAVA_DOUBLE, 0L),
+                (float) point.get(ValueLayout.JAVA_DOUBLE, 8L)
+        };
+    }
+
+    /// Invokes `GetPropertyValue` and decodes a `VT_BSTR` payload.
+    ///
+    /// @param propertyId the UIA property identifier
+    /// @return the decoded string, or empty when the variant is not a `BSTR`
+    public String invokePropertyValueString(int propertyId) {
+        requireOpen();
+        MemorySegment getProperty = simpleVtable.getAtIndex(ValueLayout.ADDRESS, 5L);
+        MemorySegment value = arena.allocate(Win32Layouts.VARIANT);
+        value.fill((byte) 0);
+        int result = Win32FfmBindings.invokeIrawElementProviderGetPropertyValuePointer(
+                getProperty,
+                simpleObject,
+                propertyId,
+                value
+        );
+        requireSuccess("GetPropertyValue", result);
+        if (value.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET) != VT_BSTR) {
+            return "";
+        }
+        return decodeUtf16(value.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET));
     }
 
     /// Invokes `GetPatternProvider` through the generated COM vtable.
@@ -3627,6 +4061,90 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return value.get(ValueLayout.JAVA_DOUBLE, 0L);
     }
 
+    /// Invokes `ITextProvider::RangeFromPoint` through the generated COM vtable.
+    ///
+    /// @param x the horizontal point
+    /// @param y the vertical point
+    /// @return whether a range was returned
+    public boolean invokeRangeFromPoint(double x, double y) {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextProvider::RangeFromPoint",
+                Win32FfmBindings.invokeItextProviderRangeFromPointPointer(
+                        functionAt(textObject, 3),
+                        textObject,
+                        x,
+                        y,
+                        result
+                )
+        );
+        return result.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `ITextProvider::RangeFromChild` through the generated COM vtable.
+    ///
+    /// @return whether a child range was returned
+    public boolean invokeRangeFromChild() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextProvider::RangeFromChild",
+                Win32FfmBindings.invokeItextProviderGetRangePointer(
+                        functionAt(textObject, 6),
+                        textObject,
+                        result
+                )
+        );
+        return result.get(ValueLayout.ADDRESS, 0L).address() != 0L;
+    }
+
+    /// Invokes `ITextProvider::GetVisibleRanges` through the generated COM vtable.
+    ///
+    /// The official oleaut32 `SAFEARRAY(ITextRangeProvider*)` is decoded with generated
+    /// `SafeArrayGetUBound` / `SafeArrayGetElement` / `SafeArrayDestroy`.
+    ///
+    /// @return whether a visible range was returned
+    public boolean invokeGetVisibleRanges() {
+        requireOpen();
+        MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
+        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        requireSuccess(
+                "ITextProvider::GetVisibleRanges",
+                Win32FfmBindings.invokeItextProviderGetRangePointer(
+                        functionAt(textObject, 5),
+                        textObject,
+                        result
+                )
+        );
+        MemorySegment array = result.get(ValueLayout.ADDRESS, 0L);
+        if (array.address() == 0L) {
+            return false;
+        }
+        MemorySegment bound = arena.allocate(ValueLayout.JAVA_INT);
+        int boundResult = bindings.safeArrayGetUBound(array, 1, bound);
+        if (boundResult < 0 || bound.get(ValueLayout.JAVA_INT, 0L) < 0) {
+            bindings.safeArrayDestroy(array);
+            return false;
+        }
+        MemorySegment indices = arena.allocate(ValueLayout.JAVA_INT);
+        indices.set(ValueLayout.JAVA_INT, 0L, 0);
+        MemorySegment element = arena.allocate(ValueLayout.ADDRESS);
+        element.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        int getResult = bindings.safeArrayGetElement(array, indices, element);
+        MemorySegment range = element.get(ValueLayout.ADDRESS, 0L);
+        if (range.address() != 0L) {
+            MemorySegment vtable = range.reinterpret(ValueLayout.ADDRESS.byteSize()).get(ValueLayout.ADDRESS, 0L);
+            MemorySegment release = vtable.reinterpret(ValueLayout.ADDRESS.byteSize() * 3L)
+                    .getAtIndex(ValueLayout.ADDRESS, 2L);
+            Win32FfmBindings.invokeIunknownReleasePointer(release, range);
+        }
+        bindings.safeArrayDestroy(array);
+        return getResult >= 0 && range.address() != 0L;
+    }
+
     /// Invokes `ITextProvider::get_DocumentRange` through the generated COM vtable.
     ///
     /// @return whether a document range was returned
@@ -4117,6 +4635,9 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             return;
         }
         closed = true;
+        if (liveNode != null) {
+            liveNode.removeLabelListener(liveLabelListener);
+        }
         release(simpleObject);
         arena.close();
     }
@@ -4343,12 +4864,15 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         if (result.address() == 0L) {
             return E_POINTER;
         }
+        MemorySegment out = result.byteSize() >= ValueLayout.ADDRESS.byteSize()
+                ? result
+                : result.reinterpret(ValueLayout.ADDRESS.byteSize());
         if (WindowsCom.matches(interfaceId, IUNKNOWN) || WindowsCom.matches(interfaceId, identity)) {
-            result.set(ValueLayout.ADDRESS, 0L, object);
+            out.set(ValueLayout.ADDRESS, 0L, object);
             addRef(object);
             return S_OK;
         }
-        result.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        out.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
         return E_NOINTERFACE;
     }
 
@@ -4460,12 +4984,117 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         }
         MemorySegment variant = value.reinterpret(Win32Layouts.VARIANT.byteSize());
         variant.fill((byte) 0);
-        if (propertyId == UIA_CONTROL_TYPE_PROPERTY_ID) {
+        if (propertyId == UIA_BOUNDING_RECTANGLE_PROPERTY_ID) {
+            writeBoundingRectangle(variant, node.bounds());
+        } else if (propertyId == UIA_PROCESS_ID_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    (int) ProcessHandle.current().pid()
+            );
+        } else if (propertyId == UIA_CONTROL_TYPE_PROPERTY_ID) {
             variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
             variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, controlTypeId(node));
+        } else if (propertyId == UIA_LOCALIZED_CONTROL_TYPE_PROPERTY_ID) {
+            writeBstrVariant(variant, node.role().name());
+        } else if (propertyId == UIA_NAME_PROPERTY_ID) {
+            writeBstrVariant(variant, node.label());
+        } else if (propertyId == UIA_ACCELERATOR_KEY_PROPERTY_ID) {
+            writeBstrVariant(variant, node.acceleratorKey());
+        } else if (propertyId == UIA_ACCESS_KEY_PROPERTY_ID) {
+            writeBstrVariant(variant, node.accessKey());
+        } else if (propertyId == UIA_VALUE_VALUE_PROPERTY_ID) {
+            writeBstrVariant(variant, node.label());
+        } else if (propertyId == UIA_CLASS_NAME_PROPERTY_ID) {
+            writeBstrVariant(variant, node.role().name());
+        } else if (propertyId == UIA_HAS_KEYBOARD_FOCUS_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.focused() ? 1 : 0);
+        } else if (propertyId == UIA_IS_KEYBOARD_FOCUSABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    node.focusable() && !node.disabled() ? 1 : 0
+            );
+        } else if (propertyId == UIA_AUTOMATION_ID_PROPERTY_ID) {
+            writeBstrVariant(variant, liveNode != null ? liveNode.name() : node.label());
+        } else if (propertyId == UIA_HELP_TEXT_PROPERTY_ID) {
+            writeBstrVariant(variant, node.hint());
+        } else if (propertyId == UIA_IS_ENABLED_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.disabled() ? 0 : 1);
+        } else if (propertyId == UIA_IS_READ_ONLY_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.readOnly() ? 1 : 0);
         } else if (propertyId == UIA_LIVE_SETTING_PROPERTY_ID) {
             variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
             variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, liveSettingId(node));
+        } else if (propertyId == UIA_IS_PASSWORD_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.password() ? 1 : 0);
+        } else if (propertyId == UIA_IS_OFFSCREEN_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    node.bounds().width() <= 0.0f || node.bounds().height() <= 0.0f ? 1 : 0
+            );
+        } else if (propertyId == UIA_FRAMEWORK_ID_PROPERTY_ID) {
+            writeBstrVariant(variant, "HimariUI");
+        } else if (propertyId == UIA_IS_CONTROL_ELEMENT_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 1);
+        } else if (propertyId == UIA_IS_CONTENT_ELEMENT_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    node.role() == SemanticsRole.NONE ? 0 : 1
+            );
+        } else if (propertyId == UIA_ORIENTATION_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, orientationId(node));
+        } else if (propertyId == UIA_CULTURE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, cultureId(node.locale()));
+        } else if (propertyId == UIA_IS_REQUIRED_FOR_FORM_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.required() ? 1 : 0);
+        } else if (propertyId == UIA_ITEM_STATUS_PROPERTY_ID) {
+            writeBstrVariant(variant, node.itemStatus());
+        } else if (propertyId == UIA_LEVEL_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.level());
+        } else if (propertyId == UIA_POSITION_IN_SET_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.positionInSet());
+        } else if (propertyId == UIA_SIZE_OF_SET_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.sizeOfSet());
+        } else if (propertyId == UIA_FULL_DESCRIPTION_PROPERTY_ID) {
+            writeBstrVariant(variant, node.description());
+        } else if (propertyId == UIA_IS_DATA_VALID_FOR_FORM_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.error() ? 0 : 1);
+        } else if (propertyId == UIA_PROVIDER_DESCRIPTION_PROPERTY_ID) {
+            writeBstrVariant(variant, "HimariUI." + node.role().name());
+        } else if (propertyId == UIA_IS_DIALOG_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    node.role() == SemanticsRole.DIALOG ? 1 : 0
+            );
+        } else if (propertyId == UIA_CLICKABLE_POINT_PROPERTY_ID) {
+            writeClickablePoint(variant, node.bounds());
+        } else if (propertyId == UIA_NATIVE_WINDOW_HANDLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, (int) hwnd.address());
+        } else if (propertyId == UIA_HEADING_LEVEL_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, headingLevelId(node));
         }
         return S_OK;
     }
@@ -5146,11 +5775,9 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         MemorySegment variant = value.reinterpret(Win32Layouts.VARIANT.byteSize());
         variant.fill((byte) 0);
         if (propertyId == UIA_NAME_PROPERTY_ID) {
-            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_BSTR);
-            MemorySegment chars = arena.allocate((node.label().length() + 1L) * 2L);
-            byte[] utf16 = node.label().getBytes(StandardCharsets.UTF_16LE);
-            MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
-            variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, chars);
+            writeBstrVariant(variant, node.label());
+        } else if (propertyId == UIA_HELP_TEXT_PROPERTY_ID) {
+            writeBstrVariant(variant, node.hint());
         }
         return S_OK;
     }
@@ -5189,7 +5816,7 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// Implements `IValueProvider::get_IsReadOnly`.
     private int getValueReadOnly(MemorySegment self, MemorySegment state) {
-        return writeInt(state, 0);
+        return writeInt(state, node.readOnly() ? 1 : 0);
     }
 
     /// Implements `IWindowProvider::SetVisualState`.
@@ -5493,7 +6120,7 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         if (value.address() == 0L) {
             return E_POINTER;
         }
-        value.set(ValueLayout.JAVA_INT, 0L, 0);
+        value.set(ValueLayout.JAVA_INT, 0L, node.readOnly() ? 1 : 0);
         return S_OK;
     }
 
@@ -5507,9 +6134,40 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return writeDouble(value, 0.0);
     }
 
-    /// Implements `ITextProvider::RangeFromPoint` with an honest empty result.
+    /// Implements `ITextProvider::RangeFromPoint` for a point inside the node bounds.
     private int rangeFromPoint(MemorySegment self, double x, double y, MemorySegment range) {
+        if (node.bounds().contains((float) x, (float) y)) {
+            return documentRange(self, range);
+        }
         return emptyRange(self, range);
+    }
+
+    /// Implements `ITextProvider::GetVisibleRanges` as a one-element oleaut32 `SAFEARRAY`.
+    private int getVisibleRanges(MemorySegment self, MemorySegment range) {
+        if (range.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment bound = arena.allocate(Win32Layouts.SAFEARRAYBOUND);
+        bound.set(ValueLayout.JAVA_INT, Win32Layouts.SAFEARRAYBOUND_C_ELEMENTS_OFFSET, 1);
+        bound.set(ValueLayout.JAVA_INT, Win32Layouts.SAFEARRAYBOUND_L_LBOUND_OFFSET, 0);
+        MemorySegment created = bindings.safeArrayCreate(VT_UNKNOWN, 1, bound);
+        if (created.address() == 0L) {
+            return E_OUTOFMEMORY;
+        }
+        MemorySegment indices = arena.allocate(ValueLayout.JAVA_INT);
+        indices.set(ValueLayout.JAVA_INT, 0L, 0);
+        int put = bindings.safeArrayPutElement(created, indices, textRangeObject);
+        if (put < 0) {
+            bindings.safeArrayDestroy(created);
+            return put;
+        }
+        range.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, created);
+        return S_OK;
+    }
+
+    /// Implements `ITextProvider::RangeFromChild` as the document range.
+    private int rangeFromChild(MemorySegment self, MemorySegment range) {
+        return documentRange(self, range);
     }
 
     /// Writes a null range out-parameter.
@@ -5553,9 +6211,30 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return E_NOTIMPL;
     }
 
+    /// Returns the live document when a layout node is bound, otherwise the snapshot label.
+    private String documentText() {
+        return liveNode != null ? liveNode.label() : node.label();
+    }
+
+    /// Expands a full-document range when [`LayoutNode#setLabel(String)`] changes the length.
+    private void syncDocumentRange() {
+        int length = documentText().length();
+        if (rangeStart == 0 && rangeEnd == previousDocumentLength) {
+            rangeEnd = length;
+        } else {
+            rangeStart = Math.min(rangeStart, length);
+            rangeEnd = Math.min(rangeEnd, length);
+            if (rangeStart > rangeEnd) {
+                rangeStart = rangeEnd;
+            }
+        }
+        previousDocumentLength = length;
+    }
+
     /// Implements `ITextRangeProvider::ExpandToEnclosingUnit`.
     private int expandToEnclosingUnit(MemorySegment self, int unit) {
-        int length = node.label().length();
+        syncDocumentRange();
+        int length = documentText().length();
         if (unit == TEXT_UNIT_DOCUMENT) {
             rangeStart = 0;
             rangeEnd = length;
@@ -5628,7 +6307,8 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         for (int index = 0; index < units; index++) {
             needle.append(packed.get(ValueLayout.JAVA_CHAR, 4L + (long) index * 2L));
         }
-        String document = node.label();
+        syncDocumentRange();
+        String document = documentText();
         String haystack = ignoreCase != 0 ? document.toLowerCase(java.util.Locale.ROOT) : document;
         String search = ignoreCase != 0 ? needle.toString().toLowerCase(java.util.Locale.ROOT) : needle.toString();
         int found = backward != 0 ? haystack.lastIndexOf(search) : haystack.indexOf(search);
@@ -5651,7 +6331,8 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         if (moved.address() == 0L) {
             return E_POINTER;
         }
-        int length = node.label().length();
+        syncDocumentRange();
+        int length = documentText().length();
         int current = endpoint == TEXT_PATTERN_RANGE_ENDPOINT_END ? rangeEnd : rangeStart;
         int next = current;
         if (unit == TEXT_UNIT_DOCUMENT) {
@@ -5764,7 +6445,8 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         if (moved.address() == 0L) {
             return E_POINTER;
         }
-        int length = node.label().length();
+        syncDocumentRange();
+        int length = documentText().length();
         int applied = 0;
         if (unit == TEXT_UNIT_DOCUMENT) {
             if (count > 0 && rangeEnd < length) {
@@ -5817,7 +6499,8 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         if (text.address() == 0L) {
             return E_POINTER;
         }
-        String document = node.label();
+        syncDocumentRange();
+        String document = documentText();
         int from = Math.min(rangeStart, document.length());
         int to = Math.min(rangeEnd, document.length());
         if (from > to) {
@@ -5871,6 +6554,56 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             text.append(unit);
         }
         return text.toString();
+    }
+
+    /// Writes a packed `VT_ARRAY | VT_R8` bounding rectangle.
+    ///
+    /// @param variant the VARIANT storage
+    /// @param bounds the root-relative bounds
+    private void writeBoundingRectangle(MemorySegment variant, org.glavo.himari.layout.LayoutRect bounds) {
+        MemorySegment rect = arena.allocate(32);
+        rect.set(ValueLayout.JAVA_DOUBLE, 0L, bounds.x());
+        rect.set(ValueLayout.JAVA_DOUBLE, 8L, bounds.y());
+        rect.set(ValueLayout.JAVA_DOUBLE, 16L, bounds.width());
+        rect.set(ValueLayout.JAVA_DOUBLE, 24L, bounds.height());
+        variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) (VT_ARRAY | VT_R8));
+        variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, rect);
+    }
+
+    /// Writes a packed `VT_ARRAY | VT_R8` clickable point at the bounds center.
+    ///
+    /// @param variant the VARIANT storage
+    /// @param bounds the root-relative bounds
+    private void writeClickablePoint(MemorySegment variant, org.glavo.himari.layout.LayoutRect bounds) {
+        MemorySegment point = arena.allocate(16);
+        point.set(ValueLayout.JAVA_DOUBLE, 0L, bounds.x() + bounds.width() * 0.5);
+        point.set(ValueLayout.JAVA_DOUBLE, 8L, bounds.y() + bounds.height() * 0.5);
+        variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) (VT_ARRAY | VT_R8));
+        variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, point);
+    }
+
+    /// Maps [`SemanticsNode#level()`] onto a UIA heading-level constant.
+    ///
+    /// @param node the snapshot
+    /// @return `HeadingLevel_None` or `HeadingLevel_1` through `HeadingLevel_9`
+    private static int headingLevelId(SemanticsNode node) {
+        int level = node.level();
+        if (level < 1 || level > 9) {
+            return HEADING_LEVEL_NONE;
+        }
+        return HEADING_LEVEL_NONE + level;
+    }
+
+    /// Writes a `VT_BSTR` VARIANT from `text`.
+    ///
+    /// @param variant the VARIANT storage
+    /// @param text the UTF-16 payload
+    private void writeBstrVariant(MemorySegment variant, String text) {
+        variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_BSTR);
+        MemorySegment chars = arena.allocate((text.length() + 1L) * 2L);
+        byte[] utf16 = text.getBytes(StandardCharsets.UTF_16LE);
+        MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
+        variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, chars);
     }
 
     /// Writes a UTF-16 C string through a `BSTR` out-parameter.
@@ -5998,6 +6731,32 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return EXPAND_COLLAPSE_STATE_EXPANDED;
     }
 
+    /// Maps a BCP-47 locale onto a Win32 LCID.
+    ///
+    /// @param locale the BCP-47 tag, empty when unspecified
+    /// @return the LCID, or `0` when unspecified
+    static int cultureId(String locale) {
+        if (locale.isEmpty()) {
+            return 0;
+        }
+        if (locale.equalsIgnoreCase("zh-CN")) {
+            return 0x0804;
+        }
+        return LCID_EN_US;
+    }
+
+    /// Maps a role onto `OrientationType`.
+    ///
+    /// @param node the semantics node
+    /// @return `None`, `Horizontal`, or `Vertical`
+    private static int orientationId(SemanticsNode node) {
+        return switch (node.role()) {
+            case SLIDER, PROGRESS, SPLIT_PANE -> ORIENTATION_HORIZONTAL;
+            case SCROLLBAR -> ORIENTATION_VERTICAL;
+            default -> ORIENTATION_NONE;
+        };
+    }
+
     /// Maps the semantics role onto a UIA control-type identifier.
     private static int controlTypeId(SemanticsNode node) {
         return switch (node.role()) {
@@ -6013,6 +6772,8 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             case TABLE -> 50036;
             case TABLE_ROW, TABLE_CELL -> 50029;
             case TEXT -> 50020;
+            case IMAGE -> 50006;
+            case CANVAS -> 50033;
             case STATUS -> UIA_STATUS_BAR_CONTROL_TYPE_ID;
             case NONE -> 50033;
             case POPUP -> 50033;
