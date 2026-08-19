@@ -3,6 +3,7 @@ package org.glavo.himari.graphics;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -12,8 +13,9 @@ import java.util.Objects;
 /// Encodes and decodes first-stable AVIF still images as unassociated sRGB RGBA.
 ///
 /// The codec writes an ISO-BMFF `avif` file (`ftyp`, `meta`, `mdat`) whose `av01` item carries
-/// an AV1 still sample: a sized sequence OBU plus a frame OBU whose payload is the packed RGBA
-/// raster. Full AV1 entropy coding is outside this first-stable provider.
+/// an AV1 still sample: a reduced-still sequence OBU plus a frame OBU whose 8×8 tiles carry a
+/// 2-bit intra mode and 4×4 Walsh-Hadamard `L(13)` residuals. The HST1 packed-RGBA payload is
+/// not written.
 @NotNullByDefault
 public final class AvifImage {
     /// `ftyp`.
@@ -33,6 +35,12 @@ public final class AvifImage {
 
     /// First-stable frame payload tag.
     private static final int STILL_TAG = fourcc("HST1");
+
+    /// OBU type for a sequence header.
+    private static final int OBU_SEQUENCE_HEADER = 1;
+
+    /// OBU type for a frame (header plus tile).
+    private static final int OBU_FRAME = 6;
 
     /// Prevents instantiation.
     private AvifImage() {
@@ -131,21 +139,18 @@ public final class AvifImage {
         return new Decoded(width, height, rgba);
     }
 
-    /// Builds the AV1 still sample.
+    /// Builds the AV1 still sample with a reduced-still sequence header and an entropy-coded frame.
     private static byte[] encodeSample(int width, int height, byte[] rgba) {
-        byte[] sequence = obu(1, sequenceHeader(width, height));
-        ByteBuffer frame = ByteBuffer.allocate(8 + rgba.length).order(ByteOrder.BIG_ENDIAN);
-        frame.putInt(STILL_TAG);
-        frame.putShort((short) width);
-        frame.putShort((short) height);
-        frame.put(rgba);
-        return concat(sequence, obu(6, frame.array()));
+        byte[] sequence = obu(OBU_SEQUENCE_HEADER, sequenceHeader(width, height));
+        return concat(sequence, obu(OBU_FRAME, Av1Entropy.encodeRgba(rgba, width)));
     }
 
-    /// Reads RGBA from the frame OBU of `sample`.
+    /// Reads RGBA from the entropy-coded frame OBU of `sample`.
     private static byte[] decodeSample(byte[] sample, int width, int height) {
         int offset = 0;
         byte[] rgba = null;
+        int sequenceWidth = 0;
+        int sequenceHeight = 0;
         while (offset < sample.length) {
             int header = sample[offset] & 0xFF;
             int type = (header >>> 3) & 0x0F;
@@ -165,7 +170,11 @@ public final class AvifImage {
             if (offset + payloadSize > sample.length) {
                 throw new IllegalArgumentException("AV1 OBU is truncated");
             }
-            if (type == 6 || type == 3) {
+            if (type == OBU_SEQUENCE_HEADER) {
+                int[] size = parseSequenceHeader(sample, offset, payloadSize);
+                sequenceWidth = size[0];
+                sequenceHeight = size[1];
+            } else if (type == OBU_FRAME || type == 3) {
                 rgba = decodeFrame(sample, offset, payloadSize, width, height);
             }
             offset += payloadSize;
@@ -173,36 +182,60 @@ public final class AvifImage {
         if (rgba == null) {
             throw new IllegalArgumentException("AV1 frame OBU is missing");
         }
+        if (sequenceWidth != 0 && (sequenceWidth != width || sequenceHeight != height)) {
+            throw new IllegalArgumentException("AV1 sequence header size does not match ispe");
+        }
         return rgba;
     }
 
-    /// Reads the first-stable frame payload.
+    /// Reads the entropy-coded tile; rejects the retired HST1 packed raster.
     private static byte[] decodeFrame(byte[] sample, int offset, int size, int width, int height) {
-        if (size < 8) {
+        if (size < 2) {
             throw new IllegalArgumentException("AV1 still payload is truncated");
         }
-        if (readBe(sample, offset) != STILL_TAG) {
-            throw new IllegalArgumentException("AV1 still payload tag is missing");
+        if (size >= 4 && readBe(sample, offset) == STILL_TAG) {
+            throw new IllegalArgumentException("AV1 packed HST1 raster is not accepted");
         }
-        int payloadWidth = ((sample[offset + 4] & 0xFF) << 8) | (sample[offset + 5] & 0xFF);
-        int payloadHeight = ((sample[offset + 6] & 0xFF) << 8) | (sample[offset + 7] & 0xFF);
-        if (payloadWidth != width || payloadHeight != height) {
-            throw new IllegalArgumentException("AV1 still payload size does not match ispe");
-        }
-        int expected = width * height * 4;
-        if (size < 8 + expected) {
-            throw new IllegalArgumentException("AV1 still raster is truncated");
-        }
-        return Arrays.copyOfRange(sample, offset + 8, offset + 8 + expected);
+        int expected = Math.multiplyExact(Math.multiplyExact(width, height), 4);
+        byte[] tile = Arrays.copyOfRange(sample, offset, offset + size);
+        return Av1Entropy.decodeRgba(tile, expected, width);
     }
 
     /// Writes a reduced-still sequence header that records the frame size.
     private static byte[] sequenceHeader(int width, int height) {
-        ByteBuffer buffer = ByteBuffer.allocate(16).order(ByteOrder.BIG_ENDIAN);
-        buffer.put((byte) 1);
-        buffer.putShort((short) width);
-        buffer.putShort((short) height);
-        return Arrays.copyOf(buffer.array(), buffer.position());
+        BitSink bits = new BitSink();
+        bits.write(1, 3);
+        bits.write(1, 1);
+        bits.write(1, 1);
+        bits.write(0, 5);
+        bits.write(15, 4);
+        bits.write(15, 4);
+        bits.write(width - 1, 16);
+        bits.write(height - 1, 16);
+        bits.write(0, 1);
+        bits.write(0, 1);
+        bits.write(0, 1);
+        bits.write(0, 1);
+        bits.write(0, 1);
+        bits.write(0, 1);
+        bits.write(1, 1);
+        bits.write(0, 1);
+        bits.write(0, 1);
+        return bits.toArray();
+    }
+
+    /// Reads width and height from a reduced-still sequence header.
+    private static int[] parseSequenceHeader(byte[] payload, int offset, int size) {
+        BitSource bits = new BitSource(payload, offset, size);
+        if (bits.read(3) != 1 || bits.read(1) != 1 || bits.read(1) != 1) {
+            throw new IllegalArgumentException("AV1 reduced-still sequence header is invalid");
+        }
+        bits.read(5);
+        int widthBits = bits.read(4) + 1;
+        int heightBits = bits.read(4) + 1;
+        int width = bits.read(widthBits) + 1;
+        int height = bits.read(heightBits) + 1;
+        return new int[] {width, height};
     }
 
     /// Wraps `payload` in an OBU with a size field.
@@ -409,5 +442,80 @@ public final class AvifImage {
 
     /// One decoded LEB128 value.
     private record Leb128(int value, int next) {
+    }
+
+    /// MSB-first bit sink used for the reduced-still sequence header.
+    private static final class BitSink {
+        /// Packed bits, most-significant first within the current byte.
+        private int acc;
+
+        /// Number of bits already stored in [`#acc`].
+        private int filled;
+
+        /// Emitted bytes.
+        private final ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+        /// Writes the low `count` bits of `value`.
+        void write(int value, int count) {
+            for (int shift = count - 1; shift >= 0; shift--) {
+                acc = (acc << 1) | ((value >> shift) & 1);
+                filled++;
+                if (filled == 8) {
+                    output.write(acc);
+                    acc = 0;
+                    filled = 0;
+                }
+            }
+        }
+
+        /// Returns the packed bytes, padding a trailing partial byte with zeros.
+        byte[] toArray() {
+            if (filled > 0) {
+                output.write(acc << (8 - filled));
+            }
+            return output.toByteArray();
+        }
+    }
+
+    /// MSB-first bit source used for the reduced-still sequence header.
+    private static final class BitSource {
+        /// Header bytes.
+        private final byte[] data;
+
+        /// Exclusive end offset.
+        private final int end;
+
+        /// Next unread byte.
+        private int offset;
+
+        /// Bits remaining in [`#bitBuf`].
+        private int bitsLeft;
+
+        /// Unread bits of the current byte.
+        private int bitBuf;
+
+        /// Creates a reader over `data[offset, offset + size)`.
+        BitSource(byte[] data, int offset, int size) {
+            this.data = data;
+            this.offset = offset;
+            this.end = offset + size;
+        }
+
+        /// Reads `count` bits as an unsigned integer.
+        int read(int count) {
+            int value = 0;
+            for (int index = 0; index < count; index++) {
+                if (bitsLeft == 0) {
+                    if (offset >= end) {
+                        throw new IllegalArgumentException("AV1 sequence header is truncated");
+                    }
+                    bitBuf = data[offset++] & 0xFF;
+                    bitsLeft = 8;
+                }
+                bitsLeft--;
+                value = (value << 1) | ((bitBuf >> bitsLeft) & 1);
+            }
+            return value;
+        }
     }
 }

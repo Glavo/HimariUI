@@ -3,15 +3,19 @@ package org.glavo.himari.font;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.GZIPInputStream;
 
-/// Reads an OpenType `SVG ` table of uncompressed SVG documents.
+/// Reads an OpenType `SVG ` table of uncompressed or gzip-compressed SVG documents.
 ///
-/// First-stable accepts version 0, uncompressed UTF-8 documents, and the first matching
-/// glyph-range record. Gzip-compressed documents (`1F 8B`) are rejected. A missing table
-/// yields no documents.
+/// First-stable accepts version 0, UTF-8 documents, and the first matching glyph-range record.
+/// Documents that begin with the gzip magic `1F 8B` are inflated with
+/// [`java.util.zip.GZIPInputStream`]. A missing table yields no documents.
 @NotNullByDefault
 final class SvgTable {
     /// Shared empty table.
@@ -75,11 +79,28 @@ final class SvgTable {
             }
             int offset = (int) absolute;
             if ((whole[offset] & 0xFF) == 0x1F && length > 1 && (whole[offset + 1] & 0xFF) == 0x8B) {
-                throw new IllegalArgumentException("Compressed SVG documents are not accepted");
+                documents[index] = inflateGzip(whole, offset, length);
+            } else {
+                documents[index] = new String(whole, offset, length, StandardCharsets.UTF_8);
             }
-            documents[index] = new String(whole, offset, length, StandardCharsets.UTF_8);
         }
         return new SvgTable(starts, ends, documents);
+    }
+
+    /// Inflates one gzip-compressed SVG document.
+    ///
+    /// @param whole the table bytes
+    /// @param offset the document start
+    /// @param length the compressed length
+    /// @return the UTF-8 document
+    private static String inflateGzip(byte[] whole, int offset, int length) {
+        try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(whole, offset, length))) {
+            ByteArrayOutputStream inflated = new ByteArrayOutputStream();
+            gzip.transferTo(inflated);
+            return inflated.toString(StandardCharsets.UTF_8);
+        } catch (IOException failure) {
+            throw new IllegalArgumentException("Compressed SVG document is not valid gzip", failure);
+        }
     }
 
     /// Returns the first SVG document that covers `glyphId`.

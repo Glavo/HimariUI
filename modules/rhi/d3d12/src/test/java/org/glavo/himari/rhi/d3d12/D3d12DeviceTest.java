@@ -51,6 +51,35 @@ final class D3d12DeviceTest {
         }
     }
 
+    /// Queries `CheckColorSpaceSupport` on the production swapchain and keeps P709 selected.
+    @Test
+    void checksColorSpaceSupportOnProductionSwapChain() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try (D3d12Device device = D3d12Device.open()) {
+            WindowsWindow window = platform.createWindow(
+                    WindowRequest.toplevel(new WindowConfiguration(
+                            "HimariUI D3D12 ColorSpace",
+                            new LogicalRect(16.0, 16.0, 320.0, 240.0),
+                            true,
+                            WindowState.NORMAL
+                    )),
+                    event -> { }
+            ).toCompletableFuture().get();
+            platform.pump();
+            try (D3d12SwapChain swapChain = D3d12SwapChain.attach(device, window.nativeHandle(), 320, 240)) {
+                D3d12Presentation presentation = swapChain.clearAndPresent(0.2f, 0.3f, 0.4f, 1.0f);
+                assertEquals(0, presentation.p709CheckHresult());
+                assertTrue(presentation.p709PresentSupported());
+                assertEquals("DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709", presentation.colorSpace());
+                assertFalse(presentation.hdrMetadataApplied());
+            }
+            window.closeAsync().toCompletableFuture().get();
+            platform.pump();
+        } finally {
+            platform.close();
+        }
+    }
+
     /// Presents one flip-model SDR frame onto a production HWND.
     @Test
     void presentsSdrToWindowsWindow() throws Exception {
@@ -72,6 +101,8 @@ final class D3d12DeviceTest {
             assertTrue(presentation.backBufferIndex() == 0 || presentation.backBufferIndex() == 1);
             assertEquals("DXGI_FORMAT_R8G8B8A8_UNORM", presentation.format());
             assertEquals("DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709", presentation.colorSpace());
+            assertEquals(0, presentation.p709CheckHresult());
+            assertTrue(presentation.p709PresentSupported());
             assertFalse(presentation.hdrMetadataApplied());
             assertTrue(presentation.ownedReferences() > 0);
             window.closeAsync().toCompletableFuture().get();
@@ -101,6 +132,10 @@ final class D3d12DeviceTest {
                 D3d12Presentation second = swapChain.clearAndPresent(0.4f, 0.5f, 0.6f, 1.0f);
                 assertTrue(first.cleared() && second.cleared());
                 assertTrue(first.presented() && second.presented());
+                assertEquals(0, first.p709CheckHresult());
+                assertTrue(first.p709PresentSupported());
+                assertEquals(first.p709Support(), second.p709Support());
+                assertEquals(first.p2020PqCheckHresult(), second.p2020PqCheckHresult());
                 assertTrue(second.ownedReferences() >= first.ownedReferences());
             }
             window.closeAsync().toCompletableFuture().get();
@@ -172,6 +207,8 @@ final class D3d12DeviceTest {
             D3d12Presentation presentation = device.presentSdrRgba(window.nativeHandle(), rgba, 32, 16);
             assertTrue(presentation.presented());
             assertFalse(presentation.cleared());
+            assertEquals(0, presentation.p709CheckHresult());
+            assertTrue(presentation.p709PresentSupported());
             assertFalse(presentation.hdrMetadataApplied());
             window.closeAsync().toCompletableFuture().get();
             platform.pump();

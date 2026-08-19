@@ -56,6 +56,12 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// Per-monitor DPI change.
     private static final int WM_DPICHANGED = 0x02E0;
 
+    /// System-key down (`WM_SYSKEYDOWN`).
+    private static final int WM_SYSKEYDOWN = 0x0104;
+
+    /// System-key up (`WM_SYSKEYUP`).
+    private static final int WM_SYSKEYUP = 0x0105;
+
     /// Pointer move.
     private static final int WM_MOUSEMOVE = 0x0200;
 
@@ -98,17 +104,44 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// `VK_RWIN`.
     private static final int VK_RWIN = 0x5C;
 
+    /// `MAPVK_VK_TO_VSC`.
+    private static final int MAPVK_VK_TO_VSC = 0;
+
     /// Vertical mouse wheel.
     private static final int WM_MOUSEWHEEL = 0x020A;
 
     /// Horizontal mouse wheel.
     private static final int WM_MOUSEHWHEEL = 0x020E;
 
-    /// Vertical pointer wheel.
-    private static final int WM_POINTERWHEEL = 0x0248;
+    /// Pointer entered the window (`WM_POINTERENTER`).
+    private static final int WM_POINTERENTER = 0x0249;
 
-    /// Horizontal pointer wheel.
-    private static final int WM_POINTERHWHEEL = 0x0249;
+    /// Pointer left the window (`WM_POINTERLEAVE`).
+    private static final int WM_POINTERLEAVE = 0x024A;
+
+    /// Pointer capture changed (`WM_POINTERCAPTURECHANGED`).
+    private static final int WM_POINTERCAPTURECHANGED = 0x024C;
+
+    /// Pointer activation of an inactive window (`WM_POINTERACTIVATE`).
+    private static final int WM_POINTERACTIVATE = 0x024B;
+
+    /// Non-client pointer update (`WM_NCPOINTERUPDATE`).
+    private static final int WM_NCPOINTERUPDATE = 0x0241;
+
+    /// Non-client pointer press (`WM_NCPOINTERDOWN`).
+    private static final int WM_NCPOINTERDOWN = 0x0242;
+
+    /// Non-client pointer release (`WM_NCPOINTERUP`).
+    private static final int WM_NCPOINTERUP = 0x0243;
+
+    /// `PA_ACTIVATE` — activate the window that received the pointer.
+    private static final int PA_ACTIVATE = 1;
+
+    /// Vertical pointer wheel (`WM_POINTERWHEEL`).
+    private static final int WM_POINTERWHEEL = 0x024E;
+
+    /// Horizontal pointer wheel (`WM_POINTERHWHEEL`).
+    private static final int WM_POINTERHWHEEL = 0x024F;
 
     /// `IDC_ARROW`.
     public static final int IDC_ARROW = 32512;
@@ -142,6 +175,21 @@ public final class WindowsNativeWindow implements AutoCloseable {
 
     /// Translated character.
     private static final int WM_CHAR = 0x0102;
+
+    /// Dead-key character (`WM_DEADCHAR`).
+    private static final int WM_DEADCHAR = 0x0103;
+
+    /// System character (`WM_SYSCHAR`).
+    private static final int WM_SYSCHAR = 0x0106;
+
+    /// System dead-key character (`WM_SYSDEADCHAR`).
+    private static final int WM_SYSDEADCHAR = 0x0107;
+
+    /// Unicode character (`WM_UNICHAR`).
+    private static final int WM_UNICHAR = 0x0109;
+
+    /// `UNICODE_NOCHAR` probe sent with `WM_UNICHAR`.
+    private static final int UNICODE_NOCHAR = 0xFFFF;
 
     /// Enter move/resize modal loop.
     private static final int WM_ENTERSIZEMOVE = 0x0231;
@@ -230,8 +278,11 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// Key events received through WndProc since the last drain.
     private final ArrayList<KeyEvent> keyEvents = new ArrayList<>();
 
-    /// UTF-16 code units received as `WM_CHAR` since the last drain.
+    /// UTF-16 code units received as `WM_CHAR` or `WM_UNICHAR` since the last drain.
     private final StringBuilder characters = new StringBuilder();
+
+    /// UTF-16 code units received as `WM_DEADCHAR` since the last drain.
+    private final StringBuilder deadCharacters = new StringBuilder();
 
     /// Whether `VK_SHIFT` is latched from `WM_KEYDOWN`/`WM_KEYUP`.
     private boolean shiftDown;
@@ -2006,7 +2057,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 flags.hasTransform(),
                 flags.up(),
                 flags.historyCount(),
-                flags.keyStates(),
+                flags.keyStates() | asyncModifierStates(),
                 flags.buttonChangeType(),
                 flags.inputData(),
                 flags.performanceCount(),
@@ -2085,21 +2136,101 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// @return the event
     private KeyEvent keyEvent(KeyEventType type, LogicalKey key, int virtualKey, long lParam) {
         int scanCode = (int) ((lParam >>> 16) & 0xFFL);
+        if (scanCode == 0) {
+            scanCode = mapVirtualKeyToScan(virtualKey);
+        }
         boolean repeat = type == KeyEventType.DOWN && (lParam & (1L << 30)) != 0L;
         boolean extended = (lParam & (1L << 24)) != 0L;
+        boolean[] snapshot = keyboardSnapshot();
         return new KeyEvent(
                 type,
                 key,
-                shiftDown,
-                ctrlDown,
-                altDown,
+                shiftDown || keyIsDown(VK_SHIFT) || snapshot[VK_SHIFT],
+                ctrlDown || keyIsDown(VK_CONTROL) || snapshot[VK_CONTROL],
+                altDown || keyIsDown(VK_MENU) || snapshot[VK_MENU],
                 scanCode,
                 repeat,
                 extended,
-                metaDown,
+                metaDown || keyIsDown(VK_LWIN) || keyIsDown(VK_RWIN) || snapshot[VK_LWIN] || snapshot[VK_RWIN],
                 keyLocation(virtualKey, extended),
                 messageTime()
         );
+    }
+
+    /// Returns whether generated `GetKeyState` reports `virtualKey` currently down.
+    ///
+    /// The high bit of the `SHORT` result is the down state. The call is the live modifier query
+    /// used by [`#keyEvent(KeyEventType, LogicalKey, int, long)`].
+    ///
+    /// @param virtualKey a Win32 virtual-key code
+    /// @return the raw `GetKeyState` result
+    public short keyState(int virtualKey) {
+        return bindings.getKeyState(virtualKey);
+    }
+
+    /// Copies generated `GetKeyboardState` into `state`.
+    ///
+    /// @param state a 256-byte destination
+    /// @return whether `GetKeyboardState` succeeded
+    public boolean copyKeyboardState(byte[] state) {
+        Objects.requireNonNull(state, "state");
+        if (state.length < 256) {
+            throw new IllegalArgumentException("GetKeyboardState requires 256 bytes");
+        }
+        MemorySegment buffer = arena.allocate(256);
+        if (bindings.getKeyboardState(buffer) == 0) {
+            return false;
+        }
+        MemorySegment.copy(buffer, ValueLayout.JAVA_BYTE, 0L, state, 0, 256);
+        return true;
+    }
+
+    /// Returns down flags from generated `GetKeyboardState`.
+    private boolean[] keyboardSnapshot() {
+        boolean[] down = new boolean[256];
+        byte[] state = new byte[256];
+        if (!copyKeyboardState(state)) {
+            return down;
+        }
+        for (int index = 0; index < 256; index++) {
+            down[index] = (state[index] & 0x80) != 0;
+        }
+        return down;
+    }
+
+    /// Returns whether generated `GetAsyncKeyState` reports `virtualKey` currently down.
+    ///
+    /// @param virtualKey a Win32 virtual-key code
+    /// @return the raw `GetAsyncKeyState` result
+    public short asyncKeyState(int virtualKey) {
+        return bindings.getAsyncKeyState(virtualKey);
+    }
+
+    /// Returns whether `GetKeyState` reports the high bit of `virtualKey`.
+    private boolean keyIsDown(int virtualKey) {
+        return (keyState(virtualKey) & 0x8000) != 0;
+    }
+
+    /// Returns whether `GetAsyncKeyState` reports the high bit of `virtualKey`.
+    private boolean asyncKeyIsDown(int virtualKey) {
+        return (asyncKeyState(virtualKey) & 0x8000) != 0;
+    }
+
+    /// Maps `virtualKey` to an OEM scan code through generated `MapVirtualKeyW`.
+    private int mapVirtualKeyToScan(int virtualKey) {
+        return bindings.mapVirtualKeyW(virtualKey, MAPVK_VK_TO_VSC) & 0xFF;
+    }
+
+    /// Packs `POINTER_MOD_SHIFT` / `POINTER_MOD_CTRL` from generated `GetAsyncKeyState`.
+    private int asyncModifierStates() {
+        int states = 0;
+        if (asyncKeyIsDown(VK_SHIFT)) {
+            states |= POINTER_MOD_SHIFT;
+        }
+        if (asyncKeyIsDown(VK_CONTROL)) {
+            states |= POINTER_MOD_CTRL;
+        }
+        return states;
     }
 
     /// Maps a virtual-key and `KF_EXTENDED` bit onto a physical location.
@@ -2151,13 +2282,37 @@ public final class WindowsNativeWindow implements AutoCloseable {
         return copy;
     }
 
-    /// Removes and returns `WM_CHAR` text delivered through WndProc since the last drain.
+    /// Removes and returns `WM_CHAR` / `WM_UNICHAR` text delivered through WndProc since the last drain.
     ///
     /// @return the committed characters, possibly empty
     public String takeCharacters() {
         String text = characters.toString();
         characters.setLength(0);
         return text;
+    }
+
+    /// Removes and returns `WM_DEADCHAR` text delivered through WndProc since the last drain.
+    ///
+    /// @return the dead-key characters, possibly empty
+    public String takeDeadCharacters() {
+        String text = deadCharacters.toString();
+        deadCharacters.setLength(0);
+        return text;
+    }
+
+    /// Appends one BMP character from `WM_CHAR`.
+    private void appendCharacter(int codeUnit) {
+        if (codeUnit >= 0x20 && codeUnit != 0x7F && codeUnit <= 0xFFFF) {
+            characters.append((char) codeUnit);
+        }
+    }
+
+    /// Appends one Unicode scalar from `WM_UNICHAR`.
+    private void appendUnichar(int codePoint) {
+        if (!Character.isValidCodePoint(codePoint) || codePoint < 0x20 || codePoint == 0x7F) {
+            return;
+        }
+        characters.append(Character.toChars(codePoint));
     }
 
     /// Destroys the HWND.
@@ -2307,6 +2462,34 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 pointerEvents.add(wheelEvent(PointerEventType.WHEEL_HORIZONTAL, wParam, lParam, PointerDeviceKind.MOUSE));
                 yield 0L;
             }
+            case WM_POINTERENTER -> {
+                pointerEvents.add(pointerMessage(PointerEventType.ENTER, wParam, lParam));
+                yield 0L;
+            }
+            case WM_POINTERLEAVE -> {
+                pointerEvents.add(pointerMessage(PointerEventType.LEAVE, wParam, lParam));
+                yield 0L;
+            }
+            case WM_POINTERCAPTURECHANGED -> {
+                pointerEvents.add(pointerMessage(PointerEventType.CAPTURE_CHANGED, wParam, lParam));
+                yield 0L;
+            }
+            case WM_POINTERACTIVATE -> {
+                pointerEvents.add(pointerMessage(PointerEventType.ACTIVATE, wParam, lParam));
+                yield PA_ACTIVATE;
+            }
+            case WM_NCPOINTERUPDATE -> {
+                pointerEvents.add(pointerMessage(PointerEventType.NON_CLIENT_MOVE, wParam, lParam));
+                yield 0L;
+            }
+            case WM_NCPOINTERDOWN -> {
+                pointerEvents.add(pointerMessage(PointerEventType.NON_CLIENT_DOWN, wParam, lParam));
+                yield 0L;
+            }
+            case WM_NCPOINTERUP -> {
+                pointerEvents.add(pointerMessage(PointerEventType.NON_CLIENT_UP, wParam, lParam));
+                yield 0L;
+            }
             case WM_POINTERWHEEL -> {
                 pointerEvents.add(wheelEvent(PointerEventType.WHEEL, wParam, lParam, pointerDevice(wParam)));
                 yield 0L;
@@ -2327,7 +2510,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 pointerEvents.add(pointerMessage(PointerEventType.UP, wParam, lParam));
                 yield 0L;
             }
-            case WM_KEYDOWN -> {
+            case WM_KEYDOWN, WM_SYSKEYDOWN -> {
                 int virtualKey = (int) wParam;
                 latchModifier(virtualKey, true);
                 @Nullable LogicalKey key = logicalKey(virtualKey);
@@ -2336,7 +2519,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 }
                 yield 0L;
             }
-            case WM_KEYUP -> {
+            case WM_KEYUP, WM_SYSKEYUP -> {
                 int virtualKey = (int) wParam;
                 latchModifier(virtualKey, false);
                 @Nullable LogicalKey key = logicalKey(virtualKey);
@@ -2345,11 +2528,22 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 }
                 yield 0L;
             }
-            case WM_CHAR -> {
+            case WM_CHAR, WM_SYSCHAR -> {
+                appendCharacter((int) wParam);
+                yield 0L;
+            }
+            case WM_DEADCHAR, WM_SYSDEADCHAR -> {
                 int codeUnit = (int) wParam;
-                if (codeUnit >= 0x20 && codeUnit != 0x7F && codeUnit <= 0xFFFF) {
-                    characters.append((char) codeUnit);
+                if (codeUnit > 0 && codeUnit <= 0xFFFF) {
+                    deadCharacters.append((char) codeUnit);
                 }
+                yield 0L;
+            }
+            case WM_UNICHAR -> {
+                if ((int) wParam == UNICODE_NOCHAR) {
+                    yield 1L;
+                }
+                appendUnichar((int) wParam);
                 yield 0L;
             }
             case WM_ENTERSIZEMOVE -> {

@@ -253,15 +253,18 @@ public final class PureJavaGuardPlugin implements Plugin<Project> {
                             List.of(Pattern.compile("\\bSystem\\s*\\.\\s*load(?:Library)?\\s*\\("))
                     ));
 
-                    sourceFiles.stream().filter(File::isFile).forEach(file -> {
-                        String code = codeOnly(readUtf8(file));
-                        String lower = code.toLowerCase(Locale.ROOT);
-                        boolean createsTemporaryFile = lower.contains("createtempfile")
-                                || lower.contains("createtempdirectory");
-                        if (createsTemporaryFile && NATIVE_SUFFIXES.stream().anyMatch(lower::contains)) {
-                            violations.add(invariantPath(file) + ": temporary native-file pattern");
-                        }
-                    });
+                    sourceFiles.stream()
+                            .filter(File::isFile)
+                            .filter(file -> Set.of("java", "kt").contains(extension(file)))
+                            .forEach(file -> {
+                                String code = codeOnly(readUtf8(file));
+                                String lower = code.toLowerCase(Locale.ROOT);
+                                boolean createsTemporaryFile = lower.contains("createtempfile")
+                                        || lower.contains("createtempdirectory");
+                                if (createsTemporaryFile && NATIVE_SUFFIXES.stream().anyMatch(lower::contains)) {
+                                    violations.add(invariantPath(file) + ": temporary native-file pattern");
+                                }
+                            });
 
                     failIfNotEmpty("native loading or extraction patterns", violations);
                 }

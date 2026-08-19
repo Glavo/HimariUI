@@ -16,6 +16,9 @@ public final class WindowsImmSession {
     /// `CFS_FORCE_POSITION`.
     private static final int CFS_FORCE_POSITION = 0x0020;
 
+    /// `CFS_CANDIDATEPOS`.
+    private static final int CFS_CANDIDATEPOS = 0x0040;
+
     /// Prevents instantiation.
     private WindowsImmSession() {
     }
@@ -25,7 +28,7 @@ public final class WindowsImmSession {
     /// @param libraries the session libraries
     /// @param hwnd the focused HWND
     /// @param ime the editor session that owns the candidate rectangle
-    /// @return whether `ImmSetCompositionWindow` succeeded
+    /// @return whether `ImmSetCompositionWindow` and `ImmSetCandidateWindow` both succeeded
     public static boolean applyCandidateRectangle(
             WindowsLibraries libraries,
             MemorySegment hwnd,
@@ -70,7 +73,35 @@ public final class WindowsImmSession {
                     Win32Layouts.COMPOSITIONFORM_AREA_OFFSET + Win32Layouts.RECT_BOTTOM_OFFSET,
                     top + Math.round(ime.candidateHeight())
             );
-            return bindings.immSetCompositionWindow(context, form) != 0;
+            boolean composition = bindings.immSetCompositionWindow(context, form) != 0;
+            MemorySegment candidate = arena.allocate(Win32Layouts.CANDIDATEFORM);
+            candidate.fill((byte) 0);
+            candidate.set(ValueLayout.JAVA_INT, Win32Layouts.CANDIDATEFORM_INDEX_OFFSET, 0);
+            candidate.set(ValueLayout.JAVA_INT, Win32Layouts.CANDIDATEFORM_STYLE_OFFSET, CFS_CANDIDATEPOS);
+            candidate.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.CANDIDATEFORM_CURRENT_POS_OFFSET + Win32Layouts.POINT_X_OFFSET,
+                    left
+            );
+            candidate.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.CANDIDATEFORM_CURRENT_POS_OFFSET + Win32Layouts.POINT_Y_OFFSET,
+                    top
+            );
+            candidate.set(ValueLayout.JAVA_INT, Win32Layouts.CANDIDATEFORM_AREA_OFFSET + Win32Layouts.RECT_LEFT_OFFSET, left);
+            candidate.set(ValueLayout.JAVA_INT, Win32Layouts.CANDIDATEFORM_AREA_OFFSET + Win32Layouts.RECT_TOP_OFFSET, top);
+            candidate.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.CANDIDATEFORM_AREA_OFFSET + Win32Layouts.RECT_RIGHT_OFFSET,
+                    left + Math.round(ime.candidateWidth())
+            );
+            candidate.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.CANDIDATEFORM_AREA_OFFSET + Win32Layouts.RECT_BOTTOM_OFFSET,
+                    top + Math.round(ime.candidateHeight())
+            );
+            boolean candidateWindow = bindings.immSetCandidateWindow(context, candidate) != 0;
+            return composition && candidateWindow;
         } finally {
             bindings.immReleaseContext(hwnd, context);
         }

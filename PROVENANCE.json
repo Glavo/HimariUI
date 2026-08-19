@@ -105,6 +105,14 @@
       "version": "RUNTIME-ADR-001 reviewed selection v1",
       "license": "Apache-2.0",
       "sha256": "a65d7b59498c5ab1a940d2f1b69e4fdb11b75a343475512acdc63c36c41ca160"
+    },
+    {
+      "path": "modules/font/src/main/resources/org/glavo/himari/font/brotli-dictionary.bin",
+      "kind": "rfc-payload",
+      "source": "https://github.com/google/brotli",
+      "version": "RFC 7932 Appendix A DICT 122784 CRC-32 0x5136cb04",
+      "license": "MIT",
+      "sha256": "20e42eb1b511c21806d4d227d07e5dd06877d8ce7b3a817f378f313653f35c70"
     }
   ]
 }

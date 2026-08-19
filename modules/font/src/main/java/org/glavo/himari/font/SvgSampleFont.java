@@ -3,13 +3,15 @@ package org.glavo.himari.font;
 import org.jetbrains.annotations.NotNullByDefault;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.zip.GZIPOutputStream;
 
-/// Generates a TrueType face whose `A` has an uncompressed OpenType `SVG ` document.
+/// Generates a TrueType face whose `A` has an OpenType `SVG ` document.
 @NotNullByDefault
 public final class SvgSampleFont {
     /// Isolated letter advance.
@@ -91,10 +93,29 @@ public final class SvgSampleFont {
         return bytes;
     }
 
-    /// Builds a face whose SVG document starts with the gzip magic.
+    /// Builds a face whose SVG document is gzip-compressed.
     ///
     /// @return a read-only SFNT file
     public static MemorySegment compressedBytes() {
+        LinkedHashMap<String, byte[]> tables = new LinkedHashMap<>();
+        tables.put("cmap", cmap());
+        byte[] glyf = glyf();
+        tables.put("glyf", glyf);
+        tables.put("SVG ", svg(gzip(DOCUMENT.getBytes(StandardCharsets.UTF_8))));
+        tables.put("head", head());
+        tables.put("hhea", hhea());
+        tables.put("hmtx", hmtx());
+        tables.put("loca", loca(glyf.length));
+        tables.put("maxp", maxp());
+        tables.put("name", name());
+        tables.put("post", post());
+        return MemorySegment.ofArray(BitmapSfntFont.wrap(tables)).asReadOnly();
+    }
+
+    /// Builds a face whose SVG document starts with a truncated gzip header.
+    ///
+    /// @return a read-only SFNT file
+    public static MemorySegment truncatedGzipBytes() {
         LinkedHashMap<String, byte[]> tables = new LinkedHashMap<>();
         tables.put("cmap", cmap());
         byte[] glyf = glyf();
@@ -108,6 +129,22 @@ public final class SvgSampleFont {
         tables.put("name", name());
         tables.put("post", post());
         return MemorySegment.ofArray(BitmapSfntFont.wrap(tables)).asReadOnly();
+    }
+
+    /// Gzip-compresses `plain`.
+    ///
+    /// @param plain the uncompressed document bytes
+    /// @return the gzip wrapper
+    private static byte[] gzip(byte[] plain) {
+        try {
+            ByteArrayOutputStream wrapped = new ByteArrayOutputStream();
+            try (GZIPOutputStream gzip = new GZIPOutputStream(wrapped)) {
+                gzip.write(plain);
+            }
+            return wrapped.toByteArray();
+        } catch (IOException failure) {
+            throw new IllegalStateException("SVG gzip wrap failed", failure);
+        }
     }
 
     /// Writes an SVG document index covering [`#GLYPH_A`].

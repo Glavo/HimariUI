@@ -376,7 +376,7 @@ public final class WindowsWindow implements PlatformWindow {
 
     /// Pushes the IME candidate rectangle through IMM32.
     ///
-    /// @return whether `ImmSetCompositionWindow` succeeded
+    /// @return whether `ImmSetCompositionWindow` and `ImmSetCandidateWindow` both succeeded
     public boolean applyImeCandidate() {
         return WindowsImmSession.applyCandidateRectangle(platform.libraries(), nativeHandle(), ime);
     }
@@ -523,6 +523,25 @@ public final class WindowsWindow implements PlatformWindow {
         Objects.requireNonNull(device, "device");
         long packed = WindowsNativeWindow.packPointer(x, y);
         int identity = Math.max(0, pointerId);
+        if (type == org.glavo.himari.layout.input.PointerEventType.ENTER
+                || type == org.glavo.himari.layout.input.PointerEventType.LEAVE
+                || type == org.glavo.himari.layout.input.PointerEventType.CAPTURE_CHANGED
+                || type == org.glavo.himari.layout.input.PointerEventType.ACTIVATE
+                || type == org.glavo.himari.layout.input.PointerEventType.NON_CLIENT_MOVE
+                || type == org.glavo.himari.layout.input.PointerEventType.NON_CLIENT_DOWN
+                || type == org.glavo.himari.layout.input.PointerEventType.NON_CLIENT_UP) {
+            int message = switch (type) {
+                case ENTER -> 0x0249;
+                case LEAVE -> 0x024A;
+                case ACTIVATE -> 0x024B;
+                case NON_CLIENT_MOVE -> 0x0241;
+                case NON_CLIENT_DOWN -> 0x0242;
+                case NON_CLIENT_UP -> 0x0243;
+                default -> 0x024C;
+            };
+            nativeWindow.sendMessage(message, pointerWParam(identity, type), packed);
+            return;
+        }
         switch (device) {
             case MOUSE -> {
                 int message = switch (type) {
@@ -535,6 +554,13 @@ public final class WindowsWindow implements PlatformWindow {
                     case SECONDARY_UP -> 0x0205;
                     case MIDDLE_DOWN -> 0x0207;
                     case MIDDLE_UP -> 0x0208;
+                    case ENTER -> 0x0249;
+                    case LEAVE -> 0x024A;
+                    case CAPTURE_CHANGED -> 0x024C;
+                    case ACTIVATE -> 0x024B;
+                    case NON_CLIENT_MOVE -> 0x0241;
+                    case NON_CLIENT_DOWN -> 0x0242;
+                    case NON_CLIENT_UP -> 0x0243;
                 };
                 long wParam = type == org.glavo.himari.layout.input.PointerEventType.WHEEL
                         || type == org.glavo.himari.layout.input.PointerEventType.WHEEL_HORIZONTAL
@@ -547,9 +573,16 @@ public final class WindowsWindow implements PlatformWindow {
                     case MOVE -> 0x0245;
                     case DOWN -> 0x0246;
                     case UP -> 0x0247;
-                    case WHEEL -> 0x0248;
-                    case WHEEL_HORIZONTAL -> 0x0249;
+                    case WHEEL -> 0x024E;
+                    case WHEEL_HORIZONTAL -> 0x024F;
                     case SECONDARY_DOWN, SECONDARY_UP, MIDDLE_DOWN, MIDDLE_UP -> 0x0246;
+                    case ENTER -> 0x0249;
+                    case LEAVE -> 0x024A;
+                    case CAPTURE_CHANGED -> 0x024C;
+                    case ACTIVATE -> 0x024B;
+                    case NON_CLIENT_MOVE -> 0x0241;
+                    case NON_CLIENT_DOWN -> 0x0242;
+                    case NON_CLIENT_UP -> 0x0243;
                 };
                 long wParam = type == org.glavo.himari.layout.input.PointerEventType.WHEEL
                         || type == org.glavo.himari.layout.input.PointerEventType.WHEEL_HORIZONTAL
@@ -569,7 +602,8 @@ public final class WindowsWindow implements PlatformWindow {
             case DOWN, MOVE -> 0x0001L;
             case SECONDARY_DOWN -> 0x0002L;
             case MIDDLE_DOWN -> 0x0010L;
-            case UP, SECONDARY_UP, MIDDLE_UP, WHEEL, WHEEL_HORIZONTAL -> 0L;
+            case UP, SECONDARY_UP, MIDDLE_UP, WHEEL, WHEEL_HORIZONTAL, ENTER, LEAVE, CAPTURE_CHANGED, ACTIVATE,
+                    NON_CLIENT_MOVE, NON_CLIENT_DOWN, NON_CLIENT_UP -> 0L;
         };
     }
 
@@ -584,7 +618,8 @@ public final class WindowsWindow implements PlatformWindow {
             case DOWN -> 0x0010;
             case SECONDARY_DOWN -> 0x0020;
             case MIDDLE_DOWN -> 0x0040;
-            case MOVE, UP, WHEEL, WHEEL_HORIZONTAL, SECONDARY_UP, MIDDLE_UP -> 0;
+            case MOVE, UP, WHEEL, WHEEL_HORIZONTAL, SECONDARY_UP, MIDDLE_UP, ENTER, LEAVE, CAPTURE_CHANGED, ACTIVATE,
+                    NON_CLIENT_MOVE, NON_CLIENT_DOWN, NON_CLIENT_UP -> 0;
         };
         return wParam | ((long) flags << 16);
     }
@@ -631,6 +666,14 @@ public final class WindowsWindow implements PlatformWindow {
         nativeWindow.postMessage(down ? 0x0100 : 0x0101, Integer.toUnsignedLong(virtualKey), lParam);
     }
 
+    /// Posts a `WM_SYSKEYDOWN` or `WM_SYSKEYUP` through the production WndProc.
+    ///
+    /// @param down whether this is `WM_SYSKEYDOWN`
+    /// @param virtualKey the virtual-key code
+    public void postSysVirtualKey(boolean down, int virtualKey) {
+        nativeWindow.postMessage(down ? 0x0104 : 0x0105, Integer.toUnsignedLong(virtualKey), 1L | (1L << 29));
+    }
+
     /// Posts a `WM_XBUTTON*` through the production WndProc.
     ///
     /// @param down whether this is `WM_XBUTTONDOWN`
@@ -651,6 +694,65 @@ public final class WindowsWindow implements PlatformWindow {
     /// @param codeUnit the UTF-16 code unit
     public void postChar(char codeUnit) {
         nativeWindow.postMessage(0x0102, codeUnit, 0L);
+    }
+
+    /// Posts a `WM_SYSCHAR` through the production WndProc.
+    ///
+    /// @param codeUnit the UTF-16 code unit
+    public void postSysChar(char codeUnit) {
+        nativeWindow.postMessage(0x0106, codeUnit, 0L);
+    }
+
+    /// Posts a `WM_SYSDEADCHAR` through the production WndProc.
+    ///
+    /// @param codeUnit the dead-key UTF-16 code unit
+    public void postSysDeadChar(char codeUnit) {
+        nativeWindow.postMessage(0x0107, codeUnit, 0L);
+    }
+
+    /// Posts a `WM_DEADCHAR` through the production WndProc.
+    ///
+    /// @param codeUnit the dead-key UTF-16 code unit
+    public void postDeadChar(char codeUnit) {
+        nativeWindow.postMessage(0x0103, codeUnit, 0L);
+    }
+
+    /// Posts a `WM_UNICHAR` through the production WndProc.
+    ///
+    /// @param codePoint the Unicode scalar value
+    public void postUnichar(int codePoint) {
+        nativeWindow.postMessage(0x0109, Integer.toUnsignedLong(codePoint), 0L);
+    }
+
+    /// Sends the `UNICODE_NOCHAR` probe and returns whether WndProc advertised `WM_UNICHAR` support.
+    ///
+    /// @return whether the production WndProc returned `TRUE`
+    public boolean supportsUnichar() {
+        return nativeWindow.sendMessage(0x0109, 0xFFFFL, 0L) != 0L;
+    }
+
+    /// Returns generated `GetKeyState` for `virtualKey`.
+    ///
+    /// @param virtualKey a Win32 virtual-key code
+    /// @return the raw `SHORT` result
+    public short keyState(int virtualKey) {
+        return nativeWindow.keyState(virtualKey);
+    }
+
+    /// Copies generated `GetKeyboardState` into `state`.
+    ///
+    /// @param state a 256-byte destination
+    /// @return whether `GetKeyboardState` succeeded
+    public boolean copyKeyboardState(byte[] state) {
+        return nativeWindow.copyKeyboardState(state);
+    }
+
+    /// Returns generated `GetAsyncKeyState` for `virtualKey`.
+    ///
+    /// @param virtualKey a Win32 virtual-key code
+    /// @return the raw `SHORT` result
+    public short asyncKeyState(int virtualKey) {
+        return nativeWindow.asyncKeyState(virtualKey);
     }
 
     /// {@inheritDoc}
@@ -705,6 +807,10 @@ public final class WindowsWindow implements PlatformWindow {
     void consumeNativeInput() {
         pendingPointers.addAll(nativeWindow.takePointerEvents());
         pendingKeys.addAll(nativeWindow.takeKeyEvents());
+        String dead = nativeWindow.takeDeadCharacters();
+        if (!dead.isEmpty()) {
+            ime.updateComposition(dead);
+        }
         String characters = nativeWindow.takeCharacters();
         if (!characters.isEmpty()) {
             ime.updateComposition(characters);

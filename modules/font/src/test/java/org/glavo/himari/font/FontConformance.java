@@ -125,9 +125,31 @@ public final class FontConformance {
         if (woff2.colorLayers(ColrV1SampleFont.GLYPH_BASE).size() != 2) {
             throw new IllegalStateException("WOFF2 leftover did not unwrap COLR v1 layers");
         }
+        byte[] time = Brotli.decompress(Brotli.compressStaticDictionary(4, 0, 0));
+        if (time.length != 4 || time[0] != 't' || time[1] != 'i' || time[2] != 'm' || time[3] != 'e') {
+            throw new IllegalStateException("Brotli static-dictionary leftover did not inflate word 0");
+        }
+        SfntFont dictionaryWoff2 = new SfntFont(Woff2File.wrapWithStaticDictionary(
+                SvgSampleFont.bytes().toArray(java.lang.foreign.ValueLayout.JAVA_BYTE)));
+        if (!SvgSampleFont.DOCUMENT.equals(dictionaryWoff2.svgDocument(SvgSampleFont.GLYPH_A))) {
+            throw new IllegalStateException("WOFF2 dictionary leftover did not unwrap the SVG document");
+        }
+        SfntFont transformed = new SfntFont(Woff2File.wrapTransformed(
+                OutlineSampleFont.bytes().toArray(java.lang.foreign.ValueLayout.JAVA_BYTE)));
+        CollectingPen originalBump = new CollectingPen();
+        CollectingPen decodedBump = new CollectingPen();
+        OutlineSampleFont.create().outline(OutlineSampleFont.GLYPH_BUMP, originalBump);
+        transformed.outline(OutlineSampleFont.GLYPH_BUMP, decodedBump);
+        if (!originalBump.commands().equals(decodedBump.commands())) {
+            throw new IllegalStateException("WOFF2 transformed glyf leftover did not reconstruct the bump outline");
+        }
         SfntFont svg = SvgSampleFont.create();
         if (!SvgSampleFont.DOCUMENT.equals(svg.svgDocument(SvgSampleFont.GLYPH_A))) {
             throw new IllegalStateException("SVG leftover did not return the stored document");
+        }
+        if (!SvgSampleFont.DOCUMENT.equals(
+                new SfntFont(SvgSampleFont.compressedBytes()).svgDocument(SvgSampleFont.GLYPH_A))) {
+            throw new IllegalStateException("gzip SVG leftover did not inflate the stored document");
         }
         SfntFont os2 = Os2SampleFont.create();
         if (os2.weightClass() != Os2SampleFont.WEIGHT_CLASS

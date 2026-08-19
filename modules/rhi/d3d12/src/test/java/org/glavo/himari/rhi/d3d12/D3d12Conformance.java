@@ -59,6 +59,11 @@ public final class D3d12Conformance {
             if (!presentation.cleared() || !presentation.presented()) {
                 throw new IllegalStateException("D3D12 swapchain did not clear and present");
             }
+            if (presentation.p709CheckHresult() != 0 || !presentation.p709PresentSupported()) {
+                throw new IllegalStateException(
+                        "IDXGISwapChain3::CheckColorSpaceSupport(P709) did not report present support"
+                );
+            }
             try (D3d12GpuResource resource = device.createUploadResource(
                     java.lang.foreign.MemorySegment.ofArray(new byte[] { 7, 8, 9, 10 }))) {
                 java.lang.foreign.MemorySegment readBack = resource.readBack(device);
@@ -135,6 +140,11 @@ public final class D3d12Conformance {
                           "format": "%s",
                           "colorSpace": "%s",
                           "hdrMetadataApplied": false,
+                          "p709CheckHresult": %d,
+                          "p709Support": %d,
+                          "p709PresentSupported": %s,
+                          "p2020PqCheckHresult": %d,
+                          "p2020PqSupport": %d,
                           "ownedReferences": %d,
                           "releasedReferences": %d
                         }
@@ -144,6 +154,11 @@ public final class D3d12Conformance {
                         presentation.backBufferIndex(),
                         presentation.format(),
                         presentation.colorSpace(),
+                        presentation.p709CheckHresult(),
+                        presentation.p709Support(),
+                        presentation.p709PresentSupported(),
+                        presentation.p2020PqCheckHresult(),
+                        presentation.p2020PqSupport(),
                         presentation.ownedReferences(),
                         presentation.releasedReferences()
                 ),

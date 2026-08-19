@@ -155,6 +155,116 @@ import java.util.Objects;
 /// @param hippogriffileArgb the hippogriffile wash color
 /// @param manticoreileArgb the manticoreile wash color
 /// @param amphipterileArgb the amphipterile wash color
+/// @param yalehoundadeArgb the yalehoundade wash color
+/// @param senmurvadeArgb the senmurvade wash color
+/// @param simurghadeArgb the simurghade wash color
+/// @param sphinxadeArgb the sphinxade wash color
+/// @param chimeraadeArgb the chimeraade wash color
+/// @param hydraadeArgb the hydraade wash color
+/// @param krakenadeArgb the krakenade wash color
+/// @param leviathanadeArgb the leviathanade wash color
+/// @param behemothadeArgb the behemothade wash color
+/// @param hippogriffadeArgb the hippogriffade wash color
+/// @param manticoreadeArgb the manticoreade wash color
+/// @param amphipteradeArgb the amphipterade wash color
+/// @param yalehoundureArgb the yalehoundure wash color
+/// @param senmurvureArgb the senmurvure wash color
+/// @param simurghureArgb the simurghure wash color
+/// @param sphinxureArgb the sphinxure wash color
+/// @param chimeraureArgb the chimeraure wash color
+/// @param hydraureArgb the hydraure wash color
+/// @param krakenureArgb the krakenure wash color
+/// @param leviathanureArgb the leviathanure wash color
+/// @param behemothureArgb the behemothure wash color
+/// @param hippogriffureArgb the hippogriffure wash color
+/// @param manticoreureArgb the manticoreure wash color
+/// @param amphipterureArgb the amphipterure wash color
+/// @param yalehoundiceArgb the yalehoundice wash color
+/// @param senmurviceArgb the senmurvice wash color
+/// @param simurghiceArgb the simurghice wash color
+/// @param sphinxiceArgb the sphinxice wash color
+/// @param chimeraiceArgb the chimeraice wash color
+/// @param hydraiceArgb the hydraice wash color
+/// @param krakeniceArgb the krakenice wash color
+/// @param leviathaniceArgb the leviathanice wash color
+/// @param behemothiceArgb the behemothice wash color
+/// @param hippogrifficeArgb the hippogriffice wash color
+/// @param manticoreiceArgb the manticoreice wash color
+/// @param amphiptericeArgb the amphipterice wash color
+/// @param yalehoundomeArgb the yalehoundome wash color
+/// @param senmurvomeArgb the senmurvome wash color
+/// @param simurghomeArgb the simurghome wash color
+/// @param sphinxomeArgb the sphinxome wash color
+/// @param chimeraomeArgb the chimeraome wash color
+/// @param hydraomeArgb the hydraome wash color
+/// @param krakenomeArgb the krakenome wash color
+/// @param leviathanomeArgb the leviathanome wash color
+/// @param behemothomeArgb the behemothome wash color
+/// @param hippogriffomeArgb the hippogriffome wash color
+/// @param manticoreomeArgb the manticoreome wash color
+/// @param amphipteromeArgb the amphipterome wash color
+/// @param yalehoundeanArgb the yalehoundean wash color
+/// @param senmurveanArgb the senmurvean wash color
+/// @param simurgheanArgb the simurghean wash color
+/// @param sphinxeanArgb the sphinxean wash color
+/// @param chimeraeanArgb the chimeraean wash color
+/// @param hydraeanArgb the hydraean wash color
+/// @param krakeneanArgb the krakenean wash color
+/// @param leviathaneanArgb the leviathanean wash color
+/// @param behemotheanArgb the behemothean wash color
+/// @param hippogriffeanArgb the hippogriffean wash color
+/// @param manticoreeanArgb the manticoreean wash color
+/// @param amphiptereanArgb the amphipterean wash color
+/// @param yalehoundeumArgb the yalehoundeum wash color
+/// @param senmurveumArgb the senmurveum wash color
+/// @param simurgheumArgb the simurgheum wash color
+/// @param sphinxeumArgb the sphinxeum wash color
+/// @param chimeraeumArgb the chimeraeum wash color
+/// @param hydraeumArgb the hydraeum wash color
+/// @param krakeneumArgb the krakeneum wash color
+/// @param leviathaneumArgb the leviathaneum wash color
+/// @param behemotheumArgb the behemotheum wash color
+/// @param hippogriffeumArgb the hippogriffeum wash color
+/// @param manticoreeumArgb the manticoreeum wash color
+/// @param amphiptereumArgb the amphiptereum wash color
+/// @param yalehoundiumArgb the yalehoundium wash color
+/// @param senmurviumArgb the senmurvium wash color
+/// @param simurghiumArgb the simurghium wash color
+/// @param sphinxiumArgb the sphinxium wash color
+/// @param chimeraiumArgb the chimeraium wash color
+/// @param hydraiumArgb the hydraium wash color
+/// @param krakeniumArgb the krakenium wash color
+/// @param leviathaniumArgb the leviathanium wash color
+/// @param behemothiumArgb the behemothium wash color
+/// @param hippogriffiumArgb the hippogriffium wash color
+/// @param manticoreiumArgb the manticoreium wash color
+/// @param amphipteriumArgb the amphipterium wash color
+/// @param yalehoundolaArgb the yalehoundola wash color
+/// @param senmurvolaArgb the senmurvola wash color
+/// @param simurgholaArgb the simurghola wash color
+/// @param sphinxolaArgb the sphinxola wash color
+/// @param chimeraolaArgb the chimeraola wash color
+/// @param hydraolaArgb the hydraola wash color
+/// @param krakenolaArgb the krakenola wash color
+/// @param leviathanolaArgb the leviathanola wash color
+/// @param behemotholaArgb the behemothola wash color
+/// @param hippogriffolaArgb the hippogriffola wash color
+/// @param manticoreolaArgb the manticoreola wash color
+/// @param amphipterolaArgb the amphipterola wash color
+/// @param yalehoundulaArgb the yalehoundula wash color
+/// @param senmurvulaArgb the senmurvula wash color
+/// @param simurghulaArgb the simurghula wash color
+/// @param sphinxulaArgb the sphinxula wash color
+/// @param chimeraulaArgb the chimeraula wash color
+/// @param hydraulaArgb the hydraula wash color
+/// @param krakenulaArgb the krakenula wash color
+/// @param leviathanulaArgb the leviathanula wash color
+/// @param behemothulaArgb the behemothula wash color
+/// @param hippogriffulaArgb the hippogriffula wash color
+/// @param manticoreulaArgb the manticoreula wash color
+/// @param amphipterulaArgb the amphipterula wash color
+/// @param yalehoundetaArgb the yalehoundeta wash color
+/// @param senmurvetaArgb the senmurveta wash color
 @NotNullByDefault
 public record ThemeWashes(
         String name,
@@ -300,7 +410,117 @@ public record ThemeWashes(
         int behemothileArgb,
         int hippogriffileArgb,
         int manticoreileArgb,
-        int amphipterileArgb
+        int amphipterileArgb,
+        int yalehoundadeArgb,
+        int senmurvadeArgb,
+        int simurghadeArgb,
+        int sphinxadeArgb,
+        int chimeraadeArgb,
+        int hydraadeArgb,
+        int krakenadeArgb,
+        int leviathanadeArgb,
+        int behemothadeArgb,
+        int hippogriffadeArgb,
+        int manticoreadeArgb,
+        int amphipteradeArgb,
+        int yalehoundureArgb,
+        int senmurvureArgb,
+        int simurghureArgb,
+        int sphinxureArgb,
+        int chimeraureArgb,
+        int hydraureArgb,
+        int krakenureArgb,
+        int leviathanureArgb,
+        int behemothureArgb,
+        int hippogriffureArgb,
+        int manticoreureArgb,
+        int amphipterureArgb,
+        int yalehoundiceArgb,
+        int senmurviceArgb,
+        int simurghiceArgb,
+        int sphinxiceArgb,
+        int chimeraiceArgb,
+        int hydraiceArgb,
+        int krakeniceArgb,
+        int leviathaniceArgb,
+        int behemothiceArgb,
+        int hippogrifficeArgb,
+        int manticoreiceArgb,
+        int amphiptericeArgb,
+        int yalehoundomeArgb,
+        int senmurvomeArgb,
+        int simurghomeArgb,
+        int sphinxomeArgb,
+        int chimeraomeArgb,
+        int hydraomeArgb,
+        int krakenomeArgb,
+        int leviathanomeArgb,
+        int behemothomeArgb,
+        int hippogriffomeArgb,
+        int manticoreomeArgb,
+        int amphipteromeArgb,
+        int yalehoundeanArgb,
+        int senmurveanArgb,
+        int simurgheanArgb,
+        int sphinxeanArgb,
+        int chimeraeanArgb,
+        int hydraeanArgb,
+        int krakeneanArgb,
+        int leviathaneanArgb,
+        int behemotheanArgb,
+        int hippogriffeanArgb,
+        int manticoreeanArgb,
+        int amphiptereanArgb,
+        int yalehoundeumArgb,
+        int senmurveumArgb,
+        int simurgheumArgb,
+        int sphinxeumArgb,
+        int chimeraeumArgb,
+        int hydraeumArgb,
+        int krakeneumArgb,
+        int leviathaneumArgb,
+        int behemotheumArgb,
+        int hippogriffeumArgb,
+        int manticoreeumArgb,
+        int amphiptereumArgb,
+        int yalehoundiumArgb,
+        int senmurviumArgb,
+        int simurghiumArgb,
+        int sphinxiumArgb,
+        int chimeraiumArgb,
+        int hydraiumArgb,
+        int krakeniumArgb,
+        int leviathaniumArgb,
+        int behemothiumArgb,
+        int hippogriffiumArgb,
+        int manticoreiumArgb,
+        int amphipteriumArgb,
+        int yalehoundolaArgb,
+        int senmurvolaArgb,
+        int simurgholaArgb,
+        int sphinxolaArgb,
+        int chimeraolaArgb,
+        int hydraolaArgb,
+        int krakenolaArgb,
+        int leviathanolaArgb,
+        int behemotholaArgb,
+        int hippogriffolaArgb,
+        int manticoreolaArgb,
+        int amphipterolaArgb,
+        int yalehoundulaArgb,
+        int senmurvulaArgb,
+        int simurghulaArgb,
+        int sphinxulaArgb,
+        int chimeraulaArgb,
+        int hydraulaArgb,
+        int krakenulaArgb,
+        int leviathanulaArgb,
+        int behemothulaArgb,
+        int hippogriffulaArgb,
+        int manticoreulaArgb,
+        int amphipterulaArgb,
+        int yalehoundetaArgb,
+        int senmurvetaArgb
 ) {
     /// Validates the washes.
     public ThemeWashes {
@@ -455,7 +675,117 @@ public record ThemeWashes(
                 0xFF192A3B,
                 0xFF1C2F42,
                 0xFF1F3449,
-                0xFF223950
+                0xFF223950,
+                0xFF253E57,
+                0xFF28435E,
+                0xFF2B4865,
+                0xFF2E4D6C,
+                0xFF315273,
+                0xFF34577A,
+                0xFF375C81,
+                0xFF3A6188,
+                0xFF3D668F,
+                0xFF406B96,
+                0xFF43709D,
+                0xFF4675A4,
+                0xFF497AAB,
+                0xFF4C7FB2,
+                0xFF4F84B9,
+                0xFF5289C0,
+                0xFF558EC7,
+                0xFF5893CE,
+                0xFF5B98D5,
+                0xFF5E9DDC,
+                0xFF61A2E3,
+                0xFF64A7EA,
+                0xFF67ACF1,
+                0xFF6AB1F8,
+                0xFF6DB6FF,
+                0xFF70BC06,
+                0xFF73C10D,
+                0xFF76C614,
+                0xFF79CB1B,
+                0xFF7CD022,
+                0xFF7FD529,
+                0xFF82DA30,
+                0xFF85DF37,
+                0xFF88E43E,
+                0xFF8BE945,
+                0xFF8EEE4C,
+                0xFF91F353,
+                0xFF94F85A,
+                0xFF97FD61,
+                0xFF9B0268,
+                0xFF9E076F,
+                0xFFA10C76,
+                0xFFA4117D,
+                0xFFA71684,
+                0xFFAA1B8B,
+                0xFFAD2092,
+                0xFFB02599,
+                0xFFB32AA0,
+                0xFFB62FA7,
+                0xFFB934AE,
+                0xFFBC39B5,
+                0xFFBF3EBC,
+                0xFFC243C3,
+                0xFFC548CA,
+                0xFFC84DD1,
+                0xFFCB52D8,
+                0xFFCE57DF,
+                0xFFD15CE6,
+                0xFFD461ED,
+                0xFFD766F4,
+                0xFFDA6BFB,
+                0xFFDD7102,
+                0xFFE07609,
+                0xFFE37B10,
+                0xFFE68017,
+                0xFFE9851E,
+                0xFFEC8A25,
+                0xFFEF8F2C,
+                0xFFF29433,
+                0xFFF5993A,
+                0xFFF89E41,
+                0xFFFBA348,
+                0xFFFEA84F,
+                0xFF020304,
+                0xFF05080B,
+                0xFF080D12,
+                0xFF0B1219,
+                0xFF0E1720,
+                0xFF111C27,
+                0xFF14212E,
+                0xFF172635,
+                0xFF1A2B3C,
+                0xFF1D3043,
+                0xFF20354A,
+                0xFF233A51,
+                0xFF263F58,
+                0xFF29445F,
+                0xFF2C4966,
+                0xFF2F4E6D,
+                0xFF325374,
+                0xFF35587B,
+                0xFF385D82,
+                0xFF3B6289,
+                0xFF3E6790,
+                0xFF416C97,
+                0xFF44719E,
+                0xFF4776A5,
+                0xFF4A7BAC,
+                0xFF4D80B3,
+                0xFF5085BA,
+                0xFF538AC1,
+                0xFF568FC8,
+                0xFF5994CF,
+                0xFF5C99D6,
+                0xFF5F9EDD,
+                0xFF62A3E4,
+                0xFF65A8EB,
+                0xFF68ADF2,
+                0xFF6BB2F9,
+                0xFF6EB800
         );
     }
 
@@ -607,7 +937,117 @@ public record ThemeWashes(
                 0xFFFFFFFF,
                 0xFF00FFFF,
                 0xFF808080,
-                0xFF00FF00
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF00FFFF,
+                0xFF808080,
+                0xFF00FF00,
+                0xFFFFFF00,
+                0xFF000000
         );
     }
 
@@ -901,7 +1341,227 @@ public record ThemeWashes(
                 + '|'
                 + Integer.toUnsignedString(manticoreileArgb, 16)
                 + '|'
-                + Integer.toUnsignedString(amphipterileArgb, 16)).getBytes(StandardCharsets.UTF_8);
+                + Integer.toUnsignedString(amphipterileArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(yalehoundadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(senmurvadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(simurghadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(sphinxadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(chimeraadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hydraadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(krakenadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(leviathanadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(behemothadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hippogriffadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(manticoreadeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(amphipteradeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(yalehoundureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(senmurvureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(simurghureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(sphinxureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(chimeraureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hydraureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(krakenureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(leviathanureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(behemothureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hippogriffureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(manticoreureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(amphipterureArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(yalehoundiceArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(senmurviceArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(simurghiceArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(sphinxiceArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(chimeraiceArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hydraiceArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(krakeniceArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(leviathaniceArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(behemothiceArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hippogrifficeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(manticoreiceArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(amphiptericeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(yalehoundomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(senmurvomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(simurghomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(sphinxomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(chimeraomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hydraomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(krakenomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(leviathanomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(behemothomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hippogriffomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(manticoreomeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(amphipteromeArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(yalehoundeanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(senmurveanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(simurgheanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(sphinxeanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(chimeraeanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hydraeanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(krakeneanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(leviathaneanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(behemotheanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hippogriffeanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(manticoreeanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(amphiptereanArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(yalehoundeumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(senmurveumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(simurgheumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(sphinxeumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(chimeraeumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hydraeumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(krakeneumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(leviathaneumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(behemotheumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hippogriffeumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(manticoreeumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(amphiptereumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(yalehoundiumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(senmurviumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(simurghiumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(sphinxiumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(chimeraiumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hydraiumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(krakeniumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(leviathaniumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(behemothiumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hippogriffiumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(manticoreiumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(amphipteriumArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(yalehoundolaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(senmurvolaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(simurgholaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(sphinxolaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(chimeraolaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hydraolaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(krakenolaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(leviathanolaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(behemotholaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hippogriffolaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(manticoreolaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(amphipterolaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(yalehoundulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(senmurvulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(simurghulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(sphinxulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(chimeraulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hydraulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(krakenulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(leviathanulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(behemothulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(hippogriffulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(manticoreulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(amphipterulaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(yalehoundetaArgb, 16)
+                + '|'
+                + Integer.toUnsignedString(senmurvetaArgb, 16)).getBytes(StandardCharsets.UTF_8);
     }
 
     /// Decodes a payload produced by [`#encode()`].
@@ -911,8 +1571,8 @@ public record ThemeWashes(
     public static ThemeWashes decode(byte[] bytes) {
         Objects.requireNonNull(bytes, "bytes");
         String[] fields = new String(bytes, StandardCharsets.UTF_8).split("\\|", -1);
-        if (fields.length != 144) {
-            throw new IllegalArgumentException("Theme washes must have one-hundred-forty-four fields");
+        if (fields.length != 254) {
+            throw new IllegalArgumentException("Theme washes must have two-hundred-fifty-four fields");
         }
         return new ThemeWashes(
                 fields[0],
@@ -1058,7 +1718,117 @@ public record ThemeWashes(
                 parseArgb(fields[140]),
                 parseArgb(fields[141]),
                 parseArgb(fields[142]),
-                parseArgb(fields[143])
+                parseArgb(fields[143]),
+                parseArgb(fields[144]),
+                parseArgb(fields[145]),
+                parseArgb(fields[146]),
+                parseArgb(fields[147]),
+                parseArgb(fields[148]),
+                parseArgb(fields[149]),
+                parseArgb(fields[150]),
+                parseArgb(fields[151]),
+                parseArgb(fields[152]),
+                parseArgb(fields[153]),
+                parseArgb(fields[154]),
+                parseArgb(fields[155]),
+                parseArgb(fields[156]),
+                parseArgb(fields[157]),
+                parseArgb(fields[158]),
+                parseArgb(fields[159]),
+                parseArgb(fields[160]),
+                parseArgb(fields[161]),
+                parseArgb(fields[162]),
+                parseArgb(fields[163]),
+                parseArgb(fields[164]),
+                parseArgb(fields[165]),
+                parseArgb(fields[166]),
+                parseArgb(fields[167]),
+                parseArgb(fields[168]),
+                parseArgb(fields[169]),
+                parseArgb(fields[170]),
+                parseArgb(fields[171]),
+                parseArgb(fields[172]),
+                parseArgb(fields[173]),
+                parseArgb(fields[174]),
+                parseArgb(fields[175]),
+                parseArgb(fields[176]),
+                parseArgb(fields[177]),
+                parseArgb(fields[178]),
+                parseArgb(fields[179]),
+                parseArgb(fields[180]),
+                parseArgb(fields[181]),
+                parseArgb(fields[182]),
+                parseArgb(fields[183]),
+                parseArgb(fields[184]),
+                parseArgb(fields[185]),
+                parseArgb(fields[186]),
+                parseArgb(fields[187]),
+                parseArgb(fields[188]),
+                parseArgb(fields[189]),
+                parseArgb(fields[190]),
+                parseArgb(fields[191]),
+                parseArgb(fields[192]),
+                parseArgb(fields[193]),
+                parseArgb(fields[194]),
+                parseArgb(fields[195]),
+                parseArgb(fields[196]),
+                parseArgb(fields[197]),
+                parseArgb(fields[198]),
+                parseArgb(fields[199]),
+                parseArgb(fields[200]),
+                parseArgb(fields[201]),
+                parseArgb(fields[202]),
+                parseArgb(fields[203]),
+                parseArgb(fields[204]),
+                parseArgb(fields[205]),
+                parseArgb(fields[206]),
+                parseArgb(fields[207]),
+                parseArgb(fields[208]),
+                parseArgb(fields[209]),
+                parseArgb(fields[210]),
+                parseArgb(fields[211]),
+                parseArgb(fields[212]),
+                parseArgb(fields[213]),
+                parseArgb(fields[214]),
+                parseArgb(fields[215]),
+                parseArgb(fields[216]),
+                parseArgb(fields[217]),
+                parseArgb(fields[218]),
+                parseArgb(fields[219]),
+                parseArgb(fields[220]),
+                parseArgb(fields[221]),
+                parseArgb(fields[222]),
+                parseArgb(fields[223]),
+                parseArgb(fields[224]),
+                parseArgb(fields[225]),
+                parseArgb(fields[226]),
+                parseArgb(fields[227]),
+                parseArgb(fields[228]),
+                parseArgb(fields[229]),
+                parseArgb(fields[230]),
+                parseArgb(fields[231]),
+                parseArgb(fields[232]),
+                parseArgb(fields[233]),
+                parseArgb(fields[234]),
+                parseArgb(fields[235]),
+                parseArgb(fields[236]),
+                parseArgb(fields[237]),
+                parseArgb(fields[238]),
+                parseArgb(fields[239]),
+                parseArgb(fields[240]),
+                parseArgb(fields[241]),
+                parseArgb(fields[242]),
+                parseArgb(fields[243]),
+                parseArgb(fields[244]),
+                parseArgb(fields[245]),
+                parseArgb(fields[246]),
+                parseArgb(fields[247]),
+                parseArgb(fields[248]),
+                parseArgb(fields[249]),
+                parseArgb(fields[250]),
+                parseArgb(fields[251]),
+                parseArgb(fields[252]),
+                parseArgb(fields[253])
         );
     }
 

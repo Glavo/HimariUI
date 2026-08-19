@@ -36,6 +36,9 @@ public final class D3d12SwapChain implements AutoCloseable {
     /// `DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709`.
     private static final int DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 = 0;
 
+    /// `DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020`.
+    private static final int DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 = 12;
+
     /// `D3D12_COMMAND_LIST_TYPE_DIRECT`.
     private static final int D3D12_COMMAND_LIST_TYPE_DIRECT = 0;
 
@@ -108,7 +111,24 @@ public final class D3d12SwapChain implements AutoCloseable {
     /// Whether this owner is closed.
     private boolean closed;
 
+    /// HRESULT from `CheckColorSpaceSupport(P709)`.
+    private final int p709CheckHresult;
+
+    /// Present/overlay bits for P709.
+    private final int p709Support;
+
+    /// HRESULT from `CheckColorSpaceSupport(P2020 PQ)`.
+    private final int p2020PqCheckHresult;
+
+    /// Present/overlay bits for P2020 PQ. First-stable present never selects this space.
+    private final int p2020PqSupport;
+
     /// Creates one swapchain owner.
+    ///
+    /// @param p709CheckHresult HRESULT from `CheckColorSpaceSupport(P709)`
+    /// @param p709Support P709 support flags
+    /// @param p2020PqCheckHresult HRESULT from `CheckColorSpaceSupport(P2020 PQ)`
+    /// @param p2020PqSupport P2020 PQ support flags
     private D3d12SwapChain(
             D3d12Native.ComTracker references,
             MemorySegment commandQueue,
@@ -123,7 +143,11 @@ public final class D3d12SwapChain implements AutoCloseable {
             MemorySegment fence,
             MemorySegment barrier,
             MemorySegment commandListArray,
-            MemorySegment clearColor
+            MemorySegment clearColor,
+            int p709CheckHresult,
+            int p709Support,
+            int p2020PqCheckHresult,
+            int p2020PqSupport
     ) {
         this.references = references;
         this.commandQueue = commandQueue;
@@ -139,6 +163,10 @@ public final class D3d12SwapChain implements AutoCloseable {
         this.barrier = barrier;
         this.commandListArray = commandListArray;
         this.clearColor = clearColor;
+        this.p709CheckHresult = p709CheckHresult;
+        this.p709Support = p709Support;
+        this.p2020PqCheckHresult = p2020PqCheckHresult;
+        this.p2020PqSupport = p2020PqSupport;
     }
 
     /// Creates a flip-model SDR swapchain attached to `hwnd`.
@@ -162,6 +190,16 @@ public final class D3d12SwapChain implements AutoCloseable {
         try {
             MemorySegment queue = createCommandQueue(device, arena, tracker);
             MemorySegment swapChain = createSwapChain(device, arena, tracker, queue, hwnd, width, height);
+            ColorSpaceProbe p709 = checkColorSpaceSupport(
+                    swapChain,
+                    arena,
+                    DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709
+            );
+            ColorSpaceProbe p2020Pq = checkColorSpaceSupport(
+                    swapChain,
+                    arena,
+                    DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020
+            );
             D3d12Native.requireSuccess(
                     "IDXGISwapChain3::SetColorSpace1(SDR)",
                     D3d12FfmBindings.invokeIdxgiSwapChain3SetColorSpace1Pointer(
@@ -227,7 +265,11 @@ public final class D3d12SwapChain implements AutoCloseable {
                     fence,
                     barrier,
                     listArray,
-                    clearColor
+                    clearColor,
+                    p709.hresult(),
+                    p709.support(),
+                    p2020Pq.hresult(),
+                    p2020Pq.support()
             );
         } catch (RuntimeException | Error failure) {
             tracker.close();
@@ -344,16 +386,7 @@ public final class D3d12SwapChain implements AutoCloseable {
                 )
         );
         awaitFence(fenceValue);
-        return new D3d12Presentation(
-                true,
-                "DXGI_FORMAT_R8G8B8A8_UNORM",
-                "DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709",
-                false,
-                references.ownedCount(),
-                0,
-                bufferIndex,
-                true
-        );
+        return presentation(bufferIndex, true);
     }
 
     /// Copies a `COPY_SOURCE` texture onto the current back buffer and presents it.
@@ -463,6 +496,11 @@ public final class D3d12SwapChain implements AutoCloseable {
                 )
         );
         awaitFence(fenceValue);
+        return presentation(bufferIndex, false);
+    }
+
+    /// Builds a present observation that includes the attach-time color-space probes.
+    private D3d12Presentation presentation(int bufferIndex, boolean cleared) {
         return new D3d12Presentation(
                 true,
                 "DXGI_FORMAT_R8G8B8A8_UNORM",
@@ -471,8 +509,39 @@ public final class D3d12SwapChain implements AutoCloseable {
                 references.ownedCount(),
                 0,
                 bufferIndex,
-                false
+                cleared,
+                p709CheckHresult,
+                p709Support,
+                p2020PqCheckHresult,
+                p2020PqSupport
         );
+    }
+
+    /// Invokes generated `IDXGISwapChain3::CheckColorSpaceSupport`.
+    private static ColorSpaceProbe checkColorSpaceSupport(
+            MemorySegment swapChain,
+            Arena arena,
+            int colorSpace
+    ) {
+        MemorySegment support = arena.allocate(ValueLayout.JAVA_INT);
+        support.set(ValueLayout.JAVA_INT, 0L, 0);
+        int hresult = D3d12FfmBindings.invokeIdxgiSwapChain3CheckColorSpaceSupportPointer(
+                D3d12Native.functionAt(
+                        swapChain,
+                        D3d12Layouts.IDXGI_SWAP_CHAIN3_VTABLE_CHECK_COLOR_SPACE_SUPPORT_OFFSET
+                ),
+                swapChain,
+                colorSpace,
+                support
+        );
+        return new ColorSpaceProbe(hresult, support.get(ValueLayout.JAVA_INT, 0L));
+    }
+
+    /// One `CheckColorSpaceSupport` result.
+    ///
+    /// @param hresult the COM status
+    /// @param support the DXGI support flags
+    private record ColorSpaceProbe(int hresult, int support) {
     }
 
     /// Releases swapchain COM objects. The parent [D3d12Device] remains open.

@@ -19,6 +19,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -188,6 +189,9 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// `UIA_ControlTypePropertyId`.
     static final int UIA_CONTROL_TYPE_PROPERTY_ID = 30003;
+
+    /// `UIA_HeaderItemControlTypeId`.
+    static final int UIA_HEADER_ITEM_CONTROL_TYPE_ID = 50034;
 
     /// `UIA_AcceleratorKeyPropertyId`.
     static final int UIA_ACCELERATOR_KEY_PROPERTY_ID = 30006;
@@ -1338,6 +1342,33 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// Published grid column count.
     private int gridColumns;
 
+    /// Column-header names from [`SemanticsGrid#columnHeaders()`].
+    private final String[] columnHeaderNames;
+
+    /// Row-header names from [`SemanticsGrid#rowHeaders()`].
+    private final String[] rowHeaderNames;
+
+    /// This cell's column-header name, empty when absent.
+    private final String cellColumnHeader;
+
+    /// This cell's row-header name, empty when absent.
+    private final String cellRowHeader;
+
+    /// COM objects returned by [`#getColumnHeaders`].
+    private MemorySegment[] columnHeaderObjects = new MemorySegment[0];
+
+    /// COM objects returned by [`#getRowHeaders`].
+    private MemorySegment[] rowHeaderObjects = new MemorySegment[0];
+
+    /// COM object returned by [`#getColumnHeaderItems`] when this cell names a column header.
+    private MemorySegment cellColumnHeaderObject = MemorySegment.NULL;
+
+    /// COM object returned by [`#getRowHeaderItems`] when this cell names a row header.
+    private MemorySegment cellRowHeaderObject = MemorySegment.NULL;
+
+    /// Name and control type for each header provider, keyed by COM object address.
+    private final HashMap<Long, HeaderInfo> headerInfos = new HashMap<>();
+
     /// This node's cell row, or `-1`.
     private int cellRow;
 
@@ -1500,6 +1531,8 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         SemanticsGrid grid = node.grid();
         this.gridRows = grid == null ? 0 : grid.rowCount();
         this.gridColumns = grid == null ? 0 : grid.columnCount();
+        this.columnHeaderNames = grid == null ? new String[0] : grid.columnHeaders();
+        this.rowHeaderNames = grid == null ? new String[0] : grid.rowHeaders();
         SemanticsScroll scroll = node.scroll();
         if (scroll != null) {
             this.verticalScrollPercent = scroll.verticalPercent();
@@ -1528,6 +1561,8 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         this.cellColumn = item == null ? -1 : item.column();
         this.cellRowSpan = item == null ? 1 : item.rowSpan();
         this.cellColumnSpan = item == null ? 1 : item.columnSpan();
+        this.cellColumnHeader = item == null ? "" : item.columnHeader();
+        this.cellRowHeader = item == null ? "" : item.rowHeader();
         this.fetchedRow = -1;
         this.fetchedColumn = -1;
         this.rangeStart = 0;
@@ -2211,6 +2246,14 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 4L,
                 bindings.createItableItemProviderGetColumnHeaderItemsStub(this::getColumnHeaderItems, failures, arena)
         );
+        this.columnHeaderObjects = allocateHeaderObjects(columnHeaderNames, failures);
+        this.rowHeaderObjects = allocateHeaderObjects(rowHeaderNames, failures);
+        this.cellColumnHeaderObject = cellColumnHeader.isEmpty()
+                ? MemorySegment.NULL
+                : allocateHeaderObject(cellColumnHeader, failures);
+        this.cellRowHeaderObject = cellRowHeader.isEmpty()
+                ? MemorySegment.NULL
+                : allocateHeaderObject(cellRowHeader, failures);
         this.fetchedCellObject = arena.allocate(ValueLayout.ADDRESS);
         MemorySegment fetchedVtable = arena.allocate(ValueLayout.ADDRESS, 8);
         fetchedCellObject.set(ValueLayout.ADDRESS, 0L, fetchedVtable);
@@ -4596,6 +4639,13 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return packedCount("ITableItemProvider::GetRowHeaderItems", tableItemObject, 3);
     }
 
+    /// Reads `ITableItemProvider::GetColumnHeaderItems` for this node.
+    ///
+    /// @return the header count
+    public int invokeColumnHeaderItems() {
+        return packedCount("ITableItemProvider::GetColumnHeaderItems", tableItemObject, 4);
+    }
+
     /// Reads `ITableProvider::GetRowHeaders` through the generated COM vtable.
     ///
     /// @return the header count
@@ -4608,6 +4658,89 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// @return the header count
     public int invokeColumnHeaders() {
         return packedCount("ITableProvider::GetColumnHeaders", tableObject, 4);
+    }
+
+    /// Reads `Name` from the header returned by `GetColumnHeaders` at `index`.
+    ///
+    /// @param index the zero-based header index
+    /// @return the accessible name
+    public String invokeColumnHeaderName(int index) {
+        return invokeHeaderString(columnHeaderObjects, index, UIA_NAME_PROPERTY_ID);
+    }
+
+    /// Reads `ControlType` from the header returned by `GetColumnHeaders` at `index`.
+    ///
+    /// @param index the zero-based header index
+    /// @return the UIA control-type identifier
+    public int invokeColumnHeaderControlType(int index) {
+        return invokeHeaderInt(columnHeaderObjects, index, UIA_CONTROL_TYPE_PROPERTY_ID);
+    }
+
+    /// Reads `Name` from the header returned by `GetRowHeaders` at `index`.
+    ///
+    /// @param index the zero-based header index
+    /// @return the accessible name
+    public String invokeRowHeaderName(int index) {
+        return invokeHeaderString(rowHeaderObjects, index, UIA_NAME_PROPERTY_ID);
+    }
+
+    /// Reads `ControlType` from the header returned by `GetRowHeaders` at `index`.
+    ///
+    /// @param index the zero-based header index
+    /// @return the UIA control-type identifier
+    public int invokeRowHeaderControlType(int index) {
+        return invokeHeaderInt(rowHeaderObjects, index, UIA_CONTROL_TYPE_PROPERTY_ID);
+    }
+
+    /// Reads `Name` from this cell's column-header item.
+    ///
+    /// @return the accessible name
+    public String invokeColumnHeaderItemName() {
+        return invokeHeaderString(new MemorySegment[] {cellColumnHeaderObject}, 0, UIA_NAME_PROPERTY_ID);
+    }
+
+    /// Invokes `GetPropertyValue` on a header provider as `VT_BSTR`.
+    private String invokeHeaderString(MemorySegment[] headers, int index, int propertyId) {
+        MemorySegment value = invokeHeaderVariant(headers, index, propertyId);
+        if (value.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET) != VT_BSTR) {
+            return "";
+        }
+        return decodeUtf16(value.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET));
+    }
+
+    /// Invokes `GetPropertyValue` on a header provider as `VT_I4`.
+    private int invokeHeaderInt(MemorySegment[] headers, int index, int propertyId) {
+        MemorySegment value = invokeHeaderVariant(headers, index, propertyId);
+        if (value.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET) != VT_I4) {
+            return 0;
+        }
+        return value.get(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET);
+    }
+
+    /// Invokes generated `IRawElementProviderSimple::GetPropertyValue` on `headers[index]`.
+    private MemorySegment invokeHeaderVariant(MemorySegment[] headers, int index, int propertyId) {
+        requireOpen();
+        if (index < 0 || index >= headers.length || headers[index].address() == 0L) {
+            throw new IllegalArgumentException("Header index is out of range");
+        }
+        MemorySegment header = headers[index];
+        MemorySegment vtable = header.get(ValueLayout.ADDRESS, 0L);
+        if (vtable.byteSize() == 0L) {
+            vtable = vtable.reinterpret(7 * ValueLayout.ADDRESS.byteSize());
+        }
+        MemorySegment getProperty = vtable.getAtIndex(ValueLayout.ADDRESS, 5L);
+        MemorySegment value = arena.allocate(Win32Layouts.VARIANT);
+        value.fill((byte) 0);
+        requireSuccess(
+                "header GetPropertyValue",
+                Win32FfmBindings.invokeIrawElementProviderGetPropertyValuePointer(
+                        getProperty,
+                        header,
+                        propertyId,
+                        value
+                )
+        );
+        return value;
     }
 
     /// Reads `ITableProvider::get_RowOrColumnMajor` through the generated COM vtable.
@@ -6334,8 +6467,18 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 || propertyId == UIA_TABLE_COLUMN_HEADERS_PROPERTY_ID
                 || propertyId == UIA_TABLE_ITEM_ROW_HEADER_ITEMS_PROPERTY_ID
                 || propertyId == UIA_TABLE_ITEM_COLUMN_HEADER_ITEMS_PROPERTY_ID) {
+            int count = 0;
+            if (propertyId == UIA_TABLE_COLUMN_HEADERS_PROPERTY_ID) {
+                count = columnHeaderNames.length;
+            } else if (propertyId == UIA_TABLE_ROW_HEADERS_PROPERTY_ID) {
+                count = rowHeaderNames.length;
+            } else if (propertyId == UIA_TABLE_ITEM_COLUMN_HEADER_ITEMS_PROPERTY_ID) {
+                count = cellColumnHeader.isEmpty() ? 0 : 1;
+            } else {
+                count = cellRowHeader.isEmpty() ? 0 : 1;
+            }
             MemorySegment headers = arena.allocate(8);
-            headers.set(ValueLayout.JAVA_INT, 0L, 0);
+            headers.set(ValueLayout.JAVA_INT, 0L, count);
             headers.set(ValueLayout.JAVA_INT, 4L, 0);
             variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) (VT_ARRAY | VT_I4));
             variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, headers);
@@ -7484,24 +7627,30 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return S_OK;
     }
 
-    /// Implements `ITableItemProvider::GetRowHeaderItems` as an empty list.
+    /// Implements `ITableItemProvider::GetRowHeaderItems`.
     private int getRowHeaderItems(MemorySegment self, MemorySegment headers) {
-        return writeEmptyPacked(headers);
+        if (cellRowHeaderObject.address() == 0L) {
+            return writeEmptyPacked(headers);
+        }
+        return writePacked(headers, new MemorySegment[] {cellRowHeaderObject});
     }
 
-    /// Implements `ITableItemProvider::GetColumnHeaderItems` as an empty list.
+    /// Implements `ITableItemProvider::GetColumnHeaderItems`.
     private int getColumnHeaderItems(MemorySegment self, MemorySegment headers) {
-        return writeEmptyPacked(headers);
+        if (cellColumnHeaderObject.address() == 0L) {
+            return writeEmptyPacked(headers);
+        }
+        return writePacked(headers, new MemorySegment[] {cellColumnHeaderObject});
     }
 
-    /// Implements `ITableProvider::GetRowHeaders` as an empty list.
+    /// Implements `ITableProvider::GetRowHeaders`.
     private int getRowHeaders(MemorySegment self, MemorySegment headers) {
-        return writeEmptyPacked(headers);
+        return writePacked(headers, rowHeaderObjects);
     }
 
-    /// Implements `ITableProvider::GetColumnHeaders` as an empty list.
+    /// Implements `ITableProvider::GetColumnHeaders`.
     private int getColumnHeaders(MemorySegment self, MemorySegment headers) {
-        return writeEmptyPacked(headers);
+        return writePacked(headers, columnHeaderObjects);
     }
 
     /// Implements `ITableProvider::get_RowOrColumnMajor`.
@@ -8297,6 +8446,126 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return S_OK;
     }
 
+    /// Writes a count-prefixed COM array of header provider pointers.
+    private int writePacked(MemorySegment output, MemorySegment[] objects) {
+        if (objects.length == 0) {
+            return writeEmptyPacked(output);
+        }
+        if (output.address() == 0L) {
+            return E_POINTER;
+        }
+        long pointerSize = ValueLayout.ADDRESS.byteSize();
+        MemorySegment block = arena.allocate(8 + objects.length * pointerSize);
+        block.set(ValueLayout.JAVA_INT, 0L, objects.length);
+        block.set(ValueLayout.JAVA_INT, 4L, 0);
+        for (int index = 0; index < objects.length; index++) {
+            block.set(ValueLayout.ADDRESS, 8 + index * pointerSize, objects[index]);
+        }
+        output.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, block);
+        return S_OK;
+    }
+
+    /// Allocates one `IRawElementProviderSimple` header object per name.
+    private MemorySegment[] allocateHeaderObjects(String[] names, CallbackFailureQueue failures) {
+        MemorySegment[] objects = new MemorySegment[names.length];
+        for (int index = 0; index < names.length; index++) {
+            objects[index] = allocateHeaderObject(names[index], failures);
+        }
+        return objects;
+    }
+
+    /// Allocates one header that answers `Name` and `ControlType` through generated vtable slots.
+    private MemorySegment allocateHeaderObject(String name, CallbackFailureQueue failures) {
+        MemorySegment object = arena.allocate(ValueLayout.ADDRESS);
+        MemorySegment vtable = arena.allocate(ValueLayout.ADDRESS, 7);
+        object.set(ValueLayout.ADDRESS, 0L, vtable);
+        vtable.setAtIndex(ValueLayout.ADDRESS, 0L, bindings.createIunknownQueryInterfaceStub(this::queryHeader, failures, arena));
+        vtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
+        vtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
+        vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                3L,
+                bindings.createIrawElementProviderGetProviderOptionsStub(this::getProviderOptions, failures, arena)
+        );
+        vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                4L,
+                bindings.createIrawElementProviderGetPatternProviderStub(this::getHeaderPatternProvider, failures, arena)
+        );
+        vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                5L,
+                bindings.createIrawElementProviderGetPropertyValueStub(this::getHeaderPropertyValue, failures, arena)
+        );
+        vtable.setAtIndex(
+                ValueLayout.ADDRESS,
+                6L,
+                bindings.createIrawElementProviderGetHostRawElementProviderStub(this::getHeaderHost, failures, arena)
+        );
+        headerInfos.put(object.address(), new HeaderInfo(name, UIA_HEADER_ITEM_CONTROL_TYPE_ID));
+        return object;
+    }
+
+    /// Implements header-object `IUnknown::QueryInterface` for `IRawElementProviderSimple`.
+    private int queryHeader(MemorySegment self, MemorySegment interfaceId, MemorySegment result) {
+        return query(interfaceId, result, IRAW_ELEMENT_PROVIDER_SIMPLE, self);
+    }
+
+    /// Implements header `GetPatternProvider` as no pattern.
+    private int getHeaderPatternProvider(MemorySegment self, int patternId, MemorySegment provider) {
+        if (provider.address() == 0L) {
+            return E_POINTER;
+        }
+        provider.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        return S_OK;
+    }
+
+    /// Implements header `get_HostRawElementProvider` as no host.
+    private int getHeaderHost(MemorySegment self, MemorySegment host) {
+        if (host.address() == 0L) {
+            return E_POINTER;
+        }
+        host.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        return S_OK;
+    }
+
+    /// Implements header `GetPropertyValue` for `Name` and `ControlType`.
+    private int getHeaderPropertyValue(MemorySegment self, int propertyId, MemorySegment variant) {
+        HeaderInfo info = headerInfos.get(self.address());
+        if (info == null || variant.address() == 0L) {
+            return E_POINTER;
+        }
+        MemorySegment out = variant.byteSize() >= Win32Layouts.VARIANT.byteSize()
+                ? variant
+                : variant.reinterpret(Win32Layouts.VARIANT.byteSize());
+        out.fill((byte) 0);
+        if (propertyId == UIA_NAME_PROPERTY_ID) {
+            writeBstrVariant(out, info.name());
+            return S_OK;
+        }
+        if (propertyId == UIA_CONTROL_TYPE_PROPERTY_ID) {
+            out.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            out.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, info.controlType());
+            return S_OK;
+        }
+        if (propertyId == UIA_LOCALIZED_CONTROL_TYPE_PROPERTY_ID) {
+            writeBstrVariant(out, "HeaderItem");
+            return S_OK;
+        }
+        return S_OK;
+    }
+
+    /// Stores one header provider's published name and control type.
+    ///
+    /// @param name the accessible name
+    /// @param controlType the UIA control-type identifier
+    private record HeaderInfo(String name, int controlType) {
+        /// Validates the header.
+        private HeaderInfo {
+            Objects.requireNonNull(name, "name");
+        }
+    }
+
     /// Reads a count-prefixed COM array produced by a generated vtable slot.
     private int packedCount(String name, MemorySegment object, int slot) {
         requireOpen();
@@ -8439,6 +8708,7 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             case LIST -> 50008;
             case TABLE -> 50036;
             case TABLE_ROW, TABLE_CELL -> 50029;
+            case TABLE_COLUMN_HEADER, TABLE_ROW_HEADER -> UIA_HEADER_ITEM_CONTROL_TYPE_ID;
             case TEXT -> 50020;
             case IMAGE -> 50006;
             case CANVAS -> 50033;

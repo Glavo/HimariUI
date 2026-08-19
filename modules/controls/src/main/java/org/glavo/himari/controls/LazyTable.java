@@ -8,6 +8,7 @@ import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.semantics.SemanticsGrid;
 import org.glavo.himari.layout.semantics.SemanticsGridItem;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.semantics.SemanticsScroll;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -39,11 +40,17 @@ public final class LazyTable {
     /// Per-column cell widths, defaulting to [`#CELL_WIDTH`].
     private final float[] columnWidths;
 
+    /// Per-column header names, empty when unpublished.
+    private final String[] columnHeaders;
+
     /// Row keys and estimates, in document order.
     private final ArrayList<RowSpec> rows = new ArrayList<>();
 
     /// Measured heights parallel to [`#rows`]. Zero means the estimate is still in use.
     private final ArrayList<Float> measured = new ArrayList<>();
+
+    /// Per-row header names parallel to [`#rows`]. Empty when unpublished.
+    private final ArrayList<String> rowHeaders = new ArrayList<>();
 
     /// Viewport origin in table-local logical pixels.
     private float viewportOffset;
@@ -72,6 +79,8 @@ public final class LazyTable {
         this.overscan = overscan;
         this.columnWidths = new float[columnCount];
         java.util.Arrays.fill(this.columnWidths, CELL_WIDTH);
+        this.columnHeaders = new String[columnCount];
+        java.util.Arrays.fill(this.columnHeaders, "");
         this.viewportHeight = DEFAULT_ROW_HEIGHT;
     }
 
@@ -105,6 +114,50 @@ public final class LazyTable {
             throw new IllegalArgumentException("Column width must be finite and positive");
         }
         columnWidths[column] = width;
+    }
+
+    /// Sets the accessible name of `column` published as a column header.
+    ///
+    /// @param column the column index
+    /// @param name the header name
+    public void setColumnHeader(int column, String name) {
+        if (column < 0 || column >= columnCount) {
+            throw new IllegalArgumentException("Column index is out of range");
+        }
+        columnHeaders[column] = Objects.requireNonNull(name, "name");
+    }
+
+    /// Returns the column-header name of `column`, empty when unpublished.
+    ///
+    /// @param column the column index
+    /// @return the name
+    public String columnHeader(int column) {
+        if (column < 0 || column >= columnCount) {
+            throw new IllegalArgumentException("Column index is out of range");
+        }
+        return columnHeaders[column];
+    }
+
+    /// Sets the accessible name of the row at `index` published as a row header.
+    ///
+    /// @param index the row index
+    /// @param name the header name
+    public void setRowHeader(int index, String name) {
+        if (index < 0 || index >= rows.size()) {
+            throw new IllegalArgumentException("Row index is out of range");
+        }
+        rowHeaders.set(index, Objects.requireNonNull(name, "name"));
+    }
+
+    /// Returns the row-header name at `index`, empty when unpublished.
+    ///
+    /// @param index the row index
+    /// @return the name
+    public String rowHeader(int index) {
+        if (index < 0 || index >= rows.size()) {
+            throw new IllegalArgumentException("Row index is out of range");
+        }
+        return rowHeaders.get(index);
     }
 
     /// Returns the overscan in rows.
@@ -182,6 +235,7 @@ public final class LazyTable {
         @Nullable String anchor = firstMaterializedKey();
         rows.add(index, new RowSpec(key, estimatedHeight));
         measured.add(index, 0.0f);
+        rowHeaders.add(index, "");
         restoreAnchor(anchor);
     }
 
@@ -199,6 +253,7 @@ public final class LazyTable {
         String removed = rows.get(index).key();
         rows.remove(index);
         measured.remove(index);
+        rowHeaders.remove(index);
         if (anchor != null && !anchor.equals(removed)) {
             restoreAnchor(anchor);
         }
@@ -363,17 +418,23 @@ public final class LazyTable {
             RowSpec row = rows.get(index);
             ArrayList<LayoutNode> cells = new ArrayList<>();
             for (int column = 0; column < columnCount; column++) {
+                String columnHeader = columnHeaders[column];
+                String rowHeader = rowHeaders.get(index);
+                boolean rowHeaderCell = !rowHeader.isEmpty() && column == 0;
+                SemanticsRole cellRole = rowHeaderCell
+                        ? SemanticsRole.TABLE_ROW_HEADER
+                        : SemanticsRole.TABLE_CELL;
                 LayoutNode cell = factory.leaf(
                         name + "-cell-" + row.key() + "-" + column,
                         new Size(columnWidths[column], heightAt(index)),
                         List.of(),
                         false,
-                        SemanticsRole.TABLE_CELL,
-                        row.key() + ":" + column,
+                        cellRole,
+                        rowHeaderCell ? rowHeader : row.key() + ":" + column,
                         Set.of(),
                         null
                 );
-                cell.setGridItem(new SemanticsGridItem(index, column));
+                cell.setGridItem(new SemanticsGridItem(index, column, 1, 1, columnHeader, rowHeader));
                 cells.add(cell);
             }
             rowNodes.add(factory.row(
@@ -385,6 +446,31 @@ public final class LazyTable {
                     cells.toArray(LayoutNode[]::new)
             ));
         }
+        if (hasColumnHeaders()) {
+            ArrayList<LayoutNode> headerCells = new ArrayList<>();
+            for (int column = 0; column < columnCount; column++) {
+                LayoutNode header = factory.leaf(
+                        name + "-column-header-" + column,
+                        new Size(columnWidths[column], DEFAULT_ROW_HEIGHT),
+                        List.of(),
+                        false,
+                        SemanticsRole.TABLE_COLUMN_HEADER,
+                        columnHeaders[column],
+                        Set.of(),
+                        null
+                );
+                header.setGridItem(new SemanticsGridItem(0, column, 1, 1, columnHeaders[column], ""));
+                headerCells.add(header);
+            }
+            rowNodes.add(0, factory.row(
+                    name + "-column-headers",
+                    Alignment.START,
+                    List.of(),
+                    SemanticsRole.TABLE_ROW,
+                    name + "-headers",
+                    headerCells.toArray(LayoutNode[]::new)
+            ));
+        }
         LayoutNode table = factory.column(
                 name,
                 Alignment.START,
@@ -393,10 +479,62 @@ public final class LazyTable {
                 name,
                 rowNodes.toArray(LayoutNode[]::new)
         );
-        table.setGrid(new SemanticsGrid(rows.size(), columnCount));
+        table.setGrid(new SemanticsGrid(rows.size(), columnCount, publishedColumnHeaders(), publishedRowHeaders()));
+        table.setScroll(scrollSnapshot());
         table.setDisabled(disabled);
         this.node = table;
         return table;
+    }
+
+    /// Returns whether any column header name is non-empty.
+    private boolean hasColumnHeaders() {
+        for (String header : columnHeaders) {
+            if (!header.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// Returns non-empty column-header names.
+    private String[] publishedColumnHeaders() {
+        ArrayList<String> names = new ArrayList<>();
+        for (String header : columnHeaders) {
+            if (!header.isEmpty()) {
+                names.add(header);
+            }
+        }
+        return names.toArray(String[]::new);
+    }
+
+    /// Returns row-header names when any row header is non-empty.
+    private String[] publishedRowHeaders() {
+        ArrayList<String> names = new ArrayList<>();
+        boolean any = false;
+        for (String header : rowHeaders) {
+            if (!header.isEmpty()) {
+                any = true;
+            }
+            names.add(header);
+        }
+        return any ? names.toArray(String[]::new) : new String[0];
+    }
+
+    /// Builds the vertical-scroll snapshot for the current viewport.
+    ///
+    /// @return the snapshot
+    public SemanticsScroll scrollSnapshot() {
+        float content = 0.0f;
+        for (int index = 0; index < rows.size(); index++) {
+            content += heightAt(index);
+        }
+        if (content <= viewportHeight || content <= 0.0f) {
+            return new SemanticsScroll(0.0, 100.0, false);
+        }
+        float maximum = content - viewportHeight;
+        double percent = 100.0 * Math.min(1.0, Math.max(0.0, viewportOffset / maximum));
+        double viewSize = 100.0 * viewportHeight / content;
+        return new SemanticsScroll(percent, viewSize, true);
     }
 
     /// Computes the inclusive-exclusive materialized window.

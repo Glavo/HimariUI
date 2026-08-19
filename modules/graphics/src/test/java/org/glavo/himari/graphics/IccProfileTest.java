@@ -279,7 +279,7 @@ final class IccProfileTest {
     /// Builds a compact ICC v2 RGB matrix/TRC profile.
     ///
     /// @return the profile bytes
-    private static byte[] minimalSrgbMatrixProfile() {
+    static byte[] minimalSrgbMatrixProfile() {
         int tagCount = 6;
         int table = 132 + tagCount * 12;
         int xyzSize = 20;

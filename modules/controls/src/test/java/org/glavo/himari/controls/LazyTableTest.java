@@ -118,4 +118,41 @@ final class LazyTableTest {
         assertTrue(table.unmountedLabels().contains("r99999"));
         assertEquals(100_000 - table.materializedKeys().size(), table.unmountedLabels().size());
     }
+
+    /// Publishes column/row headers and a scroll snapshot through [`LazyTable#create`].
+    @Test
+    void createPublishesHeadersAndScroll() {
+        LayoutTree tree = new LayoutTree();
+        LazyTable table = new LazyTable(2, 0);
+        table.addRow("alpha", 16.0f);
+        table.addRow("beta", 16.0f);
+        table.addRow("gamma", 16.0f);
+        table.addRow("delta", 16.0f);
+        table.setColumnHeader(0, "Name");
+        table.setColumnHeader(1, "Value");
+        table.setRowHeader(0, "A");
+        table.setViewport(0.0f, 16.0f);
+        tree.setRoot(table.create(new LayoutFactory(tree), "people"));
+        tree.measure(Constraints.loose(400.0f, 400.0f));
+        tree.place();
+        assertEquals("Name", table.columnHeader(0));
+        assertEquals("A", table.rowHeader(0));
+        assertEquals(2, tree.root().grid().columnHeaders().length);
+        assertEquals("Name", tree.root().grid().columnHeaders()[0]);
+        assertEquals("Value", tree.root().grid().columnHeaders()[1]);
+        assertEquals("A", tree.root().grid().rowHeaders()[0]);
+        assertNotNull(tree.root().scroll());
+        assertTrue(tree.root().scroll().verticallyScrollable());
+        assertEquals(0.0, tree.root().scroll().verticalPercent(), 0.1);
+        assertEquals(25.0, tree.root().scroll().verticalViewSize(), 0.1);
+        assertEquals(0.0, table.scrollSnapshot().verticalPercent(), 0.1);
+        assertTrue(tree.semantics().nodes().stream().anyMatch(node ->
+                node.role() == SemanticsRole.TABLE_COLUMN_HEADER && "Name".equals(node.label())));
+        assertTrue(tree.semantics().nodes().stream().anyMatch(node ->
+                node.role() == SemanticsRole.TABLE_ROW_HEADER && "A".equals(node.label())));
+        assertTrue(tree.semantics().nodes().stream().anyMatch(node ->
+                node.gridItem() != null
+                        && node.gridItem().column() == 1
+                        && "Value".equals(node.gridItem().columnHeader())));
+    }
 }

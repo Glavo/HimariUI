@@ -50,6 +50,12 @@ public enum SemanticsRole {
     /// One cell inside a table row.
     TABLE_CELL,
 
+    /// One column header cell.
+    TABLE_COLUMN_HEADER,
+
+    /// One row header cell.
+    TABLE_ROW_HEADER,
+
     /// An editable text field.
     TEXT_FIELD,
 

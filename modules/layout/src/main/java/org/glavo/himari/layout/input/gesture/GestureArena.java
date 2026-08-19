@@ -134,7 +134,8 @@ public final class GestureArena {
             case MOVE -> onMove(event.pointerId(), event.x(), event.y(), timestampNanos);
             case UP -> onUp(event.pointerId(), event.x(), event.y(), timestampNanos);
             case WHEEL, WHEEL_HORIZONTAL -> onWheel(event.wheelDelta());
-            case SECONDARY_DOWN, SECONDARY_UP, MIDDLE_DOWN, MIDDLE_UP -> false;
+            case SECONDARY_DOWN, SECONDARY_UP, MIDDLE_DOWN, MIDDLE_UP, ENTER, LEAVE, CAPTURE_CHANGED, ACTIVATE,
+                    NON_CLIENT_MOVE, NON_CLIENT_DOWN, NON_CLIENT_UP -> false;
         };
     }
 

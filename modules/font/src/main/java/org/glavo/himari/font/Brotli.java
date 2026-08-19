@@ -9,9 +9,9 @@ import java.util.Arrays;
 ///
 /// [`#compress(byte[])`] emits the Section 11.1 trivial stream (uncompressed meta-blocks plus an
 /// empty last meta-block). [`#decompress(byte[])`] accepts that form and compressed meta-blocks
-/// with simple or complex prefix codes, block switches, and LZ77 copies inside the sliding
-/// window. Distances that resolve to the static dictionary are rejected; first-stable WOFF2 wrap
-/// never emits them.
+/// with simple or complex prefix codes, block switches, LZ77 copies inside the sliding
+/// window, and RFC 7932 static-dictionary distances. [`#compressStaticDictionary(int, int, int)`]
+/// and [`#compressWithStaticDictionary(byte[])`] emit those dictionary references.
 @NotNullByDefault
 public final class Brotli {
     /// Rejects a decompressed image larger than this many bytes.
@@ -241,6 +241,140 @@ public final class Brotli {
         }
         writer.alignByte();
         return writer.toByteArray();
+    }
+
+    /// Encodes one RFC 7932 static-dictionary reference as a last compressed meta-block.
+    ///
+    /// The stream inflates to the transformed dictionary word selected by `copyLength`, `wordId`,
+    /// and `transformId`. First-stable WOFF2 wrap does not have to emit this form.
+    ///
+    /// @param copyLength the base dictionary word length in `4..24`
+    /// @param wordId the word index in that length bucket
+    /// @param transformId the Appendix B transform index in `0..120`
+    /// @return a valid Brotli stream
+    public static byte[] compressStaticDictionary(int copyLength, int wordId, int transformId) {
+        byte[] word = BrotliDictionary.apply(copyLength, wordId, transformId);
+        return writeDictionaryCommands(new byte[0], copyLength, wordId, transformId, new byte[0], word.length);
+    }
+
+    /// Encodes `input` as a compressed meta-block that copies the longest identity dictionary word.
+    ///
+    /// Bytes before and after that word are emitted as literals. `input` must contain at least one
+    /// RFC 7932 identity dictionary word.
+    ///
+    /// @param input the uncompressed bytes
+    /// @return a valid Brotli stream
+    public static byte[] compressWithStaticDictionary(byte[] input) {
+        if (input.length == 0) {
+            return compress(input);
+        }
+        int[] match = BrotliDictionary.findIdentity(input);
+        if (match == null) {
+            throw new IllegalArgumentException("Input contains no RFC 7932 dictionary word");
+        }
+        int offset = match[0];
+        int copyLength = match[1];
+        int wordId = match[2];
+        byte[] prefix = Arrays.copyOfRange(input, 0, offset);
+        byte[] suffix = Arrays.copyOfRange(input, offset + copyLength, input.length);
+        return writeDictionaryCommands(prefix, copyLength, wordId, 0, suffix, input.length);
+    }
+
+    /// Writes a last compressed meta-block with optional literal runs around one dictionary copy.
+    private static byte[] writeDictionaryCommands(
+            byte[] prefix,
+            int copyLength,
+            int wordId,
+            int transformId,
+            byte[] suffix,
+            int mlen
+    ) {
+        int sizeBits = dictionarySizeBits(copyLength);
+        int address = wordId | (transformId << sizeBits);
+        int distance = address + prefix.length + 1;
+        int[] encoded = encodeDistance(distance);
+        int copyCode = copyCodeOf(copyLength);
+        int prefixInsert = insertCodeOf(Math.max(prefix.length, 0));
+        int dictCommand = insertCopyCode(prefix.length == 0 ? 0 : prefixInsert, copyCode, false);
+        int[] usedCommands = new int[704];
+        int[] usedDistances = new int[64];
+        usedCommands[dictCommand] = 1;
+        usedDistances[encoded[0]] = 1;
+        int trailCommand = -1;
+        if (suffix.length > 0) {
+            trailCommand = insertCopyCode(insertCodeOf(suffix.length), 0, false);
+            usedCommands[trailCommand] = 1;
+        }
+        BitWriter writer = new BitWriter();
+        writer.write(0, 1);
+        writer.write(1, 1);
+        writer.write(0, 1);
+        int mlenMinus1 = mlen - 1;
+        int nibbles = mlenMinus1 < (1 << 16) ? 0 : mlenMinus1 < (1 << 20) ? 1 : 2;
+        writer.write(nibbles, 2);
+        writer.write(mlenMinus1, (nibbles + 4) * 4);
+        writer.write(0, 1);
+        writer.write(0, 1);
+        writer.write(0, 1);
+        writer.write(0, 2);
+        writer.write(0, 4);
+        writer.write(0, 2);
+        writer.write(0, 1);
+        writer.write(0, 1);
+        int[] literalLength = new int[256];
+        for (byte value : prefix) {
+            literalLength[value & 0xFF] = 1;
+        }
+        for (byte value : suffix) {
+            literalLength[value & 0xFF] = 1;
+        }
+        prepareAndWritePrefix(writer, literalLength);
+        prepareAndWritePrefix(writer, usedCommands);
+        prepareAndWritePrefix(writer, usedDistances);
+        int[] literalCode = canonicalCodes(literalLength);
+        int[] commandCode = canonicalCodes(usedCommands);
+        int[] distanceCode = canonicalCodes(usedDistances);
+        writeSymbol(writer, usedCommands, commandCode, dictCommand);
+        if (prefix.length > 0 && INSERT_EXTRA[prefixInsert] > 0) {
+            writer.write(prefix.length - INSERT_BASE[prefixInsert], INSERT_EXTRA[prefixInsert]);
+        }
+        if (COPY_EXTRA[copyCode] > 0) {
+            writer.write(copyLength - COPY_BASE[copyCode], COPY_EXTRA[copyCode]);
+        }
+        for (byte value : prefix) {
+            writeSymbol(writer, literalLength, literalCode, value & 0xFF);
+        }
+        writeSymbol(writer, usedDistances, distanceCode, encoded[0]);
+        int extra = distanceExtraBits(encoded[0], 0, 0);
+        if (extra > 0) {
+            writer.write(encoded[1], extra);
+        }
+        if (trailCommand >= 0) {
+            int suffixInsert = insertCodeOf(suffix.length);
+            writeSymbol(writer, usedCommands, commandCode, trailCommand);
+            if (INSERT_EXTRA[suffixInsert] > 0) {
+                writer.write(suffix.length - INSERT_BASE[suffixInsert], INSERT_EXTRA[suffixInsert]);
+            }
+            for (byte value : suffix) {
+                writeSymbol(writer, literalLength, literalCode, value & 0xFF);
+            }
+        }
+        writer.alignByte();
+        return writer.toByteArray();
+    }
+
+    /// `NDBITS[copyLength]` from RFC 7932 Appendix A.
+    private static int dictionarySizeBits(int copyLength) {
+        return switch (copyLength) {
+            case 4, 5, 8, 9, 10, 11, 12 -> 10;
+            case 6, 7 -> 11;
+            case 13, 14 -> 9;
+            case 15, 18 -> 8;
+            case 16, 17, 19, 20 -> 7;
+            case 21, 22 -> 6;
+            case 23, 24 -> 5;
+            default -> throw new IllegalArgumentException("Brotli dictionary copy length must be in 4..24");
+        };
     }
 
     /// Inflates a RFC 7932 stream.
@@ -1046,11 +1180,19 @@ public final class Brotli {
                     distance = resolveDistance(dcode, npostfix, ndirect);
                 }
                 int available = written + out;
-                if (distance > available) {
-                    throw new IllegalArgumentException("Brotli static-dictionary distance is not supported");
-                }
-                if (distance > window) {
-                    throw new IllegalArgumentException("Brotli copy distance exceeds the window");
+                int maxDistance = Math.min(available, window);
+                if (distance > maxDistance) {
+                    byte[] word = BrotliDictionary.transform(copy, distance - maxDistance - 1);
+                    if (out + word.length > mlen) {
+                        throw new IllegalArgumentException("Brotli dictionary word exceeds the meta-block");
+                    }
+                    System.arraycopy(word, 0, produced, out, word.length);
+                    for (byte value : word) {
+                        previous2 = previous1;
+                        previous1 = value & 0xFF;
+                    }
+                    out += word.length;
+                    continue;
                 }
                 for (int n = 0; n < copy && out < mlen; n++) {
                     int source = written + out - distance;

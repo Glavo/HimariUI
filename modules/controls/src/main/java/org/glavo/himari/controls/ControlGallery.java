@@ -118,6 +118,18 @@ public final class ControlGallery {
     /// Extra theme washes that do not fit in [`ThemeTokens`], [`ThemeSurfaces`], or [`ThemeOverlays`].
     private ThemeWashes washes;
 
+    /// Extra theme glazes that do not fit in [`ThemeTokens`], [`ThemeSurfaces`],
+    /// [`ThemeOverlays`], or [`ThemeWashes`].
+    private ThemeGlazes glazes;
+
+    /// Extra theme sheens that do not fit in [`ThemeTokens`], [`ThemeSurfaces`],
+    /// [`ThemeOverlays`], [`ThemeWashes`], or [`ThemeGlazes`].
+    private ThemeSheens sheens;
+
+    /// Extra theme films that do not fit in [`ThemeTokens`], [`ThemeSurfaces`],
+    /// [`ThemeOverlays`], [`ThemeWashes`], [`ThemeGlazes`], or [`ThemeSheens`].
+    private ThemeFilms films;
+
     /// Last UTF-8 font family installed by [#applyFontReload(ResourceReload, String)].
     private @Nullable String fontFamily;
 
@@ -169,6 +181,9 @@ public final class ControlGallery {
         this.surfaces = ThemeSurfaces.standard();
         this.overlays = ThemeOverlays.standard();
         this.washes = ThemeWashes.standard();
+        this.glazes = ThemeGlazes.standard();
+        this.sheens = ThemeSheens.standard();
+        this.films = ThemeFilms.standard();
     }
 
     /// Returns the button.
@@ -367,6 +382,27 @@ public final class ControlGallery {
         return washes;
     }
 
+    /// Returns the extra theme glazes.
+    ///
+    /// @return the glazes
+    public ThemeGlazes glazes() {
+        return glazes;
+    }
+
+    /// Returns the extra theme sheens.
+    ///
+    /// @return the sheens
+    public ThemeSheens sheens() {
+        return sheens;
+    }
+
+    /// Returns the extra theme films.
+    ///
+    /// @return the films
+    public ThemeFilms films() {
+        return films;
+    }
+
     /// Returns the last font family installed by [#applyFontReload(ResourceReload, String)].
     ///
     /// @return the family, or `null` before the first successful font reload
@@ -470,6 +506,75 @@ public final class ControlGallery {
             return false;
         }
         this.washes = ThemeWashes.decode(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE));
+        return true;
+    }
+
+    /// Replaces the extra theme glazes used by the next [#create(LayoutTree)].
+    ///
+    /// @param glazes the glazes
+    public void setGlazes(ThemeGlazes glazes) {
+        this.glazes = Objects.requireNonNull(glazes, "glazes");
+    }
+
+    /// Applies the current published extra-glaze generation for `key` from `reload`.
+    ///
+    /// @param reload the resource generations
+    /// @param key the glaze consumer key
+    /// @return whether a glaze payload was installed
+    public boolean applyGlazesReload(ResourceReload reload, String key) {
+        Objects.requireNonNull(reload, "reload");
+        Objects.requireNonNull(key, "key");
+        @Nullable ResourceSnapshot snapshot = reload.current(ResourceKind.THEME, key);
+        if (snapshot == null) {
+            return false;
+        }
+        this.glazes = ThemeGlazes.decode(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE));
+        return true;
+    }
+
+    /// Replaces the extra theme sheens used by the next [#create(LayoutTree)].
+    ///
+    /// @param sheens the sheens
+    public void setSheens(ThemeSheens sheens) {
+        this.sheens = Objects.requireNonNull(sheens, "sheens");
+    }
+
+    /// Applies the current published extra-sheen generation for `key` from `reload`.
+    ///
+    /// @param reload the resource generations
+    /// @param key the sheen consumer key
+    /// @return whether a sheen payload was installed
+    public boolean applySheensReload(ResourceReload reload, String key) {
+        Objects.requireNonNull(reload, "reload");
+        Objects.requireNonNull(key, "key");
+        @Nullable ResourceSnapshot snapshot = reload.current(ResourceKind.THEME, key);
+        if (snapshot == null) {
+            return false;
+        }
+        this.sheens = ThemeSheens.decode(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE));
+        return true;
+    }
+
+    /// Replaces the extra theme films used by the next [#create(LayoutTree)].
+    ///
+    /// @param films the films
+    public void setFilms(ThemeFilms films) {
+        this.films = Objects.requireNonNull(films, "films");
+    }
+
+    /// Applies the current published extra-film generation for `key` from `reload`.
+    ///
+    /// @param reload the resource generations
+    /// @param key the film consumer key
+    /// @return whether a film payload was installed
+    public boolean applyFilmsReload(ResourceReload reload, String key) {
+        Objects.requireNonNull(reload, "reload");
+        Objects.requireNonNull(key, "key");
+        @Nullable ResourceSnapshot snapshot = reload.current(ResourceKind.THEME, key);
+        if (snapshot == null) {
+            return false;
+        }
+        this.films = ThemeFilms.decode(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE));
         return true;
     }
 

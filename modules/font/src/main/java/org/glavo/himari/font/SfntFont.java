@@ -16,7 +16,7 @@ import java.util.Objects;
 
 /// Reads a checked SFNT, TTC first face, WOFF1, or WOFF2 directory, `cmap` format 4/12, `hmtx`, TrueType `loca`/`glyf` or
 /// CFF/CFF2 Type 2 outlines, optional GSUB, GDEF, GPOS/`kern`, COLR v0/v1/CPAL, `fvar`, `avar`, `gvar`,
-/// `HVAR`, `VVAR`, `MVAR`, `STAT`, `sbix`, CBLC/CBDT, EBLC/EBDT, `gasp`, uncompressed `SVG `, `OS/2`,
+/// `HVAR`, `VVAR`, `MVAR`, `STAT`, `sbix`, CBLC/CBDT, EBLC/EBDT, `gasp`, uncompressed or gzip `SVG `, `OS/2`,
 /// `name` family and style, and `post` italic/pitch.
 ///
 /// The font file is retained as a read-only [MemorySegment] so the same view can back a heap array

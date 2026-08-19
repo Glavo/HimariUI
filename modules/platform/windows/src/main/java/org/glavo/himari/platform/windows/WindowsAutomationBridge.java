@@ -67,6 +67,7 @@ public final class WindowsAutomationBridge {
             case TABLE -> "Table";
             case TABLE_ROW -> "DataItem";
             case TABLE_CELL -> "DataItem";
+            case TABLE_COLUMN_HEADER, TABLE_ROW_HEADER -> "HeaderItem";
             case TEXT -> "Text";
             case IMAGE -> "Image";
             case CANVAS -> "Pane";

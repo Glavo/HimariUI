@@ -20,6 +20,27 @@ public enum PointerEventType {
     /// The pointer reported a horizontal wheel notch.
     WHEEL_HORIZONTAL,
 
+    /// The pointer entered the window hit-test region.
+    ENTER,
+
+    /// The pointer left the window hit-test region.
+    LEAVE,
+
+    /// The window lost pointer capture (`WM_POINTERCAPTURECHANGED`).
+    CAPTURE_CHANGED,
+
+    /// An inactive window received a pointer activation request (`WM_POINTERACTIVATE`).
+    ACTIVATE,
+
+    /// A non-client-area pointer update (`WM_NCPOINTERUPDATE`).
+    NON_CLIENT_MOVE,
+
+    /// A non-client-area pointer press (`WM_NCPOINTERDOWN`).
+    NON_CLIENT_DOWN,
+
+    /// A non-client-area pointer release (`WM_NCPOINTERUP`).
+    NON_CLIENT_UP,
+
     /// The secondary (right) button pressed.
     SECONDARY_DOWN,
 

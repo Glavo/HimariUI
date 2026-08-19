@@ -41,4 +41,25 @@ final class BrotliTest {
         byte[] original = "WOFF2 Brotli leftover 13.4".getBytes(StandardCharsets.US_ASCII);
         assertArrayEquals(original, Brotli.decompress(Brotli.compressCommands(original)));
     }
+
+    /// The first Appendix A word inflates through a static-dictionary distance.
+    @Test
+    void staticDictionaryIdentityWordInflates() {
+        byte[] expected = "time".getBytes(StandardCharsets.US_ASCII);
+        assertArrayEquals(expected, Brotli.decompress(Brotli.compressStaticDictionary(4, 0, 0)));
+    }
+
+    /// Appendix B uppercase-first produces `Time` from dictionary word 0.
+    @Test
+    void staticDictionaryUppercaseFirstInflates() {
+        byte[] expected = "Time".getBytes(StandardCharsets.US_ASCII);
+        assertArrayEquals(expected, Brotli.decompress(Brotli.compressStaticDictionary(4, 0, 9)));
+    }
+
+    /// Literals around an identity dictionary word inflate through the same decoder.
+    @Test
+    void staticDictionaryWordInsideLiteralsInflates() {
+        byte[] original = ">>time<<".getBytes(StandardCharsets.US_ASCII);
+        assertArrayEquals(original, Brotli.decompress(Brotli.compressWithStaticDictionary(original)));
+    }
 }

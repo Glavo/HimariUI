@@ -6642,6 +6642,6558 @@ public record Color(ColorEncoding encoding, float red, float green, float blue, 
         return fromHsl(hsl[0] + 22.0f, hsl[1], hsl[2], toSrgb().alpha);
     }
 
+    /// Returns an sRGB copy with OKLCH hue rotated by `23` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate23() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 23.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `23` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate23() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 23.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `23` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate23() {
+        return hsvRotate(23.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `23` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate23() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 23.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `24` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate24() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 24.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `24` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate24() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 24.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `24` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate24() {
+        return hsvRotate(24.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `24` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate24() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 24.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `26` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate26() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 26.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `26` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate26() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 26.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `26` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate26() {
+        return hsvRotate(26.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `26` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate26() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 26.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `27` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate27() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 27.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `27` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate27() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 27.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `27` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate27() {
+        return hsvRotate(27.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `27` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate27() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 27.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `28` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate28() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 28.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `28` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate28() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 28.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `28` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate28() {
+        return hsvRotate(28.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `28` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate28() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 28.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `29` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate29() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 29.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `29` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate29() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 29.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `29` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate29() {
+        return hsvRotate(29.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `29` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate29() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 29.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `31` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate31() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 31.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `31` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate31() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 31.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `31` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate31() {
+        return hsvRotate(31.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `31` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate31() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 31.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `32` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate32() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 32.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `32` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate32() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 32.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `32` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate32() {
+        return hsvRotate(32.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `32` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate32() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 32.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `33` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate33() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 33.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `33` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate33() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 33.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `33` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate33() {
+        return hsvRotate(33.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `33` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate33() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 33.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `34` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate34() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 34.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `34` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate34() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 34.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `34` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate34() {
+        return hsvRotate(34.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `34` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate34() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 34.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `36` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate36() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 36.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `36` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate36() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 36.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `36` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate36() {
+        return hsvRotate(36.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `36` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate36() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 36.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `37` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate37() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 37.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `37` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate37() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 37.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `37` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate37() {
+        return hsvRotate(37.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `37` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate37() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 37.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `38` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate38() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 38.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `38` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate38() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 38.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `38` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate38() {
+        return hsvRotate(38.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `38` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate38() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 38.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `39` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate39() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 39.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `39` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate39() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 39.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `39` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate39() {
+        return hsvRotate(39.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `39` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate39() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 39.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `41` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate41() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 41.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `41` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate41() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 41.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `41` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate41() {
+        return hsvRotate(41.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `41` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate41() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 41.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `42` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate42() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 42.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `42` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate42() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 42.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `42` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate42() {
+        return hsvRotate(42.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `42` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate42() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 42.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `43` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate43() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 43.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `43` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate43() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 43.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `43` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate43() {
+        return hsvRotate(43.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `43` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate43() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 43.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `44` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate44() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 44.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `44` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate44() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 44.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `44` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate44() {
+        return hsvRotate(44.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `44` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate44() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 44.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `46` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate46() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 46.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `46` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate46() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 46.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `46` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate46() {
+        return hsvRotate(46.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `46` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate46() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 46.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `47` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate47() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 47.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `47` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate47() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 47.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `47` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate47() {
+        return hsvRotate(47.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `47` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate47() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 47.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `48` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate48() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 48.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `48` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate48() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 48.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `48` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate48() {
+        return hsvRotate(48.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `48` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate48() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 48.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `49` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate49() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 49.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `49` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate49() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 49.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `49` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate49() {
+        return hsvRotate(49.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `49` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate49() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 49.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `51` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate51() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 51.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `51` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate51() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 51.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `51` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate51() {
+        return hsvRotate(51.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `51` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate51() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 51.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `52` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate52() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 52.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `52` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate52() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 52.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `52` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate52() {
+        return hsvRotate(52.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `52` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate52() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 52.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `53` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate53() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 53.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `53` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate53() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 53.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `53` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate53() {
+        return hsvRotate(53.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `53` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate53() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 53.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `54` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate54() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 54.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `54` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate54() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 54.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `54` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate54() {
+        return hsvRotate(54.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `54` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate54() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 54.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `56` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate56() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 56.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `56` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate56() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 56.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `56` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate56() {
+        return hsvRotate(56.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `56` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate56() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 56.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `57` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate57() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 57.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `57` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate57() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 57.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `57` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate57() {
+        return hsvRotate(57.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `57` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate57() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 57.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `58` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate58() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 58.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `58` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate58() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 58.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `58` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate58() {
+        return hsvRotate(58.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `58` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate58() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 58.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `59` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate59() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 59.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `59` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate59() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 59.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `59` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate59() {
+        return hsvRotate(59.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `59` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate59() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 59.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `61` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate61() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 61.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `61` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate61() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 61.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `61` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate61() {
+        return hsvRotate(61.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `61` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate61() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 61.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `62` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate62() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 62.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `62` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate62() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 62.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `62` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate62() {
+        return hsvRotate(62.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `62` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate62() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 62.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `63` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate63() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 63.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `63` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate63() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 63.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `63` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate63() {
+        return hsvRotate(63.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `63` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate63() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 63.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `64` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate64() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 64.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `64` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate64() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 64.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `64` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate64() {
+        return hsvRotate(64.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `64` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate64() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 64.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `66` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate66() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 66.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `66` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate66() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 66.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `66` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate66() {
+        return hsvRotate(66.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `66` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate66() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 66.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `67` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate67() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 67.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `67` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate67() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 67.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `67` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate67() {
+        return hsvRotate(67.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `67` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate67() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 67.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `68` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate68() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 68.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `68` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate68() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 68.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `68` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate68() {
+        return hsvRotate(68.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `68` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate68() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 68.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `69` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate69() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 69.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `69` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate69() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 69.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `69` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate69() {
+        return hsvRotate(69.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `69` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate69() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 69.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `71` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate71() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 71.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `71` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate71() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 71.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `71` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate71() {
+        return hsvRotate(71.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `71` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate71() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 71.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `72` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate72() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 72.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `72` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate72() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 72.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `72` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate72() {
+        return hsvRotate(72.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `72` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate72() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 72.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `73` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate73() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 73.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `73` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate73() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 73.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `73` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate73() {
+        return hsvRotate(73.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `73` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate73() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 73.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `74` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate74() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 74.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `74` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate74() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 74.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `74` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate74() {
+        return hsvRotate(74.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `74` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate74() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 74.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `76` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate76() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 76.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `76` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate76() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 76.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `76` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate76() {
+        return hsvRotate(76.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `76` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate76() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 76.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `77` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate77() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 77.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `77` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate77() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 77.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `77` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate77() {
+        return hsvRotate(77.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `77` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate77() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 77.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `78` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate78() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 78.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `78` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate78() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 78.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `78` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate78() {
+        return hsvRotate(78.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `78` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate78() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 78.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `79` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate79() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 79.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `79` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate79() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 79.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `79` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate79() {
+        return hsvRotate(79.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `79` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate79() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 79.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `81` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate81() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 81.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `81` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate81() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 81.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `81` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate81() {
+        return hsvRotate(81.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `81` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate81() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 81.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `82` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate82() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 82.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `82` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate82() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 82.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `82` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate82() {
+        return hsvRotate(82.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `82` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate82() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 82.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `83` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate83() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 83.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `83` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate83() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 83.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `83` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate83() {
+        return hsvRotate(83.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `83` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate83() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 83.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `84` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate84() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 84.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `84` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate84() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 84.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `84` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate84() {
+        return hsvRotate(84.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `84` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate84() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 84.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `86` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate86() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 86.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `86` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate86() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 86.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `86` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate86() {
+        return hsvRotate(86.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `86` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate86() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 86.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `87` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate87() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 87.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `87` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate87() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 87.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `87` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate87() {
+        return hsvRotate(87.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `87` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate87() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 87.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `88` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate88() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 88.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `88` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate88() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 88.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `88` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate88() {
+        return hsvRotate(88.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `88` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate88() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 88.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `89` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate89() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 89.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `89` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate89() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 89.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `89` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate89() {
+        return hsvRotate(89.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `89` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate89() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 89.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `91` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate91() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 91.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `91` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate91() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 91.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `91` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate91() {
+        return hsvRotate(91.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `91` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate91() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 91.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `92` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate92() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 92.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `92` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate92() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 92.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `92` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate92() {
+        return hsvRotate(92.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `92` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate92() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 92.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `93` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate93() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 93.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `93` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate93() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 93.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `93` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate93() {
+        return hsvRotate(93.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `93` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate93() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 93.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `94` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate94() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 94.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `94` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate94() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 94.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `94` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate94() {
+        return hsvRotate(94.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `94` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate94() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 94.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `96` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate96() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 96.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `96` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate96() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 96.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `96` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate96() {
+        return hsvRotate(96.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `96` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate96() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 96.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `97` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate97() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 97.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `97` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate97() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 97.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `97` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate97() {
+        return hsvRotate(97.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `97` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate97() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 97.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `98` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate98() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 98.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `98` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate98() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 98.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `98` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate98() {
+        return hsvRotate(98.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `98` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate98() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 98.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `99` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate99() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 99.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `99` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate99() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 99.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `99` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate99() {
+        return hsvRotate(99.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `99` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate99() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 99.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `101` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate101() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 101.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `101` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate101() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 101.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `101` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate101() {
+        return hsvRotate(101.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `101` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate101() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 101.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `102` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate102() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 102.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `102` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate102() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 102.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `102` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate102() {
+        return hsvRotate(102.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `102` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate102() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 102.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `103` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate103() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 103.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `103` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate103() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 103.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `103` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate103() {
+        return hsvRotate(103.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `103` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate103() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 103.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `104` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate104() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 104.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `104` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate104() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 104.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `104` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate104() {
+        return hsvRotate(104.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `104` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate104() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 104.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `106` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate106() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 106.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `106` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate106() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 106.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `106` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate106() {
+        return hsvRotate(106.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `106` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate106() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 106.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `107` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate107() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 107.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `107` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate107() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 107.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `107` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate107() {
+        return hsvRotate(107.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `107` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate107() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 107.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `108` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate108() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 108.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `108` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate108() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 108.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `108` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate108() {
+        return hsvRotate(108.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `108` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate108() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 108.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `109` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate109() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 109.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `109` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate109() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 109.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `109` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate109() {
+        return hsvRotate(109.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `109` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate109() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 109.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `111` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate111() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 111.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `111` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate111() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 111.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `111` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate111() {
+        return hsvRotate(111.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `111` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate111() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 111.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `112` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate112() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 112.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `112` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate112() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 112.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `112` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate112() {
+        return hsvRotate(112.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `112` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate112() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 112.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `113` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate113() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 113.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `113` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate113() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 113.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `113` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate113() {
+        return hsvRotate(113.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `113` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate113() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 113.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `114` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate114() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 114.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `114` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate114() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 114.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `114` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate114() {
+        return hsvRotate(114.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `114` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate114() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 114.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `116` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate116() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 116.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `116` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate116() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 116.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `116` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate116() {
+        return hsvRotate(116.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `116` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate116() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 116.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `117` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate117() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 117.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `117` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate117() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 117.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `117` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate117() {
+        return hsvRotate(117.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `117` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate117() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 117.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `118` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate118() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 118.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `118` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate118() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 118.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `118` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate118() {
+        return hsvRotate(118.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `118` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate118() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 118.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `119` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate119() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 119.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `119` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate119() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 119.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `119` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate119() {
+        return hsvRotate(119.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `119` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate119() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 119.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `121` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate121() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 121.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `121` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate121() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 121.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `121` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate121() {
+        return hsvRotate(121.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `121` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate121() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 121.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `122` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate122() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 122.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `122` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate122() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 122.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `122` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate122() {
+        return hsvRotate(122.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `122` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate122() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 122.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `123` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate123() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 123.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `123` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate123() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 123.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `123` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate123() {
+        return hsvRotate(123.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `123` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate123() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 123.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `124` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate124() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 124.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `124` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate124() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 124.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `124` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate124() {
+        return hsvRotate(124.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `124` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate124() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 124.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `126` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate126() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 126.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `126` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate126() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 126.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `126` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate126() {
+        return hsvRotate(126.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `126` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate126() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 126.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `127` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate127() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 127.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `127` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate127() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 127.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `127` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate127() {
+        return hsvRotate(127.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `127` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate127() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 127.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `128` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate128() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 128.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `128` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate128() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 128.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `128` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate128() {
+        return hsvRotate(128.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `128` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate128() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 128.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `129` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate129() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 129.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `129` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate129() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 129.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `129` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate129() {
+        return hsvRotate(129.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `129` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate129() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 129.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `131` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate131() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 131.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `131` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate131() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 131.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `131` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate131() {
+        return hsvRotate(131.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `131` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate131() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 131.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `132` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate132() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 132.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `132` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate132() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 132.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `132` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate132() {
+        return hsvRotate(132.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `132` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate132() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 132.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `133` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate133() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 133.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `133` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate133() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 133.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `133` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate133() {
+        return hsvRotate(133.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `133` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate133() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 133.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `134` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate134() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 134.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `134` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate134() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 134.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `134` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate134() {
+        return hsvRotate(134.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `134` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate134() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 134.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `136` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate136() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 136.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `136` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate136() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 136.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `136` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate136() {
+        return hsvRotate(136.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `136` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate136() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 136.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `137` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate137() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 137.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `137` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate137() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 137.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `137` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate137() {
+        return hsvRotate(137.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `137` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate137() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 137.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `138` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate138() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 138.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `138` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate138() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 138.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `138` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate138() {
+        return hsvRotate(138.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `138` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate138() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 138.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `139` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate139() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 139.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `139` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate139() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 139.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `139` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate139() {
+        return hsvRotate(139.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `139` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate139() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 139.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `141` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate141() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 141.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `141` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate141() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 141.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `141` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate141() {
+        return hsvRotate(141.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `141` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate141() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 141.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `142` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate142() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 142.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `142` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate142() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 142.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `142` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate142() {
+        return hsvRotate(142.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `142` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate142() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 142.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `143` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate143() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 143.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `143` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate143() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 143.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `143` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate143() {
+        return hsvRotate(143.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `143` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate143() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 143.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `144` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate144() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 144.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `144` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate144() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 144.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `144` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate144() {
+        return hsvRotate(144.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `144` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate144() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 144.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `146` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate146() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 146.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `146` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate146() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 146.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `146` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate146() {
+        return hsvRotate(146.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `146` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate146() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 146.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `147` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate147() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 147.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `147` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate147() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 147.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `147` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate147() {
+        return hsvRotate(147.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `147` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate147() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 147.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `148` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate148() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 148.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `148` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate148() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 148.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `148` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate148() {
+        return hsvRotate(148.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `148` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate148() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 148.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `149` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate149() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 149.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `149` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate149() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 149.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `149` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate149() {
+        return hsvRotate(149.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `149` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate149() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 149.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `151` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate151() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 151.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `151` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate151() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 151.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `151` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate151() {
+        return hsvRotate(151.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `151` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate151() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 151.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `152` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate152() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 152.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `152` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate152() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 152.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `152` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate152() {
+        return hsvRotate(152.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `152` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate152() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 152.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `153` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate153() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 153.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `153` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate153() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 153.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `153` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate153() {
+        return hsvRotate(153.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `153` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate153() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 153.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `154` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate154() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 154.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `154` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate154() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 154.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `154` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate154() {
+        return hsvRotate(154.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `154` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate154() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 154.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `156` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate156() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 156.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `156` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate156() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 156.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `156` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate156() {
+        return hsvRotate(156.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `156` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate156() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 156.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `157` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate157() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 157.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `157` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate157() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 157.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `157` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate157() {
+        return hsvRotate(157.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `157` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate157() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 157.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `158` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate158() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 158.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `158` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate158() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 158.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `158` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate158() {
+        return hsvRotate(158.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `158` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate158() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 158.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `159` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate159() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 159.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `159` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate159() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 159.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `159` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate159() {
+        return hsvRotate(159.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `159` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate159() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 159.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `161` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate161() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 161.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `161` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate161() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 161.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `161` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate161() {
+        return hsvRotate(161.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `161` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate161() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 161.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `162` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate162() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 162.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `162` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate162() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 162.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `162` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate162() {
+        return hsvRotate(162.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `162` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate162() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 162.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `163` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate163() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 163.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `163` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate163() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 163.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `163` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate163() {
+        return hsvRotate(163.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `163` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate163() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 163.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `164` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate164() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 164.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `164` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate164() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 164.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `164` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate164() {
+        return hsvRotate(164.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `164` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate164() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 164.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `166` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate166() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 166.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `166` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate166() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 166.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `166` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate166() {
+        return hsvRotate(166.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `166` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate166() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 166.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `167` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate167() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 167.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `167` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate167() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 167.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `167` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate167() {
+        return hsvRotate(167.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `167` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate167() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 167.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `168` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate168() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 168.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `168` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate168() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 168.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `168` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate168() {
+        return hsvRotate(168.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `168` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate168() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 168.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `169` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate169() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 169.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `169` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate169() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 169.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `169` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate169() {
+        return hsvRotate(169.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `169` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate169() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 169.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `171` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate171() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 171.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `171` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate171() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 171.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `171` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate171() {
+        return hsvRotate(171.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `171` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate171() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 171.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `172` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate172() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 172.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `172` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate172() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 172.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `172` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate172() {
+        return hsvRotate(172.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `172` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate172() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 172.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `173` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate173() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 173.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `173` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate173() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 173.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `173` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate173() {
+        return hsvRotate(173.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `173` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate173() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 173.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `174` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate174() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 174.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `174` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate174() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 174.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `174` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate174() {
+        return hsvRotate(174.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `174` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate174() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 174.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `176` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate176() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 176.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `176` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate176() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 176.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `176` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate176() {
+        return hsvRotate(176.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `176` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate176() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 176.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `177` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate177() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 177.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `177` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate177() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 177.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `177` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate177() {
+        return hsvRotate(177.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `177` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate177() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 177.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `178` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate178() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 178.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `178` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate178() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 178.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `178` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate178() {
+        return hsvRotate(178.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `178` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate178() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 178.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `179` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate179() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 179.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `179` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate179() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 179.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `179` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate179() {
+        return hsvRotate(179.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `179` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate179() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 179.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `180` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate180() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 180.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `180` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate180() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 180.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `180` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate180() {
+        return hsvRotate(180.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `180` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate180() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 180.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `181` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate181() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 181.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `181` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate181() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 181.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `181` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate181() {
+        return hsvRotate(181.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `181` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate181() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 181.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `182` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate182() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 182.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `182` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate182() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 182.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `182` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate182() {
+        return hsvRotate(182.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `182` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate182() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 182.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `183` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate183() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 183.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `183` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate183() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 183.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `183` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate183() {
+        return hsvRotate(183.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `183` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate183() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 183.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `184` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate184() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 184.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `184` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate184() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 184.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `184` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate184() {
+        return hsvRotate(184.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `184` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate184() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 184.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `186` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate186() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 186.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `186` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate186() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 186.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `186` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate186() {
+        return hsvRotate(186.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `186` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate186() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 186.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `187` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate187() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 187.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `187` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate187() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 187.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `187` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate187() {
+        return hsvRotate(187.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `187` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate187() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 187.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `188` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate188() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 188.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `188` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate188() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 188.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `188` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate188() {
+        return hsvRotate(188.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `188` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate188() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 188.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `189` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate189() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 189.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `189` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate189() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 189.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `189` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate189() {
+        return hsvRotate(189.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `189` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate189() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 189.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `191` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate191() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 191.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `191` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate191() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 191.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `191` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate191() {
+        return hsvRotate(191.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `191` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate191() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 191.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `192` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate192() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 192.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `192` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate192() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 192.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `192` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate192() {
+        return hsvRotate(192.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `192` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate192() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 192.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `193` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate193() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 193.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `193` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate193() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 193.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `193` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate193() {
+        return hsvRotate(193.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `193` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate193() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 193.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `194` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate194() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 194.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `194` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate194() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 194.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `194` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate194() {
+        return hsvRotate(194.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `194` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate194() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 194.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `196` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate196() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 196.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `196` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate196() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 196.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `196` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate196() {
+        return hsvRotate(196.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `196` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate196() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 196.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `197` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate197() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 197.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `197` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate197() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 197.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `197` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate197() {
+        return hsvRotate(197.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `197` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate197() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 197.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `198` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate198() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 198.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `198` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate198() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 198.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `198` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate198() {
+        return hsvRotate(198.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `198` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate198() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 198.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `199` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate199() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 199.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `199` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate199() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 199.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `199` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate199() {
+        return hsvRotate(199.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `199` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate199() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 199.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `201` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate201() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 201.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `201` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate201() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 201.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `201` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate201() {
+        return hsvRotate(201.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `201` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate201() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 201.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `202` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate202() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 202.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `202` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate202() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 202.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `202` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate202() {
+        return hsvRotate(202.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `202` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate202() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 202.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `203` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate203() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 203.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `203` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate203() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 203.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `203` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate203() {
+        return hsvRotate(203.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `203` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate203() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 203.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `204` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate204() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 204.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `204` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate204() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 204.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `204` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate204() {
+        return hsvRotate(204.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `204` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate204() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 204.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `206` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate206() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 206.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `206` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate206() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 206.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `206` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate206() {
+        return hsvRotate(206.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `206` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate206() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 206.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `207` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate207() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 207.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `207` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate207() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 207.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `207` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate207() {
+        return hsvRotate(207.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `207` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate207() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 207.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `208` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate208() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 208.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `208` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate208() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 208.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `208` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate208() {
+        return hsvRotate(208.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `208` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate208() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 208.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `209` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate209() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 209.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `209` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate209() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 209.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `209` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate209() {
+        return hsvRotate(209.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `209` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate209() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 209.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `211` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate211() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 211.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `211` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate211() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 211.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `211` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate211() {
+        return hsvRotate(211.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `211` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate211() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 211.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `212` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate212() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 212.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `212` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate212() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 212.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `212` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate212() {
+        return hsvRotate(212.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `212` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate212() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 212.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `213` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate213() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 213.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `213` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate213() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 213.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `213` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate213() {
+        return hsvRotate(213.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `213` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate213() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 213.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `214` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate214() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 214.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `214` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate214() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 214.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `214` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate214() {
+        return hsvRotate(214.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `214` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate214() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 214.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `216` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate216() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 216.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `216` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate216() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 216.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `216` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate216() {
+        return hsvRotate(216.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `216` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate216() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 216.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `217` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate217() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 217.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `217` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate217() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 217.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `217` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate217() {
+        return hsvRotate(217.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `217` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate217() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 217.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `218` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate218() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 218.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `218` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate218() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 218.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `218` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate218() {
+        return hsvRotate(218.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `218` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate218() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 218.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `219` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate219() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 219.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `219` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate219() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 219.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `219` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate219() {
+        return hsvRotate(219.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `219` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate219() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 219.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `221` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate221() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 221.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `221` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate221() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 221.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `221` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate221() {
+        return hsvRotate(221.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `221` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate221() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 221.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `222` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate222() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 222.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `222` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate222() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 222.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `222` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate222() {
+        return hsvRotate(222.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `222` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate222() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 222.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `223` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate223() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 223.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `223` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate223() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 223.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `223` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate223() {
+        return hsvRotate(223.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `223` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate223() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 223.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `224` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate224() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 224.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `224` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate224() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 224.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `224` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate224() {
+        return hsvRotate(224.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `224` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate224() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 224.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `226` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate226() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 226.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `226` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate226() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 226.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `226` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate226() {
+        return hsvRotate(226.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `226` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate226() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 226.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `227` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate227() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 227.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `227` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate227() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 227.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `227` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate227() {
+        return hsvRotate(227.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `227` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate227() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 227.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `228` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate228() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 228.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `228` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate228() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 228.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `228` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate228() {
+        return hsvRotate(228.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `228` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate228() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 228.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `229` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate229() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 229.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `229` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate229() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 229.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `229` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate229() {
+        return hsvRotate(229.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `229` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate229() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 229.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
+    /// Returns an sRGB copy with OKLCH hue rotated by `231` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color oklchRotate231() {
+        float[] oklch = toOklch();
+        return fromOklch(oklch[0], oklch[1], oklch[2] + 231.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with CIE LCh hue rotated by `231` degrees.
+    ///
+    /// Lightness and chroma are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color cieLchRotate231() {
+        float[] lch = toCieLch();
+        return fromCieLch(lch[0], lch[1], lch[2] + 231.0f, toSrgb().alpha).toSrgb();
+    }
+
+    /// Returns an sRGB copy with HSV hue rotated by `231` degrees.
+    ///
+    /// Saturation and value are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hsvRotate231() {
+        return hsvRotate(231.0f);
+    }
+
+    /// Returns an sRGB copy with HSL hue rotated by `231` degrees.
+    ///
+    /// Saturation and lightness are unchanged.
+    ///
+    /// @return the hue-rotated sRGB color
+    public Color hslRotate231() {
+        float[] hsl = toHsl();
+        return fromHsl(hsl[0] + 231.0f, hsl[1], hsl[2], toSrgb().alpha);
+    }
+
     /// Returns an sRGB copy with the given absolute OKLCH chroma.
     ///
     /// @param chroma the OKLCH chroma, nonnegative

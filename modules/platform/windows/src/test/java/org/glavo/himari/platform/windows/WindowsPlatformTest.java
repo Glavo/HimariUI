@@ -273,6 +273,82 @@ final class WindowsPlatformTest {
         }
     }
 
+    /// Queries generated `GetKeyState` / `GetAsyncKeyState` on the production key and pointer path.
+    @Test
+    void queriesLiveModifierStateThroughGeneratedUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "KeyState", 32.0, 32.0);
+            platform.pump();
+            short shift = window.keyState(0x10);
+            short asyncShift = window.asyncKeyState(0x10);
+            short asyncControl = window.asyncKeyState(0x11);
+            assertEquals(shift, window.keyState(0x10));
+            assertEquals(asyncShift, window.asyncKeyState(0x10));
+            byte[] snapshot = new byte[256];
+            assertTrue(window.copyKeyboardState(snapshot));
+            assertEquals((shift & 0x8000) != 0, (snapshot[0x10] & 0x80) != 0);
+            window.postVirtualKey(true, 0x10);
+            window.postVirtualKey(true, 0x0D);
+            platform.pump();
+            List<org.glavo.himari.layout.input.KeyEvent> keys = window.takeKeyEvents();
+            assertEquals(1, keys.size());
+            assertEquals(LogicalKey.ENTER, keys.getFirst().key());
+            assertTrue(keys.getFirst().shift(), "latched VK_SHIFT plus GetKeyState must mark shift");
+            WindowsNativeWindow.PenAxes axes = new WindowsNativeWindow.PenAxes(0.25f, 0.0f, 0.0f, 0.0f);
+            window.postPen(PointerEventType.DOWN, 4, 5, 7, axes);
+            platform.pump();
+            PointerEvent pointer = window.takePointerEvents().getLast();
+            int expectedAsync = 0;
+            if ((asyncShift & 0x8000) != 0 || (window.asyncKeyState(0x10) & 0x8000) != 0) {
+                expectedAsync |= WindowsNativeWindow.POINTER_MOD_SHIFT;
+            }
+            if ((asyncControl & 0x8000) != 0 || (window.asyncKeyState(0x11) & 0x8000) != 0) {
+                expectedAsync |= WindowsNativeWindow.POINTER_MOD_CTRL;
+            }
+            assertEquals(expectedAsync, pointer.keyStates() & (WindowsNativeWindow.POINTER_MOD_SHIFT
+                    | WindowsNativeWindow.POINTER_MOD_CTRL));
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Delivers `WM_UNICHAR` and `WM_DEADCHAR` through the production WndProc.
+    @Test
+    void deliversUnicharAndDeadCharThroughWndProc() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "Unichar", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.supportsUnichar());
+            window.postDeadChar('^');
+            platform.pump();
+            assertEquals("^", window.ime().composition());
+            assertFalse(window.ime().committed());
+            window.postUnichar('e');
+            platform.pump();
+            assertEquals("e", window.ime().surroundingText());
+            assertTrue(window.ime().committed());
+            window.postUnichar(0x1F600);
+            platform.pump();
+            assertTrue(window.ime().surroundingText().contains(new String(Character.toChars(0x1F600))));
+            window.postSysDeadChar('`');
+            platform.pump();
+            assertEquals("`", window.ime().composition());
+            window.postSysChar('a');
+            platform.pump();
+            assertTrue(window.ime().surroundingText().contains("a"));
+            window.postVirtualKey(true, 0x0D);
+            platform.pump();
+            List<org.glavo.himari.layout.input.KeyEvent> mapped = window.takeKeyEvents();
+            assertEquals(1, mapped.size());
+            assertEquals(LogicalKey.ENTER, mapped.getFirst().key());
+            assertTrue(mapped.getFirst().scanCode() > 0, "MapVirtualKeyW must fill a missing scan code");
+        } finally {
+            platform.close();
+        }
+    }
+
     /// Delivers `WM_MOUSEWHEEL` through the production WndProc as one wheel notch.
     @Test
     void deliversPostedWheelThroughWndProc() throws Exception {
@@ -297,6 +373,162 @@ final class WindowsPlatformTest {
             assertEquals(1, horizontal.size());
             assertEquals(PointerEventType.WHEEL_HORIZONTAL, horizontal.getFirst().type());
             assertEquals(1.0f, horizontal.getFirst().wheelDelta());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Delivers `WM_POINTERENTER` and `WM_POINTERLEAVE` through the production WndProc.
+    @Test
+    void deliversPointerEnterAndLeaveThroughWndProc() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "PointerEnter", 32.0, 32.0);
+            platform.pump();
+            WindowsNativeWindow.PenAxes axes = new WindowsNativeWindow.PenAxes(0.25f, 0.0f, 0.0f, 40.0f);
+            window.postPen(PointerEventType.ENTER, 6, 7, 4, axes);
+            window.postPen(PointerEventType.LEAVE, 6, 7, 4, axes);
+            platform.pump();
+            List<PointerEvent> events = window.takePointerEvents();
+            assertEquals(2, events.size());
+            assertEquals(PointerEventType.ENTER, events.get(0).type());
+            assertEquals(PointerDeviceKind.PEN, events.get(0).device());
+            assertEquals(4, events.get(0).pointerId());
+            assertEquals(6.0f, events.get(0).x());
+            assertEquals(7.0f, events.get(0).y());
+            assertEquals(40.0f, events.get(0).rotation());
+            assertEquals(PointerEventType.LEAVE, events.get(1).type());
+            assertEquals(4, events.get(1).pointerId());
+            window.postPen(PointerEventType.CAPTURE_CHANGED, 6, 7, 4, axes);
+            platform.pump();
+            List<PointerEvent> capture = window.takePointerEvents();
+            assertEquals(1, capture.size());
+            assertEquals(PointerEventType.CAPTURE_CHANGED, capture.getFirst().type());
+            window.postPen(PointerEventType.WHEEL, 8, 9, 5, axes);
+            window.postPen(PointerEventType.WHEEL_HORIZONTAL, 8, 9, 5, axes);
+            platform.pump();
+            List<PointerEvent> wheels = window.takePointerEvents();
+            assertEquals(2, wheels.size());
+            assertEquals(PointerEventType.WHEEL, wheels.get(0).type());
+            assertEquals(PointerEventType.WHEEL_HORIZONTAL, wheels.get(1).type());
+            window.postPen(PointerEventType.ACTIVATE, 8, 9, 5, axes);
+            platform.pump();
+            List<PointerEvent> activate = window.takePointerEvents();
+            assertEquals(1, activate.size());
+            assertEquals(PointerEventType.ACTIVATE, activate.getFirst().type());
+            assertEquals(PointerDeviceKind.PEN, activate.getFirst().device());
+            assertEquals(5, activate.getFirst().pointerId());
+            window.postPen(PointerEventType.NON_CLIENT_DOWN, 2, 3, 5, axes);
+            window.postPen(PointerEventType.NON_CLIENT_MOVE, 3, 4, 5, axes);
+            window.postPen(PointerEventType.NON_CLIENT_UP, 3, 4, 5, axes);
+            platform.pump();
+            List<PointerEvent> nonClient = window.takePointerEvents();
+            assertEquals(3, nonClient.size());
+            assertEquals(PointerEventType.NON_CLIENT_DOWN, nonClient.get(0).type());
+            assertEquals(PointerEventType.NON_CLIENT_MOVE, nonClient.get(1).type());
+            assertEquals(PointerEventType.NON_CLIENT_UP, nonClient.get(2).type());
+            assertEquals(2.0f, nonClient.get(0).x());
+            assertEquals(3.0f, nonClient.get(0).y());
+            window.postSysVirtualKey(true, 0x12);
+            window.postSysVirtualKey(true, 0x0D);
+            window.postSysVirtualKey(false, 0x0D);
+            window.postSysVirtualKey(false, 0x12);
+            platform.pump();
+            List<org.glavo.himari.layout.input.KeyEvent> sysKeys = window.takeKeyEvents();
+            assertEquals(2, sysKeys.size());
+            assertEquals(LogicalKey.ENTER, sysKeys.get(0).key());
+            assertTrue(sysKeys.get(0).alt());
+            assertEquals(KeyEventType.DOWN, sysKeys.get(0).type());
+            assertEquals(LogicalKey.ENTER, sysKeys.get(1).key());
+            assertEquals(KeyEventType.UP, sysKeys.get(1).type());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Publishes table headers through generated `ITableProvider` and `ITableItemProvider`.
+    @Test
+    void tableHeadersRoundTripThroughGeneratedUia() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "TableHeaders", 64.0, 64.0);
+            platform.pump();
+            LayoutTree tree = new LayoutTree();
+            LayoutFactory factory = new LayoutFactory(tree);
+            LayoutNode table = factory.leaf(
+                    "people",
+                    new Size(160.0f, 40.0f),
+                    List.of(),
+                    false,
+                    SemanticsRole.TABLE,
+                    "People",
+                    java.util.Set.of(),
+                    null
+            );
+            table.setGrid(new SemanticsGrid(
+                    1,
+                    2,
+                    new String[] {"Name", "Value"},
+                    new String[] {"A"}
+            ));
+            LayoutNode cell = factory.leaf(
+                    "cell",
+                    new Size(80.0f, 20.0f),
+                    List.of(),
+                    false,
+                    SemanticsRole.TABLE_CELL,
+                    "r0c1",
+                    java.util.Set.of(),
+                    null
+            );
+            cell.setGridItem(new SemanticsGridItem(0, 1, 1, 1, "Value", "A"));
+            tree.setRoot(table);
+            tree.measure(Constraints.loose(400.0f, 400.0f));
+            tree.place();
+            try (WindowsAutomationProvider grid = window.automationProvider(table)) {
+                assertEquals(2, grid.invokeColumnHeaders());
+                assertEquals(1, grid.invokeRowHeaders());
+                assertArrayEquals(
+                        new int[] {2, 0},
+                        grid.invokePropertyValueInts(
+                                WindowsAutomationProvider.UIA_TABLE_COLUMN_HEADERS_PROPERTY_ID
+                        )
+                );
+                assertArrayEquals(
+                        new int[] {1, 0},
+                        grid.invokePropertyValueInts(
+                                WindowsAutomationProvider.UIA_TABLE_ROW_HEADERS_PROPERTY_ID
+                        )
+                );
+                assertEquals("Name", grid.invokeColumnHeaderName(0));
+                assertEquals("Value", grid.invokeColumnHeaderName(1));
+                assertEquals(
+                        WindowsAutomationProvider.UIA_HEADER_ITEM_CONTROL_TYPE_ID,
+                        grid.invokeColumnHeaderControlType(0)
+                );
+                assertEquals("A", grid.invokeRowHeaderName(0));
+                assertEquals(
+                        WindowsAutomationProvider.UIA_HEADER_ITEM_CONTROL_TYPE_ID,
+                        grid.invokeRowHeaderControlType(0)
+                );
+            }
+            try (WindowsAutomationProvider item = window.automationProvider(cell)) {
+                assertEquals(1, item.invokeColumnHeaderItems());
+                assertEquals(1, item.invokeRowHeaderItems());
+                assertArrayEquals(
+                        new int[] {1, 0},
+                        item.invokePropertyValueInts(
+                                WindowsAutomationProvider.UIA_TABLE_ITEM_COLUMN_HEADER_ITEMS_PROPERTY_ID
+                        )
+                );
+                assertArrayEquals(
+                        new int[] {1, 0},
+                        item.invokePropertyValueInts(
+                                WindowsAutomationProvider.UIA_TABLE_ITEM_ROW_HEADER_ITEMS_PROPERTY_ID
+                        )
+                );
+                assertEquals("Value", item.invokeColumnHeaderItemName());
+            }
         } finally {
             platform.close();
         }

@@ -91,13 +91,17 @@ final class FirstStableLeftoversTest {
         assertEquals(SbixSampleFont.TAG_PNG, png.graphicType());
     }
 
-    /// SVG documents come from [`SfntFont#svgDocument(int)`].
+    /// SVG documents, including gzip payloads, come from [`SfntFont#svgDocument(int)`].
     @Test
     void svgDocumentUsesShippedEntry() {
         SfntFont font = SvgSampleFont.create();
         assertEquals(SvgSampleFont.DOCUMENT, font.svgDocument(SvgSampleFont.GLYPH_A));
         assertEquals(null, font.svgDocument(0));
-        assertThrows(IllegalArgumentException.class, () -> new SfntFont(SvgSampleFont.compressedBytes()));
+        assertEquals(
+                SvgSampleFont.DOCUMENT,
+                new SfntFont(SvgSampleFont.compressedBytes()).svgDocument(SvgSampleFont.GLYPH_A)
+        );
+        assertThrows(IllegalArgumentException.class, () -> new SfntFont(SvgSampleFont.truncatedGzipBytes()));
     }
 
     /// `OS/2` and `name` family come from [`SfntFont#weightClass()`] and [`SfntFont#familyName()`].
@@ -182,5 +186,14 @@ final class FirstStableLeftoversTest {
                 ColrV1SampleFont.bytes().toArray(java.lang.foreign.ValueLayout.JAVA_BYTE));
         SfntFont font = new SfntFont(woff2);
         assertEquals(2, font.colorLayers(ColrV1SampleFont.GLYPH_BASE).size());
+    }
+
+    /// WOFF2 unwrap inflates a Brotli static-dictionary distance through [`Woff2File#unwrap`].
+    @Test
+    void woff2StaticDictionaryInflatesThroughUnwrap() {
+        byte[] sfnt = SvgSampleFont.bytes().toArray(java.lang.foreign.ValueLayout.JAVA_BYTE);
+        byte[] woff2 = Woff2File.wrapWithStaticDictionary(sfnt);
+        SfntFont font = new SfntFont(woff2);
+        assertEquals(SvgSampleFont.DOCUMENT, font.svgDocument(SvgSampleFont.GLYPH_A));
     }
 }

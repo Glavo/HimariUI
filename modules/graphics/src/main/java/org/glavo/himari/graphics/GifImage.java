@@ -11,8 +11,10 @@ import java.util.Objects;
 /// Encodes and decodes GIF89a images as unassociated sRGB RGBA.
 ///
 /// The encoder builds a global color table of at most 256 unique opaque colors and writes one
-/// image descriptor with LZW. The decoder reads the first image block of a GIF87a or GIF89a
-/// stream. Transparent pixels decode as alpha `0`.
+/// image descriptor with LZW. [`#encodeAnimated(int, int, byte[]...)`] writes a Netscape loop
+/// block and one graphic-control plus image descriptor per frame. [`#decode(byte[])`] composites
+/// every image block with disposal methods 1 and 2 and returns the last canvas. Transparent
+/// pixels decode as alpha `0`.
 @NotNullByDefault
 public final class GifImage {
     /// Maximum color-table entries.
@@ -100,11 +102,141 @@ public final class GifImage {
         return sink.toArray();
     }
 
-    /// Decodes the first image of a GIF87a or GIF89a stream.
+    /// Encodes two or more full-size frames as a GIF89a animation.
+    ///
+    /// Each frame uses a local color table and graphic-control disposal 1 (do not dispose).
+    /// [`#encodeAnimatedClear(int, int, byte[]...)`] writes disposal 2 (restore to background).
+    /// Distinct colors per frame are limited to 256.
+    ///
+    /// @param width the positive pixel width
+    /// @param height the positive pixel height
+    /// @param frames at least two `width * height * 4` rasters
+    /// @return the GIF bytes
+    public static byte @Unmodifiable [] encodeAnimated(int width, int height, byte[]... frames) {
+        return encodeAnimatedFrames(width, height, 1, frames);
+    }
+
+    /// Encodes two or more full-size frames as a GIF89a animation with disposal method 2.
+    ///
+    /// After each frame is displayed the painted rectangle is restored to transparent black.
+    /// Distinct colors per frame are limited to 256.
+    ///
+    /// @param width the positive pixel width
+    /// @param height the positive pixel height
+    /// @param frames at least two `width * height * 4` rasters
+    /// @return the GIF bytes
+    public static byte @Unmodifiable [] encodeAnimatedClear(int width, int height, byte[]... frames) {
+        return encodeAnimatedFrames(width, height, 2, frames);
+    }
+
+    /// Encodes animated frames with the given graphic-control disposal method.
+    ///
+    /// @param width the positive pixel width
+    /// @param height the positive pixel height
+    /// @param disposal `1` (do not dispose) or `2` (restore to background)
+    /// @param frames at least two rasters
+    private static byte @Unmodifiable [] encodeAnimatedFrames(
+            int width,
+            int height,
+            int disposal,
+            byte[]... frames
+    ) {
+        Objects.requireNonNull(frames, "frames");
+        if (frames.length < 2) {
+            throw new IllegalArgumentException("GIF animation requires at least two frames");
+        }
+        if (disposal != 1 && disposal != 2) {
+            throw new IllegalArgumentException("GIF disposal must be 1 or 2");
+        }
+        int pixelCount = checkedPixelCount(width, height);
+        for (byte[] frame : frames) {
+            Objects.requireNonNull(frame, "frame");
+            if (frame.length != pixelCount * 4) {
+                throw new IllegalArgumentException("RGBA length must be width * height * 4");
+            }
+        }
+        ByteSink sink = new ByteSink();
+        sink.bytes(new byte[] {'G', 'I', 'F', '8', '9', 'a'});
+        sink.u16(width);
+        sink.u16(height);
+        sink.u8(0x70);
+        sink.u8(0);
+        sink.u8(0);
+        sink.bytes(new byte[] {0x21, (byte) 0xFF, 0x0B});
+        sink.bytes(new byte[] {'N', 'E', 'T', 'S', 'C', 'A', 'P', 'E', '2', '.', '0'});
+        sink.u8(3);
+        sink.u8(1);
+        sink.u16(0);
+        sink.u8(0);
+        for (byte[] frame : frames) {
+            int[] colors = new int[pixelCount];
+            for (int index = 0; index < pixelCount; index++) {
+                int offset = index * 4;
+                colors[index] = rgb(frame[offset], frame[offset + 1], frame[offset + 2]);
+            }
+            int[] palette = palette(colors);
+            int[] indexMap = new int[pixelCount];
+            for (int index = 0; index < pixelCount; index++) {
+                indexMap[index] = nearest(palette, colors[index]);
+            }
+            int paletteBits = 1;
+            while ((1 << paletteBits) < palette.length) {
+                paletteBits++;
+            }
+            paletteBits = Math.max(2, paletteBits);
+            int tableSize = 1 << paletteBits;
+            sink.u8(0x21);
+            sink.u8(0xF9);
+            sink.u8(4);
+            sink.u8(disposal << 2);
+            sink.u16(10);
+            sink.u8(0);
+            sink.u8(0);
+            sink.u8(0x2C);
+            sink.u16(0);
+            sink.u16(0);
+            sink.u16(width);
+            sink.u16(height);
+            sink.u8(0x80 | (paletteBits - 1));
+            for (int index = 0; index < tableSize; index++) {
+                int color = index < palette.length ? palette[index] : 0;
+                sink.u8(color >>> 16);
+                sink.u8(color >>> 8);
+                sink.u8(color);
+            }
+            int minCode = Math.max(2, paletteBits);
+            sink.u8(minCode);
+            byte[] packed = lzwEncode(indexMap, minCode);
+            int offset = 0;
+            while (offset < packed.length) {
+                int block = Math.min(255, packed.length - offset);
+                sink.u8(block);
+                sink.raw(packed, offset, block);
+                offset += block;
+            }
+            sink.u8(0);
+        }
+        sink.u8(0x3B);
+        return sink.toArray();
+    }
+
+    /// Decodes a GIF87a or GIF89a stream, compositing every image block.
     ///
     /// @param bytes the GIF stream
-    /// @return the decoded image
+    /// @return the last composited canvas
     public static Decoded decode(byte[] bytes) {
+        Decoded[] frames = decodeFrames(bytes);
+        return frames[frames.length - 1];
+    }
+
+    /// Decodes every composited frame of a GIF87a or GIF89a stream.
+    ///
+    /// Disposal method 1 leaves the canvas. Disposal method 2 restores the painted rectangle to
+    /// transparent black before the next frame. Other disposal values are treated as method 1.
+    ///
+    /// @param bytes the GIF stream
+    /// @return one canvas snapshot per image block
+    public static Decoded @Unmodifiable [] decodeFrames(byte[] bytes) {
         Objects.requireNonNull(bytes, "bytes");
         if (!isGif(bytes)) {
             throw new IllegalArgumentException("GIF signature is missing");
@@ -122,7 +254,9 @@ public final class GifImage {
             global = readTable(source, packed & 0x07);
         }
         int transparent = -1;
-        int[] local = global;
+        int disposal = 1;
+        byte[] canvas = new byte[width * height * 4];
+        ArrayList<Decoded> frames = new ArrayList<>();
         while (source.remaining() > 0) {
             int introducer = source.u8();
             if (introducer == 0x3B) {
@@ -136,8 +270,9 @@ public final class GifImage {
                     source.u16();
                     int index = source.u8();
                     source.u8();
-                    if (size >= 4 && (flags & 0x01) != 0) {
-                        transparent = index;
+                    if (size >= 4) {
+                        disposal = (flags >>> 2) & 0x07;
+                        transparent = (flags & 0x01) != 0 ? index : -1;
                     }
                 } else {
                     skipSubBlocks(source);
@@ -147,37 +282,59 @@ public final class GifImage {
             if (introducer != 0x2C) {
                 throw new IllegalArgumentException("GIF block is unsupported");
             }
-            source.u16();
-            source.u16();
+            int left = source.u16();
+            int top = source.u16();
             int imageWidth = source.u16();
             int imageHeight = source.u16();
             int imagePacked = source.u8();
+            int[] local = global;
             if ((imagePacked & 0x80) != 0) {
                 local = readTable(source, imagePacked & 0x07);
             }
             int minCode = source.u8();
             byte[] compressed = readSubBlocks(source);
             int[] indices = lzwDecode(compressed, minCode, imageWidth * imageHeight);
-            byte[] rgba = new byte[width * height * 4];
-            int limitX = Math.min(width, imageWidth);
-            int limitY = Math.min(height, imageHeight);
+            int limitX = Math.min(width - left, imageWidth);
+            int limitY = Math.min(height - top, imageHeight);
             for (int y = 0; y < limitY; y++) {
                 for (int x = 0; x < limitX; x++) {
+                    if (left + x < 0 || top + y < 0) {
+                        continue;
+                    }
                     int colorIndex = indices[y * imageWidth + x] & 0xFF;
-                    int dest = (y * width + x) * 4;
+                    int dest = ((top + y) * width + (left + x)) * 4;
                     if (colorIndex == transparent || colorIndex >= local.length) {
                         continue;
                     }
                     int color = local[colorIndex];
-                    rgba[dest] = (byte) (color >>> 16);
-                    rgba[dest + 1] = (byte) (color >>> 8);
-                    rgba[dest + 2] = (byte) color;
-                    rgba[dest + 3] = (byte) 255;
+                    canvas[dest] = (byte) (color >>> 16);
+                    canvas[dest + 1] = (byte) (color >>> 8);
+                    canvas[dest + 2] = (byte) color;
+                    canvas[dest + 3] = (byte) 255;
                 }
             }
-            return new Decoded(width, height, rgba);
+            frames.add(new Decoded(width, height, Arrays.copyOf(canvas, canvas.length)));
+            if (disposal == 2) {
+                for (int y = 0; y < limitY; y++) {
+                    for (int x = 0; x < limitX; x++) {
+                        if (left + x < 0 || top + y < 0) {
+                            continue;
+                        }
+                        int dest = ((top + y) * width + (left + x)) * 4;
+                        canvas[dest] = 0;
+                        canvas[dest + 1] = 0;
+                        canvas[dest + 2] = 0;
+                        canvas[dest + 3] = 0;
+                    }
+                }
+            }
+            transparent = -1;
+            disposal = 1;
         }
-        throw new IllegalArgumentException("GIF image block is missing");
+        if (frames.isEmpty()) {
+            throw new IllegalArgumentException("GIF image block is missing");
+        }
+        return frames.toArray(Decoded[]::new);
     }
 
     /// Builds a palette of at most 256 colors.
