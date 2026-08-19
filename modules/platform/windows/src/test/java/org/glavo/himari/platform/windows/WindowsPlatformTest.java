@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -238,6 +239,7 @@ final class WindowsPlatformTest {
             assertEquals(2, keys.size());
             assertEquals(LogicalKey.ENTER, keys.get(0).key());
             assertEquals(0x1C, keys.get(0).scanCode());
+            assertTrue(keys.get(0).timestampMillis() > 0L);
             assertFalse(keys.get(0).repeat());
             assertEquals(LogicalKey.ESCAPE, keys.get(1).key());
             assertEquals(0x01, keys.get(1).scanCode());
@@ -252,8 +254,14 @@ final class WindowsPlatformTest {
             assertEquals(2, metaKeys.size());
             assertEquals(LogicalKey.META, metaKeys.get(0).key());
             assertTrue(metaKeys.get(0).meta());
+            assertEquals(org.glavo.himari.layout.input.KeyLocation.LEFT, metaKeys.get(0).location());
             assertEquals(LogicalKey.TAB, metaKeys.get(1).key());
             assertTrue(metaKeys.get(1).meta());
+            window.postVirtualKey(true, 0x5C);
+            platform.pump();
+            List<org.glavo.himari.layout.input.KeyEvent> rightMeta = window.takeKeyEvents();
+            assertEquals(LogicalKey.META, rightMeta.getFirst().key());
+            assertEquals(org.glavo.himari.layout.input.KeyLocation.RIGHT, rightMeta.getFirst().location());
             assertEquals(PointerEventType.DOWN, pointers.get(2).type());
             assertEquals(PointerEvent.BUTTON_X1, pointers.get(2).buttons());
             assertEquals(8.0f, pointers.get(2).x());
@@ -531,6 +539,285 @@ final class WindowsPlatformTest {
             assertTrue(delivered.sequenceId() > 0);
             assertTrue(delivered.timestampMillis() > 0L);
             assertFalse(delivered.synthetic());
+            java.lang.foreign.MemorySegment touchPacked = java.lang.foreign.Arena.ofAuto().allocate(
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_TOUCH_INFO
+            );
+            touchPacked.fill((byte) 0);
+            touchPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_TOUCH_INFO_TOUCHMASK_OFFSET,
+                    WindowsNativeWindow.TOUCH_MASK_CONTACTAREA
+                            | WindowsNativeWindow.TOUCH_MASK_ORIENTATION
+            );
+            touchPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_TOUCH_INFO_RCCONTACTLEFT_OFFSET,
+                    10
+            );
+            touchPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_TOUCH_INFO_RCCONTACTTOP_OFFSET,
+                    20
+            );
+            touchPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_TOUCH_INFO_RCCONTACTRIGHT_OFFSET,
+                    18
+            );
+            touchPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_TOUCH_INFO_RCCONTACTBOTTOM_OFFSET,
+                    32
+            );
+            touchPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_TOUCH_INFO_ORIENTATION_OFFSET,
+                    45
+            );
+            WindowsNativeWindow.ContactArea decoded = WindowsNativeWindow.decodeTouchInfo(touchPacked);
+            assertEquals(8.0f, decoded.width(), 0.001f);
+            assertEquals(12.0f, decoded.height(), 0.001f);
+            assertEquals(45.0f, decoded.orientation(), 0.001f);
+            WindowsNativeWindow.ContactArea missingTouch = window.queryTouchInfo(0x00FFFFFF);
+            assertEquals(0.0f, missingTouch.width());
+            assertEquals(0.0f, missingTouch.height());
+            window.postTouch(
+                    PointerEventType.DOWN,
+                    6,
+                    7,
+                    9,
+                    new WindowsNativeWindow.ContactArea(8.0f, 12.0f, 45.0f)
+            );
+            platform.pump();
+            PointerEvent touch = window.takePointerEvents().getLast();
+            assertEquals(PointerDeviceKind.TOUCH, touch.device());
+            assertEquals(9, touch.pointerId());
+            assertEquals(8.0f, touch.contactWidth(), 0.001f);
+            assertEquals(12.0f, touch.contactHeight(), 0.001f);
+            assertEquals(45.0f, touch.orientation(), 0.001f);
+            assertFalse(touch.synthetic());
+            java.lang.foreign.MemorySegment infoPacked = java.lang.foreign.Arena.ofAuto().allocate(
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO
+            );
+            infoPacked.fill((byte) 0);
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_FRAMEID_OFFSET,
+                    42
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_POINTERFLAGS_OFFSET,
+                    WindowsNativeWindow.POINTER_FLAG_INRANGE
+                            | WindowsNativeWindow.POINTER_FLAG_INCONTACT
+                            | WindowsNativeWindow.POINTER_FLAG_CANCELED
+                            | WindowsNativeWindow.POINTER_FLAG_PRIMARY
+                            | WindowsNativeWindow.POINTER_FLAG_FIRSTBUTTON
+                            | WindowsNativeWindow.POINTER_FLAG_SECONDBUTTON
+                            | WindowsNativeWindow.POINTER_FLAG_THIRDBUTTON
+                            | WindowsNativeWindow.POINTER_FLAG_FOURTHBUTTON
+                            | WindowsNativeWindow.POINTER_FLAG_FIFTHBUTTON
+                            | WindowsNativeWindow.POINTER_FLAG_NEW
+                            | WindowsNativeWindow.POINTER_FLAG_CONFIDENCE
+                            | WindowsNativeWindow.POINTER_FLAG_DOWN
+                            | WindowsNativeWindow.POINTER_FLAG_UPDATE
+                            | WindowsNativeWindow.POINTER_FLAG_WHEEL
+                            | WindowsNativeWindow.POINTER_FLAG_HWHEEL
+                            | WindowsNativeWindow.POINTER_FLAG_CAPTURECHANGED
+                            | WindowsNativeWindow.POINTER_FLAG_HASTRANSFORM
+                            | WindowsNativeWindow.POINTER_FLAG_UP
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_HISTORYCOUNT_OFFSET,
+                    3
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_KEYSTATES_OFFSET,
+                    WindowsNativeWindow.POINTER_MOD_SHIFT | WindowsNativeWindow.POINTER_MOD_CTRL
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_BUTTONCHANGETYPE_OFFSET,
+                    WindowsNativeWindow.POINTER_CHANGE_FIRSTBUTTON_DOWN
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_INPUTDATA_OFFSET,
+                    7
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_LONG,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_PERFORMANCECOUNT_OFFSET,
+                    1234567890123L
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_PIXELLOCATIONRAWX_OFFSET,
+                    100
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_PIXELLOCATIONRAWY_OFFSET,
+                    200
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_HIMETRICLOCATIONX_OFFSET,
+                    2540
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_HIMETRICLOCATIONY_OFFSET,
+                    5080
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_HIMETRICLOCATIONRAWX_OFFSET,
+                    3810
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_HIMETRICLOCATIONRAWY_OFFSET,
+                    7620
+            );
+            infoPacked.set(
+                    java.lang.foreign.ValueLayout.JAVA_INT,
+                    org.glavo.himari.platform.windows.generated.Win32Layouts.POINTER_INFO_DWTIME_OFFSET,
+                    12345
+            );
+            WindowsNativeWindow.PointerFlags decodedFlags = WindowsNativeWindow.decodePointerInfo(infoPacked);
+            assertEquals(42, decodedFlags.frameId());
+            assertEquals(3, decodedFlags.historyCount());
+            assertEquals(7, decodedFlags.inputData());
+            assertEquals(1234567890123L, decodedFlags.performanceCount());
+            assertEquals(100, decodedFlags.rawX());
+            assertEquals(200, decodedFlags.rawY());
+            assertEquals(2540, decodedFlags.himetricX());
+            assertEquals(5080, decodedFlags.himetricY());
+            assertEquals(3810, decodedFlags.himetricRawX());
+            assertEquals(7620, decodedFlags.himetricRawY());
+            assertEquals(12345, decodedFlags.pointerTime());
+            assertEquals(
+                    WindowsNativeWindow.POINTER_MOD_SHIFT | WindowsNativeWindow.POINTER_MOD_CTRL,
+                    decodedFlags.keyStates()
+            );
+            assertEquals(WindowsNativeWindow.POINTER_CHANGE_FIRSTBUTTON_DOWN, decodedFlags.buttonChangeType());
+            assertTrue(decodedFlags.inRange());
+            assertTrue(decodedFlags.inContact());
+            assertTrue(decodedFlags.canceled());
+            assertTrue(decodedFlags.primary());
+            assertTrue(decodedFlags.firstButton());
+            assertTrue(decodedFlags.secondButton());
+            assertTrue(decodedFlags.thirdButton());
+            assertTrue(decodedFlags.fourthButton());
+            assertTrue(decodedFlags.fifthButton());
+            assertTrue(decodedFlags.newPointer());
+            assertTrue(decodedFlags.confidence());
+            assertTrue(decodedFlags.down());
+            assertTrue(decodedFlags.update());
+            assertTrue(decodedFlags.wheel());
+            assertTrue(decodedFlags.horizontalWheel());
+            assertTrue(decodedFlags.captureChanged());
+            assertTrue(decodedFlags.hasTransform());
+            assertTrue(decodedFlags.up());
+            WindowsNativeWindow.PointerFlags missingFlags = window.queryPointerInfo(0x00FFFFFF);
+            assertEquals(0, missingFlags.frameId());
+            assertEquals(0, missingFlags.historyCount());
+            assertEquals(0, missingFlags.keyStates());
+            assertEquals(0, missingFlags.buttonChangeType());
+            assertEquals(0, missingFlags.inputData());
+            assertEquals(0L, missingFlags.performanceCount());
+            assertEquals(0, missingFlags.rawX());
+            assertEquals(0, missingFlags.rawY());
+            assertEquals(0, missingFlags.himetricX());
+            assertEquals(0, missingFlags.himetricY());
+            assertEquals(0, missingFlags.himetricRawX());
+            assertEquals(0, missingFlags.himetricRawY());
+            assertEquals(0, missingFlags.pointerTime());
+            assertFalse(missingFlags.inRange());
+            assertFalse(missingFlags.inContact());
+            assertFalse(missingFlags.canceled());
+            assertFalse(missingFlags.primary());
+            assertFalse(missingFlags.firstButton());
+            assertFalse(missingFlags.secondButton());
+            assertFalse(missingFlags.thirdButton());
+            assertFalse(missingFlags.fourthButton());
+            assertFalse(missingFlags.fifthButton());
+            assertFalse(missingFlags.newPointer());
+            assertFalse(missingFlags.confidence());
+            assertFalse(missingFlags.down());
+            assertFalse(missingFlags.update());
+            assertFalse(missingFlags.wheel());
+            assertFalse(missingFlags.horizontalWheel());
+            assertFalse(missingFlags.captureChanged());
+            assertFalse(missingFlags.hasTransform());
+            assertFalse(missingFlags.up());
+            window.installPointerFlags(
+                    11,
+                    new WindowsNativeWindow.PointerFlags(
+                            42, true, true, true, true, true, true, true, true, true, true, true,
+                            true, true, true, true, true, true, true, 3,
+                            WindowsNativeWindow.POINTER_MOD_SHIFT | WindowsNativeWindow.POINTER_MOD_CTRL,
+                            WindowsNativeWindow.POINTER_CHANGE_FIRSTBUTTON_DOWN,
+                            7,
+                            1234567890123L,
+                            100,
+                            200,
+                            2540,
+                            5080,
+                            3810,
+                            7620,
+                            12345
+                    )
+            );
+            window.postTouch(
+                    PointerEventType.DOWN,
+                    8,
+                    9,
+                    11,
+                    new WindowsNativeWindow.ContactArea(4.0f, 6.0f, 15.0f)
+            );
+            platform.pump();
+            PointerEvent flagged = window.takePointerEvents().getLast();
+            assertEquals(PointerDeviceKind.TOUCH, flagged.device());
+            assertEquals(11, flagged.pointerId());
+            assertTrue(flagged.inRange());
+            assertTrue(flagged.inContact());
+            assertEquals(42, flagged.frameId());
+            assertTrue(flagged.canceled());
+            assertTrue(flagged.primary());
+            assertTrue(flagged.firstButton());
+            assertTrue(flagged.secondButton());
+            assertTrue(flagged.thirdButton());
+            assertTrue(flagged.fourthButton());
+            assertTrue(flagged.fifthButton());
+            assertTrue(flagged.newPointer());
+            assertTrue(flagged.confidence());
+            assertTrue(flagged.down());
+            assertTrue(flagged.update());
+            assertTrue(flagged.wheel());
+            assertTrue(flagged.horizontalWheel());
+            assertTrue(flagged.captureChanged());
+            assertTrue(flagged.hasTransform());
+            assertTrue(flagged.up());
+            assertEquals(3, flagged.historyCount());
+            assertEquals(
+                    WindowsNativeWindow.POINTER_MOD_SHIFT | WindowsNativeWindow.POINTER_MOD_CTRL,
+                    flagged.keyStates()
+            );
+            assertEquals(WindowsNativeWindow.POINTER_CHANGE_FIRSTBUTTON_DOWN, flagged.buttonChangeType());
+            assertEquals(7, flagged.inputData());
+            assertEquals(1234567890123L, flagged.performanceCount());
+            assertEquals(100, flagged.rawX());
+            assertEquals(200, flagged.rawY());
+            assertEquals(2540, flagged.himetricX());
+            assertEquals(5080, flagged.himetricY());
+            assertEquals(3810, flagged.himetricRawX());
+            assertEquals(7620, flagged.himetricRawY());
+            assertEquals(12345, flagged.pointerTime());
+            assertFalse(flagged.synthetic());
         } finally {
             platform.close();
         }
@@ -1007,6 +1294,10 @@ final class WindowsPlatformTest {
                             1,
                             readOnly.invokePropertyValue(WindowsAutomationProvider.UIA_IS_READ_ONLY_PROPERTY_ID)
                     );
+                    assertEquals(
+                            1,
+                            readOnly.invokePropertyValue(WindowsAutomationProvider.UIA_VALUE_IS_READ_ONLY_PROPERTY_ID)
+                    );
                 }
                 incrementLive.setReadOnly(false);
                 incrementLive.setHint("Increases the counter");
@@ -1039,6 +1330,26 @@ final class WindowsPlatformTest {
                 incrementLive.setAcceleratorKey("Ctrl+I");
                 incrementLive.setRequired(true);
                 incrementLive.setItemStatus("busy");
+                incrementLive.setItemType("button");
+                incrementLive.setLandmarkType(WindowsAutomationProvider.LANDMARK_TYPE_MAIN);
+                incrementLive.setLocalizedLandmarkType("main");
+                incrementLive.setAriaRole("button");
+                incrementLive.setAriaProperties("pressed=false");
+                incrementLive.setControllerFor("counter");
+                incrementLive.setDescribedBy("hint");
+                incrementLive.setFlowsTo("status");
+                incrementLive.setLabeledBy("title");
+                incrementLive.setFlowsFrom("header");
+                incrementLive.setOptimizeForVisualContent(true);
+                incrementLive.setFillColor(0xFF1565C0);
+                incrementLive.setOutlineColor(0xFFE0E0E0);
+                incrementLive.setFillType(WindowsAutomationProvider.FILL_TYPE_COLOR);
+                incrementLive.setVisualEffects(WindowsAutomationProvider.VISUAL_EFFECTS_SHADOW);
+                incrementLive.setOutlineThickness(2);
+                incrementLive.setRotation(90);
+                incrementLive.setPeripheral(true);
+                incrementLive.setAnnotationType(60000);
+                incrementLive.setAnnotationObjects("note");
                 incrementLive.setLocale("en-US");
                 incrementLive.setLevel(2);
                 incrementLive.setPositionInSet(1);
@@ -1097,6 +1408,102 @@ final class WindowsPlatformTest {
                             "busy",
                             keys.invokePropertyValueString(
                                     WindowsAutomationProvider.UIA_ITEM_STATUS_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "button",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_ITEM_TYPE_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            WindowsAutomationProvider.LANDMARK_TYPE_MAIN,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_LANDMARK_TYPE_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "main",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_LOCALIZED_LANDMARK_TYPE_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "button",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_ARIA_ROLE_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "pressed=false",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_ARIA_PROPERTIES_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "counter",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_CONTROLLER_FOR_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "hint",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_DESCRIBED_BY_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "status",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_FLOWS_TO_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "title",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_LABELED_BY_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "header",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_FLOWS_FROM_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            1,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_OPTIMIZE_FOR_VISUAL_CONTENT_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            0xFF1565C0,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_FILL_COLOR_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            0xFFE0E0E0,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_OUTLINE_COLOR_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            WindowsAutomationProvider.FILL_TYPE_COLOR,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_FILL_TYPE_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            WindowsAutomationProvider.VISUAL_EFFECTS_SHADOW,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_VISUAL_EFFECTS_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            2,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_OUTLINE_THICKNESS_PROPERTY_ID
                             )
                     );
                     assertEquals(
@@ -1176,6 +1583,42 @@ final class WindowsPlatformTest {
                             click[1],
                             0.01f
                     );
+                    float[] center = keys.invokeCenterPoint();
+                    assertEquals(click[0], center[0], 0.01f);
+                    assertEquals(click[1], center[1], 0.01f);
+                    assertEquals(
+                            90,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_ROTATION_PROPERTY_ID
+                            )
+                    );
+                    float[] size = keys.invokeSize();
+                    assertEquals(increment.bounds().width(), size[0], 0.01f);
+                    assertEquals(increment.bounds().height(), size[1], 0.01f);
+                    assertEquals(
+                            (int) incrementLive.id(),
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_RUNTIME_ID_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            1,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_IS_PERIPHERAL_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            60000,
+                            keys.invokePropertyValue(
+                                    WindowsAutomationProvider.UIA_ANNOTATION_TYPES_PROPERTY_ID
+                            )
+                    );
+                    assertEquals(
+                            "note",
+                            keys.invokePropertyValueString(
+                                    WindowsAutomationProvider.UIA_ANNOTATION_OBJECTS_PROPERTY_ID
+                            )
+                    );
                 }
                 LayoutFactory factory = new LayoutFactory(tree);
                 LayoutNode slider = factory.leaf(
@@ -1236,10 +1679,40 @@ final class WindowsPlatformTest {
                     );
                 }
                 assertTrue(provider.invokePatternProvider(WindowsAutomationProvider.UIA_INVOKE_PATTERN_ID));
+                assertEquals(
+                        1,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_INVOKE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_VALUE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(1, provider.invoke());
                 assertTrue(provider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_SYNCHRONIZED_INPUT_PATTERN_ID
                 ));
+                assertEquals(
+                        1,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SYNCHRONIZED_INPUT_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_OBJECT_MODEL_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_ANNOTATION_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(
                         1,
                         provider.startListening(WindowsAutomationProvider.SYNCHRONIZED_INPUT_KEY_DOWN)
@@ -1249,15 +1722,74 @@ final class WindowsPlatformTest {
                         WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_PATTERN_ID
                 ));
                 assertEquals(0, provider.legacyChildId());
+                assertEquals(
+                        0,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_CHILD_ID_PROPERTY_ID
+                        )
+                );
                 assertEquals(increment.label(), provider.legacyName());
+                assertEquals(
+                        increment.label(),
+                        provider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_NAME_PROPERTY_ID
+                        )
+                );
                 assertEquals(WindowsAutomationProvider.ROLE_SYSTEM_PUSHBUTTON, provider.legacyRole());
+                assertEquals(
+                        WindowsAutomationProvider.ROLE_SYSTEM_PUSHBUTTON,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_ROLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(2, provider.invokeLegacyDefaultAction());
                 assertEquals(increment.label(), provider.legacyValue());
+                assertEquals(
+                        increment.label(),
+                        provider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_VALUE_PROPERTY_ID
+                        )
+                );
                 assertEquals(WindowsAutomationProvider.STATE_SYSTEM_FOCUSABLE, provider.legacyState());
+                assertEquals(
+                        WindowsAutomationProvider.STATE_SYSTEM_FOCUSABLE,
+                        provider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_STATE_PROPERTY_ID
+                        )
+                );
                 assertEquals(increment.label(), provider.legacyDescription());
+                assertEquals(
+                        increment.label(),
+                        provider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_DESCRIPTION_PROPERTY_ID
+                        )
+                );
                 assertEquals("Press", provider.legacyDefaultAction());
+                assertEquals(
+                        "Press",
+                        provider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_DEFAULT_ACTION_PROPERTY_ID
+                        )
+                );
                 assertEquals("", provider.legacyKeyboardShortcut());
+                assertEquals(
+                        "",
+                        provider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_KEYBOARD_SHORTCUT_PROPERTY_ID
+                        )
+                );
                 assertEquals(increment.label(), provider.legacyHelp());
+                assertTrue(
+                        provider.invokePropertyValueUnknown(
+                                WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_SELECTION_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        increment.label(),
+                        provider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_LEGACY_IACCESSIBLE_HELP_PROPERTY_ID
+                        )
+                );
                 assertTrue(provider.invokeFragmentNavigate(WindowsAutomationProvider.NAVIGATE_DIRECTION_PARENT));
                 assertFalse(provider.invokeFragmentNavigate(1));
                 assertEquals(1, provider.invokeFragmentSetFocus());
@@ -1451,26 +1983,173 @@ final class WindowsPlatformTest {
             assertEquals(SemanticsLiveRegion.ASSERTIVE, alertNode.liveRegion());
             try (WindowsAutomationProvider toggleProvider = window.automationProvider(toggleNode)) {
                 assertTrue(toggleProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TOGGLE_PATTERN_ID));
+                assertEquals(
+                        1,
+                        toggleProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TOGGLE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        toggleProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SCROLL_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        toggleProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SELECTION_CAN_SELECT_MULTIPLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        toggleProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SCROLL_HORIZONTALLY_SCROLLABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        toggleProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SCROLL_VERTICALLY_SCROLLABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(WindowsAutomationProvider.TOGGLE_STATE_OFF, toggleProvider.toggleState());
+                assertEquals(
+                        WindowsAutomationProvider.TOGGLE_STATE_OFF,
+                        toggleProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TOGGLE_TOGGLE_STATE_PROPERTY_ID
+                        )
+                );
                 assertEquals(WindowsAutomationProvider.TOGGLE_STATE_ON, toggleProvider.toggle());
+                assertEquals(
+                        WindowsAutomationProvider.TOGGLE_STATE_ON,
+                        toggleProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TOGGLE_TOGGLE_STATE_PROPERTY_ID
+                        )
+                );
             }
             try (WindowsAutomationProvider rangeProvider = window.automationProvider(sliderNode)) {
                 assertTrue(rangeProvider.invokePatternProvider(WindowsAutomationProvider.UIA_RANGE_VALUE_PATTERN_ID));
+                assertEquals(
+                        1,
+                        rangeProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_RANGE_VALUE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(3.0, rangeProvider.rangeValue());
+                assertEquals(
+                        0.0,
+                        rangeProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_RANGE_VALUE_MINIMUM_PROPERTY_ID
+                        ),
+                        0.001
+                );
+                assertEquals(
+                        100.0,
+                        rangeProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_RANGE_VALUE_MAXIMUM_PROPERTY_ID
+                        ),
+                        0.001
+                );
+                assertEquals(
+                        0,
+                        rangeProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_RANGE_VALUE_IS_READ_ONLY_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.RANGE_LARGE_CHANGE,
+                        rangeProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_RANGE_VALUE_LARGE_CHANGE_PROPERTY_ID
+                        ),
+                        0.001
+                );
+                assertEquals(
+                        WindowsAutomationProvider.RANGE_SMALL_CHANGE,
+                        rangeProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_RANGE_VALUE_SMALL_CHANGE_PROPERTY_ID
+                        ),
+                        0.001
+                );
                 assertEquals(7.5, rangeProvider.setRangeValue(7.5));
                 assertEquals(7.5, rangeProvider.rangeValue());
             }
             try (WindowsAutomationProvider selectionProvider = window.automationProvider(optionNode)) {
                 assertTrue(selectionProvider.invokePatternProvider(WindowsAutomationProvider.UIA_SELECTION_ITEM_PATTERN_ID));
+                assertEquals(
+                        1,
+                        selectionProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SELECTION_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        selectionProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_EXPAND_COLLAPSE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertFalse(selectionProvider.itemSelected());
+                assertEquals(
+                        0,
+                        selectionProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SELECTION_ITEM_IS_SELECTED_PROPERTY_ID
+                        )
+                );
                 assertTrue(selectionProvider.selectItem());
+                assertEquals(
+                        1,
+                        selectionProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SELECTION_ITEM_IS_SELECTED_PROPERTY_ID
+                        )
+                );
                 assertFalse(selectionProvider.removeItemFromSelection());
+                assertEquals(
+                        0,
+                        selectionProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SELECTION_ITEM_IS_SELECTED_PROPERTY_ID
+                        )
+                );
+                assertTrue(
+                        selectionProvider.invokePropertyValueUnknown(
+                                WindowsAutomationProvider.UIA_SELECTION_ITEM_SELECTION_CONTAINER_PROPERTY_ID
+                        )
+                );
             }
             try (WindowsAutomationProvider expandProvider = window.automationProvider(itemNode)) {
                 assertTrue(expandProvider.invokePatternProvider(WindowsAutomationProvider.UIA_EXPAND_COLLAPSE_PATTERN_ID));
+                assertEquals(
+                        1,
+                        expandProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_EXPAND_COLLAPSE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        expandProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SELECTION_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(WindowsAutomationProvider.EXPAND_COLLAPSE_STATE_EXPANDED, expandProvider.expandState());
+                assertEquals(
+                        WindowsAutomationProvider.EXPAND_COLLAPSE_STATE_EXPANDED,
+                        expandProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_EXPAND_COLLAPSE_EXPAND_COLLAPSE_STATE_PROPERTY_ID
+                        )
+                );
                 assertEquals(WindowsAutomationProvider.EXPAND_COLLAPSE_STATE_COLLAPSED, expandProvider.collapse());
+                assertEquals(
+                        WindowsAutomationProvider.EXPAND_COLLAPSE_STATE_COLLAPSED,
+                        expandProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_EXPAND_COLLAPSE_EXPAND_COLLAPSE_STATE_PROPERTY_ID
+                        )
+                );
                 assertEquals(WindowsAutomationProvider.EXPAND_COLLAPSE_STATE_EXPANDED, expandProvider.expand());
+                assertEquals(
+                        WindowsAutomationProvider.EXPAND_COLLAPSE_STATE_EXPANDED,
+                        expandProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_EXPAND_COLLAPSE_EXPAND_COLLAPSE_STATE_PROPERTY_ID
+                        )
+                );
             }
             SemanticsNode tableNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.TABLE)
@@ -1478,9 +2157,45 @@ final class WindowsPlatformTest {
                     .orElseThrow();
             try (WindowsAutomationProvider gridProvider = window.automationProvider(tableNode)) {
                 assertTrue(gridProvider.invokePatternProvider(WindowsAutomationProvider.UIA_GRID_PATTERN_ID));
+                assertEquals(
+                        1,
+                        gridProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_GRID_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        gridProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_EXPAND_COLLAPSE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(gridProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TABLE_PATTERN_ID));
+                assertEquals(
+                        1,
+                        gridProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TABLE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        gridProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_GRID_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(2, gridProvider.gridRowCount());
+                assertEquals(
+                        2,
+                        gridProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_GRID_ROW_COUNT_PROPERTY_ID
+                        )
+                );
                 assertEquals(3, gridProvider.gridColumnCount());
+                assertEquals(
+                        3,
+                        gridProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_GRID_COLUMN_COUNT_PROPERTY_ID
+                        )
+                );
                 assertTrue(gridProvider.invokeGetItem(1, 2));
                 assertEquals(1, gridProvider.invokeFetchedItemRow());
                 assertEquals(2, gridProvider.invokeFetchedItemColumn());
@@ -1488,10 +2203,46 @@ final class WindowsPlatformTest {
                 assertFalse(gridProvider.invokeGetItem(2, 0));
                 assertEquals(0, gridProvider.invokeRowHeaders());
                 assertEquals(0, gridProvider.invokeColumnHeaders());
+                assertArrayEquals(
+                        new int[] {0, 0},
+                        gridProvider.invokePropertyValueInts(
+                                WindowsAutomationProvider.UIA_TABLE_ROW_HEADERS_PROPERTY_ID
+                        )
+                );
+                assertArrayEquals(
+                        new int[] {0, 0},
+                        gridProvider.invokePropertyValueInts(
+                                WindowsAutomationProvider.UIA_TABLE_COLUMN_HEADERS_PROPERTY_ID
+                        )
+                );
                 assertEquals(WindowsAutomationProvider.ROW_OR_COLUMN_MAJOR_ROW, gridProvider.rowOrColumnMajor());
+                assertEquals(
+                        WindowsAutomationProvider.ROW_OR_COLUMN_MAJOR_ROW,
+                        gridProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TABLE_ROW_OR_COLUMN_MAJOR_PROPERTY_ID
+                        )
+                );
                 assertTrue(gridProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_SPREADSHEET_PATTERN_ID
                 ));
+                assertEquals(
+                        1,
+                        gridProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SPREADSHEET_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        gridProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SPREADSHEET_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        gridProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_STYLES_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(gridProvider.invokeSpreadsheetItem("People"));
                 assertFalse(gridProvider.invokeSpreadsheetItem("missing"));
             }
@@ -1501,14 +2252,108 @@ final class WindowsPlatformTest {
                     .orElseThrow();
             try (WindowsAutomationProvider cellProvider = window.automationProvider(cellNode)) {
                 assertTrue(cellProvider.invokePatternProvider(WindowsAutomationProvider.UIA_GRID_ITEM_PATTERN_ID));
+                assertEquals(
+                        1,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_GRID_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TABLE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(cellProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TABLE_ITEM_PATTERN_ID));
+                assertEquals(
+                        1,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TABLE_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SELECTION_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(0, cellProvider.gridItemRow());
+                assertEquals(
+                        0,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_GRID_ITEM_ROW_PROPERTY_ID
+                        )
+                );
                 assertEquals(1, cellProvider.gridItemColumn());
+                assertEquals(
+                        1,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_GRID_ITEM_COLUMN_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        1,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_GRID_ITEM_ROW_SPAN_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        1,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_GRID_ITEM_COLUMN_SPAN_PROPERTY_ID
+                        )
+                );
+                assertTrue(
+                        cellProvider.invokePropertyValueUnknown(
+                                WindowsAutomationProvider.UIA_GRID_ITEM_CONTAINING_GRID_PROPERTY_ID
+                        )
+                );
                 assertEquals(0, cellProvider.invokeRowHeaderItems());
+                assertArrayEquals(
+                        new int[] {0, 0},
+                        cellProvider.invokePropertyValueInts(
+                                WindowsAutomationProvider.UIA_TABLE_ITEM_ROW_HEADER_ITEMS_PROPERTY_ID
+                        )
+                );
+                assertArrayEquals(
+                        new int[] {0, 0},
+                        cellProvider.invokePropertyValueInts(
+                                WindowsAutomationProvider.UIA_TABLE_ITEM_COLUMN_HEADER_ITEMS_PROPERTY_ID
+                        )
+                );
                 assertTrue(cellProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_SPREADSHEET_ITEM_PATTERN_ID
                 ));
+                assertEquals(
+                        1,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SPREADSHEET_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SPREADSHEET_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals("=r0c1", cellProvider.spreadsheetFormula());
+                assertEquals(
+                        "=r0c1",
+                        cellProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_SPREADSHEET_ITEM_FORMULA_PROPERTY_ID
+                        )
+                );
+                assertTrue(
+                        cellProvider.invokePropertyValueUnknown(
+                                WindowsAutomationProvider.UIA_SPREADSHEET_ITEM_ANNOTATION_OBJECTS_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ANNOTATION_TYPE_COMMENT,
+                        cellProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SPREADSHEET_ITEM_ANNOTATION_TYPES_PROPERTY_ID
+                        )
+                );
             }
             SemanticsNode listNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.LIST)
@@ -1516,19 +2361,122 @@ final class WindowsPlatformTest {
                     .orElseThrow();
             try (WindowsAutomationProvider scrollProvider = window.automationProvider(listNode)) {
                 assertTrue(scrollProvider.invokePatternProvider(WindowsAutomationProvider.UIA_SCROLL_PATTERN_ID));
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SCROLL_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TOGGLE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(scrollProvider.verticallyScrollable());
                 assertTrue(scrollProvider.horizontallyScrollable());
                 assertEquals(25.0, scrollProvider.verticalScrollPercent());
                 assertEquals(10.0, scrollProvider.horizontalScrollPercent());
+                assertEquals(
+                        10.0,
+                        scrollProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_SCROLL_HORIZONTAL_SCROLL_PERCENT_PROPERTY_ID
+                        ),
+                        0.001
+                );
+                assertEquals(
+                        25.0,
+                        scrollProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_SCROLL_VERTICAL_SCROLL_PERCENT_PROPERTY_ID
+                        ),
+                        0.001
+                );
+                assertEquals(
+                        30.0,
+                        scrollProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_SCROLL_HORIZONTAL_VIEW_SIZE_PROPERTY_ID
+                        ),
+                        0.001
+                );
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SCROLL_HORIZONTALLY_SCROLLABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        20.0,
+                        scrollProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_SCROLL_VERTICAL_VIEW_SIZE_PROPERTY_ID
+                        ),
+                        0.001
+                );
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SCROLL_VERTICALLY_SCROLLABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(40.0, scrollProvider.setVerticalScrollPercent(40.0));
+                assertEquals(
+                        40.0,
+                        scrollProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_SCROLL_VERTICAL_SCROLL_PERCENT_PROPERTY_ID
+                        ),
+                        0.001
+                );
                 assertEquals(50.0, scrollProvider.scrollVertical(WindowsAutomationProvider.SCROLL_AMOUNT_SMALL_INCREMENT));
                 assertEquals(20.0, scrollProvider.setHorizontalScrollPercent(20.0));
+                assertEquals(
+                        20.0,
+                        scrollProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_SCROLL_HORIZONTAL_SCROLL_PERCENT_PROPERTY_ID
+                        ),
+                        0.001
+                );
                 assertEquals(30.0, scrollProvider.scrollHorizontal(WindowsAutomationProvider.SCROLL_AMOUNT_SMALL_INCREMENT));
+                assertEquals(
+                        30.0,
+                        scrollProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_SCROLL_HORIZONTAL_SCROLL_PERCENT_PROPERTY_ID
+                        ),
+                        0.001
+                );
                 assertTrue(scrollProvider.invokePatternProvider(WindowsAutomationProvider.UIA_SCROLL_ITEM_PATTERN_ID));
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SCROLL_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_GRID_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(1, scrollProvider.invokeScrollItem());
                 assertTrue(scrollProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_VIRTUALIZED_ITEM_PATTERN_ID
                 ));
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_VIRTUALIZED_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_ITEM_CONTAINER_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TEXT_PATTERN2_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(1, scrollProvider.invokeVirtualizedItem());
                 assertTrue(scrollProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_ITEM_CONTAINER_PATTERN_ID
@@ -1538,29 +2486,216 @@ final class WindowsPlatformTest {
                 assertTrue(scrollProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_MULTIPLE_VIEW_PATTERN_ID
                 ));
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_MULTIPLE_VIEW_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SELECTION_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TABLE_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(1, scrollProvider.currentView());
+                assertArrayEquals(
+                        new int[] {1, 1},
+                        scrollProvider.invokePropertyValueInts(
+                                WindowsAutomationProvider.UIA_MULTIPLE_VIEW_SUPPORTED_VIEWS_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_MULTIPLE_VIEW_CURRENT_VIEW_PROPERTY_ID
+                        )
+                );
                 assertEquals("List", scrollProvider.viewName(1));
                 assertEquals(2, scrollProvider.setCurrentView(2));
                 assertEquals(2, scrollProvider.currentView());
+                assertEquals(
+                        2,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_MULTIPLE_VIEW_CURRENT_VIEW_PROPERTY_ID
+                        )
+                );
                 assertTrue(scrollProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_DROP_TARGET_PATTERN_ID
                 ));
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_DROP_TARGET_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_CUSTOM_NAVIGATION_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals("move", scrollProvider.dropTargetEffect());
                 assertTrue(scrollProvider.invokePatternProvider(WindowsAutomationProvider.UIA_DRAG_PATTERN_ID));
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_DRAG_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TRANSFORM_PATTERN2_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TRANSFORM2_CAN_ZOOM_PROPERTY_ID
+                        )
+                );
                 assertFalse(scrollProvider.isGrabbed());
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_DRAG_IS_GRABBED_PROPERTY_ID
+                        )
+                );
+                assertTrue(
+                        scrollProvider.invokePropertyValueUnknown(
+                                WindowsAutomationProvider.UIA_DRAG_GRABBED_ITEMS_PROPERTY_ID
+                        )
+                );
                 assertEquals("copy", scrollProvider.dropEffect());
+                assertEquals(
+                        "copy",
+                        scrollProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_DRAG_DROP_EFFECT_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        "copy",
+                        scrollProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_DRAG_DROP_EFFECTS_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        "move",
+                        scrollProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_DROP_TARGET_DROP_TARGET_EFFECT_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        "move",
+                        scrollProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_DROP_TARGET_DROP_TARGET_EFFECTS_PROPERTY_ID
+                        )
+                );
                 assertTrue(scrollProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_SELECTION_PATTERN_ID
                 ));
                 assertTrue(scrollProvider.canSelectMultiple());
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SELECTION_CAN_SELECT_MULTIPLE_PROPERTY_ID
+                        )
+                );
+                assertTrue(
+                        scrollProvider.invokePropertyValueUnknown(
+                                WindowsAutomationProvider.UIA_SELECTION_SELECTION_PROPERTY_ID
+                        )
+                );
                 assertFalse(scrollProvider.isSelectionRequired());
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SELECTION_IS_SELECTION_REQUIRED_PROPERTY_ID
+                        )
+                );
                 assertTrue(scrollProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_SELECTION_PATTERN2_ID
                 ));
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SELECTION_PATTERN2_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_DOCK_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TRANSFORM_CAN_MOVE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TRANSFORM_CAN_RESIZE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TRANSFORM_CAN_ROTATE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_WINDOW_CAN_MAXIMIZE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_WINDOW_CAN_MINIMIZE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_WINDOW_IS_MODAL_PROPERTY_ID
+                        )
+                );
                 assertEquals(1, scrollProvider.selectionItemCount());
+                assertEquals(
+                        1,
+                        scrollProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_SELECTION2_ITEM_COUNT_PROPERTY_ID
+                        )
+                );
                 assertTrue(scrollProvider.invokeCurrentSelectedItem());
                 assertTrue(scrollProvider.invokeFirstSelectedItem());
                 assertTrue(scrollProvider.invokeLastSelectedItem());
+                assertTrue(
+                        scrollProvider.invokePropertyValueUnknown(
+                                WindowsAutomationProvider.UIA_SELECTION2_CURRENT_SELECTED_ITEM_PROPERTY_ID
+                        )
+                );
+                assertTrue(
+                        scrollProvider.invokePropertyValueUnknown(
+                                WindowsAutomationProvider.UIA_SELECTION2_FIRST_SELECTED_ITEM_PROPERTY_ID
+                        )
+                );
+                assertTrue(
+                        scrollProvider.invokePropertyValueUnknown(
+                                WindowsAutomationProvider.UIA_SELECTION2_LAST_SELECTED_ITEM_PROPERTY_ID
+                        )
+                );
             }
             SemanticsNode dialogNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.DIALOG)
@@ -1568,40 +2703,166 @@ final class WindowsPlatformTest {
                     .orElseThrow();
             try (WindowsAutomationProvider windowProvider = window.automationProvider(dialogNode)) {
                 assertTrue(windowProvider.invokePatternProvider(WindowsAutomationProvider.UIA_WINDOW_PATTERN_ID));
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_WINDOW_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.canMaximize());
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_WINDOW_CAN_MAXIMIZE_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.canMinimize());
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_WINDOW_CAN_MINIMIZE_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.isModal());
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_WINDOW_IS_MODAL_PROPERTY_ID
+                        )
+                );
                 assertFalse(windowProvider.isTopmost());
+                assertEquals(
+                        0,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_WINDOW_IS_TOPMOST_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.waitForInputIdle(0));
                 assertEquals(
                         WindowsAutomationProvider.WINDOW_INTERACTION_READY,
                         windowProvider.windowInteractionState()
                 );
                 assertEquals(
+                        WindowsAutomationProvider.WINDOW_INTERACTION_READY,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_WINDOW_WINDOW_INTERACTION_STATE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.WINDOW_VISUAL_STATE_NORMAL,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_WINDOW_WINDOW_VISUAL_STATE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
                         WindowsAutomationProvider.WINDOW_VISUAL_STATE_MAXIMIZED,
                         windowProvider.setWindowVisualState(WindowsAutomationProvider.WINDOW_VISUAL_STATE_MAXIMIZED)
                 );
+                assertEquals(
+                        WindowsAutomationProvider.WINDOW_VISUAL_STATE_MAXIMIZED,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_WINDOW_WINDOW_VISUAL_STATE_PROPERTY_ID
+                        )
+                );
                 assertEquals(1, windowProvider.closeWindow());
                 assertTrue(windowProvider.invokePatternProvider(WindowsAutomationProvider.UIA_DOCK_PATTERN_ID));
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_DOCK_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SELECTION_PATTERN2_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(
                         WindowsAutomationProvider.DOCK_POSITION_NONE,
                         windowProvider.dockPosition()
                 );
                 assertEquals(
+                        WindowsAutomationProvider.DOCK_POSITION_NONE,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_DOCK_DOCK_POSITION_PROPERTY_ID
+                        )
+                );
+                assertEquals(
                         WindowsAutomationProvider.DOCK_POSITION_TOP,
                         windowProvider.setDockPosition(WindowsAutomationProvider.DOCK_POSITION_TOP)
                 );
+                assertEquals(
+                        WindowsAutomationProvider.DOCK_POSITION_TOP,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_DOCK_DOCK_POSITION_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TRANSFORM_PATTERN_ID));
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TRANSFORM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TEXT_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_LEGACY_IACCESSIBLE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.canMove());
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TRANSFORM_CAN_MOVE_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.canResize());
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TRANSFORM_CAN_RESIZE_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.canRotate());
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TRANSFORM_CAN_ROTATE_PROPERTY_ID
+                        )
+                );
                 assertEquals(12.0, windowProvider.moveTransform(12.0, 24.0));
                 assertEquals(80.0, windowProvider.resizeTransform(80.0, 40.0));
                 assertEquals(15.0, windowProvider.rotateTransform(15.0));
                 assertTrue(windowProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_TRANSFORM_PATTERN2_ID
                 ));
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TRANSFORM_PATTERN2_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_DRAG_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.canZoom());
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_TRANSFORM2_CAN_ZOOM_PROPERTY_ID
+                        )
+                );
                 assertEquals(1.0, windowProvider.zoomLevel());
                 assertEquals(2.5, windowProvider.zoomTransform(2.5));
                 assertEquals(2.5, windowProvider.zoomLevel());
@@ -1609,14 +2870,59 @@ final class WindowsPlatformTest {
                 assertEquals(3.5, windowProvider.zoomLevel());
                 assertEquals(0.5, windowProvider.zoomMinimum());
                 assertEquals(4.0, windowProvider.zoomMaximum());
+                assertEquals(
+                        3.5,
+                        windowProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_TRANSFORM2_ZOOM_LEVEL_PROPERTY_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        0.5,
+                        windowProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_TRANSFORM2_ZOOM_MINIMUM_PROPERTY_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        4.0,
+                        windowProvider.invokePropertyValueDouble(
+                                WindowsAutomationProvider.UIA_TRANSFORM2_ZOOM_MAXIMUM_PROPERTY_ID
+                        ),
+                        0.0001
+                );
                 assertTrue(windowProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_CUSTOM_NAVIGATION_PATTERN_ID
                 ));
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_CUSTOM_NAVIGATION_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_DROP_TARGET_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.invokeNavigate(WindowsAutomationProvider.NAVIGATE_DIRECTION_PARENT));
                 assertFalse(windowProvider.invokeNavigate(1));
                 assertTrue(windowProvider.invokePatternProvider(
                         WindowsAutomationProvider.UIA_OBJECT_MODEL_PATTERN_ID
                 ));
+                assertEquals(
+                        1,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_OBJECT_MODEL_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        windowProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_ANNOTATION_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(windowProvider.invokeObjectModel());
             }
             try (WindowsAutomationProvider statusProvider = window.automationProvider(status);
@@ -1645,16 +2951,119 @@ final class WindowsPlatformTest {
                         WindowsAutomationProvider.UIA_ANNOTATION_PATTERN_ID
                 ));
                 assertEquals(
+                        1,
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_ANNOTATION_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_OBJECT_MODEL_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
                         WindowsAutomationProvider.ANNOTATION_TYPE_COMMENT,
                         statusProvider.annotationTypeId()
                 );
+                assertEquals(
+                        WindowsAutomationProvider.ANNOTATION_TYPE_COMMENT,
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_ANNOTATION_ANNOTATION_TYPE_ID_PROPERTY_ID
+                        )
+                );
                 assertEquals("Comment", statusProvider.annotationTypeName());
+                assertEquals(
+                        "Comment",
+                        statusProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_ANNOTATION_ANNOTATION_TYPE_NAME_PROPERTY_ID
+                        )
+                );
                 assertEquals("Himari", statusProvider.annotationAuthor());
+                assertEquals(
+                        "Himari",
+                        statusProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_ANNOTATION_AUTHOR_PROPERTY_ID
+                        )
+                );
                 assertEquals("2026-08-17", statusProvider.annotationDateTime());
+                assertEquals(
+                        "2026-08-17",
+                        statusProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_ANNOTATION_DATE_TIME_PROPERTY_ID
+                        )
+                );
                 assertTrue(statusProvider.invokeAnnotationTarget());
+                assertTrue(
+                        statusProvider.invokePropertyValueUnknown(
+                                WindowsAutomationProvider.UIA_ANNOTATION_TARGET_PROPERTY_ID
+                        )
+                );
                 assertTrue(statusProvider.invokePatternProvider(WindowsAutomationProvider.UIA_STYLES_PATTERN_ID));
+                assertEquals(
+                        1,
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_STYLES_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_SPREADSHEET_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals(WindowsAutomationProvider.STYLE_ID_NORMAL, statusProvider.styleId());
+                assertEquals(
+                        WindowsAutomationProvider.STYLE_ID_NORMAL,
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_STYLES_STYLE_ID_PROPERTY_ID
+                        )
+                );
                 assertEquals("Normal", statusProvider.styleName());
+                assertEquals(
+                        "Normal",
+                        statusProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_STYLES_STYLE_NAME_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_FILL_COLOR_PROPERTY_ID
+                        ),
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_STYLES_FILL_COLOR_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_FILL_TYPE_PROPERTY_ID
+                        ),
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_STYLES_FILL_PATTERN_STYLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.STYLE_SHAPE_RECTANGLE,
+                        statusProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_STYLES_SHAPE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_OUTLINE_COLOR_PROPERTY_ID
+                        ),
+                        statusProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_STYLES_FILL_PATTERN_COLOR_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        statusProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_ARIA_PROPERTIES_PROPERTY_ID
+                        ),
+                        statusProvider.invokePropertyValueString(
+                                WindowsAutomationProvider.UIA_STYLES_EXTENDED_PROPERTIES_PROPERTY_ID
+                        )
+                );
             }
             SemanticsNode fieldNode = valueTree.semantics().nodes().stream()
                     .filter(node -> node.role() == SemanticsRole.TEXT_FIELD)
@@ -1662,6 +3071,18 @@ final class WindowsPlatformTest {
                     .orElseThrow();
             try (WindowsAutomationProvider textProvider = window.automationProvider(fieldNode)) {
                 assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_VALUE_PATTERN_ID));
+                assertEquals(
+                        1,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_VALUE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        1,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_INVOKE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertEquals("hello", textProvider.value());
                 assertEquals("world", textProvider.setValue("world"));
                 assertEquals("world", textProvider.value());
@@ -1672,6 +3093,10 @@ final class WindowsPlatformTest {
                     assertEquals(
                             1,
                             readOnly.invokePropertyValue(WindowsAutomationProvider.UIA_IS_READ_ONLY_PROPERTY_ID)
+                    );
+                    assertEquals(
+                            1,
+                            readOnly.invokePropertyValue(WindowsAutomationProvider.UIA_VALUE_IS_READ_ONLY_PROPERTY_ID)
                     );
                 }
                 field.setReadOnly(false);
@@ -1688,15 +3113,75 @@ final class WindowsPlatformTest {
                 }
                 field.setHint("");
                 assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_CHILD_PATTERN_ID));
+                assertEquals(
+                        1,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TEXT_CHILD_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_DRAG_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(textProvider.invokeTextContainer());
                 assertTrue(textProvider.invokeTextChildRange());
                 assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_EDIT_PATTERN_ID));
+                assertEquals(
+                        1,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TEXT_EDIT_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_CUSTOM_NAVIGATION_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(textProvider.invokeActiveComposition());
                 assertTrue(textProvider.invokeConversionTarget());
                 assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_PATTERN2_ID));
+                assertEquals(
+                        1,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TEXT_PATTERN2_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_ITEM_CONTAINER_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_VIRTUALIZED_ITEM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(textProvider.invokeCaretRange());
                 assertTrue(textProvider.invokeRangeFromAnnotation());
                 assertTrue(textProvider.invokePatternProvider(WindowsAutomationProvider.UIA_TEXT_PATTERN_ID));
+                assertEquals(
+                        1,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TEXT_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_TRANSFORM_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
+                assertEquals(
+                        1,
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_IS_LEGACY_IACCESSIBLE_PATTERN_AVAILABLE_PROPERTY_ID
+                        )
+                );
                 assertTrue(textProvider.invokeDocumentRange());
                 assertTrue(textProvider.invokeGetVisibleRanges());
                 assertTrue(textProvider.invokeRangeFromChild());
@@ -1751,7 +3236,282 @@ final class WindowsPlatformTest {
                 textProvider.invokeSelect();
                 assertTrue(textProvider.invokeGetSelection());
                 assertFalse(textProvider.invokeFindAttribute(40013));
-                assertEquals(0, textProvider.invokeGetAttributeValue(40013));
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_IS_HIDDEN_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_ANIMATION_STYLE_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_BACKGROUND_COLOR,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_BACKGROUND_COLOR_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_FONT_NAME,
+                        textProvider.invokeGetAttributeValueString(
+                                WindowsAutomationProvider.UIA_FONT_NAME_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_FONT_SIZE,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_FONT_SIZE_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_FONT_WEIGHT,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_FONT_WEIGHT_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_FOREGROUND_COLOR,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_FOREGROUND_COLOR_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_BULLET_STYLE_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_CAP_STYLE_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        textProvider.invokePropertyValue(
+                                WindowsAutomationProvider.UIA_CULTURE_PROPERTY_ID
+                        ),
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_CULTURE_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_HORIZONTAL_TEXT_ALIGNMENT_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_IS_ITALIC_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_IS_READ_ONLY_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_INDENT_FIRST_LINE,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_INDENTATION_FIRST_LINE_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_INDENT_LEADING,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_INDENTATION_LEADING_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_INDENT_TRAILING,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_INDENTATION_TRAILING_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_IS_SUBSCRIPT_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_IS_SUPERSCRIPT_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_MARGIN,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_MARGIN_BOTTOM_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_MARGIN,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_MARGIN_LEADING_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_MARGIN,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_MARGIN_TOP_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_MARGIN,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_MARGIN_TRAILING_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_OUTLINE_STYLES_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_FOREGROUND_COLOR,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_OVERLINE_COLOR_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_OVERLINE_STYLE_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_FOREGROUND_COLOR,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_STRIKETHROUGH_COLOR_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_STRIKETHROUGH_STYLE_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_TABS_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_TEXT_FLOW_DIRECTIONS_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_FOREGROUND_COLOR,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_UNDERLINE_COLOR_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_UNDERLINE_STYLE_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ANNOTATION_TYPE_COMMENT,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_ANNOTATION_TYPES_ATTRIBUTE_ID
+                        )
+                );
+                assertTrue(
+                        textProvider.invokeGetAttributeValueUnknown(
+                                WindowsAutomationProvider.UIA_ANNOTATION_OBJECTS_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        "Normal",
+                        textProvider.invokeGetAttributeValueString(
+                                WindowsAutomationProvider.UIA_STYLE_NAME_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.STYLE_ID_NORMAL,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_STYLE_ID_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        "",
+                        textProvider.invokeGetAttributeValueString(
+                                WindowsAutomationProvider.UIA_LINK_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_IS_ACTIVE_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_SELECTION_ACTIVE_END_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_CARET_POSITION_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        0,
+                        textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_CARET_BIDI_MODE_ATTRIBUTE_ID
+                        )
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_LINE_SPACING,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_LINE_SPACING_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_PARAGRAPH_SPACING,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_BEFORE_PARAGRAPH_SPACING_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        WindowsAutomationProvider.ATTRIBUTE_PARAGRAPH_SPACING,
+                        textProvider.invokeGetAttributeValueDouble(
+                                WindowsAutomationProvider.UIA_AFTER_PARAGRAPH_SPACING_ATTRIBUTE_ID
+                        ),
+                        0.0001
+                );
+                assertEquals(
+                        "",
+                        textProvider.invokeGetAttributeValueString(
+                                WindowsAutomationProvider.UIA_SAY_AS_INTERPRET_AS_ATTRIBUTE_ID
+                        )
+                );
                 textProvider.invokeRemoveFromSelection();
                 assertFalse(textProvider.invokeGetSelection());
                 textProvider.invokeAddToSelection();

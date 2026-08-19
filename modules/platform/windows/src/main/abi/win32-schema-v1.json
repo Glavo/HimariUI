@@ -199,6 +199,46 @@
     },
     { "kind": "pointer", "name": "pointer_pen_info_ptr", "pointee": "pointer_pen_info", "constant": false, "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false } },
     {
+      "kind": "aggregate", "name": "pointer_info", "aggregateKind": "struct", "byteSize": 96, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "pointerType", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "pointerId", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "frameId", "type": "u32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "pointerFlags", "type": "u32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "himetricLocationX", "type": "i32", "byteOffset": 40, "bitOffset": null, "bitWidth": null },
+        { "name": "himetricLocationY", "type": "i32", "byteOffset": 44, "bitOffset": null, "bitWidth": null },
+        { "name": "pixelLocationRawX", "type": "i32", "byteOffset": 48, "bitOffset": null, "bitWidth": null },
+        { "name": "pixelLocationRawY", "type": "i32", "byteOffset": 52, "bitOffset": null, "bitWidth": null },
+        { "name": "himetricLocationRawX", "type": "i32", "byteOffset": 56, "bitOffset": null, "bitWidth": null },
+        { "name": "himetricLocationRawY", "type": "i32", "byteOffset": 60, "bitOffset": null, "bitWidth": null },
+        { "name": "dwTime", "type": "u32", "byteOffset": 64, "bitOffset": null, "bitWidth": null },
+        { "name": "historyCount", "type": "u32", "byteOffset": 68, "bitOffset": null, "bitWidth": null },
+        { "name": "inputData", "type": "i32", "byteOffset": 72, "bitOffset": null, "bitWidth": null },
+        { "name": "keyStates", "type": "u32", "byteOffset": 76, "bitOffset": null, "bitWidth": null },
+        { "name": "performanceCount", "type": "u64", "byteOffset": 80, "bitOffset": null, "bitWidth": null },
+        { "name": "buttonChangeType", "type": "i32", "byteOffset": 88, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "pointer_info_ptr", "pointee": "pointer_info", "constant": false, "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false } },
+    {
+      "kind": "aggregate", "name": "pointer_touch_info", "aggregateKind": "struct", "byteSize": 144, "alignment": 8, "packing": 0,
+      "fields": [
+        { "name": "pointerType", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "pointerId", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "touchFlags", "type": "u32", "byteOffset": 96, "bitOffset": null, "bitWidth": null },
+        { "name": "touchMask", "type": "u32", "byteOffset": 100, "bitOffset": null, "bitWidth": null },
+        { "name": "rcContactLeft", "type": "i32", "byteOffset": 104, "bitOffset": null, "bitWidth": null },
+        { "name": "rcContactTop", "type": "i32", "byteOffset": 108, "bitOffset": null, "bitWidth": null },
+        { "name": "rcContactRight", "type": "i32", "byteOffset": 112, "bitOffset": null, "bitWidth": null },
+        { "name": "rcContactBottom", "type": "i32", "byteOffset": 116, "bitOffset": null, "bitWidth": null },
+        { "name": "orientation", "type": "u32", "byteOffset": 136, "bitOffset": null, "bitWidth": null },
+        { "name": "pressure", "type": "u32", "byteOffset": 140, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "pointer_touch_info_ptr", "pointee": "pointer_touch_info", "constant": false, "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false } },
+    {
       "kind": "aggregate", "name": "byte_array_32", "aggregateKind": "struct", "byteSize": 32, "alignment": 1, "packing": 0,
       "fields": [
         { "name": "first", "type": "u8", "byteOffset": 0, "bitOffset": null, "bitWidth": null }
@@ -2621,6 +2661,26 @@
       "parameters": [
         { "name": "pointerId", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
         { "name": "penInfo", "type": "pointer_pen_info_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "any",
+      "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getPointerInfo", "symbol": "GetPointerInfo",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "pointerId", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "pointerInfo", "type": "pointer_info_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "any",
+      "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getPointerTouchInfo", "symbol": "GetPointerTouchInfo",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "pointerId", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" },
+        { "name": "touchInfo", "type": "pointer_touch_info_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
       ],
       "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "any",
       "availability": { "introduced": "6.2", "deprecated": null, "unavailable": false }

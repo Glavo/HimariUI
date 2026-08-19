@@ -3,6 +3,7 @@ package org.glavo.himari.platform.windows;
 import org.glavo.himari.ffi.CallbackFailureQueue;
 import org.glavo.himari.layout.input.KeyEvent;
 import org.glavo.himari.layout.input.KeyEventType;
+import org.glavo.himari.layout.input.KeyLocation;
 import org.glavo.himari.layout.input.LogicalKey;
 import org.glavo.himari.layout.input.PointerDeviceKind;
 import org.glavo.himari.layout.input.PointerEvent;
@@ -210,6 +211,18 @@ public final class WindowsNativeWindow implements AutoCloseable {
 
     /// Pointer identity that [`#syntheticPenAxes`] applies to.
     private int syntheticPenPointerId = -1;
+
+    /// Synthetic contact ellipse used when `GetPointerTouchInfo` has no live contact.
+    private @Nullable ContactArea syntheticContact;
+
+    /// Pointer identity that [`#syntheticContact`] applies to.
+    private int syntheticContactPointerId = -1;
+
+    /// Synthetic `POINTER_INFO` flags used when `GetPointerInfo` has no live contact.
+    private @Nullable PointerFlags syntheticPointerFlags;
+
+    /// Pointer identity that [`#syntheticPointerFlags`] applies to.
+    private int syntheticPointerFlagsId = -1;
 
     /// Host delivery sequence assigned to the next pointer event.
     private int pointerSequence;
@@ -734,6 +747,974 @@ public final class WindowsNativeWindow implements AutoCloseable {
         }
     }
 
+    /// `TOUCH_MASK_CONTACTAREA`.
+    public static final int TOUCH_MASK_CONTACTAREA = 0x00000001;
+
+    /// `TOUCH_MASK_ORIENTATION`.
+    public static final int TOUCH_MASK_ORIENTATION = 0x00000002;
+
+    /// Stores a decoded `POINTER_TOUCH_INFO` contact ellipse and orientation.
+    ///
+    /// @param width contact width in pixels
+    /// @param height contact height in pixels
+    /// @param orientation clockwise contact angle in degrees in `[0, 359]`; `0` when unreported
+    public record ContactArea(float width, float height, float orientation) {
+        /// Validates the ellipse.
+        public ContactArea {
+            if (!Float.isFinite(width) || !Float.isFinite(height) || !Float.isFinite(orientation)
+                    || width < 0.0f || height < 0.0f) {
+                throw new IllegalArgumentException("contact size must be finite and nonnegative");
+            }
+            if (orientation < 0.0f || orientation > 359.0f) {
+                throw new IllegalArgumentException("orientation must be in [0, 359] degrees");
+            }
+        }
+
+        /// Creates an ellipse with no reported orientation.
+        ///
+        /// @param width contact width
+        /// @param height contact height
+        public ContactArea(float width, float height) {
+            this(width, height, 0.0f);
+        }
+    }
+
+    /// `POINTER_FLAG_INRANGE`.
+    public static final int POINTER_FLAG_INRANGE = 0x00000002;
+
+    /// `POINTER_FLAG_INCONTACT`.
+    public static final int POINTER_FLAG_INCONTACT = 0x00000004;
+
+    /// `POINTER_FLAG_CANCELED`.
+    public static final int POINTER_FLAG_CANCELED = 0x00008000;
+
+    /// `POINTER_FLAG_PRIMARY`.
+    public static final int POINTER_FLAG_PRIMARY = 0x00002000;
+
+    /// `POINTER_FLAG_FIRSTBUTTON`.
+    public static final int POINTER_FLAG_FIRSTBUTTON = 0x00000010;
+
+    /// `POINTER_FLAG_SECONDBUTTON`.
+    public static final int POINTER_FLAG_SECONDBUTTON = 0x00000020;
+
+    /// `POINTER_FLAG_THIRDBUTTON`.
+    public static final int POINTER_FLAG_THIRDBUTTON = 0x00000040;
+
+    /// `POINTER_FLAG_FOURTHBUTTON`.
+    public static final int POINTER_FLAG_FOURTHBUTTON = 0x00000080;
+
+    /// `POINTER_FLAG_FIFTHBUTTON`.
+    public static final int POINTER_FLAG_FIFTHBUTTON = 0x00000100;
+
+    /// `POINTER_FLAG_NEW`.
+    public static final int POINTER_FLAG_NEW = 0x00000001;
+
+    /// `POINTER_FLAG_CONFIDENCE`.
+    public static final int POINTER_FLAG_CONFIDENCE = 0x00004000;
+
+    /// `POINTER_FLAG_DOWN`.
+    public static final int POINTER_FLAG_DOWN = 0x00010000;
+
+    /// `POINTER_FLAG_UPDATE`.
+    public static final int POINTER_FLAG_UPDATE = 0x00020000;
+
+    /// `POINTER_FLAG_WHEEL`.
+    public static final int POINTER_FLAG_WHEEL = 0x00080000;
+
+    /// `POINTER_FLAG_HWHEEL`.
+    public static final int POINTER_FLAG_HWHEEL = 0x00100000;
+
+    /// `POINTER_FLAG_CAPTURECHANGED`.
+    public static final int POINTER_FLAG_CAPTURECHANGED = 0x00200000;
+
+    /// `POINTER_FLAG_HASTRANSFORM`.
+    public static final int POINTER_FLAG_HASTRANSFORM = 0x00400000;
+
+    /// `POINTER_FLAG_UP`.
+    public static final int POINTER_FLAG_UP = 0x00040000;
+
+    /// `POINTER_MOD_SHIFT` in `POINTER_INFO.dwKeyStates`.
+    public static final int POINTER_MOD_SHIFT = 0x00000004;
+
+    /// `POINTER_MOD_CTRL` in `POINTER_INFO.dwKeyStates`.
+    public static final int POINTER_MOD_CTRL = 0x00000008;
+
+    /// `POINTER_CHANGE_FIRSTBUTTON_DOWN`.
+    public static final int POINTER_CHANGE_FIRSTBUTTON_DOWN = 1;
+
+    /// Stores decoded `POINTER_INFO` frame id plus hover, contact, canceled, primary, and button bits.
+    ///
+    /// @param frameId the host frame identity; `0` when unreported
+    /// @param inRange whether `POINTER_FLAG_INRANGE` is set
+    /// @param inContact whether `POINTER_FLAG_INCONTACT` is set
+    /// @param canceled whether `POINTER_FLAG_CANCELED` is set
+    /// @param primary whether `POINTER_FLAG_PRIMARY` is set
+    /// @param firstButton whether `POINTER_FLAG_FIRSTBUTTON` is set
+    /// @param secondButton whether `POINTER_FLAG_SECONDBUTTON` is set
+    /// @param thirdButton whether `POINTER_FLAG_THIRDBUTTON` is set
+    /// @param fourthButton whether `POINTER_FLAG_FOURTHBUTTON` is set
+    /// @param fifthButton whether `POINTER_FLAG_FIFTHBUTTON` is set
+    /// @param newPointer whether `POINTER_FLAG_NEW` is set
+    /// @param confidence whether `POINTER_FLAG_CONFIDENCE` is set
+    /// @param down whether `POINTER_FLAG_DOWN` is set
+    /// @param update whether `POINTER_FLAG_UPDATE` is set
+    /// @param wheel whether `POINTER_FLAG_WHEEL` is set
+    /// @param horizontalWheel whether `POINTER_FLAG_HWHEEL` is set
+    /// @param captureChanged whether `POINTER_FLAG_CAPTURECHANGED` is set
+    /// @param hasTransform whether `POINTER_FLAG_HASTRANSFORM` is set
+    /// @param up whether `POINTER_FLAG_UP` is set
+    /// @param historyCount host `POINTER_INFO.historyCount`; `0` when unreported
+    /// @param keyStates host `POINTER_INFO.dwKeyStates`; `0` when unreported
+    /// @param buttonChangeType host `POINTER_INFO.ButtonChangeType`; `0` when unreported
+    /// @param inputData host `POINTER_INFO.InputData`; `0` when unreported
+    /// @param performanceCount host `POINTER_INFO.PerformanceCount`; `0` when unreported
+    /// @param rawX host `POINTER_INFO.ptPixelLocationRaw.x`; `0` when unreported
+    /// @param rawY host `POINTER_INFO.ptPixelLocationRaw.y`; `0` when unreported
+    /// @param himetricX host `POINTER_INFO.ptHimetricLocation.x`; `0` when unreported
+    /// @param himetricY host `POINTER_INFO.ptHimetricLocation.y`; `0` when unreported
+    /// @param himetricRawX host `POINTER_INFO.ptHimetricLocationRaw.x`; `0` when unreported
+    /// @param himetricRawY host `POINTER_INFO.ptHimetricLocationRaw.y`; `0` when unreported
+    /// @param pointerTime host `POINTER_INFO.dwTime`; `0` when unreported
+    public record PointerFlags(
+            int frameId,
+            boolean inRange,
+            boolean inContact,
+            boolean canceled,
+            boolean primary,
+            boolean firstButton,
+            boolean secondButton,
+            boolean thirdButton,
+            boolean fourthButton,
+            boolean fifthButton,
+            boolean newPointer,
+            boolean confidence,
+            boolean down,
+            boolean update,
+            boolean wheel,
+            boolean horizontalWheel,
+            boolean captureChanged,
+            boolean hasTransform,
+            boolean up,
+            int historyCount,
+            int keyStates,
+            int buttonChangeType,
+            int inputData,
+            long performanceCount,
+            int rawX,
+            int rawY,
+            int himetricX,
+            int himetricY,
+            int himetricRawX,
+            int himetricRawY,
+            int pointerTime
+    ) {
+        /// Validates the frame identity, history count, and remaining `POINTER_INFO` integers.
+        public PointerFlags {
+            if (frameId < 0) {
+                throw new IllegalArgumentException("frameId must be non-negative");
+            }
+            if (historyCount < 0) {
+                throw new IllegalArgumentException("historyCount must be non-negative");
+            }
+            if (keyStates < 0) {
+                throw new IllegalArgumentException("keyStates must be non-negative");
+            }
+            if (buttonChangeType < 0) {
+                throw new IllegalArgumentException("buttonChangeType must be non-negative");
+            }
+            if (performanceCount < 0L) {
+                throw new IllegalArgumentException("performanceCount must be non-negative");
+            }
+            if (pointerTime < 0) {
+                throw new IllegalArgumentException("pointerTime must be non-negative");
+            }
+        }
+
+        /// Creates flags with a first-button bit and no second-button bit.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton
+        ) {
+            this(frameId, inRange, inContact, canceled, primary, firstButton, false, false);
+        }
+
+        /// Creates flags with a second-button bit and no third-button bit.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton
+        ) {
+            this(frameId, inRange, inContact, canceled, primary, firstButton, secondButton, false, false, false);
+        }
+
+        /// Creates flags with a third-button bit and no fourth-button bit.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton
+        ) {
+            this(frameId, inRange, inContact, canceled, primary, firstButton, secondButton, thirdButton, false, false, false, false);
+        }
+
+        /// Creates flags with a fourth-button bit and no fifth-button bit.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton
+        ) {
+            this(frameId, inRange, inContact, canceled, primary, firstButton, secondButton, thirdButton, fourthButton, false, false, false);
+        }
+
+        /// Creates flags with a fifth-button bit and no new-pointer bit.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        /// @param fifthButton whether the fifth button is down
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton,
+                boolean fifthButton
+        ) {
+            this(frameId, inRange, inContact, canceled, primary, firstButton, secondButton, thirdButton, fourthButton, fifthButton, false, false);
+        }
+
+        /// Creates flags with a new-pointer bit and no confidence bit.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        /// @param fifthButton whether the fifth button is down
+        /// @param newPointer whether this is a newly sighted pointer
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton,
+                boolean fifthButton,
+                boolean newPointer
+        ) {
+            this(frameId, inRange, inContact, canceled, primary, firstButton, secondButton, thirdButton, fourthButton, fifthButton, newPointer, false);
+        }
+
+        /// Creates flags with a confidence bit and no remaining `POINTER_INFO` flags.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        /// @param fifthButton whether the fifth button is down
+        /// @param newPointer whether this is a newly sighted pointer
+        /// @param confidence whether the host reports a confident contact
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton,
+                boolean fifthButton,
+                boolean newPointer,
+                boolean confidence
+        ) {
+            this(
+                    frameId,
+                    inRange,
+                    inContact,
+                    canceled,
+                    primary,
+                    firstButton,
+                    secondButton,
+                    thirdButton,
+                    fourthButton,
+                    fifthButton,
+                    newPointer,
+                    confidence,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+            );
+        }
+
+        /// Creates flags with remaining `POINTER_INFO` bits except `POINTER_FLAG_UP`.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        /// @param fifthButton whether the fifth button is down
+        /// @param newPointer whether this is a newly sighted pointer
+        /// @param confidence whether the host reports a confident contact
+        /// @param down whether the contact is beginning
+        /// @param update whether this is an update
+        /// @param wheel whether a vertical wheel tick is present
+        /// @param horizontalWheel whether a horizontal wheel tick is present
+        /// @param captureChanged whether capture changed
+        /// @param hasTransform whether a pointer transform is present
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton,
+                boolean fifthButton,
+                boolean newPointer,
+                boolean confidence,
+                boolean down,
+                boolean update,
+                boolean wheel,
+                boolean horizontalWheel,
+                boolean captureChanged,
+                boolean hasTransform
+        ) {
+            this(
+                    frameId,
+                    inRange,
+                    inContact,
+                    canceled,
+                    primary,
+                    firstButton,
+                    secondButton,
+                    thirdButton,
+                    fourthButton,
+                    fifthButton,
+                    newPointer,
+                    confidence,
+                    down,
+                    update,
+                    wheel,
+                    horizontalWheel,
+                    captureChanged,
+                    hasTransform,
+                    false
+            );
+        }
+
+        /// Creates flags with `POINTER_FLAG_UP` and no reported history count.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        /// @param fifthButton whether the fifth button is down
+        /// @param newPointer whether this is a newly sighted pointer
+        /// @param confidence whether the host reports a confident contact
+        /// @param down whether the contact is beginning
+        /// @param update whether this is an update
+        /// @param wheel whether a vertical wheel tick is present
+        /// @param horizontalWheel whether a horizontal wheel tick is present
+        /// @param captureChanged whether capture changed
+        /// @param hasTransform whether a pointer transform is present
+        /// @param up whether the contact is ending
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton,
+                boolean fifthButton,
+                boolean newPointer,
+                boolean confidence,
+                boolean down,
+                boolean update,
+                boolean wheel,
+                boolean horizontalWheel,
+                boolean captureChanged,
+                boolean hasTransform,
+                boolean up
+        ) {
+            this(
+                    frameId,
+                    inRange,
+                    inContact,
+                    canceled,
+                    primary,
+                    firstButton,
+                    secondButton,
+                    thirdButton,
+                    fourthButton,
+                    fifthButton,
+                    newPointer,
+                    confidence,
+                    down,
+                    update,
+                    wheel,
+                    horizontalWheel,
+                    captureChanged,
+                    hasTransform,
+                    up,
+                    0
+            );
+        }
+
+        /// Creates flags with a reported history count and no key-state or button-change fields.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        /// @param fifthButton whether the fifth button is down
+        /// @param newPointer whether this is a newly sighted pointer
+        /// @param confidence whether the host reports a confident contact
+        /// @param down whether the contact is beginning
+        /// @param update whether this is an update
+        /// @param wheel whether a vertical wheel tick is present
+        /// @param horizontalWheel whether a horizontal wheel tick is present
+        /// @param captureChanged whether capture changed
+        /// @param hasTransform whether a pointer transform is present
+        /// @param up whether the contact is ending
+        /// @param historyCount host history count
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton,
+                boolean fifthButton,
+                boolean newPointer,
+                boolean confidence,
+                boolean down,
+                boolean update,
+                boolean wheel,
+                boolean horizontalWheel,
+                boolean captureChanged,
+                boolean hasTransform,
+                boolean up,
+                int historyCount
+        ) {
+            this(
+                    frameId,
+                    inRange,
+                    inContact,
+                    canceled,
+                    primary,
+                    firstButton,
+                    secondButton,
+                    thirdButton,
+                    fourthButton,
+                    fifthButton,
+                    newPointer,
+                    confidence,
+                    down,
+                    update,
+                    wheel,
+                    horizontalWheel,
+                    captureChanged,
+                    hasTransform,
+                    up,
+                    historyCount,
+                    0,
+                    0
+            );
+        }
+
+        /// Creates flags with key-state and button-change fields, and no remaining `POINTER_INFO` integers.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        /// @param fifthButton whether the fifth button is down
+        /// @param newPointer whether this is a newly sighted pointer
+        /// @param confidence whether the host reports a confident contact
+        /// @param down whether the contact is beginning
+        /// @param update whether this is an update
+        /// @param wheel whether a vertical wheel tick is present
+        /// @param horizontalWheel whether a horizontal wheel tick is present
+        /// @param captureChanged whether capture changed
+        /// @param hasTransform whether a pointer transform is present
+        /// @param up whether the contact is ending
+        /// @param historyCount host history count
+        /// @param keyStates host modifier bits
+        /// @param buttonChangeType host button-change kind
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton,
+                boolean fifthButton,
+                boolean newPointer,
+                boolean confidence,
+                boolean down,
+                boolean update,
+                boolean wheel,
+                boolean horizontalWheel,
+                boolean captureChanged,
+                boolean hasTransform,
+                boolean up,
+                int historyCount,
+                int keyStates,
+                int buttonChangeType
+        ) {
+            this(
+                    frameId,
+                    inRange,
+                    inContact,
+                    canceled,
+                    primary,
+                    firstButton,
+                    secondButton,
+                    thirdButton,
+                    fourthButton,
+                    fifthButton,
+                    newPointer,
+                    confidence,
+                    down,
+                    update,
+                    wheel,
+                    horizontalWheel,
+                    captureChanged,
+                    hasTransform,
+                    up,
+                    historyCount,
+                    keyStates,
+                    buttonChangeType,
+                    0,
+                    0L
+            );
+        }
+
+        /// Creates flags with input-data and performance-count, and no raw or himetric locations.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        /// @param fifthButton whether the fifth button is down
+        /// @param newPointer whether this is a newly sighted pointer
+        /// @param confidence whether the host reports a confident contact
+        /// @param down whether the contact is beginning
+        /// @param update whether this is an update
+        /// @param wheel whether a vertical wheel tick is present
+        /// @param horizontalWheel whether a horizontal wheel tick is present
+        /// @param captureChanged whether capture changed
+        /// @param hasTransform whether a pointer transform is present
+        /// @param up whether the contact is ending
+        /// @param historyCount host history count
+        /// @param keyStates host modifier bits
+        /// @param buttonChangeType host button-change kind
+        /// @param inputData host extra input data
+        /// @param performanceCount host performance counter
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton,
+                boolean fifthButton,
+                boolean newPointer,
+                boolean confidence,
+                boolean down,
+                boolean update,
+                boolean wheel,
+                boolean horizontalWheel,
+                boolean captureChanged,
+                boolean hasTransform,
+                boolean up,
+                int historyCount,
+                int keyStates,
+                int buttonChangeType,
+                int inputData,
+                long performanceCount
+        ) {
+            this(
+                    frameId,
+                    inRange,
+                    inContact,
+                    canceled,
+                    primary,
+                    firstButton,
+                    secondButton,
+                    thirdButton,
+                    fourthButton,
+                    fifthButton,
+                    newPointer,
+                    confidence,
+                    down,
+                    update,
+                    wheel,
+                    horizontalWheel,
+                    captureChanged,
+                    hasTransform,
+                    up,
+                    historyCount,
+                    keyStates,
+                    buttonChangeType,
+                    inputData,
+                    performanceCount,
+                    0,
+                    0,
+                    0,
+                    0
+            );
+        }
+
+        /// Creates flags with raw and himetric locations, and no raw himetric locations.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        /// @param fifthButton whether the fifth button is down
+        /// @param newPointer whether this is a newly sighted pointer
+        /// @param confidence whether the host reports a confident contact
+        /// @param down whether the contact is beginning
+        /// @param update whether this is an update
+        /// @param wheel whether a vertical wheel tick is present
+        /// @param horizontalWheel whether a horizontal wheel tick is present
+        /// @param captureChanged whether capture changed
+        /// @param hasTransform whether a pointer transform is present
+        /// @param up whether the contact is ending
+        /// @param historyCount host history count
+        /// @param keyStates host modifier bits
+        /// @param buttonChangeType host button-change kind
+        /// @param inputData host extra input data
+        /// @param performanceCount host performance counter
+        /// @param rawX raw pixel X
+        /// @param rawY raw pixel Y
+        /// @param himetricX himetric X
+        /// @param himetricY himetric Y
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton,
+                boolean fifthButton,
+                boolean newPointer,
+                boolean confidence,
+                boolean down,
+                boolean update,
+                boolean wheel,
+                boolean horizontalWheel,
+                boolean captureChanged,
+                boolean hasTransform,
+                boolean up,
+                int historyCount,
+                int keyStates,
+                int buttonChangeType,
+                int inputData,
+                long performanceCount,
+                int rawX,
+                int rawY,
+                int himetricX,
+                int himetricY
+        ) {
+            this(
+                    frameId,
+                    inRange,
+                    inContact,
+                    canceled,
+                    primary,
+                    firstButton,
+                    secondButton,
+                    thirdButton,
+                    fourthButton,
+                    fifthButton,
+                    newPointer,
+                    confidence,
+                    down,
+                    update,
+                    wheel,
+                    horizontalWheel,
+                    captureChanged,
+                    hasTransform,
+                    up,
+                    historyCount,
+                    keyStates,
+                    buttonChangeType,
+                    inputData,
+                    performanceCount,
+                    rawX,
+                    rawY,
+                    himetricX,
+                    himetricY,
+                    0,
+                    0
+            );
+        }
+
+        /// Creates flags with raw himetric locations and no `POINTER_INFO.dwTime`.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        /// @param firstButton whether the first button is down
+        /// @param secondButton whether the second button is down
+        /// @param thirdButton whether the third button is down
+        /// @param fourthButton whether the fourth button is down
+        /// @param fifthButton whether the fifth button is down
+        /// @param newPointer whether this is a newly sighted pointer
+        /// @param confidence whether the host reports a confident contact
+        /// @param down whether the contact is beginning
+        /// @param update whether this is an update
+        /// @param wheel whether a vertical wheel tick is present
+        /// @param horizontalWheel whether a horizontal wheel tick is present
+        /// @param captureChanged whether capture changed
+        /// @param hasTransform whether a pointer transform is present
+        /// @param up whether the contact is ending
+        /// @param historyCount host history count
+        /// @param keyStates host modifier bits
+        /// @param buttonChangeType host button-change kind
+        /// @param inputData host extra input data
+        /// @param performanceCount host performance counter
+        /// @param rawX raw pixel X
+        /// @param rawY raw pixel Y
+        /// @param himetricX himetric X
+        /// @param himetricY himetric Y
+        /// @param himetricRawX raw himetric X
+        /// @param himetricRawY raw himetric Y
+        public PointerFlags(
+                int frameId,
+                boolean inRange,
+                boolean inContact,
+                boolean canceled,
+                boolean primary,
+                boolean firstButton,
+                boolean secondButton,
+                boolean thirdButton,
+                boolean fourthButton,
+                boolean fifthButton,
+                boolean newPointer,
+                boolean confidence,
+                boolean down,
+                boolean update,
+                boolean wheel,
+                boolean horizontalWheel,
+                boolean captureChanged,
+                boolean hasTransform,
+                boolean up,
+                int historyCount,
+                int keyStates,
+                int buttonChangeType,
+                int inputData,
+                long performanceCount,
+                int rawX,
+                int rawY,
+                int himetricX,
+                int himetricY,
+                int himetricRawX,
+                int himetricRawY
+        ) {
+            this(
+                    frameId,
+                    inRange,
+                    inContact,
+                    canceled,
+                    primary,
+                    firstButton,
+                    secondButton,
+                    thirdButton,
+                    fourthButton,
+                    fifthButton,
+                    newPointer,
+                    confidence,
+                    down,
+                    update,
+                    wheel,
+                    horizontalWheel,
+                    captureChanged,
+                    hasTransform,
+                    up,
+                    historyCount,
+                    keyStates,
+                    buttonChangeType,
+                    inputData,
+                    performanceCount,
+                    rawX,
+                    rawY,
+                    himetricX,
+                    himetricY,
+                    himetricRawX,
+                    himetricRawY,
+                    0
+            );
+        }
+
+        /// Creates flags with a primary-contact bit and no first-button bit.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        /// @param primary whether this is the primary contact
+        public PointerFlags(int frameId, boolean inRange, boolean inContact, boolean canceled, boolean primary) {
+            this(frameId, inRange, inContact, canceled, primary, false, false, false);
+        }
+
+        /// Creates flags with a canceled bit and no primary-contact bit.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        /// @param canceled whether the contact was canceled
+        public PointerFlags(int frameId, boolean inRange, boolean inContact, boolean canceled) {
+            this(frameId, inRange, inContact, canceled, false, false, false, false);
+        }
+
+        /// Creates flags with a frame identity and no canceled bit.
+        ///
+        /// @param frameId the host frame identity
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        public PointerFlags(int frameId, boolean inRange, boolean inContact) {
+            this(frameId, inRange, inContact, false, false, false, false, false);
+        }
+
+        /// Creates flags with no reported frame identity.
+        ///
+        /// @param inRange whether the pointer is in range
+        /// @param inContact whether the pointer is in contact
+        public PointerFlags(boolean inRange, boolean inContact) {
+            this(0, inRange, inContact, false, false, false, false, false);
+        }
+    }
+
     /// Installs pen axes used by the next [`#queryPenInfo(int)`] when the host has no contact.
     ///
     /// @param pointerId the pointer identity
@@ -742,6 +1723,146 @@ public final class WindowsNativeWindow implements AutoCloseable {
         Objects.requireNonNull(axes, "axes");
         this.syntheticPenPointerId = pointerId;
         this.syntheticPenAxes = axes;
+    }
+
+    /// Installs a contact ellipse used by the next [`#queryTouchInfo(int)`] when the host has no contact.
+    ///
+    /// @param pointerId the pointer identity
+    /// @param contact the ellipse
+    public void installTouchContact(int pointerId, ContactArea contact) {
+        Objects.requireNonNull(contact, "contact");
+        this.syntheticContactPointerId = pointerId;
+        this.syntheticContact = contact;
+    }
+
+    /// Queries generated `GetPointerTouchInfo` for `pointerId`.
+    ///
+    /// A failed query returns [#installTouchContact] for `pointerId`, or zeros when none exist.
+    ///
+    /// @param pointerId the pointer identity
+    /// @return the contact ellipse
+    public ContactArea queryTouchInfo(int pointerId) {
+        requireOpen();
+        MemorySegment info = arena.allocate(Win32Layouts.POINTER_TOUCH_INFO);
+        info.fill((byte) 0);
+        Win32FfmBindings.GetPointerTouchInfoResult result = bindings.getPointerTouchInfo(pointerId, info);
+        if (result.value() == 0) {
+            if (syntheticContact != null && pointerId == syntheticContactPointerId) {
+                return syntheticContact;
+            }
+            return new ContactArea(0.0f, 0.0f);
+        }
+        return decodeTouchInfo(info);
+    }
+
+    /// Reads `rcContact` and `orientation` from a packed `POINTER_TOUCH_INFO`.
+    ///
+    /// @param info the packed structure
+    /// @return the ellipse and orientation; unset mask bits report `0`
+    public static ContactArea decodeTouchInfo(MemorySegment info) {
+        Objects.requireNonNull(info, "info");
+        int mask = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_TOUCH_INFO_TOUCHMASK_OFFSET);
+        float width = 0.0f;
+        float height = 0.0f;
+        if ((mask & TOUCH_MASK_CONTACTAREA) != 0) {
+            int left = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_TOUCH_INFO_RCCONTACTLEFT_OFFSET);
+            int top = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_TOUCH_INFO_RCCONTACTTOP_OFFSET);
+            int right = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_TOUCH_INFO_RCCONTACTRIGHT_OFFSET);
+            int bottom = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_TOUCH_INFO_RCCONTACTBOTTOM_OFFSET);
+            width = Math.max(0, right - left);
+            height = Math.max(0, bottom - top);
+        }
+        float orientation = 0.0f;
+        if ((mask & TOUCH_MASK_ORIENTATION) != 0) {
+            int raw = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_TOUCH_INFO_ORIENTATION_OFFSET);
+            orientation = Math.clamp(raw, 0.0f, 359.0f);
+        }
+        return new ContactArea(width, height, orientation);
+    }
+
+    /// Installs pointer-info flags used by the next [`#queryPointerInfo(int)`] when the host has no contact.
+    ///
+    /// @param pointerId the pointer identity
+    /// @param flags the hover and contact bits
+    public void installPointerFlags(int pointerId, PointerFlags flags) {
+        Objects.requireNonNull(flags, "flags");
+        this.syntheticPointerFlagsId = pointerId;
+        this.syntheticPointerFlags = flags;
+    }
+
+    /// Queries generated `GetPointerInfo` for `pointerId`.
+    ///
+    /// A failed query returns [#installPointerFlags] for `pointerId`, or both bits unset when none exist.
+    ///
+    /// @param pointerId the pointer identity
+    /// @return the hover and contact bits
+    public PointerFlags queryPointerInfo(int pointerId) {
+        requireOpen();
+        MemorySegment info = arena.allocate(Win32Layouts.POINTER_INFO);
+        info.fill((byte) 0);
+        Win32FfmBindings.GetPointerInfoResult result = bindings.getPointerInfo(pointerId, info);
+        if (result.value() == 0) {
+            if (syntheticPointerFlags != null && pointerId == syntheticPointerFlagsId) {
+                return syntheticPointerFlags;
+            }
+            return new PointerFlags(false, false);
+        }
+        return decodePointerInfo(info);
+    }
+
+    /// Reads `frameId`, `historyCount`, and `POINTER_FLAG_*` bits from a packed `POINTER_INFO`.
+    ///
+    /// @param info the packed structure
+    /// @return the frame identity plus hover and contact bits
+    public static PointerFlags decodePointerInfo(MemorySegment info) {
+        Objects.requireNonNull(info, "info");
+        int frameId = Math.max(0, info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_FRAMEID_OFFSET));
+        int flags = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_POINTERFLAGS_OFFSET);
+        int historyCount = Math.max(0, info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_HISTORYCOUNT_OFFSET));
+        int inputData = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_INPUTDATA_OFFSET);
+        int keyStates = Math.max(0, info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_KEYSTATES_OFFSET));
+        long performanceCount = Math.max(0L, info.get(ValueLayout.JAVA_LONG, Win32Layouts.POINTER_INFO_PERFORMANCECOUNT_OFFSET));
+        int buttonChangeType = Math.max(0, info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_BUTTONCHANGETYPE_OFFSET));
+        int rawX = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_PIXELLOCATIONRAWX_OFFSET);
+        int rawY = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_PIXELLOCATIONRAWY_OFFSET);
+        int himetricX = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_HIMETRICLOCATIONX_OFFSET);
+        int himetricY = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_HIMETRICLOCATIONY_OFFSET);
+        int himetricRawX = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_HIMETRICLOCATIONRAWX_OFFSET);
+        int himetricRawY = info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_HIMETRICLOCATIONRAWY_OFFSET);
+        int pointerTime = Math.max(0, info.get(ValueLayout.JAVA_INT, Win32Layouts.POINTER_INFO_DWTIME_OFFSET));
+        return new PointerFlags(
+                frameId,
+                (flags & POINTER_FLAG_INRANGE) != 0,
+                (flags & POINTER_FLAG_INCONTACT) != 0,
+                (flags & POINTER_FLAG_CANCELED) != 0,
+                (flags & POINTER_FLAG_PRIMARY) != 0,
+                (flags & POINTER_FLAG_FIRSTBUTTON) != 0,
+                (flags & POINTER_FLAG_SECONDBUTTON) != 0,
+                (flags & POINTER_FLAG_THIRDBUTTON) != 0,
+                (flags & POINTER_FLAG_FOURTHBUTTON) != 0,
+                (flags & POINTER_FLAG_FIFTHBUTTON) != 0,
+                (flags & POINTER_FLAG_NEW) != 0,
+                (flags & POINTER_FLAG_CONFIDENCE) != 0,
+                (flags & POINTER_FLAG_DOWN) != 0,
+                (flags & POINTER_FLAG_UPDATE) != 0,
+                (flags & POINTER_FLAG_WHEEL) != 0,
+                (flags & POINTER_FLAG_HWHEEL) != 0,
+                (flags & POINTER_FLAG_CAPTURECHANGED) != 0,
+                (flags & POINTER_FLAG_HASTRANSFORM) != 0,
+                (flags & POINTER_FLAG_UP) != 0,
+                historyCount,
+                keyStates,
+                buttonChangeType,
+                inputData,
+                performanceCount,
+                rawX,
+                rawY,
+                himetricX,
+                himetricY,
+                himetricRawX,
+                himetricRawY,
+                pointerTime
+        );
     }
 
     /// Queries generated `GetPointerPenInfo` for `pointerId`.
@@ -809,6 +1930,9 @@ public final class WindowsNativeWindow implements AutoCloseable {
         if (syntheticPenAxes != null && pointerId == syntheticPenPointerId) {
             return PointerDeviceKind.PEN;
         }
+        if (syntheticContact != null && pointerId == syntheticContactPointerId) {
+            return PointerDeviceKind.TOUCH;
+        }
         int type = queryPointerType(pointerId);
         if (type == 0) {
             return PointerDeviceKind.TOUCH;
@@ -840,6 +1964,8 @@ public final class WindowsNativeWindow implements AutoCloseable {
             inverted = axes.inverted();
             eraser = axes.eraser();
         }
+        ContactArea contact = queryTouchInfo(pointerId);
+        PointerFlags flags = queryPointerInfo(pointerId);
         return new PointerEvent(
                 type,
                 lowWord(lParam),
@@ -856,7 +1982,41 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 nextPointerSequence(),
                 false,
                 inverted,
-                eraser
+                eraser,
+                contact.width(),
+                contact.height(),
+                contact.orientation(),
+                flags.inRange(),
+                flags.inContact(),
+                flags.frameId(),
+                flags.canceled(),
+                flags.primary(),
+                flags.firstButton(),
+                flags.secondButton(),
+                flags.thirdButton(),
+                flags.fourthButton(),
+                flags.fifthButton(),
+                flags.newPointer(),
+                flags.confidence(),
+                flags.down(),
+                flags.update(),
+                flags.wheel(),
+                flags.horizontalWheel(),
+                flags.captureChanged(),
+                flags.hasTransform(),
+                flags.up(),
+                flags.historyCount(),
+                flags.keyStates(),
+                flags.buttonChangeType(),
+                flags.inputData(),
+                flags.performanceCount(),
+                flags.rawX(),
+                flags.rawY(),
+                flags.himetricX(),
+                flags.himetricY(),
+                flags.himetricRawX(),
+                flags.himetricRawY(),
+                flags.pointerTime()
         );
     }
 
@@ -923,11 +2083,41 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// @param key the logical key
     /// @param lParam the message `lParam`
     /// @return the event
-    private KeyEvent keyEvent(KeyEventType type, LogicalKey key, long lParam) {
+    private KeyEvent keyEvent(KeyEventType type, LogicalKey key, int virtualKey, long lParam) {
         int scanCode = (int) ((lParam >>> 16) & 0xFFL);
         boolean repeat = type == KeyEventType.DOWN && (lParam & (1L << 30)) != 0L;
         boolean extended = (lParam & (1L << 24)) != 0L;
-        return new KeyEvent(type, key, shiftDown, ctrlDown, altDown, scanCode, repeat, extended, metaDown);
+        return new KeyEvent(
+                type,
+                key,
+                shiftDown,
+                ctrlDown,
+                altDown,
+                scanCode,
+                repeat,
+                extended,
+                metaDown,
+                keyLocation(virtualKey, extended),
+                messageTime()
+        );
+    }
+
+    /// Maps a virtual-key and `KF_EXTENDED` bit onto a physical location.
+    ///
+    /// @param virtualKey the `wParam` virtual-key code
+    /// @param extended whether `KF_EXTENDED` was set
+    /// @return the location
+    private static KeyLocation keyLocation(int virtualKey, boolean extended) {
+        if (virtualKey == VK_LWIN) {
+            return KeyLocation.LEFT;
+        }
+        if (virtualKey == VK_RWIN) {
+            return KeyLocation.RIGHT;
+        }
+        if (!extended && ((virtualKey >= 0x21 && virtualKey <= 0x28) || virtualKey == 0x2E)) {
+            return KeyLocation.NUMPAD;
+        }
+        return KeyLocation.STANDARD;
     }
 
     /// Posts one message to this HWND so the production WndProc delivers it.
@@ -1142,7 +2332,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 latchModifier(virtualKey, true);
                 @Nullable LogicalKey key = logicalKey(virtualKey);
                 if (key != null) {
-                    keyEvents.add(keyEvent(KeyEventType.DOWN, key, lParam));
+                    keyEvents.add(keyEvent(KeyEventType.DOWN, key, virtualKey, lParam));
                 }
                 yield 0L;
             }
@@ -1151,7 +2341,7 @@ public final class WindowsNativeWindow implements AutoCloseable {
                 latchModifier(virtualKey, false);
                 @Nullable LogicalKey key = logicalKey(virtualKey);
                 if (key != null) {
-                    keyEvents.add(keyEvent(KeyEventType.UP, key, lParam));
+                    keyEvents.add(keyEvent(KeyEventType.UP, key, virtualKey, lParam));
                 }
                 yield 0L;
             }

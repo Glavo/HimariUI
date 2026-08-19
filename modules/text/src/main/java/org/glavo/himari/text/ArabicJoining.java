@@ -31,6 +31,12 @@ public final class ArabicJoining {
         if (codePoint >= 0x0750 && codePoint <= 0x077F) {
             return JoiningType.DUAL;
         }
+        if (codePoint >= 0x0870 && codePoint <= 0x089F) {
+            return extendedBJoining(codePoint);
+        }
+        if (codePoint >= 0x08A0 && codePoint <= 0x08FF) {
+            return extendedAJoining(codePoint);
+        }
         if (rightJoining(codePoint)) {
             return JoiningType.RIGHT;
         }
@@ -116,6 +122,32 @@ public final class ArabicJoining {
         return JoiningType.NON_JOINING;
     }
 
+    /// Classifies Arabic Extended-B letters, tatweel variants, and combining marks.
+    private static JoiningType extendedBJoining(int codePoint) {
+        if (codePoint >= 0x0890) {
+            return JoiningType.TRANSPARENT;
+        }
+        return switch (codePoint) {
+            case 0x0883, 0x0884, 0x0885 -> JoiningType.JOIN_CAUSING;
+            case 0x0888, 0x088F -> JoiningType.NON_JOINING;
+            case 0x0870, 0x0871, 0x0872, 0x0873, 0x0874, 0x0875, 0x0876, 0x0877,
+                    0x0878, 0x0879, 0x087A, 0x087B, 0x087C, 0x087D, 0x087E, 0x087F,
+                    0x0880, 0x0881, 0x0882 -> JoiningType.RIGHT;
+            default -> JoiningType.DUAL;
+        };
+    }
+
+    /// Classifies Arabic Extended-A letters and combining marks.
+    private static JoiningType extendedAJoining(int codePoint) {
+        if (codePoint >= 0x08D3) {
+            return JoiningType.TRANSPARENT;
+        }
+        return switch (codePoint) {
+            case 0x08AA, 0x08AB, 0x08AC, 0x08AD, 0x08AE, 0x08B1, 0x08B2, 0x08B9 -> JoiningType.RIGHT;
+            default -> JoiningType.DUAL;
+        };
+    }
+
     /// Returns whether `codePoint` is a first-stable right-joining extended letter.
     private static boolean rightJoining(int codePoint) {
         return codePoint == 0x0671
@@ -137,7 +169,19 @@ public final class ArabicJoining {
                 || codePoint == 0x06D3
                 || codePoint == 0x06D5
                 || codePoint == 0x06EE
-                || codePoint == 0x06EF;
+                || codePoint == 0x06EF
+                || (codePoint >= 0x0672 && codePoint <= 0x0673)
+                || (codePoint >= 0x0675 && codePoint <= 0x0677)
+                || (codePoint >= 0x0689 && codePoint <= 0x068B)
+                || codePoint == 0x068F
+                || codePoint == 0x0690
+                || (codePoint >= 0x0692 && codePoint <= 0x0697)
+                || codePoint == 0x0699
+                || codePoint == 0x06C3
+                || codePoint == 0x06C4
+                || codePoint == 0x06CA
+                || codePoint == 0x06CD
+                || codePoint == 0x06CF;
     }
 
     /// Returns whether `codePoint` is a first-stable dual-joining extended letter.
@@ -163,7 +207,27 @@ public final class ArabicJoining {
                 || codePoint == 0x06C1
                 || codePoint == 0x06CC
                 || codePoint == 0x06D0
-                || codePoint == 0x06AD;
+                || codePoint == 0x06AD
+                || codePoint == 0x0678
+                || codePoint == 0x0681
+                || codePoint == 0x0682
+                || codePoint == 0x0685
+                || (codePoint >= 0x069A && codePoint <= 0x069F)
+                || (codePoint >= 0x06A0 && codePoint <= 0x06A3)
+                || codePoint == 0x06A5
+                || codePoint == 0x06A7
+                || codePoint == 0x06A8
+                || (codePoint >= 0x06AA && codePoint <= 0x06AC)
+                || codePoint == 0x06AE
+                || codePoint == 0x06B0
+                || codePoint == 0x06B2
+                || (codePoint >= 0x06B4 && codePoint <= 0x06B9)
+                || codePoint == 0x06BC
+                || codePoint == 0x06BD
+                || codePoint == 0x06BF
+                || codePoint == 0x06C2
+                || codePoint == 0x06CE
+                || codePoint == 0x06D1;
     }
 
     /// Returns whether `codePoint` is a joining-transparent mark.

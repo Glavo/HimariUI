@@ -183,6 +183,12 @@ public final class Os2SampleFont {
     /// Stored Windows Unicode `nameID 25`.
     public static final String VARIATIONS_POST_SCRIPT_PREFIX = "HimariOs2Bold";
 
+    /// Stored Windows Unicode `nameID 23`.
+    public static final String LIGHT_BACKGROUND_PALETTE = "LightPalette";
+
+    /// Stored Windows Unicode `nameID 24`.
+    public static final String DARK_BACKGROUND_PALETTE = "DarkPalette";
+
     /// Stored Windows Unicode `nameID 21`.
     public static final String WWS_FAMILY = "HimariOs2";
 
@@ -430,7 +436,9 @@ public final class Os2SampleFont {
         byte[] compatibleFull = COMPATIBLE_FULL.getBytes(StandardCharsets.UTF_16BE);
         byte[] postScriptCid = POST_SCRIPT_CID.getBytes(StandardCharsets.UTF_16BE);
         byte[] variationsPrefix = VARIATIONS_POST_SCRIPT_PREFIX.getBytes(StandardCharsets.UTF_16BE);
-        int storage = 6 + 276;
+        byte[] lightPalette = LIGHT_BACKGROUND_PALETTE.getBytes(StandardCharsets.UTF_16BE);
+        byte[] darkPalette = DARK_BACKGROUND_PALETTE.getBytes(StandardCharsets.UTF_16BE);
+        int storage = 6 + 300;
         ByteBuffer buffer = ByteBuffer.allocate(
                 storage
                         + copyright.length
@@ -456,9 +464,11 @@ public final class Os2SampleFont {
                         + compatibleFull.length
                         + postScriptCid.length
                         + variationsPrefix.length
+                        + lightPalette.length
+                        + darkPalette.length
         ).order(ByteOrder.BIG_ENDIAN);
         buffer.putShort((short) 0);
-        buffer.putShort((short) 23);
+        buffer.putShort((short) 25);
         buffer.putShort((short) storage);
         int offset = 0;
         putNameRecord(buffer, 0, offset, copyright.length);
@@ -506,6 +516,10 @@ public final class Os2SampleFont {
         putNameRecord(buffer, 20, offset, postScriptCid.length);
         offset += postScriptCid.length;
         putNameRecord(buffer, 25, offset, variationsPrefix.length);
+        offset += variationsPrefix.length;
+        putNameRecord(buffer, 23, offset, lightPalette.length);
+        offset += lightPalette.length;
+        putNameRecord(buffer, 24, offset, darkPalette.length);
         buffer.put(copyright);
         buffer.put(family);
         buffer.put(unique);
@@ -529,6 +543,8 @@ public final class Os2SampleFont {
         buffer.put(compatibleFull);
         buffer.put(postScriptCid);
         buffer.put(variationsPrefix);
+        buffer.put(lightPalette);
+        buffer.put(darkPalette);
         return buffer.array();
     }
 

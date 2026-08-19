@@ -217,12 +217,32 @@ public final class LayoutTree {
                 node.acceleratorKey(),
                 node.required(),
                 node.itemStatus(),
+                node.itemType(),
                 node.locale(),
                 node.level(),
                 node.positionInSet(),
                 node.sizeOfSet(),
                 node.description(),
-                node.error()
+                node.error(),
+                node.landmarkType(),
+                node.localizedLandmarkType(),
+                node.ariaRole(),
+                node.ariaProperties(),
+                node.controllerFor(),
+                node.describedBy(),
+                node.flowsTo(),
+                node.labeledBy(),
+                node.flowsFrom(),
+                node.optimizeForVisualContent(),
+                node.fillColor(),
+                node.outlineColor(),
+                node.fillType(),
+                node.visualEffects(),
+                node.outlineThickness(),
+                node.rotation(),
+                node.peripheral(),
+                node.annotationType(),
+                node.annotationObjects()
         ));
         for (LayoutNode child : node.children()) {
             collectSemantics(child, nodes);

@@ -53,6 +53,25 @@ final class FirstStableLeftoversTest {
                 HvarSampleFont.DEFAULT_ADVANCE + HvarSampleFont.ADVANCE_DELTA,
                 hvar.metrics(HvarSampleFont.GLYPH_A, new float[] {HvarSampleFont.MAX_WEIGHT}).advanceWidth()
         );
+        SfntFont stat = FvarSampleFont.create();
+        assertEquals(2, stat.statAxes().size());
+        assertEquals(FvarSampleFont.TAG_WGHT, stat.statAxes().getFirst().tag());
+        assertEquals(FvarSampleFont.STAT_AXIS_NAME_ID, stat.statAxes().getFirst().nameId());
+        assertEquals(FvarSampleFont.TAG_WDTH, stat.statAxes().get(1).tag());
+        assertEquals(4, stat.statNamedInstances().size());
+        assertEquals(FvarSampleFont.STAT_INSTANCE_NAME_ID, stat.statNamedInstances().getFirst().nameId());
+        assertEquals(FvarSampleFont.DEFAULT_WEIGHT, stat.statNamedInstances().getFirst().value(), 0.01f);
+        assertTrue(stat.statNamedInstances().getFirst().elidableAxisValueName());
+        assertEquals(2, stat.statNamedInstances().get(1).format());
+        assertEquals(FvarSampleFont.STAT_LIGHT_MIN, stat.statNamedInstances().get(1).rangeMin(), 0.01f);
+        assertEquals(3, stat.statNamedInstances().get(2).format());
+        assertTrue(stat.statNamedInstances().get(2).olderSiblingFontAttribute());
+        assertEquals(FvarSampleFont.STAT_BOLD_LINKED, stat.statNamedInstances().get(2).linkedValue(), 0.01f);
+        assertEquals(4, stat.statNamedInstances().get(3).format());
+        assertEquals(FvarSampleFont.STAT_BLACK_VALUE, stat.statNamedInstances().get(3).value(), 0.01f);
+        assertEquals(1, stat.statNamedInstances().get(3).extraAxisIndices().length);
+        assertEquals(FvarSampleFont.STAT_BLACK_WIDTH, stat.statNamedInstances().get(3).extraValues()[0], 0.01f);
+        assertEquals(FvarSampleFont.STAT_ELIDED_FALLBACK_NAME_ID, stat.statElidedFallbackNameId());
     }
 
     /// CBLC/CBDT and EBLC/EBDT strikes use the shipped bitmap entries.
@@ -120,6 +139,8 @@ final class FirstStableLeftoversTest {
         assertEquals(Os2SampleFont.COMPATIBLE_FULL, font.compatibleFull());
         assertEquals(Os2SampleFont.POST_SCRIPT_CID, font.postScriptCid());
         assertEquals(Os2SampleFont.VARIATIONS_POST_SCRIPT_PREFIX, font.variationsPostScriptPrefix());
+        assertEquals(Os2SampleFont.LIGHT_BACKGROUND_PALETTE, font.lightBackgroundPalette());
+        assertEquals(Os2SampleFont.DARK_BACKGROUND_PALETTE, font.darkBackgroundPalette());
         assertEquals(Os2SampleFont.SUBSCRIPT_X_SIZE, font.subscriptXSize());
         assertEquals(Os2SampleFont.SUBSCRIPT_Y_SIZE, font.subscriptYSize());
         assertEquals(Os2SampleFont.SUBSCRIPT_X_OFFSET, font.subscriptXOffset());

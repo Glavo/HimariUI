@@ -17,6 +17,9 @@ public final class FvarSampleFont {
     /// `wght` tag.
     public static final int TAG_WGHT = 0x77676874;
 
+    /// `wdth` tag.
+    public static final int TAG_WDTH = 0x77647468;
+
     /// Default weight.
     public static final float DEFAULT_WEIGHT = 400.0f;
 
@@ -28,6 +31,48 @@ public final class FvarSampleFont {
 
     /// Glyph of `A`.
     public static final int GLYPH_A = 1;
+
+    /// `STAT` weight-axis name ID.
+    public static final int STAT_AXIS_NAME_ID = 256;
+
+    /// `STAT` width-axis name ID.
+    public static final int STAT_WIDTH_NAME_ID = 257;
+
+    /// `STAT` format-1 Regular instance name ID.
+    public static final int STAT_INSTANCE_NAME_ID = 258;
+
+    /// `STAT` format-2 Light instance name ID.
+    public static final int STAT_LIGHT_NAME_ID = 259;
+
+    /// `STAT` format-2 Light nominal weight.
+    public static final float STAT_LIGHT_VALUE = 300.0f;
+
+    /// `STAT` format-2 Light range minimum.
+    public static final float STAT_LIGHT_MIN = 200.0f;
+
+    /// `STAT` format-2 Light range maximum.
+    public static final float STAT_LIGHT_MAX = 350.0f;
+
+    /// `STAT` format-3 Bold instance name ID.
+    public static final int STAT_BOLD_NAME_ID = 260;
+
+    /// `STAT` format-3 Bold weight.
+    public static final float STAT_BOLD_VALUE = 700.0f;
+
+    /// `STAT` format-3 Bold linked Regular weight.
+    public static final float STAT_BOLD_LINKED = 400.0f;
+
+    /// `STAT` format-4 Black instance name ID.
+    public static final int STAT_BLACK_NAME_ID = 261;
+
+    /// `STAT` format-4 Black weight.
+    public static final float STAT_BLACK_VALUE = 900.0f;
+
+    /// `STAT` format-4 Black width.
+    public static final float STAT_BLACK_WIDTH = 75.0f;
+
+    /// `STAT` elided-fallback name ID.
+    public static final int STAT_ELIDED_FALLBACK_NAME_ID = 2;
 
     /// Glyph count including `.notdef`.
     private static final int GLYPH_COUNT = 2;
@@ -52,6 +97,7 @@ public final class FvarSampleFont {
         byte[] glyf = glyf();
         tables.put("glyf", glyf);
         tables.put("fvar", fvar());
+        tables.put("STAT", stat());
         tables.put("head", head());
         tables.put("hhea", hhea());
         tables.put("hmtx", hmtx());
@@ -131,6 +177,56 @@ public final class FvarSampleFont {
     /// Encodes a 16.16 fixed value.
     private static int toFixed(float value) {
         return Math.round(value * 65536.0f);
+    }
+
+    /// Writes two `STAT` design axes and format-1 through format-4 instances.
+    private static byte[] stat() {
+        ByteBuffer buffer = ByteBuffer.allocate(112).order(ByteOrder.BIG_ENDIAN);
+        buffer.putShort((short) 1);
+        buffer.putShort((short) 1);
+        buffer.putShort((short) 8);
+        buffer.putShort((short) 2);
+        buffer.putInt(20);
+        buffer.putShort((short) 4);
+        buffer.putInt(36);
+        buffer.putShort((short) STAT_ELIDED_FALLBACK_NAME_ID);
+        buffer.putInt(TAG_WGHT);
+        buffer.putShort((short) STAT_AXIS_NAME_ID);
+        buffer.putShort((short) 0);
+        buffer.putInt(TAG_WDTH);
+        buffer.putShort((short) STAT_WIDTH_NAME_ID);
+        buffer.putShort((short) 1);
+        buffer.putShort((short) 44);
+        buffer.putShort((short) 56);
+        buffer.putShort((short) 76);
+        buffer.putShort((short) 92);
+        buffer.putShort((short) 1);
+        buffer.putShort((short) 0);
+        buffer.putShort((short) StatNamedInstance.FLAG_ELIDABLE_AXIS_VALUE_NAME);
+        buffer.putShort((short) STAT_INSTANCE_NAME_ID);
+        buffer.putInt(toFixed(DEFAULT_WEIGHT));
+        buffer.putShort((short) 2);
+        buffer.putShort((short) 0);
+        buffer.putShort((short) 0);
+        buffer.putShort((short) STAT_LIGHT_NAME_ID);
+        buffer.putInt(toFixed(STAT_LIGHT_VALUE));
+        buffer.putInt(toFixed(STAT_LIGHT_MIN));
+        buffer.putInt(toFixed(STAT_LIGHT_MAX));
+        buffer.putShort((short) 3);
+        buffer.putShort((short) 0);
+        buffer.putShort((short) StatNamedInstance.FLAG_OLDER_SIBLING_FONT_ATTRIBUTE);
+        buffer.putShort((short) STAT_BOLD_NAME_ID);
+        buffer.putInt(toFixed(STAT_BOLD_VALUE));
+        buffer.putInt(toFixed(STAT_BOLD_LINKED));
+        buffer.putShort((short) 4);
+        buffer.putShort((short) 2);
+        buffer.putShort((short) 0);
+        buffer.putShort((short) STAT_BLACK_NAME_ID);
+        buffer.putShort((short) 0);
+        buffer.putInt(toFixed(STAT_BLACK_VALUE));
+        buffer.putShort((short) 1);
+        buffer.putInt(toFixed(STAT_BLACK_WIDTH));
+        return buffer.array();
     }
 
     /// Writes the head table.

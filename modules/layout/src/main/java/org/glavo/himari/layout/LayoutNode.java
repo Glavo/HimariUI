@@ -104,6 +104,9 @@ public final class LayoutNode {
     /// Item-status text published to semantics, empty when absent.
     private String itemStatus = "";
 
+    /// Item-type text published to semantics, empty when absent.
+    private String itemType = "";
+
     /// BCP-47 locale published to semantics, empty when unspecified.
     private String locale = "";
 
@@ -121,6 +124,63 @@ public final class LayoutNode {
 
     /// Whether the node currently reports invalid form data.
     private boolean error;
+
+    /// UIA landmark type published to semantics; `0` when unspecified.
+    private int landmarkType;
+
+    /// Localized landmark type published to semantics, empty when absent.
+    private String localizedLandmarkType = "";
+
+    /// ARIA role published to semantics, empty when absent.
+    private String ariaRole = "";
+
+    /// ARIA properties published to semantics, empty when absent.
+    private String ariaProperties = "";
+
+    /// Controller-for target identity published to semantics, empty when absent.
+    private String controllerFor = "";
+
+    /// Described-by target identity published to semantics, empty when absent.
+    private String describedBy = "";
+
+    /// Flows-to target identity published to semantics, empty when absent.
+    private String flowsTo = "";
+
+    /// Labeled-by target identity published to semantics, empty when absent.
+    private String labeledBy = "";
+
+    /// Flows-from target identity published to semantics, empty when absent.
+    private String flowsFrom = "";
+
+    /// Whether the node prefers visual content over textual equivalents.
+    private boolean optimizeForVisualContent;
+
+    /// Fill color published to semantics as ARGB; `0` when unspecified.
+    private int fillColor;
+
+    /// Outline color published to semantics as ARGB; `0` when unspecified.
+    private int outlineColor;
+
+    /// UIA fill type published to semantics; `0` when unspecified.
+    private int fillType;
+
+    /// UIA visual-effects flags published to semantics; `0` when unspecified.
+    private int visualEffects;
+
+    /// UIA outline thickness published to semantics; `0` when unspecified.
+    private int outlineThickness;
+
+    /// UIA element rotation in degrees; `0` when unspecified.
+    private int rotation;
+
+    /// Whether the node is peripheral to the main task.
+    private boolean peripheral;
+
+    /// UIA annotation type published to semantics; `0` when unspecified.
+    private int annotationType;
+
+    /// Annotation-object identities published to semantics, empty when absent.
+    private String annotationObjects = "";
 
     /// Listeners invoked after [#setLabel(String)] when this node is a live region.
     private final ArrayList<Runnable> labelListeners = new ArrayList<>(0);
@@ -477,6 +537,301 @@ public final class LayoutNode {
     /// @param itemStatus the status, possibly empty
     public void setItemStatus(String itemStatus) {
         this.itemStatus = Objects.requireNonNull(itemStatus, "itemStatus");
+    }
+
+    /// Returns the item-type text.
+    ///
+    /// @return the type, empty when absent
+    public String itemType() {
+        return itemType;
+    }
+
+    /// Publishes the item-type text for the next semantics snapshot.
+    ///
+    /// @param itemType the type, possibly empty
+    public void setItemType(String itemType) {
+        this.itemType = Objects.requireNonNull(itemType, "itemType");
+    }
+
+    /// Returns the landmark type.
+    ///
+    /// @return the landmark type, or `0` when unspecified
+    public int landmarkType() {
+        return landmarkType;
+    }
+
+    /// Publishes the landmark type for the next semantics snapshot.
+    ///
+    /// @param landmarkType the landmark type; `0` when unspecified
+    public void setLandmarkType(int landmarkType) {
+        if (landmarkType < 0) {
+            throw new IllegalArgumentException("landmarkType must be nonnegative");
+        }
+        this.landmarkType = landmarkType;
+    }
+
+    /// Returns the localized landmark type.
+    ///
+    /// @return the localized type, empty when absent
+    public String localizedLandmarkType() {
+        return localizedLandmarkType;
+    }
+
+    /// Publishes the localized landmark type for the next semantics snapshot.
+    ///
+    /// @param localizedLandmarkType the localized type, possibly empty
+    public void setLocalizedLandmarkType(String localizedLandmarkType) {
+        this.localizedLandmarkType = Objects.requireNonNull(localizedLandmarkType, "localizedLandmarkType");
+    }
+
+    /// Returns the ARIA role.
+    ///
+    /// @return the role, empty when absent
+    public String ariaRole() {
+        return ariaRole;
+    }
+
+    /// Publishes the ARIA role for the next semantics snapshot.
+    ///
+    /// @param ariaRole the role, possibly empty
+    public void setAriaRole(String ariaRole) {
+        this.ariaRole = Objects.requireNonNull(ariaRole, "ariaRole");
+    }
+
+    /// Returns the ARIA properties string.
+    ///
+    /// @return the properties, empty when absent
+    public String ariaProperties() {
+        return ariaProperties;
+    }
+
+    /// Publishes the ARIA properties string for the next semantics snapshot.
+    ///
+    /// @param ariaProperties the properties, possibly empty
+    public void setAriaProperties(String ariaProperties) {
+        this.ariaProperties = Objects.requireNonNull(ariaProperties, "ariaProperties");
+    }
+
+    /// Returns the controller-for target identity.
+    ///
+    /// @return the identity, empty when absent
+    public String controllerFor() {
+        return controllerFor;
+    }
+
+    /// Publishes the controller-for target identity for the next semantics snapshot.
+    ///
+    /// @param controllerFor the identity, possibly empty
+    public void setControllerFor(String controllerFor) {
+        this.controllerFor = Objects.requireNonNull(controllerFor, "controllerFor");
+    }
+
+    /// Returns the described-by target identity.
+    ///
+    /// @return the identity, empty when absent
+    public String describedBy() {
+        return describedBy;
+    }
+
+    /// Publishes the described-by target identity for the next semantics snapshot.
+    ///
+    /// @param describedBy the identity, possibly empty
+    public void setDescribedBy(String describedBy) {
+        this.describedBy = Objects.requireNonNull(describedBy, "describedBy");
+    }
+
+    /// Returns the flows-to target identity.
+    ///
+    /// @return the identity, empty when absent
+    public String flowsTo() {
+        return flowsTo;
+    }
+
+    /// Publishes the flows-to target identity for the next semantics snapshot.
+    ///
+    /// @param flowsTo the identity, possibly empty
+    public void setFlowsTo(String flowsTo) {
+        this.flowsTo = Objects.requireNonNull(flowsTo, "flowsTo");
+    }
+
+    /// Returns the labeled-by target identity.
+    ///
+    /// @return the identity, empty when absent
+    public String labeledBy() {
+        return labeledBy;
+    }
+
+    /// Publishes the labeled-by target identity for the next semantics snapshot.
+    ///
+    /// @param labeledBy the identity, possibly empty
+    public void setLabeledBy(String labeledBy) {
+        this.labeledBy = Objects.requireNonNull(labeledBy, "labeledBy");
+    }
+
+    /// Returns the flows-from target identity.
+    ///
+    /// @return the identity, empty when absent
+    public String flowsFrom() {
+        return flowsFrom;
+    }
+
+    /// Publishes the flows-from target identity for the next semantics snapshot.
+    ///
+    /// @param flowsFrom the identity, possibly empty
+    public void setFlowsFrom(String flowsFrom) {
+        this.flowsFrom = Objects.requireNonNull(flowsFrom, "flowsFrom");
+    }
+
+    /// Returns whether the node prefers visual content over textual equivalents.
+    ///
+    /// @return `true` when visual content is preferred
+    public boolean optimizeForVisualContent() {
+        return optimizeForVisualContent;
+    }
+
+    /// Publishes the visual-content preference for the next semantics snapshot.
+    ///
+    /// @param optimizeForVisualContent `true` when visual content is preferred
+    public void setOptimizeForVisualContent(boolean optimizeForVisualContent) {
+        this.optimizeForVisualContent = optimizeForVisualContent;
+    }
+
+    /// Returns the fill color.
+    ///
+    /// @return the ARGB color, or `0` when unspecified
+    public int fillColor() {
+        return fillColor;
+    }
+
+    /// Publishes the fill color for the next semantics snapshot.
+    ///
+    /// @param fillColor the ARGB color, or `0` when unspecified
+    public void setFillColor(int fillColor) {
+        this.fillColor = fillColor;
+    }
+
+    /// Returns the outline color.
+    ///
+    /// @return the ARGB color, or `0` when unspecified
+    public int outlineColor() {
+        return outlineColor;
+    }
+
+    /// Publishes the outline color for the next semantics snapshot.
+    ///
+    /// @param outlineColor the ARGB color, or `0` when unspecified
+    public void setOutlineColor(int outlineColor) {
+        this.outlineColor = outlineColor;
+    }
+
+    /// Returns the fill type.
+    ///
+    /// @return the fill type, or `0` when unspecified
+    public int fillType() {
+        return fillType;
+    }
+
+    /// Publishes the fill type for the next semantics snapshot.
+    ///
+    /// @param fillType the nonnegative fill type
+    public void setFillType(int fillType) {
+        if (fillType < 0) {
+            throw new IllegalArgumentException("fillType must be nonnegative");
+        }
+        this.fillType = fillType;
+    }
+
+    /// Returns the visual-effects flags.
+    ///
+    /// @return the flags, or `0` when unspecified
+    public int visualEffects() {
+        return visualEffects;
+    }
+
+    /// Publishes the visual-effects flags for the next semantics snapshot.
+    ///
+    /// @param visualEffects the nonnegative flags
+    public void setVisualEffects(int visualEffects) {
+        if (visualEffects < 0) {
+            throw new IllegalArgumentException("visualEffects must be nonnegative");
+        }
+        this.visualEffects = visualEffects;
+    }
+
+    /// Returns the outline thickness.
+    ///
+    /// @return the thickness, or `0` when unspecified
+    public int outlineThickness() {
+        return outlineThickness;
+    }
+
+    /// Publishes the outline thickness for the next semantics snapshot.
+    ///
+    /// @param outlineThickness the nonnegative thickness
+    public void setOutlineThickness(int outlineThickness) {
+        if (outlineThickness < 0) {
+            throw new IllegalArgumentException("outlineThickness must be nonnegative");
+        }
+        this.outlineThickness = outlineThickness;
+    }
+
+    /// Returns the element rotation in degrees.
+    ///
+    /// @return the rotation, or `0` when unspecified
+    public int rotation() {
+        return rotation;
+    }
+
+    /// Publishes the element rotation for the next semantics snapshot.
+    ///
+    /// @param rotation the rotation in degrees
+    public void setRotation(int rotation) {
+        this.rotation = rotation;
+    }
+
+    /// Returns whether the node is peripheral to the main task.
+    ///
+    /// @return `true` when the node is peripheral
+    public boolean peripheral() {
+        return peripheral;
+    }
+
+    /// Publishes the peripheral flag for the next semantics snapshot.
+    ///
+    /// @param peripheral `true` when the node is peripheral
+    public void setPeripheral(boolean peripheral) {
+        this.peripheral = peripheral;
+    }
+
+    /// Returns the annotation type.
+    ///
+    /// @return the type, or `0` when unspecified
+    public int annotationType() {
+        return annotationType;
+    }
+
+    /// Publishes the annotation type for the next semantics snapshot.
+    ///
+    /// @param annotationType the nonnegative type
+    public void setAnnotationType(int annotationType) {
+        if (annotationType < 0) {
+            throw new IllegalArgumentException("annotationType must be nonnegative");
+        }
+        this.annotationType = annotationType;
+    }
+
+    /// Returns the annotation-object identities.
+    ///
+    /// @return the identities, empty when absent
+    public String annotationObjects() {
+        return annotationObjects;
+    }
+
+    /// Publishes the annotation-object identities for the next semantics snapshot.
+    ///
+    /// @param annotationObjects the identities, possibly empty
+    public void setAnnotationObjects(String annotationObjects) {
+        this.annotationObjects = Objects.requireNonNull(annotationObjects, "annotationObjects");
     }
 
     /// Returns the BCP-47 locale.

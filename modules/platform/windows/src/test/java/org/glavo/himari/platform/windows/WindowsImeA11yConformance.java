@@ -380,7 +380,9 @@ public final class WindowsImeA11yConformance {
                 uiaTextCom = uiaTextCom
                         && textProvider.invokeGetSelection()
                         && !textProvider.invokeFindAttribute(40013)
-                        && textProvider.invokeGetAttributeValue(40013) == 0
+                        && textProvider.invokeGetAttributeValueInt(
+                                WindowsAutomationProvider.UIA_IS_HIDDEN_ATTRIBUTE_ID
+                        ) == 0
                         && textProvider.invokeScrollIntoView(true)
                         && textProvider.invokeGetChildren() == 0
                         && textProvider.invokeShowContextMenu() == 1

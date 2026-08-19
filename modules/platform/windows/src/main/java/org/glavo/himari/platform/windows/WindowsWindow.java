@@ -139,6 +139,30 @@ public final class WindowsWindow implements PlatformWindow {
         return nativeWindow.queryPenInfo(pointerId);
     }
 
+    /// Queries generated `GetPointerTouchInfo` for `pointerId`.
+    ///
+    /// @param pointerId the pointer identity
+    /// @return the contact ellipse
+    public WindowsNativeWindow.ContactArea queryTouchInfo(int pointerId) {
+        return nativeWindow.queryTouchInfo(pointerId);
+    }
+
+    /// Queries generated `GetPointerInfo` for `pointerId`.
+    ///
+    /// @param pointerId the pointer identity
+    /// @return the hover and contact bits
+    public WindowsNativeWindow.PointerFlags queryPointerInfo(int pointerId) {
+        return nativeWindow.queryPointerInfo(pointerId);
+    }
+
+    /// Installs pointer-info flags used when `GetPointerInfo` has no live contact.
+    ///
+    /// @param pointerId the pointer identity
+    /// @param flags the hover and contact bits
+    public void installPointerFlags(int pointerId, WindowsNativeWindow.PointerFlags flags) {
+        nativeWindow.installPointerFlags(pointerId, flags);
+    }
+
     /// Returns the physical-pixels-per-logical-pixel scale implied by [#dpi()].
     ///
     /// @return the positive scale
@@ -165,6 +189,28 @@ public final class WindowsWindow implements PlatformWindow {
     ) {
         nativeWindow.installPenAxes(pointerId, axes);
         postPointer(type, x, y, org.glavo.himari.layout.input.PointerDeviceKind.PEN, pointerId);
+    }
+
+    /// Posts a touch `WM_POINTER*` through the production WndProc with `rcContact`.
+    ///
+    /// When the host has no live touch contact, [`WindowsNativeWindow#queryTouchInfo(int)`]
+    /// uses `contact` so the delivered [`org.glavo.himari.layout.input.PointerEvent`] carries
+    /// width and height.
+    ///
+    /// @param type the pointer kind
+    /// @param x the client x
+    /// @param y the client y
+    /// @param pointerId the host pointer identity
+    /// @param contact the contact ellipse
+    public void postTouch(
+            org.glavo.himari.layout.input.PointerEventType type,
+            int x,
+            int y,
+            int pointerId,
+            WindowsNativeWindow.ContactArea contact
+    ) {
+        nativeWindow.installTouchContact(pointerId, contact);
+        postPointer(type, x, y, org.glavo.himari.layout.input.PointerDeviceKind.TOUCH, pointerId);
     }
 
     /// Posts one wheel notch through the production WndProc.

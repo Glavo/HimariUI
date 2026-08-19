@@ -123,6 +123,28 @@ final class ArabicJoiningTest {
         assertEquals(JoiningType.RIGHT, ArabicJoining.type(0x06D5));
         assertEquals(JoiningType.RIGHT, ArabicJoining.type(0x06EE));
         assertEquals(JoiningType.RIGHT, ArabicJoining.type(0x06EF));
+        assertEquals(JoiningType.RIGHT, ArabicJoining.type(0x0672));
+        assertEquals(JoiningType.RIGHT, ArabicJoining.type(0x0693));
+        assertEquals(JoiningType.RIGHT, ArabicJoining.type(0x06CD));
+        assertEquals(JoiningType.DUAL, ArabicJoining.type(0x0678));
+        assertEquals(JoiningType.DUAL, ArabicJoining.type(0x06A1));
+        assertEquals(JoiningType.DUAL, ArabicJoining.type(0x06AA));
+        assertEquals(JoiningType.DUAL, ArabicJoining.type(0x06D1));
+        assertEquals(ArabicForm.FINAL, form("\u0628\u0693", 1));
+        assertEquals(ArabicForm.INITIAL, form("\u06A1\u0628", 0));
+        assertEquals(JoiningType.DUAL, ArabicJoining.type(0x08A0));
+        assertEquals(JoiningType.RIGHT, ArabicJoining.type(0x08AA));
+        assertEquals(JoiningType.RIGHT, ArabicJoining.type(0x08AD));
+        assertEquals(JoiningType.TRANSPARENT, ArabicJoining.type(0x08E4));
+        assertEquals(ArabicForm.FINAL, form("\u0628\u08AA", 1));
+        assertEquals(ArabicForm.INITIAL, form("\u08A0\u0628", 0));
+        assertEquals(JoiningType.RIGHT, ArabicJoining.type(0x0870));
+        assertEquals(JoiningType.JOIN_CAUSING, ArabicJoining.type(0x0883));
+        assertEquals(JoiningType.DUAL, ArabicJoining.type(0x0886));
+        assertEquals(JoiningType.NON_JOINING, ArabicJoining.type(0x0888));
+        assertEquals(JoiningType.TRANSPARENT, ArabicJoining.type(0x0898));
+        assertEquals(ArabicForm.FINAL, form("\u0628\u0870", 1));
+        assertEquals(ArabicForm.INITIAL, form("\u0886\u0628", 0));
     }
 
     /// Forces a final form after ZWJ.

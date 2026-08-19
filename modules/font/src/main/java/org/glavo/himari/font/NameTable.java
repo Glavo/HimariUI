@@ -11,14 +11,14 @@ import java.nio.charset.StandardCharsets;
 /// version, PostScript, trademark, manufacturer, designer, description, typographic, and WWS names.
 ///
 /// The first Windows Unicode (`platform 3`, `encoding 1`) `nameID 0`–`14` / `16` / `17` /
-/// `18` / `19` / `20` / `21` / `22` / `25` record wins. When that record is absent, the first Macintosh Roman
+/// `18` / `19` / `20` / `21` / `22` / `23` / `24` / `25` record wins. When that record is absent, the first Macintosh Roman
 /// (`platform 1`, `encoding 0`) record of the same name ID is used.
 @NotNullByDefault
 public final class NameTable {
     /// Shared empty table.
     static final NameTable EMPTY = new NameTable(
             null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null);
 
     /// Decoded copyright, or `null` when no `nameID 0` record is present.
     private final @Nullable String copyright;
@@ -89,6 +89,12 @@ public final class NameTable {
     /// Decoded Variations PostScript prefix, or `null` when no `nameID 25` record is present.
     private final @Nullable String variationsPostScriptPrefix;
 
+    /// Decoded light-background palette name, or `null` when no `nameID 23` record is present.
+    private final @Nullable String lightBackgroundPalette;
+
+    /// Decoded dark-background palette name, or `null` when no `nameID 24` record is present.
+    private final @Nullable String darkBackgroundPalette;
+
     /// Creates a table.
     ///
     /// @param copyright the copyright, or `null`
@@ -114,6 +120,8 @@ public final class NameTable {
     /// @param compatibleFull the compatible full name, or `null`
     /// @param postScriptCid the PostScript CID findfont name, or `null`
     /// @param variationsPostScriptPrefix the Variations PostScript prefix, or `null`
+    /// @param lightBackgroundPalette the light-background palette name, or `null`
+    /// @param darkBackgroundPalette the dark-background palette name, or `null`
     private NameTable(
             @Nullable String copyright,
             @Nullable String familyName,
@@ -137,7 +145,9 @@ public final class NameTable {
             @Nullable String sampleText,
             @Nullable String compatibleFull,
             @Nullable String postScriptCid,
-            @Nullable String variationsPostScriptPrefix
+            @Nullable String variationsPostScriptPrefix,
+            @Nullable String lightBackgroundPalette,
+            @Nullable String darkBackgroundPalette
     ) {
         this.copyright = copyright;
         this.familyName = familyName;
@@ -162,6 +172,8 @@ public final class NameTable {
         this.compatibleFull = compatibleFull;
         this.postScriptCid = postScriptCid;
         this.variationsPostScriptPrefix = variationsPostScriptPrefix;
+        this.lightBackgroundPalette = lightBackgroundPalette;
+        this.darkBackgroundPalette = darkBackgroundPalette;
     }
 
     /// Parses a `name` table, or returns [`#EMPTY`].
@@ -227,6 +239,10 @@ public final class NameTable {
         @Nullable String macintoshCid = null;
         @Nullable String windowsVarPs = null;
         @Nullable String macintoshVarPs = null;
+        @Nullable String windowsLightBg = null;
+        @Nullable String macintoshLightBg = null;
+        @Nullable String windowsDarkBg = null;
+        @Nullable String macintoshDarkBg = null;
         for (int index = 0; index < count; index++) {
             int platform = Short.toUnsignedInt(buffer.getShort());
             int encoding = Short.toUnsignedInt(buffer.getShort());
@@ -238,7 +254,7 @@ public final class NameTable {
                     && nameId != 7 && nameId != 8 && nameId != 9 && nameId != 10 && nameId != 11 && nameId != 12
                     && nameId != 13 && nameId != 14 && nameId != 16 && nameId != 17
                     && nameId != 18 && nameId != 19 && nameId != 20 && nameId != 21 && nameId != 22
-                    && nameId != 25)
+                    && nameId != 23 && nameId != 24 && nameId != 25)
                     || length < 1) {
                 continue;
             }
@@ -294,6 +310,10 @@ public final class NameTable {
                     windowsCid = new String(whole, at, length, StandardCharsets.UTF_16BE);
                 } else if (nameId == 25 && windowsVarPs == null) {
                     windowsVarPs = new String(whole, at, length, StandardCharsets.UTF_16BE);
+                } else if (nameId == 23 && windowsLightBg == null) {
+                    windowsLightBg = new String(whole, at, length, StandardCharsets.UTF_16BE);
+                } else if (nameId == 24 && windowsDarkBg == null) {
+                    windowsDarkBg = new String(whole, at, length, StandardCharsets.UTF_16BE);
                 }
             } else if (platform == 1 && encoding == 0) {
                 if (nameId == 0 && macintoshCopyright == null) {
@@ -342,6 +362,10 @@ public final class NameTable {
                     macintoshCid = new String(whole, at, length, StandardCharsets.US_ASCII);
                 } else if (nameId == 25 && macintoshVarPs == null) {
                     macintoshVarPs = new String(whole, at, length, StandardCharsets.US_ASCII);
+                } else if (nameId == 23 && macintoshLightBg == null) {
+                    macintoshLightBg = new String(whole, at, length, StandardCharsets.US_ASCII);
+                } else if (nameId == 24 && macintoshDarkBg == null) {
+                    macintoshDarkBg = new String(whole, at, length, StandardCharsets.US_ASCII);
                 }
             }
         }
@@ -368,12 +392,15 @@ public final class NameTable {
         @Nullable String compatibleFull = windowsCompatible != null ? windowsCompatible : macintoshCompatible;
         @Nullable String postScriptCid = windowsCid != null ? windowsCid : macintoshCid;
         @Nullable String variationsPostScriptPrefix = windowsVarPs != null ? windowsVarPs : macintoshVarPs;
+        @Nullable String lightBackgroundPalette = windowsLightBg != null ? windowsLightBg : macintoshLightBg;
+        @Nullable String darkBackgroundPalette = windowsDarkBg != null ? windowsDarkBg : macintoshDarkBg;
         return copyright == null && family == null && unique == null && style == null && full == null
                 && version == null && postScript == null && trademark == null && manufacturer == null
                 && designer == null && description == null && typoFamily == null && typoSubfamily == null
                 && vendorUrl == null && license == null && designerUrl == null && licenseUrl == null
                 && wwsFamily == null && wwsSubfamily == null && sampleText == null && compatibleFull == null
                 && postScriptCid == null && variationsPostScriptPrefix == null
+                && lightBackgroundPalette == null && darkBackgroundPalette == null
                 ? EMPTY
                 : new NameTable(
                         copyright,
@@ -398,7 +425,9 @@ public final class NameTable {
                         sampleText,
                         compatibleFull,
                         postScriptCid,
-                        variationsPostScriptPrefix
+                        variationsPostScriptPrefix,
+                        lightBackgroundPalette,
+                        darkBackgroundPalette
                 );
     }
 
@@ -561,5 +590,19 @@ public final class NameTable {
     /// @return the prefix, or `null` when absent
     @Nullable String variationsPostScriptPrefix() {
         return variationsPostScriptPrefix;
+    }
+
+    /// Returns the light-background palette name.
+    ///
+    /// @return the palette name, or `null` when absent
+    @Nullable String lightBackgroundPalette() {
+        return lightBackgroundPalette;
+    }
+
+    /// Returns the dark-background palette name.
+    ///
+    /// @return the palette name, or `null` when absent
+    @Nullable String darkBackgroundPalette() {
+        return darkBackgroundPalette;
     }
 }

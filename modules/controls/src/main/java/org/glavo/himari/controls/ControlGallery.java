@@ -109,6 +109,15 @@ public final class ControlGallery {
     /// Theme tokens used by the gallery.
     private ThemeTokens theme;
 
+    /// Extra theme surfaces that do not fit in [`ThemeTokens`].
+    private ThemeSurfaces surfaces;
+
+    /// Extra theme overlays that do not fit in [`ThemeTokens`] or [`ThemeSurfaces`].
+    private ThemeOverlays overlays;
+
+    /// Extra theme washes that do not fit in [`ThemeTokens`], [`ThemeSurfaces`], or [`ThemeOverlays`].
+    private ThemeWashes washes;
+
     /// Last UTF-8 font family installed by [#applyFontReload(ResourceReload, String)].
     private @Nullable String fontFamily;
 
@@ -157,6 +166,9 @@ public final class ControlGallery {
                 new Tree.Item("child", "Child", 1, false)
         ));
         this.theme = ThemeTokens.standard();
+        this.surfaces = ThemeSurfaces.standard();
+        this.overlays = ThemeOverlays.standard();
+        this.washes = ThemeWashes.standard();
     }
 
     /// Returns the button.
@@ -334,6 +346,27 @@ public final class ControlGallery {
         return theme;
     }
 
+    /// Returns the extra theme surfaces.
+    ///
+    /// @return the surfaces
+    public ThemeSurfaces surfaces() {
+        return surfaces;
+    }
+
+    /// Returns the extra theme overlays.
+    ///
+    /// @return the overlays
+    public ThemeOverlays overlays() {
+        return overlays;
+    }
+
+    /// Returns the extra theme washes.
+    ///
+    /// @return the washes
+    public ThemeWashes washes() {
+        return washes;
+    }
+
     /// Returns the last font family installed by [#applyFontReload(ResourceReload, String)].
     ///
     /// @return the family, or `null` before the first successful font reload
@@ -368,6 +401,75 @@ public final class ControlGallery {
             return false;
         }
         this.theme = ThemeTokens.decode(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE));
+        return true;
+    }
+
+    /// Replaces the extra theme surfaces used by the next [#create(LayoutTree)].
+    ///
+    /// @param surfaces the surfaces
+    public void setSurfaces(ThemeSurfaces surfaces) {
+        this.surfaces = Objects.requireNonNull(surfaces, "surfaces");
+    }
+
+    /// Applies the current published extra-surface generation for `key` from `reload`.
+    ///
+    /// @param reload the resource generations
+    /// @param key the surface consumer key
+    /// @return whether a surface payload was installed
+    public boolean applySurfacesReload(ResourceReload reload, String key) {
+        Objects.requireNonNull(reload, "reload");
+        Objects.requireNonNull(key, "key");
+        @Nullable ResourceSnapshot snapshot = reload.current(ResourceKind.THEME, key);
+        if (snapshot == null) {
+            return false;
+        }
+        this.surfaces = ThemeSurfaces.decode(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE));
+        return true;
+    }
+
+    /// Replaces the extra theme overlays used by the next [#create(LayoutTree)].
+    ///
+    /// @param overlays the overlays
+    public void setOverlays(ThemeOverlays overlays) {
+        this.overlays = Objects.requireNonNull(overlays, "overlays");
+    }
+
+    /// Applies the current published extra-overlay generation for `key` from `reload`.
+    ///
+    /// @param reload the resource generations
+    /// @param key the overlay consumer key
+    /// @return whether an overlay payload was installed
+    public boolean applyOverlaysReload(ResourceReload reload, String key) {
+        Objects.requireNonNull(reload, "reload");
+        Objects.requireNonNull(key, "key");
+        @Nullable ResourceSnapshot snapshot = reload.current(ResourceKind.THEME, key);
+        if (snapshot == null) {
+            return false;
+        }
+        this.overlays = ThemeOverlays.decode(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE));
+        return true;
+    }
+
+    /// Replaces the extra theme washes used by the next [#create(LayoutTree)].
+    ///
+    /// @param washes the washes
+    public void setWashes(ThemeWashes washes) {
+        this.washes = Objects.requireNonNull(washes, "washes");
+    }
+
+    /// Applies the current published extra-wash generation for `key` from `reload`.
+    ///
+    /// @param reload the resource generations
+    /// @param key the wash consumer key
+    /// @return whether a wash payload was installed
+    public boolean applyWashesReload(ResourceReload reload, String key) {
+        Objects.requireNonNull(reload, "reload");
+        Objects.requireNonNull(key, "key");
+        @Nullable ResourceSnapshot snapshot = reload.current(ResourceKind.THEME, key);
+        if (snapshot == null) {
+            return false;
+        }
+        this.washes = ThemeWashes.decode(snapshot.bytes().toArray(ValueLayout.JAVA_BYTE));
         return true;
     }
 

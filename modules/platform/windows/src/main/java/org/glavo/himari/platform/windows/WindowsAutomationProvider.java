@@ -234,6 +234,618 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// `UIA_ItemStatusPropertyId`.
     static final int UIA_ITEM_STATUS_PROPERTY_ID = 30026;
 
+    /// `UIA_ItemTypePropertyId`.
+    static final int UIA_ITEM_TYPE_PROPERTY_ID = 30021;
+
+    /// `UIA_LandmarkTypePropertyId`.
+    static final int UIA_LANDMARK_TYPE_PROPERTY_ID = 30157;
+
+    /// `UIA_LocalizedLandmarkTypePropertyId`.
+    static final int UIA_LOCALIZED_LANDMARK_TYPE_PROPERTY_ID = 30158;
+
+    /// `UIA_AriaRolePropertyId`.
+    static final int UIA_ARIA_ROLE_PROPERTY_ID = 30101;
+
+    /// `UIA_AriaPropertiesPropertyId`.
+    static final int UIA_ARIA_PROPERTIES_PROPERTY_ID = 30102;
+
+    /// `UIA_ControllerForPropertyId`.
+    static final int UIA_CONTROLLER_FOR_PROPERTY_ID = 30104;
+
+    /// `UIA_DescribedByPropertyId`.
+    static final int UIA_DESCRIBED_BY_PROPERTY_ID = 30105;
+
+    /// `UIA_FlowsToPropertyId`.
+    static final int UIA_FLOWS_TO_PROPERTY_ID = 30106;
+
+    /// `UIA_LabeledByPropertyId`.
+    static final int UIA_LABELED_BY_PROPERTY_ID = 30018;
+
+    /// `UIA_FlowsFromPropertyId`.
+    static final int UIA_FLOWS_FROM_PROPERTY_ID = 30148;
+
+    /// `UIA_OptimizeForVisualContentPropertyId`.
+    static final int UIA_OPTIMIZE_FOR_VISUAL_CONTENT_PROPERTY_ID = 30111;
+
+    /// `UIA_FillColorPropertyId`.
+    static final int UIA_FILL_COLOR_PROPERTY_ID = 30160;
+
+    /// `UIA_OutlineColorPropertyId`.
+    static final int UIA_OUTLINE_COLOR_PROPERTY_ID = 30161;
+
+    /// `UIA_FillTypePropertyId`.
+    static final int UIA_FILL_TYPE_PROPERTY_ID = 30162;
+
+    /// `UIA_VisualEffectsPropertyId`.
+    static final int UIA_VISUAL_EFFECTS_PROPERTY_ID = 30163;
+
+    /// `UIA_OutlineThicknessPropertyId`.
+    static final int UIA_OUTLINE_THICKNESS_PROPERTY_ID = 30164;
+
+    /// `UIA_CenterPointPropertyId`.
+    static final int UIA_CENTER_POINT_PROPERTY_ID = 30165;
+
+    /// `UIA_RotationPropertyId`.
+    static final int UIA_ROTATION_PROPERTY_ID = 30166;
+
+    /// `UIA_SizePropertyId`.
+    static final int UIA_SIZE_PROPERTY_ID = 30167;
+
+    /// `UIA_RuntimeIdPropertyId`.
+    static final int UIA_RUNTIME_ID_PROPERTY_ID = 30000;
+
+    /// `UIA_IsPeripheralPropertyId`.
+    static final int UIA_IS_PERIPHERAL_PROPERTY_ID = 30150;
+
+    /// `UIA_AnnotationTypesPropertyId`.
+    static final int UIA_ANNOTATION_TYPES_PROPERTY_ID = 30155;
+
+    /// `UIA_AnnotationObjectsPropertyId`.
+    static final int UIA_ANNOTATION_OBJECTS_PROPERTY_ID = 30156;
+
+    /// `UIA_ValueIsReadOnlyPropertyId`.
+    static final int UIA_VALUE_IS_READ_ONLY_PROPERTY_ID = 30046;
+
+    /// `UIA_IsInvokePatternAvailablePropertyId`.
+    static final int UIA_IS_INVOKE_PATTERN_AVAILABLE_PROPERTY_ID = 30031;
+
+    /// `UIA_IsValuePatternAvailablePropertyId`.
+    static final int UIA_IS_VALUE_PATTERN_AVAILABLE_PROPERTY_ID = 30043;
+
+    /// `UIA_IsRangeValuePatternAvailablePropertyId`.
+    static final int UIA_IS_RANGE_VALUE_PATTERN_AVAILABLE_PROPERTY_ID = 30033;
+
+    /// `UIA_IsTogglePatternAvailablePropertyId`.
+    static final int UIA_IS_TOGGLE_PATTERN_AVAILABLE_PROPERTY_ID = 30041;
+
+    /// `UIA_IsScrollPatternAvailablePropertyId`.
+    static final int UIA_IS_SCROLL_PATTERN_AVAILABLE_PROPERTY_ID = 30034;
+
+    /// `UIA_IsWindowPatternAvailablePropertyId`.
+    static final int UIA_IS_WINDOW_PATTERN_AVAILABLE_PROPERTY_ID = 30044;
+
+    /// `UIA_IsExpandCollapsePatternAvailablePropertyId`.
+    static final int UIA_IS_EXPAND_COLLAPSE_PATTERN_AVAILABLE_PROPERTY_ID = 30028;
+
+    /// `UIA_IsSelectionItemPatternAvailablePropertyId`.
+    static final int UIA_IS_SELECTION_ITEM_PATTERN_AVAILABLE_PROPERTY_ID = 30036;
+
+    /// `UIA_IsGridPatternAvailablePropertyId`.
+    static final int UIA_IS_GRID_PATTERN_AVAILABLE_PROPERTY_ID = 30030;
+
+    /// `UIA_IsGridItemPatternAvailablePropertyId`.
+    static final int UIA_IS_GRID_ITEM_PATTERN_AVAILABLE_PROPERTY_ID = 30029;
+
+    /// `UIA_IsTablePatternAvailablePropertyId`.
+    static final int UIA_IS_TABLE_PATTERN_AVAILABLE_PROPERTY_ID = 30038;
+
+    /// `UIA_IsScrollItemPatternAvailablePropertyId`.
+    static final int UIA_IS_SCROLL_ITEM_PATTERN_AVAILABLE_PROPERTY_ID = 30035;
+
+    /// `UIA_IsMultipleViewPatternAvailablePropertyId`.
+    static final int UIA_IS_MULTIPLE_VIEW_PATTERN_AVAILABLE_PROPERTY_ID = 30032;
+
+    /// `UIA_IsSelectionPatternAvailablePropertyId`.
+    static final int UIA_IS_SELECTION_PATTERN_AVAILABLE_PROPERTY_ID = 30037;
+
+    /// `UIA_IsTableItemPatternAvailablePropertyId`.
+    static final int UIA_IS_TABLE_ITEM_PATTERN_AVAILABLE_PROPERTY_ID = 30039;
+
+    /// `UIA_IsTextPatternAvailablePropertyId`.
+    static final int UIA_IS_TEXT_PATTERN_AVAILABLE_PROPERTY_ID = 30040;
+
+    /// `UIA_IsTransformPatternAvailablePropertyId`.
+    static final int UIA_IS_TRANSFORM_PATTERN_AVAILABLE_PROPERTY_ID = 30042;
+
+    /// `UIA_IsLegacyIAccessiblePatternAvailablePropertyId`.
+    static final int UIA_IS_LEGACY_IACCESSIBLE_PATTERN_AVAILABLE_PROPERTY_ID = 30090;
+
+    /// `UIA_IsItemContainerPatternAvailablePropertyId`.
+    static final int UIA_IS_ITEM_CONTAINER_PATTERN_AVAILABLE_PROPERTY_ID = 30108;
+
+    /// `UIA_IsVirtualizedItemPatternAvailablePropertyId`.
+    static final int UIA_IS_VIRTUALIZED_ITEM_PATTERN_AVAILABLE_PROPERTY_ID = 30109;
+
+    /// `UIA_IsTextPattern2AvailablePropertyId`.
+    static final int UIA_IS_TEXT_PATTERN2_AVAILABLE_PROPERTY_ID = 30119;
+
+    /// `UIA_IsSynchronizedInputPatternAvailablePropertyId`.
+    static final int UIA_IS_SYNCHRONIZED_INPUT_PATTERN_AVAILABLE_PROPERTY_ID = 30110;
+
+    /// `UIA_IsObjectModelPatternAvailablePropertyId`.
+    static final int UIA_IS_OBJECT_MODEL_PATTERN_AVAILABLE_PROPERTY_ID = 30112;
+
+    /// `UIA_IsAnnotationPatternAvailablePropertyId`.
+    static final int UIA_IS_ANNOTATION_PATTERN_AVAILABLE_PROPERTY_ID = 30118;
+
+    /// `UIA_IsStylesPatternAvailablePropertyId`.
+    static final int UIA_IS_STYLES_PATTERN_AVAILABLE_PROPERTY_ID = 30127;
+
+    /// `UIA_IsSpreadsheetPatternAvailablePropertyId`.
+    static final int UIA_IS_SPREADSHEET_PATTERN_AVAILABLE_PROPERTY_ID = 30128;
+
+    /// `UIA_IsSpreadsheetItemPatternAvailablePropertyId`.
+    static final int UIA_IS_SPREADSHEET_ITEM_PATTERN_AVAILABLE_PROPERTY_ID = 30132;
+
+    /// `UIA_IsTransformPattern2AvailablePropertyId`.
+    static final int UIA_IS_TRANSFORM_PATTERN2_AVAILABLE_PROPERTY_ID = 30134;
+
+    /// `UIA_IsTextChildPatternAvailablePropertyId`.
+    static final int UIA_IS_TEXT_CHILD_PATTERN_AVAILABLE_PROPERTY_ID = 30136;
+
+    /// `UIA_IsDragPatternAvailablePropertyId`.
+    static final int UIA_IS_DRAG_PATTERN_AVAILABLE_PROPERTY_ID = 30137;
+
+    /// `UIA_IsDropTargetPatternAvailablePropertyId`.
+    static final int UIA_IS_DROP_TARGET_PATTERN_AVAILABLE_PROPERTY_ID = 30141;
+
+    /// `UIA_IsTextEditPatternAvailablePropertyId`.
+    static final int UIA_IS_TEXT_EDIT_PATTERN_AVAILABLE_PROPERTY_ID = 30149;
+
+    /// `UIA_IsCustomNavigationPatternAvailablePropertyId`.
+    static final int UIA_IS_CUSTOM_NAVIGATION_PATTERN_AVAILABLE_PROPERTY_ID = 30151;
+
+    /// `UIA_IsDockPatternAvailablePropertyId`.
+    static final int UIA_IS_DOCK_PATTERN_AVAILABLE_PROPERTY_ID = 30027;
+
+    /// `UIA_IsSelectionPattern2AvailablePropertyId`.
+    static final int UIA_IS_SELECTION_PATTERN2_AVAILABLE_PROPERTY_ID = 30168;
+
+    /// `UIA_DockDockPositionPropertyId`.
+    static final int UIA_DOCK_DOCK_POSITION_PROPERTY_ID = 30069;
+
+    /// `UIA_TransformCanMovePropertyId`.
+    static final int UIA_TRANSFORM_CAN_MOVE_PROPERTY_ID = 30087;
+
+    /// `UIA_TransformCanResizePropertyId`.
+    static final int UIA_TRANSFORM_CAN_RESIZE_PROPERTY_ID = 30088;
+
+    /// `UIA_TransformCanRotatePropertyId`.
+    static final int UIA_TRANSFORM_CAN_ROTATE_PROPERTY_ID = 30089;
+
+    /// `UIA_ExpandCollapseExpandCollapseStatePropertyId`.
+    static final int UIA_EXPAND_COLLAPSE_EXPAND_COLLAPSE_STATE_PROPERTY_ID = 30070;
+
+    /// `UIA_ToggleToggleStatePropertyId`.
+    static final int UIA_TOGGLE_TOGGLE_STATE_PROPERTY_ID = 30086;
+
+    /// `UIA_MultipleViewCurrentViewPropertyId`.
+    static final int UIA_MULTIPLE_VIEW_CURRENT_VIEW_PROPERTY_ID = 30071;
+
+    /// `UIA_SelectionItemIsSelectedPropertyId`.
+    static final int UIA_SELECTION_ITEM_IS_SELECTED_PROPERTY_ID = 30079;
+
+    /// `UIA_GridRowCountPropertyId`.
+    static final int UIA_GRID_ROW_COUNT_PROPERTY_ID = 30062;
+
+    /// `UIA_GridColumnCountPropertyId`.
+    static final int UIA_GRID_COLUMN_COUNT_PROPERTY_ID = 30063;
+
+    /// `UIA_GridItemRowPropertyId`.
+    static final int UIA_GRID_ITEM_ROW_PROPERTY_ID = 30064;
+
+    /// `UIA_GridItemColumnPropertyId`.
+    static final int UIA_GRID_ITEM_COLUMN_PROPERTY_ID = 30065;
+
+    /// `UIA_GridItemRowSpanPropertyId`.
+    static final int UIA_GRID_ITEM_ROW_SPAN_PROPERTY_ID = 30066;
+
+    /// `UIA_GridItemColumnSpanPropertyId`.
+    static final int UIA_GRID_ITEM_COLUMN_SPAN_PROPERTY_ID = 30067;
+
+    /// `UIA_GridItemContainingGridPropertyId`.
+    static final int UIA_GRID_ITEM_CONTAINING_GRID_PROPERTY_ID = 30068;
+
+    /// `UIA_SelectionItemSelectionContainerPropertyId`.
+    static final int UIA_SELECTION_ITEM_SELECTION_CONTAINER_PROPERTY_ID = 30080;
+
+    /// `UIA_LegacyIAccessibleSelectionPropertyId`.
+    static final int UIA_LEGACY_IACCESSIBLE_SELECTION_PROPERTY_ID = 30099;
+
+    /// `UIA_WindowCanMaximizePropertyId`.
+    static final int UIA_WINDOW_CAN_MAXIMIZE_PROPERTY_ID = 30073;
+
+    /// `UIA_WindowCanMinimizePropertyId`.
+    static final int UIA_WINDOW_CAN_MINIMIZE_PROPERTY_ID = 30074;
+
+    /// `UIA_WindowWindowVisualStatePropertyId`.
+    static final int UIA_WINDOW_WINDOW_VISUAL_STATE_PROPERTY_ID = 30075;
+
+    /// `UIA_WindowWindowInteractionStatePropertyId`.
+    static final int UIA_WINDOW_WINDOW_INTERACTION_STATE_PROPERTY_ID = 30076;
+
+    /// `UIA_WindowIsModalPropertyId`.
+    static final int UIA_WINDOW_IS_MODAL_PROPERTY_ID = 30077;
+
+    /// `UIA_WindowIsTopmostPropertyId`.
+    static final int UIA_WINDOW_IS_TOPMOST_PROPERTY_ID = 30078;
+
+    /// `UIA_TableRowHeadersPropertyId`.
+    static final int UIA_TABLE_ROW_HEADERS_PROPERTY_ID = 30081;
+
+    /// `UIA_TableColumnHeadersPropertyId`.
+    static final int UIA_TABLE_COLUMN_HEADERS_PROPERTY_ID = 30082;
+
+    /// `UIA_TableRowOrColumnMajorPropertyId`.
+    static final int UIA_TABLE_ROW_OR_COLUMN_MAJOR_PROPERTY_ID = 30083;
+
+    /// `UIA_TableItemRowHeaderItemsPropertyId`.
+    static final int UIA_TABLE_ITEM_ROW_HEADER_ITEMS_PROPERTY_ID = 30084;
+
+    /// `UIA_TableItemColumnHeaderItemsPropertyId`.
+    static final int UIA_TABLE_ITEM_COLUMN_HEADER_ITEMS_PROPERTY_ID = 30085;
+
+    /// `UIA_SelectionSelectionPropertyId`.
+    static final int UIA_SELECTION_SELECTION_PROPERTY_ID = 30059;
+
+    /// `UIA_SelectionCanSelectMultiplePropertyId`.
+    static final int UIA_SELECTION_CAN_SELECT_MULTIPLE_PROPERTY_ID = 30060;
+
+    /// `UIA_SelectionIsSelectionRequiredPropertyId`.
+    static final int UIA_SELECTION_IS_SELECTION_REQUIRED_PROPERTY_ID = 30061;
+
+    /// `UIA_ScrollHorizontalScrollPercentPropertyId`.
+    static final int UIA_SCROLL_HORIZONTAL_SCROLL_PERCENT_PROPERTY_ID = 30053;
+
+    /// `UIA_ScrollHorizontalViewSizePropertyId`.
+    static final int UIA_SCROLL_HORIZONTAL_VIEW_SIZE_PROPERTY_ID = 30054;
+
+    /// `UIA_ScrollVerticalScrollPercentPropertyId`.
+    static final int UIA_SCROLL_VERTICAL_SCROLL_PERCENT_PROPERTY_ID = 30055;
+
+    /// `UIA_ScrollHorizontallyScrollablePropertyId`.
+    static final int UIA_SCROLL_HORIZONTALLY_SCROLLABLE_PROPERTY_ID = 30057;
+
+    /// `UIA_ScrollVerticalViewSizePropertyId`.
+    static final int UIA_SCROLL_VERTICAL_VIEW_SIZE_PROPERTY_ID = 30056;
+
+    /// `UIA_ScrollVerticallyScrollablePropertyId`.
+    static final int UIA_SCROLL_VERTICALLY_SCROLLABLE_PROPERTY_ID = 30058;
+
+    /// `UIA_RangeValueMinimumPropertyId`.
+    static final int UIA_RANGE_VALUE_MINIMUM_PROPERTY_ID = 30049;
+
+    /// `UIA_RangeValueMaximumPropertyId`.
+    static final int UIA_RANGE_VALUE_MAXIMUM_PROPERTY_ID = 30050;
+
+    /// `UIA_RangeValueIsReadOnlyPropertyId`.
+    static final int UIA_RANGE_VALUE_IS_READ_ONLY_PROPERTY_ID = 30048;
+
+    /// First-stable range minimum published by `IRangeValueProvider::get_Minimum`.
+    static final double RANGE_MINIMUM = 0.0;
+
+    /// First-stable range maximum published by `IRangeValueProvider::get_Maximum`.
+    static final double RANGE_MAXIMUM = 100.0;
+
+    /// First-stable large-change step, one tenth of `[#RANGE_MINIMUM, #RANGE_MAXIMUM]`.
+    static final double RANGE_LARGE_CHANGE = 10.0;
+
+    /// First-stable small-change step, one hundredth of `[#RANGE_MINIMUM, #RANGE_MAXIMUM]`.
+    static final double RANGE_SMALL_CHANGE = 1.0;
+
+    /// `UIA_RangeValueLargeChangePropertyId`.
+    static final int UIA_RANGE_VALUE_LARGE_CHANGE_PROPERTY_ID = 30051;
+
+    /// `UIA_RangeValueSmallChangePropertyId`.
+    static final int UIA_RANGE_VALUE_SMALL_CHANGE_PROPERTY_ID = 30052;
+
+    /// `UIA_AnnotationAnnotationTypeIdPropertyId`.
+    static final int UIA_ANNOTATION_ANNOTATION_TYPE_ID_PROPERTY_ID = 30113;
+
+    /// `UIA_AnnotationAnnotationTypeNamePropertyId`.
+    static final int UIA_ANNOTATION_ANNOTATION_TYPE_NAME_PROPERTY_ID = 30114;
+
+    /// `UIA_AnnotationAuthorPropertyId`.
+    static final int UIA_ANNOTATION_AUTHOR_PROPERTY_ID = 30115;
+
+    /// `UIA_AnnotationDateTimePropertyId`.
+    static final int UIA_ANNOTATION_DATE_TIME_PROPERTY_ID = 30116;
+
+    /// `UIA_StylesStyleIdPropertyId`.
+    static final int UIA_STYLES_STYLE_ID_PROPERTY_ID = 30120;
+
+    /// `UIA_StylesStyleNamePropertyId`.
+    static final int UIA_STYLES_STYLE_NAME_PROPERTY_ID = 30121;
+
+    /// `UIA_StylesFillColorPropertyId`.
+    static final int UIA_STYLES_FILL_COLOR_PROPERTY_ID = 30122;
+
+    /// `UIA_StylesFillPatternStylePropertyId`.
+    static final int UIA_STYLES_FILL_PATTERN_STYLE_PROPERTY_ID = 30123;
+
+    /// `UIA_StylesShapePropertyId`.
+    static final int UIA_STYLES_SHAPE_PROPERTY_ID = 30124;
+
+    /// `UIA_StylesFillPatternColorPropertyId`.
+    static final int UIA_STYLES_FILL_PATTERN_COLOR_PROPERTY_ID = 30125;
+
+    /// `UIA_StylesExtendedPropertiesPropertyId`.
+    static final int UIA_STYLES_EXTENDED_PROPERTIES_PROPERTY_ID = 30126;
+
+    /// `UIA_SpreadsheetItemFormulaPropertyId`.
+    static final int UIA_SPREADSHEET_ITEM_FORMULA_PROPERTY_ID = 30129;
+
+    /// `UIA_SpreadsheetItemAnnotationObjectsPropertyId`.
+    static final int UIA_SPREADSHEET_ITEM_ANNOTATION_OBJECTS_PROPERTY_ID = 30130;
+
+    /// `UIA_SpreadsheetItemAnnotationTypesPropertyId`.
+    static final int UIA_SPREADSHEET_ITEM_ANNOTATION_TYPES_PROPERTY_ID = 30131;
+
+    /// `UIA_DragIsGrabbedPropertyId`.
+    static final int UIA_DRAG_IS_GRABBED_PROPERTY_ID = 30138;
+
+    /// `UIA_DragDropEffectPropertyId`.
+    static final int UIA_DRAG_DROP_EFFECT_PROPERTY_ID = 30139;
+
+    /// `UIA_DragDropEffectsPropertyId`.
+    static final int UIA_DRAG_DROP_EFFECTS_PROPERTY_ID = 30140;
+
+    /// `UIA_DropTargetDropTargetEffectPropertyId`.
+    static final int UIA_DROP_TARGET_DROP_TARGET_EFFECT_PROPERTY_ID = 30142;
+
+    /// `UIA_DropTargetDropTargetEffectsPropertyId`.
+    static final int UIA_DROP_TARGET_DROP_TARGET_EFFECTS_PROPERTY_ID = 30143;
+
+    /// `UIA_DragGrabbedItemsPropertyId`.
+    static final int UIA_DRAG_GRABBED_ITEMS_PROPERTY_ID = 30144;
+
+    /// `UIA_Transform2ZoomLevelPropertyId`.
+    static final int UIA_TRANSFORM2_ZOOM_LEVEL_PROPERTY_ID = 30145;
+
+    /// `UIA_Transform2ZoomMinimumPropertyId`.
+    static final int UIA_TRANSFORM2_ZOOM_MINIMUM_PROPERTY_ID = 30146;
+
+    /// `UIA_Transform2ZoomMaximumPropertyId`.
+    static final int UIA_TRANSFORM2_ZOOM_MAXIMUM_PROPERTY_ID = 30147;
+
+    /// `UIA_Transform2CanZoomPropertyId`.
+    static final int UIA_TRANSFORM2_CAN_ZOOM_PROPERTY_ID = 30133;
+
+    /// `UIA_Selection2ItemCountPropertyId`.
+    static final int UIA_SELECTION2_ITEM_COUNT_PROPERTY_ID = 30172;
+
+    /// `UIA_LegacyIAccessibleChildIdPropertyId`.
+    static final int UIA_LEGACY_IACCESSIBLE_CHILD_ID_PROPERTY_ID = 30091;
+
+    /// `UIA_LegacyIAccessibleNamePropertyId`.
+    static final int UIA_LEGACY_IACCESSIBLE_NAME_PROPERTY_ID = 30092;
+
+    /// `UIA_LegacyIAccessibleValuePropertyId`.
+    static final int UIA_LEGACY_IACCESSIBLE_VALUE_PROPERTY_ID = 30093;
+
+    /// `UIA_LegacyIAccessibleDescriptionPropertyId`.
+    static final int UIA_LEGACY_IACCESSIBLE_DESCRIPTION_PROPERTY_ID = 30094;
+
+    /// `UIA_LegacyIAccessibleRolePropertyId`.
+    static final int UIA_LEGACY_IACCESSIBLE_ROLE_PROPERTY_ID = 30095;
+
+    /// `UIA_LegacyIAccessibleStatePropertyId`.
+    static final int UIA_LEGACY_IACCESSIBLE_STATE_PROPERTY_ID = 30096;
+
+    /// `UIA_LegacyIAccessibleHelpPropertyId`.
+    static final int UIA_LEGACY_IACCESSIBLE_HELP_PROPERTY_ID = 30097;
+
+    /// `UIA_LegacyIAccessibleKeyboardShortcutPropertyId`.
+    static final int UIA_LEGACY_IACCESSIBLE_KEYBOARD_SHORTCUT_PROPERTY_ID = 30098;
+
+    /// `UIA_LegacyIAccessibleDefaultActionPropertyId`.
+    static final int UIA_LEGACY_IACCESSIBLE_DEFAULT_ACTION_PROPERTY_ID = 30100;
+
+    /// `UIA_MultipleViewSupportedViewsPropertyId`.
+    static final int UIA_MULTIPLE_VIEW_SUPPORTED_VIEWS_PROPERTY_ID = 30072;
+
+    /// `UIA_AnimationStyleAttributeId`.
+    static final int UIA_ANIMATION_STYLE_ATTRIBUTE_ID = 40000;
+
+    /// `UIA_FontNameAttributeId`.
+    static final int UIA_FONT_NAME_ATTRIBUTE_ID = 40005;
+
+    /// `UIA_FontSizeAttributeId`.
+    static final int UIA_FONT_SIZE_ATTRIBUTE_ID = 40006;
+
+    /// `UIA_Selection2FirstSelectedItemPropertyId`.
+    static final int UIA_SELECTION2_FIRST_SELECTED_ITEM_PROPERTY_ID = 30169;
+
+    /// `UIA_Selection2LastSelectedItemPropertyId`.
+    static final int UIA_SELECTION2_LAST_SELECTED_ITEM_PROPERTY_ID = 30170;
+
+    /// `UIA_Selection2CurrentSelectedItemPropertyId`.
+    static final int UIA_SELECTION2_CURRENT_SELECTED_ITEM_PROPERTY_ID = 30171;
+
+    /// `UIA_AnnotationTargetPropertyId`.
+    static final int UIA_ANNOTATION_TARGET_PROPERTY_ID = 30117;
+
+    /// `UIA_BackgroundColorAttributeId`.
+    static final int UIA_BACKGROUND_COLOR_ATTRIBUTE_ID = 40001;
+
+    /// `UIA_FontWeightAttributeId`.
+    static final int UIA_FONT_WEIGHT_ATTRIBUTE_ID = 40007;
+
+    /// `UIA_ForegroundColorAttributeId`.
+    static final int UIA_FOREGROUND_COLOR_ATTRIBUTE_ID = 40008;
+
+    /// `UIA_IsHiddenAttributeId`.
+    static final int UIA_IS_HIDDEN_ATTRIBUTE_ID = 40013;
+
+    /// `UIA_BulletStyleAttributeId`.
+    static final int UIA_BULLET_STYLE_ATTRIBUTE_ID = 40002;
+
+    /// `UIA_CapStyleAttributeId`.
+    static final int UIA_CAP_STYLE_ATTRIBUTE_ID = 40003;
+
+    /// `UIA_CultureAttributeId`.
+    static final int UIA_CULTURE_ATTRIBUTE_ID = 40004;
+
+    /// `UIA_HorizontalTextAlignmentAttributeId`.
+    static final int UIA_HORIZONTAL_TEXT_ALIGNMENT_ATTRIBUTE_ID = 40009;
+
+    /// `UIA_IsItalicAttributeId`.
+    static final int UIA_IS_ITALIC_ATTRIBUTE_ID = 40014;
+
+    /// `UIA_IsReadOnlyAttributeId`.
+    static final int UIA_IS_READ_ONLY_ATTRIBUTE_ID = 40015;
+
+    /// `UIA_IndentationFirstLineAttributeId`.
+    static final int UIA_INDENTATION_FIRST_LINE_ATTRIBUTE_ID = 40010;
+
+    /// `UIA_IndentationLeadingAttributeId`.
+    static final int UIA_INDENTATION_LEADING_ATTRIBUTE_ID = 40011;
+
+    /// `UIA_IndentationTrailingAttributeId`.
+    static final int UIA_INDENTATION_TRAILING_ATTRIBUTE_ID = 40012;
+
+    /// `UIA_IsSubscriptAttributeId`.
+    static final int UIA_IS_SUBSCRIPT_ATTRIBUTE_ID = 40016;
+
+    /// `UIA_IsSuperscriptAttributeId`.
+    static final int UIA_IS_SUPERSCRIPT_ATTRIBUTE_ID = 40017;
+
+    /// `UIA_MarginBottomAttributeId`.
+    static final int UIA_MARGIN_BOTTOM_ATTRIBUTE_ID = 40018;
+
+    /// `UIA_MarginLeadingAttributeId`.
+    static final int UIA_MARGIN_LEADING_ATTRIBUTE_ID = 40019;
+
+    /// `UIA_MarginTopAttributeId`.
+    static final int UIA_MARGIN_TOP_ATTRIBUTE_ID = 40020;
+
+    /// `UIA_MarginTrailingAttributeId`.
+    static final int UIA_MARGIN_TRAILING_ATTRIBUTE_ID = 40021;
+
+    /// First-stable first-line indent in points published with [`#UIA_INDENTATION_FIRST_LINE_ATTRIBUTE_ID`].
+    static final double ATTRIBUTE_INDENT_FIRST_LINE = 0.0;
+
+    /// First-stable leading indent in points published with [`#UIA_INDENTATION_LEADING_ATTRIBUTE_ID`].
+    static final double ATTRIBUTE_INDENT_LEADING = 0.0;
+
+    /// First-stable trailing indent in points published with [`#UIA_INDENTATION_TRAILING_ATTRIBUTE_ID`].
+    static final double ATTRIBUTE_INDENT_TRAILING = 0.0;
+
+    /// First-stable margin in points published with the margin TextAttributeIds.
+    static final double ATTRIBUTE_MARGIN = 0.0;
+
+    /// `UIA_OutlineStylesAttributeId`.
+    static final int UIA_OUTLINE_STYLES_ATTRIBUTE_ID = 40022;
+
+    /// `UIA_OverlineColorAttributeId`.
+    static final int UIA_OVERLINE_COLOR_ATTRIBUTE_ID = 40023;
+
+    /// `UIA_OverlineStyleAttributeId`.
+    static final int UIA_OVERLINE_STYLE_ATTRIBUTE_ID = 40024;
+
+    /// `UIA_StrikethroughColorAttributeId`.
+    static final int UIA_STRIKETHROUGH_COLOR_ATTRIBUTE_ID = 40025;
+
+    /// `UIA_StrikethroughStyleAttributeId`.
+    static final int UIA_STRIKETHROUGH_STYLE_ATTRIBUTE_ID = 40026;
+
+    /// `UIA_TabsAttributeId`.
+    static final int UIA_TABS_ATTRIBUTE_ID = 40027;
+
+    /// `UIA_TextFlowDirectionsAttributeId`.
+    static final int UIA_TEXT_FLOW_DIRECTIONS_ATTRIBUTE_ID = 40028;
+
+    /// `UIA_UnderlineColorAttributeId`.
+    static final int UIA_UNDERLINE_COLOR_ATTRIBUTE_ID = 40029;
+
+    /// `UIA_UnderlineStyleAttributeId`.
+    static final int UIA_UNDERLINE_STYLE_ATTRIBUTE_ID = 40030;
+
+    /// `UIA_AnnotationTypesAttributeId`.
+    static final int UIA_ANNOTATION_TYPES_ATTRIBUTE_ID = 40031;
+
+    /// `UIA_AnnotationObjectsAttributeId`.
+    static final int UIA_ANNOTATION_OBJECTS_ATTRIBUTE_ID = 40032;
+
+    /// `UIA_StyleNameAttributeId`.
+    static final int UIA_STYLE_NAME_ATTRIBUTE_ID = 40033;
+
+    /// `UIA_StyleIdAttributeId`.
+    static final int UIA_STYLE_ID_ATTRIBUTE_ID = 40034;
+
+    /// `UIA_LinkAttributeId`.
+    static final int UIA_LINK_ATTRIBUTE_ID = 40035;
+
+    /// `UIA_IsActiveAttributeId`.
+    static final int UIA_IS_ACTIVE_ATTRIBUTE_ID = 40036;
+
+    /// `UIA_SelectionActiveEndAttributeId`.
+    static final int UIA_SELECTION_ACTIVE_END_ATTRIBUTE_ID = 40037;
+
+    /// `UIA_CaretPositionAttributeId`.
+    static final int UIA_CARET_POSITION_ATTRIBUTE_ID = 40038;
+
+    /// `UIA_CaretBidiModeAttributeId`.
+    static final int UIA_CARET_BIDI_MODE_ATTRIBUTE_ID = 40039;
+
+    /// `UIA_LineSpacingAttributeId`.
+    static final int UIA_LINE_SPACING_ATTRIBUTE_ID = 40040;
+
+    /// `UIA_BeforeParagraphSpacingAttributeId`.
+    static final int UIA_BEFORE_PARAGRAPH_SPACING_ATTRIBUTE_ID = 40041;
+
+    /// `UIA_AfterParagraphSpacingAttributeId`.
+    static final int UIA_AFTER_PARAGRAPH_SPACING_ATTRIBUTE_ID = 40042;
+
+    /// `UIA_SayAsInterpretAsAttributeId`.
+    static final int UIA_SAY_AS_INTERPRET_AS_ATTRIBUTE_ID = 40043;
+
+    /// First-stable line spacing multiplier published with [`#UIA_LINE_SPACING_ATTRIBUTE_ID`].
+    static final double ATTRIBUTE_LINE_SPACING = 1.0;
+
+    /// First-stable paragraph spacing in points published with the paragraph-spacing TextAttributeIds.
+    static final double ATTRIBUTE_PARAGRAPH_SPACING = 0.0;
+
+    /// First-stable styles font name published with [`#UIA_FONT_NAME_ATTRIBUTE_ID`].
+    static final String ATTRIBUTE_FONT_NAME = "Segoe UI";
+
+    /// First-stable styles font size in points published with [`#UIA_FONT_SIZE_ATTRIBUTE_ID`].
+    static final double ATTRIBUTE_FONT_SIZE = 12.0;
+
+    /// First-stable `FW_NORMAL` published with [`#UIA_FONT_WEIGHT_ATTRIBUTE_ID`].
+    static final int ATTRIBUTE_FONT_WEIGHT = 400;
+
+    /// First-stable opaque black published with [`#UIA_FOREGROUND_COLOR_ATTRIBUTE_ID`].
+    static final int ATTRIBUTE_FOREGROUND_COLOR = 0xFF000000;
+
+    /// First-stable opaque white published with [`#UIA_BACKGROUND_COLOR_ATTRIBUTE_ID`].
+    static final int ATTRIBUTE_BACKGROUND_COLOR = 0xFFFFFFFF;
+
+    /// First-stable styles shape name published with [`#STYLE_ID_NORMAL`].
+    static final String STYLE_SHAPE_RECTANGLE = "Rectangle";
+
+    /// `FillType_Color`.
+    static final int FILL_TYPE_COLOR = 1;
+
+    /// `VisualEffects_Shadow`.
+    static final int VISUAL_EFFECTS_SHADOW = 1;
+
+    /// `LandmarkType_None`.
+    static final int LANDMARK_TYPE_NONE = 0;
+
+    /// `LandmarkType_Main`.
+    static final int LANDMARK_TYPE_MAIN = 80002;
+
     /// `UIA_PositionInSetPropertyId`.
     static final int UIA_POSITION_IN_SET_PROPERTY_ID = 30152;
 
@@ -1856,12 +2468,32 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 live.acceleratorKey(),
                 live.required(),
                 live.itemStatus(),
+                live.itemType(),
                 live.locale(),
                 live.level(),
                 live.positionInSet(),
                 live.sizeOfSet(),
                 live.description(),
-                live.error()
+                live.error(),
+                live.landmarkType(),
+                live.localizedLandmarkType(),
+                live.ariaRole(),
+                live.ariaProperties(),
+                live.controllerFor(),
+                live.describedBy(),
+                live.flowsTo(),
+                live.labeledBy(),
+                live.flowsFrom(),
+                live.optimizeForVisualContent(),
+                live.fillColor(),
+                live.outlineColor(),
+                live.fillType(),
+                live.visualEffects(),
+                live.outlineThickness(),
+                live.rotation(),
+                live.peripheral(),
+                live.annotationType(),
+                live.annotationObjects()
         );
         return new WindowsAutomationProvider(libraries.bindings(), snapshot, hwnd, live);
     }
@@ -1998,6 +2630,25 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return value.get(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET);
     }
 
+    /// Invokes `GetPropertyValue` and reads a `VT_R8` payload.
+    ///
+    /// @param propertyId the UIA property identifier
+    /// @return the `VT_R8` payload
+    public double invokePropertyValueDouble(int propertyId) {
+        requireOpen();
+        MemorySegment getProperty = simpleVtable.getAtIndex(ValueLayout.ADDRESS, 5L);
+        MemorySegment value = arena.allocate(Win32Layouts.VARIANT);
+        value.fill((byte) 0);
+        int result = Win32FfmBindings.invokeIrawElementProviderGetPropertyValuePointer(
+                getProperty,
+                simpleObject,
+                propertyId,
+                value
+        );
+        requireSuccess("GetPropertyValue", result);
+        return value.get(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET);
+    }
+
     /// Invokes `GetPropertyValue` for `UIA_BoundingRectanglePropertyId`.
     ///
     /// The first-stable payload is a packed `VT_ARRAY | VT_R8` of four doubles:
@@ -2057,6 +2708,62 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         };
     }
 
+    /// Invokes `GetPropertyValue` for `UIA_CenterPointPropertyId`.
+    ///
+    /// The first-stable payload is a packed `VT_ARRAY | VT_R8` of two doubles: center X, center Y.
+    ///
+    /// @return `{centerX, centerY}`
+    public float[] invokeCenterPoint() {
+        requireOpen();
+        MemorySegment getProperty = simpleVtable.getAtIndex(ValueLayout.ADDRESS, 5L);
+        MemorySegment value = arena.allocate(Win32Layouts.VARIANT);
+        value.fill((byte) 0);
+        int result = Win32FfmBindings.invokeIrawElementProviderGetPropertyValuePointer(
+                getProperty,
+                simpleObject,
+                UIA_CENTER_POINT_PROPERTY_ID,
+                value
+        );
+        requireSuccess("GetPropertyValue", result);
+        short vt = value.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET);
+        if (vt != (short) (VT_ARRAY | VT_R8)) {
+            throw new IllegalStateException("CenterPoint variant is " + vt);
+        }
+        MemorySegment point = value.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET).reinterpret(16);
+        return new float[] {
+                (float) point.get(ValueLayout.JAVA_DOUBLE, 0L),
+                (float) point.get(ValueLayout.JAVA_DOUBLE, 8L)
+        };
+    }
+
+    /// Invokes `GetPropertyValue` for `UIA_SizePropertyId`.
+    ///
+    /// The first-stable payload is a packed `VT_ARRAY | VT_R8` of two doubles: width, height.
+    ///
+    /// @return `{width, height}`
+    public float[] invokeSize() {
+        requireOpen();
+        MemorySegment getProperty = simpleVtable.getAtIndex(ValueLayout.ADDRESS, 5L);
+        MemorySegment value = arena.allocate(Win32Layouts.VARIANT);
+        value.fill((byte) 0);
+        int result = Win32FfmBindings.invokeIrawElementProviderGetPropertyValuePointer(
+                getProperty,
+                simpleObject,
+                UIA_SIZE_PROPERTY_ID,
+                value
+        );
+        requireSuccess("GetPropertyValue", result);
+        short vt = value.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET);
+        if (vt != (short) (VT_ARRAY | VT_R8)) {
+            throw new IllegalStateException("Size variant is " + vt);
+        }
+        MemorySegment size = value.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET).reinterpret(16);
+        return new float[] {
+                (float) size.get(ValueLayout.JAVA_DOUBLE, 0L),
+                (float) size.get(ValueLayout.JAVA_DOUBLE, 8L)
+        };
+    }
+
     /// Invokes `GetPropertyValue` and decodes a `VT_BSTR` payload.
     ///
     /// @param propertyId the UIA property identifier
@@ -2077,6 +2784,28 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             return "";
         }
         return decodeUtf16(value.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET));
+    }
+
+    /// Reads `GetPropertyValue` as a `VT_UNKNOWN` pointer.
+    ///
+    /// @param propertyId the UIA property identifier
+    /// @return whether a non-null interface pointer was returned
+    public boolean invokePropertyValueUnknown(int propertyId) {
+        requireOpen();
+        MemorySegment getProperty = simpleVtable.getAtIndex(ValueLayout.ADDRESS, 5L);
+        MemorySegment value = arena.allocate(Win32Layouts.VARIANT);
+        value.fill((byte) 0);
+        int result = Win32FfmBindings.invokeIrawElementProviderGetPropertyValuePointer(
+                getProperty,
+                simpleObject,
+                propertyId,
+                value
+        );
+        requireSuccess("GetPropertyValue", result);
+        if (value.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET) != VT_UNKNOWN) {
+            return false;
+        }
+        return value.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET).address() != 0L;
     }
 
     /// Invokes `GetPatternProvider` through the generated COM vtable.
@@ -4488,6 +5217,122 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return variant.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET);
     }
 
+    /// Reads `ITextRangeProvider::GetAttributeValue` as a `VT_I4` payload.
+    ///
+    /// @param attributeId a `TextAttributeId`
+    /// @return the integer payload, or `0` when the variant is not `VT_I4`
+    public int invokeGetAttributeValueInt(int attributeId) {
+        requireOpen();
+        MemorySegment variant = arena.allocate(Win32Layouts.VARIANT);
+        variant.fill((byte) 0);
+        requireSuccess(
+                "ITextRangeProvider::GetAttributeValue",
+                Win32FfmBindings.invokeItextRangeProviderGetAttributeValuePointer(
+                        functionAt(textRangeObject, 9),
+                        textRangeObject,
+                        attributeId,
+                        variant
+                )
+        );
+        if (variant.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET) != VT_I4) {
+            return 0;
+        }
+        return variant.get(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET);
+    }
+
+    /// Reads `ITextRangeProvider::GetAttributeValue` as a `VT_BSTR` payload.
+    ///
+    /// @param attributeId a `TextAttributeId`
+    /// @return the string payload, or `""` when the variant is not `VT_BSTR`
+    public String invokeGetAttributeValueString(int attributeId) {
+        requireOpen();
+        MemorySegment variant = arena.allocate(Win32Layouts.VARIANT);
+        variant.fill((byte) 0);
+        requireSuccess(
+                "ITextRangeProvider::GetAttributeValue",
+                Win32FfmBindings.invokeItextRangeProviderGetAttributeValuePointer(
+                        functionAt(textRangeObject, 9),
+                        textRangeObject,
+                        attributeId,
+                        variant
+                )
+        );
+        if (variant.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET) != VT_BSTR) {
+            return "";
+        }
+        return decodeUtf16(variant.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET));
+    }
+
+    /// Reads `ITextRangeProvider::GetAttributeValue` as a `VT_R8` payload.
+    ///
+    /// @param attributeId a `TextAttributeId`
+    /// @return the double payload, or `0.0` when the variant is not `VT_R8`
+    public double invokeGetAttributeValueDouble(int attributeId) {
+        requireOpen();
+        MemorySegment variant = arena.allocate(Win32Layouts.VARIANT);
+        variant.fill((byte) 0);
+        requireSuccess(
+                "ITextRangeProvider::GetAttributeValue",
+                Win32FfmBindings.invokeItextRangeProviderGetAttributeValuePointer(
+                        functionAt(textRangeObject, 9),
+                        textRangeObject,
+                        attributeId,
+                        variant
+                )
+        );
+        if (variant.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET) != VT_R8) {
+            return 0.0;
+        }
+        return variant.get(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET);
+    }
+
+    /// Reads `ITextRangeProvider::GetAttributeValue` as a `VT_UNKNOWN` pointer.
+    ///
+    /// @param attributeId a `TextAttributeId`
+    /// @return whether a non-null interface pointer was returned
+    public boolean invokeGetAttributeValueUnknown(int attributeId) {
+        requireOpen();
+        MemorySegment variant = arena.allocate(Win32Layouts.VARIANT);
+        variant.fill((byte) 0);
+        requireSuccess(
+                "ITextRangeProvider::GetAttributeValue",
+                Win32FfmBindings.invokeItextRangeProviderGetAttributeValuePointer(
+                        functionAt(textRangeObject, 9),
+                        textRangeObject,
+                        attributeId,
+                        variant
+                )
+        );
+        if (variant.get(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET) != VT_UNKNOWN) {
+            return false;
+        }
+        return variant.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET).address() != 0L;
+    }
+
+    /// Reads `GetPropertyValue` as a packed count-prefixed `int32` vector.
+    ///
+    /// @param propertyId the UIA property identifier
+    /// @return `{count, first}` when present
+    public int[] invokePropertyValueInts(int propertyId) {
+        requireOpen();
+        MemorySegment getProperty = simpleVtable.getAtIndex(ValueLayout.ADDRESS, 5L);
+        MemorySegment value = arena.allocate(Win32Layouts.VARIANT);
+        value.fill((byte) 0);
+        int result = Win32FfmBindings.invokeIrawElementProviderGetPropertyValuePointer(
+                getProperty,
+                simpleObject,
+                propertyId,
+                value
+        );
+        requireSuccess("GetPropertyValue", result);
+        MemorySegment block = value.get(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET);
+        if (block.address() == 0L) {
+            return new int[0];
+        }
+        block = block.byteSize() == 0L ? block.reinterpret(8) : block;
+        return new int[] {block.get(ValueLayout.JAVA_INT, 0L), block.get(ValueLayout.JAVA_INT, 4L)};
+    }
+
     /// Invokes `ITextRangeProvider::AddToSelection` through the generated COM vtable.
     public void invokeAddToSelection() {
         requireOpen();
@@ -4888,6 +5733,119 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         return references;
     }
 
+    /// Returns whether [`#getPatternProvider`] would expose `patternId`.
+    ///
+    /// @param patternId the UIA pattern identifier
+    /// @return `true` when this snapshot exposes the pattern
+    private boolean patternAvailable(int patternId) {
+        if (patternId == UIA_INVOKE_PATTERN_ID) {
+            return node.actions().contains(SemanticsAction.ACTIVATE);
+        }
+        if (patternId == UIA_VALUE_PATTERN_ID) {
+            return node.role() == SemanticsRole.TEXT_FIELD || node.role() == SemanticsRole.TEXT_AREA;
+        }
+        if (patternId == UIA_RANGE_VALUE_PATTERN_ID) {
+            return node.rangeValue() != null;
+        }
+        if (patternId == UIA_TOGGLE_PATTERN_ID) {
+            return node.role() == SemanticsRole.TOGGLE;
+        }
+        if (patternId == UIA_SCROLL_PATTERN_ID) {
+            return node.scroll() != null;
+        }
+        if (patternId == UIA_WINDOW_PATTERN_ID) {
+            return node.role() == SemanticsRole.DIALOG;
+        }
+        if (patternId == UIA_EXPAND_COLLAPSE_PATTERN_ID) {
+            return expandable(node);
+        }
+        if (patternId == UIA_SELECTION_ITEM_PATTERN_ID) {
+            return selectableItem(node);
+        }
+        if (patternId == UIA_GRID_PATTERN_ID) {
+            return node.grid() != null;
+        }
+        if (patternId == UIA_GRID_ITEM_PATTERN_ID) {
+            return node.gridItem() != null;
+        }
+        if (patternId == UIA_TABLE_PATTERN_ID) {
+            return node.grid() != null;
+        }
+        if (patternId == UIA_SCROLL_ITEM_PATTERN_ID) {
+            return node.actions().contains(SemanticsAction.SCROLL_INTO_VIEW);
+        }
+        if (patternId == UIA_MULTIPLE_VIEW_PATTERN_ID) {
+            return node.role() == SemanticsRole.LIST;
+        }
+        if (patternId == UIA_SELECTION_PATTERN_ID) {
+            return node.role() == SemanticsRole.LIST;
+        }
+        if (patternId == UIA_TABLE_ITEM_PATTERN_ID) {
+            return node.gridItem() != null;
+        }
+        if (patternId == UIA_TEXT_PATTERN_ID) {
+            return node.textRange() != null;
+        }
+        if (patternId == UIA_TRANSFORM_PATTERN_ID) {
+            return node.role() == SemanticsRole.DIALOG;
+        }
+        if (patternId == UIA_LEGACY_IACCESSIBLE_PATTERN_ID) {
+            return true;
+        }
+        if (patternId == UIA_ITEM_CONTAINER_PATTERN_ID) {
+            return node.role() == SemanticsRole.LIST;
+        }
+        if (patternId == UIA_VIRTUALIZED_ITEM_PATTERN_ID) {
+            return node.actions().contains(SemanticsAction.REALIZE);
+        }
+        if (patternId == UIA_TEXT_PATTERN2_ID) {
+            return node.textRange() != null;
+        }
+        if (patternId == UIA_SYNCHRONIZED_INPUT_PATTERN_ID) {
+            return node.actions().contains(SemanticsAction.ACTIVATE);
+        }
+        if (patternId == UIA_OBJECT_MODEL_PATTERN_ID) {
+            return node.role() == SemanticsRole.DIALOG;
+        }
+        if (patternId == UIA_ANNOTATION_PATTERN_ID) {
+            return node.role() == SemanticsRole.STATUS;
+        }
+        if (patternId == UIA_STYLES_PATTERN_ID) {
+            return node.role() == SemanticsRole.STATUS;
+        }
+        if (patternId == UIA_SPREADSHEET_PATTERN_ID) {
+            return node.grid() != null;
+        }
+        if (patternId == UIA_SPREADSHEET_ITEM_PATTERN_ID) {
+            return node.gridItem() != null;
+        }
+        if (patternId == UIA_TRANSFORM_PATTERN2_ID) {
+            return node.role() == SemanticsRole.DIALOG;
+        }
+        if (patternId == UIA_TEXT_CHILD_PATTERN_ID) {
+            return node.textRange() != null;
+        }
+        if (patternId == UIA_DRAG_PATTERN_ID) {
+            return node.role() == SemanticsRole.LIST;
+        }
+        if (patternId == UIA_DROP_TARGET_PATTERN_ID) {
+            return node.role() == SemanticsRole.LIST;
+        }
+        if (patternId == UIA_TEXT_EDIT_PATTERN_ID) {
+            return node.textRange() != null;
+        }
+        if (patternId == UIA_CUSTOM_NAVIGATION_PATTERN_ID) {
+            return node.role() == SemanticsRole.DIALOG;
+        }
+        if (patternId == UIA_DOCK_PATTERN_ID) {
+            return node.role() == SemanticsRole.DIALOG;
+        }
+        if (patternId == UIA_SELECTION_PATTERN2_ID) {
+            return node.role() == SemanticsRole.LIST;
+        }
+        return false;
+    }
+
     /// Implements `IRawElementProviderSimple::GetPatternProvider`.
     private int getPatternProvider(MemorySegment self, int patternId, MemorySegment provider) {
         if (provider.address() == 0L) {
@@ -5028,6 +5986,513 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         } else if (propertyId == UIA_IS_READ_ONLY_PROPERTY_ID) {
             variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
             variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.readOnly() ? 1 : 0);
+        } else if (propertyId == UIA_VALUE_IS_READ_ONLY_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.readOnly() ? 1 : 0);
+        } else if (propertyId == UIA_IS_INVOKE_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_INVOKE_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_VALUE_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_VALUE_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_RANGE_VALUE_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_RANGE_VALUE_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_TOGGLE_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TOGGLE_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_SCROLL_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_SCROLL_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_WINDOW_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_WINDOW_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_EXPAND_COLLAPSE_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_EXPAND_COLLAPSE_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_SELECTION_ITEM_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_SELECTION_ITEM_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_GRID_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_GRID_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_GRID_ITEM_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_GRID_ITEM_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_TABLE_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TABLE_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_SCROLL_ITEM_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_SCROLL_ITEM_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_MULTIPLE_VIEW_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_MULTIPLE_VIEW_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_SELECTION_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_SELECTION_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_TABLE_ITEM_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TABLE_ITEM_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_TEXT_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TEXT_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_TRANSFORM_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TRANSFORM_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_LEGACY_IACCESSIBLE_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_LEGACY_IACCESSIBLE_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_ITEM_CONTAINER_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_ITEM_CONTAINER_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_VIRTUALIZED_ITEM_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_VIRTUALIZED_ITEM_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_TEXT_PATTERN2_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TEXT_PATTERN2_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_SYNCHRONIZED_INPUT_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_SYNCHRONIZED_INPUT_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_OBJECT_MODEL_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_OBJECT_MODEL_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_ANNOTATION_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_ANNOTATION_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_STYLES_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_STYLES_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_SPREADSHEET_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_SPREADSHEET_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_SPREADSHEET_ITEM_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_SPREADSHEET_ITEM_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_TRANSFORM_PATTERN2_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TRANSFORM_PATTERN2_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_TEXT_CHILD_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TEXT_CHILD_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_DRAG_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_DRAG_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_DROP_TARGET_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_DROP_TARGET_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_TEXT_EDIT_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TEXT_EDIT_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_CUSTOM_NAVIGATION_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_CUSTOM_NAVIGATION_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_DOCK_PATTERN_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_DOCK_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_IS_SELECTION_PATTERN2_AVAILABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_SELECTION_PATTERN2_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_DOCK_DOCK_POSITION_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, dockPosition);
+        } else if (propertyId == UIA_TRANSFORM_CAN_MOVE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TRANSFORM_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_TRANSFORM_CAN_RESIZE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TRANSFORM_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_TRANSFORM_CAN_ROTATE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TRANSFORM_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_EXPAND_COLLAPSE_EXPAND_COLLAPSE_STATE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, expandState);
+        } else if (propertyId == UIA_TOGGLE_TOGGLE_STATE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, toggleState);
+        } else if (propertyId == UIA_MULTIPLE_VIEW_SUPPORTED_VIEWS_PROPERTY_ID) {
+            MemorySegment views = arena.allocate(8);
+            views.set(ValueLayout.JAVA_INT, 0L, 1);
+            views.set(ValueLayout.JAVA_INT, 4L, currentView);
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) (VT_ARRAY | VT_I4));
+            variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, views);
+        } else if (propertyId == UIA_MULTIPLE_VIEW_CURRENT_VIEW_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, currentView);
+        } else if (propertyId == UIA_SELECTION_ITEM_IS_SELECTED_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, itemSelected ? 1 : 0);
+        } else if (propertyId == UIA_GRID_ROW_COUNT_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, gridRows);
+        } else if (propertyId == UIA_GRID_COLUMN_COUNT_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, gridColumns);
+        } else if (propertyId == UIA_GRID_ITEM_ROW_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, cellRow);
+        } else if (propertyId == UIA_GRID_ITEM_COLUMN_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, cellColumn);
+        } else if (propertyId == UIA_GRID_ITEM_ROW_SPAN_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, cellRowSpan);
+        } else if (propertyId == UIA_GRID_ITEM_COLUMN_SPAN_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, cellColumnSpan);
+        } else if (propertyId == UIA_GRID_ITEM_CONTAINING_GRID_PROPERTY_ID) {
+            writeUnknownVariant(variant, simpleObject);
+        } else if (propertyId == UIA_SELECTION_ITEM_SELECTION_CONTAINER_PROPERTY_ID) {
+            writeUnknownVariant(variant, simpleObject);
+        } else if (propertyId == UIA_LEGACY_IACCESSIBLE_SELECTION_PROPERTY_ID) {
+            writeUnknownVariant(variant, foundItemObject);
+        } else if (propertyId == UIA_WINDOW_CAN_MAXIMIZE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_WINDOW_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_WINDOW_CAN_MINIMIZE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_WINDOW_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_WINDOW_WINDOW_VISUAL_STATE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, windowVisualState);
+        } else if (propertyId == UIA_WINDOW_WINDOW_INTERACTION_STATE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, WINDOW_INTERACTION_READY);
+        } else if (propertyId == UIA_WINDOW_IS_MODAL_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    node.role() == SemanticsRole.DIALOG ? 1 : 0
+            );
+        } else if (propertyId == UIA_WINDOW_IS_TOPMOST_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (propertyId == UIA_TABLE_ROW_HEADERS_PROPERTY_ID
+                || propertyId == UIA_TABLE_COLUMN_HEADERS_PROPERTY_ID
+                || propertyId == UIA_TABLE_ITEM_ROW_HEADER_ITEMS_PROPERTY_ID
+                || propertyId == UIA_TABLE_ITEM_COLUMN_HEADER_ITEMS_PROPERTY_ID) {
+            MemorySegment headers = arena.allocate(8);
+            headers.set(ValueLayout.JAVA_INT, 0L, 0);
+            headers.set(ValueLayout.JAVA_INT, 4L, 0);
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) (VT_ARRAY | VT_I4));
+            variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, headers);
+        } else if (propertyId == UIA_TABLE_ROW_OR_COLUMN_MAJOR_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, ROW_OR_COLUMN_MAJOR_ROW);
+        } else if (propertyId == UIA_SELECTION_SELECTION_PROPERTY_ID) {
+            writeUnknownVariant(variant, foundItemObject);
+        } else if (propertyId == UIA_SELECTION_CAN_SELECT_MULTIPLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_SELECTION_PATTERN_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_SELECTION_IS_SELECTION_REQUIRED_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (propertyId == UIA_SCROLL_HORIZONTAL_SCROLL_PERCENT_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(
+                    ValueLayout.JAVA_DOUBLE,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    horizontallyScrollable ? horizontalScrollPercent : SCROLL_NO_AMOUNT
+            );
+        } else if (propertyId == UIA_SCROLL_HORIZONTAL_VIEW_SIZE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, horizontalViewSize);
+        } else if (propertyId == UIA_SCROLL_VERTICAL_SCROLL_PERCENT_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, verticalScrollPercent);
+        } else if (propertyId == UIA_SCROLL_HORIZONTALLY_SCROLLABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, horizontallyScrollable ? 1 : 0);
+        } else if (propertyId == UIA_SCROLL_VERTICAL_VIEW_SIZE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, verticalViewSize);
+        } else if (propertyId == UIA_SCROLL_VERTICALLY_SCROLLABLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, verticallyScrollable ? 1 : 0);
+        } else if (propertyId == UIA_RANGE_VALUE_MINIMUM_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, RANGE_MINIMUM);
+        } else if (propertyId == UIA_RANGE_VALUE_MAXIMUM_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, RANGE_MAXIMUM);
+        } else if (propertyId == UIA_RANGE_VALUE_IS_READ_ONLY_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.readOnly() ? 1 : 0);
+        } else if (propertyId == UIA_RANGE_VALUE_LARGE_CHANGE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, RANGE_LARGE_CHANGE);
+        } else if (propertyId == UIA_RANGE_VALUE_SMALL_CHANGE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, RANGE_SMALL_CHANGE);
+        } else if (propertyId == UIA_ANNOTATION_ANNOTATION_TYPE_ID_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, ANNOTATION_TYPE_COMMENT);
+        } else if (propertyId == UIA_ANNOTATION_ANNOTATION_TYPE_NAME_PROPERTY_ID) {
+            writeBstrVariant(variant, "Comment");
+        } else if (propertyId == UIA_ANNOTATION_AUTHOR_PROPERTY_ID) {
+            writeBstrVariant(variant, "Himari");
+        } else if (propertyId == UIA_ANNOTATION_DATE_TIME_PROPERTY_ID) {
+            writeBstrVariant(variant, "2026-08-17");
+        } else if (propertyId == UIA_STYLES_STYLE_ID_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, STYLE_ID_NORMAL);
+        } else if (propertyId == UIA_STYLES_STYLE_NAME_PROPERTY_ID) {
+            writeBstrVariant(variant, "Normal");
+        } else if (propertyId == UIA_STYLES_FILL_COLOR_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.fillColor());
+        } else if (propertyId == UIA_STYLES_FILL_PATTERN_STYLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.fillType());
+        } else if (propertyId == UIA_STYLES_SHAPE_PROPERTY_ID) {
+            writeBstrVariant(variant, STYLE_SHAPE_RECTANGLE);
+        } else if (propertyId == UIA_STYLES_FILL_PATTERN_COLOR_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.outlineColor());
+        } else if (propertyId == UIA_STYLES_EXTENDED_PROPERTIES_PROPERTY_ID) {
+            writeBstrVariant(variant, node.ariaProperties());
+        } else if (propertyId == UIA_SPREADSHEET_ITEM_FORMULA_PROPERTY_ID) {
+            writeBstrVariant(variant, "=" + node.label());
+        } else if (propertyId == UIA_SPREADSHEET_ITEM_ANNOTATION_OBJECTS_PROPERTY_ID) {
+            writeUnknownVariant(variant, foundItemObject);
+        } else if (propertyId == UIA_SPREADSHEET_ITEM_ANNOTATION_TYPES_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, ANNOTATION_TYPE_COMMENT);
+        } else if (propertyId == UIA_DRAG_IS_GRABBED_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (propertyId == UIA_DRAG_DROP_EFFECT_PROPERTY_ID) {
+            writeBstrVariant(variant, "copy");
+        } else if (propertyId == UIA_DRAG_DROP_EFFECTS_PROPERTY_ID) {
+            writeBstrVariant(variant, "copy");
+        } else if (propertyId == UIA_DROP_TARGET_DROP_TARGET_EFFECT_PROPERTY_ID) {
+            writeBstrVariant(variant, "move");
+        } else if (propertyId == UIA_DROP_TARGET_DROP_TARGET_EFFECTS_PROPERTY_ID) {
+            writeBstrVariant(variant, "move");
+        } else if (propertyId == UIA_DRAG_GRABBED_ITEMS_PROPERTY_ID) {
+            writeUnknownVariant(variant, foundItemObject);
+        } else if (propertyId == UIA_TRANSFORM2_ZOOM_LEVEL_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, transformZoom);
+        } else if (propertyId == UIA_TRANSFORM2_ZOOM_MINIMUM_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, ZOOM_MINIMUM);
+        } else if (propertyId == UIA_TRANSFORM2_ZOOM_MAXIMUM_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, ZOOM_MAXIMUM);
+        } else if (propertyId == UIA_TRANSFORM2_CAN_ZOOM_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    patternAvailable(UIA_TRANSFORM_PATTERN2_ID) ? 1 : 0
+            );
+        } else if (propertyId == UIA_SELECTION2_ITEM_COUNT_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 1);
+        } else if (propertyId == UIA_SELECTION2_FIRST_SELECTED_ITEM_PROPERTY_ID
+                || propertyId == UIA_SELECTION2_LAST_SELECTED_ITEM_PROPERTY_ID
+                || propertyId == UIA_SELECTION2_CURRENT_SELECTED_ITEM_PROPERTY_ID) {
+            writeUnknownVariant(variant, foundItemObject);
+        } else if (propertyId == UIA_ANNOTATION_TARGET_PROPERTY_ID) {
+            writeUnknownVariant(variant, simpleObject);
+        } else if (propertyId == UIA_LEGACY_IACCESSIBLE_CHILD_ID_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (propertyId == UIA_LEGACY_IACCESSIBLE_NAME_PROPERTY_ID) {
+            writeBstrVariant(variant, node.label());
+        } else if (propertyId == UIA_LEGACY_IACCESSIBLE_VALUE_PROPERTY_ID) {
+            writeBstrVariant(variant, node.label());
+        } else if (propertyId == UIA_LEGACY_IACCESSIBLE_DESCRIPTION_PROPERTY_ID) {
+            writeBstrVariant(variant, node.label());
+        } else if (propertyId == UIA_LEGACY_IACCESSIBLE_ROLE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    node.actions().contains(SemanticsAction.ACTIVATE)
+                            ? ROLE_SYSTEM_PUSHBUTTON
+                            : ROLE_SYSTEM_CLIENT
+            );
+        } else if (propertyId == UIA_LEGACY_IACCESSIBLE_STATE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, STATE_SYSTEM_FOCUSABLE);
+        } else if (propertyId == UIA_LEGACY_IACCESSIBLE_HELP_PROPERTY_ID) {
+            writeBstrVariant(variant, node.label());
+        } else if (propertyId == UIA_LEGACY_IACCESSIBLE_KEYBOARD_SHORTCUT_PROPERTY_ID) {
+            writeBstrVariant(variant, "");
+        } else if (propertyId == UIA_LEGACY_IACCESSIBLE_DEFAULT_ACTION_PROPERTY_ID) {
+            writeBstrVariant(
+                    variant,
+                    node.actions().contains(SemanticsAction.ACTIVATE) ? "Press" : ""
+            );
         } else if (propertyId == UIA_LIVE_SETTING_PROPERTY_ID) {
             variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
             variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, liveSettingId(node));
@@ -5064,6 +6529,67 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.required() ? 1 : 0);
         } else if (propertyId == UIA_ITEM_STATUS_PROPERTY_ID) {
             writeBstrVariant(variant, node.itemStatus());
+        } else if (propertyId == UIA_ITEM_TYPE_PROPERTY_ID) {
+            writeBstrVariant(variant, node.itemType());
+        } else if (propertyId == UIA_LANDMARK_TYPE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.landmarkType());
+        } else if (propertyId == UIA_LOCALIZED_LANDMARK_TYPE_PROPERTY_ID) {
+            writeBstrVariant(variant, node.localizedLandmarkType());
+        } else if (propertyId == UIA_ARIA_ROLE_PROPERTY_ID) {
+            writeBstrVariant(variant, node.ariaRole());
+        } else if (propertyId == UIA_ARIA_PROPERTIES_PROPERTY_ID) {
+            writeBstrVariant(variant, node.ariaProperties());
+        } else if (propertyId == UIA_CONTROLLER_FOR_PROPERTY_ID) {
+            writeBstrVariant(variant, node.controllerFor());
+        } else if (propertyId == UIA_DESCRIBED_BY_PROPERTY_ID) {
+            writeBstrVariant(variant, node.describedBy());
+        } else if (propertyId == UIA_FLOWS_TO_PROPERTY_ID) {
+            writeBstrVariant(variant, node.flowsTo());
+        } else if (propertyId == UIA_LABELED_BY_PROPERTY_ID) {
+            writeBstrVariant(variant, node.labeledBy());
+        } else if (propertyId == UIA_FLOWS_FROM_PROPERTY_ID) {
+            writeBstrVariant(variant, node.flowsFrom());
+        } else if (propertyId == UIA_OPTIMIZE_FOR_VISUAL_CONTENT_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(
+                    ValueLayout.JAVA_INT,
+                    Win32Layouts.VARIANT_L_VAL_OFFSET,
+                    node.optimizeForVisualContent() ? 1 : 0
+            );
+        } else if (propertyId == UIA_FILL_COLOR_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.fillColor());
+        } else if (propertyId == UIA_OUTLINE_COLOR_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.outlineColor());
+        } else if (propertyId == UIA_FILL_TYPE_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.fillType());
+        } else if (propertyId == UIA_VISUAL_EFFECTS_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.visualEffects());
+        } else if (propertyId == UIA_OUTLINE_THICKNESS_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.outlineThickness());
+        } else if (propertyId == UIA_CENTER_POINT_PROPERTY_ID) {
+            writeClickablePoint(variant, node.bounds());
+        } else if (propertyId == UIA_ROTATION_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.rotation());
+        } else if (propertyId == UIA_SIZE_PROPERTY_ID) {
+            writeSize(variant, node.bounds());
+        } else if (propertyId == UIA_RUNTIME_ID_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, (int) node.id());
+        } else if (propertyId == UIA_IS_PERIPHERAL_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.peripheral() ? 1 : 0);
+        } else if (propertyId == UIA_ANNOTATION_TYPES_PROPERTY_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.annotationType());
+        } else if (propertyId == UIA_ANNOTATION_OBJECTS_PROPERTY_ID) {
+            writeBstrVariant(variant, node.annotationObjects());
         } else if (propertyId == UIA_LEVEL_PROPERTY_ID) {
             variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
             variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.level());
@@ -6126,12 +7652,12 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// Implements `IRangeValueProvider::get_Maximum`.
     private int getRangeMaximum(MemorySegment self, MemorySegment value) {
-        return writeDouble(value, 100.0);
+        return writeDouble(value, RANGE_MAXIMUM);
     }
 
     /// Implements `IRangeValueProvider::get_Minimum`.
     private int getRangeMinimum(MemorySegment self, MemorySegment value) {
-        return writeDouble(value, 0.0);
+        return writeDouble(value, RANGE_MINIMUM);
     }
 
     /// Implements `ITextProvider::RangeFromPoint` for a point inside the node bounds.
@@ -6409,6 +7935,126 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         }
         MemorySegment variant = value.reinterpret(Win32Layouts.VARIANT.byteSize());
         variant.fill((byte) 0);
+        if (attributeId == UIA_ANIMATION_STYLE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_BACKGROUND_COLOR_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_BACKGROUND_COLOR);
+        } else if (attributeId == UIA_BULLET_STYLE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_CAP_STYLE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_CULTURE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, cultureId(node.locale()));
+        } else if (attributeId == UIA_FONT_NAME_ATTRIBUTE_ID) {
+            writeBstrVariant(variant, ATTRIBUTE_FONT_NAME);
+        } else if (attributeId == UIA_FONT_SIZE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_FONT_SIZE);
+        } else if (attributeId == UIA_FONT_WEIGHT_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_FONT_WEIGHT);
+        } else if (attributeId == UIA_FOREGROUND_COLOR_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_FOREGROUND_COLOR);
+        } else if (attributeId == UIA_IS_HIDDEN_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_HORIZONTAL_TEXT_ALIGNMENT_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_IS_ITALIC_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_IS_READ_ONLY_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.readOnly() ? 1 : 0);
+        } else if (attributeId == UIA_INDENTATION_FIRST_LINE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_INDENT_FIRST_LINE);
+        } else if (attributeId == UIA_INDENTATION_LEADING_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_INDENT_LEADING);
+        } else if (attributeId == UIA_INDENTATION_TRAILING_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_INDENT_TRAILING);
+        } else if (attributeId == UIA_IS_SUBSCRIPT_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_IS_SUPERSCRIPT_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_MARGIN_BOTTOM_ATTRIBUTE_ID
+                || attributeId == UIA_MARGIN_LEADING_ATTRIBUTE_ID
+                || attributeId == UIA_MARGIN_TOP_ATTRIBUTE_ID
+                || attributeId == UIA_MARGIN_TRAILING_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_MARGIN);
+        } else if (attributeId == UIA_OUTLINE_STYLES_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_OVERLINE_COLOR_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_FOREGROUND_COLOR);
+        } else if (attributeId == UIA_OVERLINE_STYLE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_STRIKETHROUGH_COLOR_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_FOREGROUND_COLOR);
+        } else if (attributeId == UIA_STRIKETHROUGH_STYLE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_TABS_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_TEXT_FLOW_DIRECTIONS_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_UNDERLINE_COLOR_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_FOREGROUND_COLOR);
+        } else if (attributeId == UIA_UNDERLINE_STYLE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_ANNOTATION_TYPES_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, ANNOTATION_TYPE_COMMENT);
+        } else if (attributeId == UIA_ANNOTATION_OBJECTS_ATTRIBUTE_ID) {
+            writeUnknownVariant(variant, foundItemObject);
+        } else if (attributeId == UIA_STYLE_NAME_ATTRIBUTE_ID) {
+            writeBstrVariant(variant, "Normal");
+        } else if (attributeId == UIA_STYLE_ID_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, STYLE_ID_NORMAL);
+        } else if (attributeId == UIA_LINK_ATTRIBUTE_ID) {
+            writeBstrVariant(variant, "");
+        } else if (attributeId == UIA_IS_ACTIVE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.focused() ? 1 : 0);
+        } else if (attributeId == UIA_SELECTION_ACTIVE_END_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_CARET_POSITION_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_CARET_BIDI_MODE_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
+            variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, 0);
+        } else if (attributeId == UIA_LINE_SPACING_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_LINE_SPACING);
+        } else if (attributeId == UIA_BEFORE_PARAGRAPH_SPACING_ATTRIBUTE_ID
+                || attributeId == UIA_AFTER_PARAGRAPH_SPACING_ATTRIBUTE_ID) {
+            variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, ATTRIBUTE_PARAGRAPH_SPACING);
+        } else if (attributeId == UIA_SAY_AS_INTERPRET_AS_ATTRIBUTE_ID) {
+            writeBstrVariant(variant, "");
+        }
         return S_OK;
     }
 
@@ -6582,6 +8228,18 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, point);
     }
 
+    /// Writes a packed `VT_ARRAY | VT_R8` size from the bounds extent.
+    ///
+    /// @param variant the VARIANT storage
+    /// @param bounds the root-relative bounds
+    private void writeSize(MemorySegment variant, org.glavo.himari.layout.LayoutRect bounds) {
+        MemorySegment size = arena.allocate(16);
+        size.set(ValueLayout.JAVA_DOUBLE, 0L, bounds.width());
+        size.set(ValueLayout.JAVA_DOUBLE, 8L, bounds.height());
+        variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) (VT_ARRAY | VT_R8));
+        variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, size);
+    }
+
     /// Maps [`SemanticsNode#level()`] onto a UIA heading-level constant.
     ///
     /// @param node the snapshot
@@ -6604,6 +8262,16 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         byte[] utf16 = text.getBytes(StandardCharsets.UTF_16LE);
         MemorySegment.copy(utf16, 0, chars, ValueLayout.JAVA_BYTE, 0L, utf16.length);
         variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, chars);
+    }
+
+    /// Writes a `VT_UNKNOWN` VARIANT that aliases an existing COM object.
+    ///
+    /// @param variant the VARIANT storage
+    /// @param object the IUnknown pointer
+    private void writeUnknownVariant(MemorySegment variant, MemorySegment object) {
+        variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, VT_UNKNOWN);
+        variant.set(ValueLayout.ADDRESS, Win32Layouts.VARIANT_L_VAL_OFFSET, object);
+        addRef(object);
     }
 
     /// Writes a UTF-16 C string through a `BSTR` out-parameter.

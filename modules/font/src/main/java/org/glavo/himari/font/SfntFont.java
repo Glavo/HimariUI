@@ -16,7 +16,7 @@ import java.util.Objects;
 
 /// Reads a checked SFNT, TTC first face, WOFF1, or WOFF2 directory, `cmap` format 4/12, `hmtx`, TrueType `loca`/`glyf` or
 /// CFF/CFF2 Type 2 outlines, optional GSUB, GDEF, GPOS/`kern`, COLR v0/v1/CPAL, `fvar`, `avar`, `gvar`,
-/// `HVAR`, `VVAR`, `MVAR`, `sbix`, CBLC/CBDT, EBLC/EBDT, `gasp`, uncompressed `SVG `, `OS/2`,
+/// `HVAR`, `VVAR`, `MVAR`, `STAT`, `sbix`, CBLC/CBDT, EBLC/EBDT, `gasp`, uncompressed `SVG `, `OS/2`,
 /// `name` family and style, and `post` italic/pitch.
 ///
 /// The font file is retained as a read-only [MemorySegment] so the same view can back a heap array
@@ -97,6 +97,9 @@ public final class SfntFont {
 
     /// `MVAR` font-wide metric deltas, empty when the table is absent.
     private final MvarTable mvar;
+
+    /// `STAT` design axes and named instances, empty when the table is absent.
+    private final StatTable stat;
 
     /// Default `hhea` ascender in font units.
     private final int ascender;
@@ -222,6 +225,7 @@ public final class SfntFont {
         this.hvar = HvarTable.parse(findTable("HVAR"), fvar.axes().size());
         this.vvar = HvarTable.parse(findTable("VVAR"), fvar.axes().size());
         this.mvar = MvarTable.parse(findTable("MVAR"), fvar.axes().size());
+        this.stat = StatTable.parse(findTable("STAT"));
         this.verticalAdvances = readVerticalAdvances();
         this.sbix = SbixTable.parse(findTable("sbix"), glyphCount);
         this.cbdt = CbdtCblc.parse(findTable("CBLC"), findTable("CBDT"), CbdtCblc.TAG_CBDT);
@@ -914,6 +918,27 @@ public final class SfntFont {
         return fvar.axes();
     }
 
+    /// Returns the `STAT` design axes in file order.
+    ///
+    /// @return the axes, empty when `STAT` is absent
+    public @Unmodifiable List<StatAxis> statAxes() {
+        return stat.axes();
+    }
+
+    /// Returns the `STAT` format-1 named instances in file order.
+    ///
+    /// @return the instances, empty when `STAT` is absent
+    public @Unmodifiable List<StatNamedInstance> statNamedInstances() {
+        return stat.namedInstances();
+    }
+
+    /// Returns `STAT.elidedFallbackNameID`, or `0` when the table is absent.
+    ///
+    /// @return the name ID
+    public int statElidedFallbackNameId() {
+        return stat.elidedFallbackNameId();
+    }
+
     /// Returns the default variation instance, one coordinate per axis.
     ///
     /// @return the default coordinates
@@ -1364,6 +1389,20 @@ public final class SfntFont {
     /// @return the prefix, or `null` when `name` has no `nameID 25` record
     public @Nullable String variationsPostScriptPrefix() {
         return names.variationsPostScriptPrefix();
+    }
+
+    /// Returns the Windows Unicode or Macintosh light-background palette name.
+    ///
+    /// @return the palette name, or `null` when `name` has no `nameID 23` record
+    public @Nullable String lightBackgroundPalette() {
+        return names.lightBackgroundPalette();
+    }
+
+    /// Returns the Windows Unicode or Macintosh dark-background palette name.
+    ///
+    /// @return the palette name, or `null` when `name` has no `nameID 24` record
+    public @Nullable String darkBackgroundPalette() {
+        return names.darkBackgroundPalette();
     }
 
     /// Returns `post.italicAngle` in degrees, or `0` when the table is absent.

@@ -165,6 +165,8 @@ public final class FontConformance {
                 || !Os2SampleFont.COMPATIBLE_FULL.equals(os2.compatibleFull())
                 || !Os2SampleFont.POST_SCRIPT_CID.equals(os2.postScriptCid())
                 || !Os2SampleFont.VARIATIONS_POST_SCRIPT_PREFIX.equals(os2.variationsPostScriptPrefix())
+                || !Os2SampleFont.LIGHT_BACKGROUND_PALETTE.equals(os2.lightBackgroundPalette())
+                || !Os2SampleFont.DARK_BACKGROUND_PALETTE.equals(os2.darkBackgroundPalette())
                 || os2.subscriptXSize() != Os2SampleFont.SUBSCRIPT_X_SIZE
                 || os2.subscriptYSize() != Os2SampleFont.SUBSCRIPT_Y_SIZE
                 || os2.subscriptXOffset() != Os2SampleFont.SUBSCRIPT_X_OFFSET
