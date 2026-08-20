@@ -55,6 +55,45 @@ public final class ControlGallery {
     /// Radio group used by the gallery.
     private final Radio radio;
 
+    /// Combo box used by the gallery.
+    private final ComboBox combo;
+
+    /// Date picker used by the gallery.
+    private final DatePicker datePicker;
+
+    /// Time picker used by the gallery.
+    private final TimePicker timePicker;
+
+    /// Color picker used by the gallery.
+    private final ColorPicker colorPicker;
+
+    /// Integer stepper used by the gallery.
+    private final NumberStepper stepper;
+
+    /// Disclosure used by the gallery.
+    private final Disclosure disclosure;
+
+    /// Search field used by the gallery.
+    private final SearchField search;
+
+    /// Separator used by the gallery.
+    private final Separator separator;
+
+    /// Toolbar used by the gallery.
+    private final Toolbar toolbar;
+
+    /// Breadcrumb used by the gallery.
+    private final Breadcrumb breadcrumb;
+
+    /// Hyperlink used by the gallery.
+    private final Hyperlink link;
+
+    /// Accordion used by the gallery.
+    private final Accordion accordion;
+
+    /// Matched-geometry pair used by the gallery.
+    private final SharedElement shared;
+
     /// Toggle used by the gallery.
     private final Toggle toggle;
 
@@ -75,6 +114,9 @@ public final class ControlGallery {
 
     /// Virtualized table used by the gallery.
     private final LazyTable table;
+
+    /// Virtualized grid used by the gallery.
+    private final LazyGrid grid;
 
     /// Text field used by the gallery.
     private final TextField field;
@@ -102,6 +144,15 @@ public final class ControlGallery {
 
     /// Split pane used by the gallery.
     private final SplitPane split;
+
+    /// Flex row used by the gallery.
+    private final Flex flex;
+
+    /// Wrapping flow used by the gallery.
+    private final Flow flow;
+
+    /// Constraint grid used by the gallery.
+    private final Grid layoutGrid;
 
     /// Tree used by the gallery.
     private final Tree tree;
@@ -151,6 +202,19 @@ public final class ControlGallery {
         this.spacer = new Spacer(new Size(8.0f, 8.0f));
         this.checkbox = new Checkbox("Agree");
         this.radio = new Radio(List.of("A", "B"));
+        this.combo = new ComboBox(List.of("Red", "Green", "Blue"));
+        this.datePicker = new DatePicker(2026, 8, 20);
+        this.timePicker = new TimePicker(13, 45);
+        this.colorPicker = new ColorPicker(0x33, 0x66, 0x99);
+        this.stepper = new NumberStepper(0, 10, 1, 3);
+        this.disclosure = new Disclosure("More");
+        this.search = new SearchField();
+        this.separator = new Separator();
+        this.toolbar = new Toolbar(List.of("Cut", "Copy", "Paste"));
+        this.breadcrumb = new Breadcrumb(List.of("Home", "Docs", "API"));
+        this.link = new Hyperlink("Plans", "plans");
+        this.accordion = new Accordion(List.of("Alpha", "Beta", "Gamma"));
+        this.shared = new SharedElement("gallery", "hero");
         this.toggle = new Toggle("Muted");
         this.slider = new Slider("Volume", 0.0f, 10.0f, 1.0f, 3.0f);
         this.scrollbar = new Scrollbar("Thumb", 0.0f, 100.0f, 10.0f, 20.0f);
@@ -164,6 +228,7 @@ public final class ControlGallery {
         this.table.addRow("r3", 20.0f);
         this.table.addRow("r4", 20.0f);
         this.table.setViewport(0.0f, 40.0f);
+        this.grid = new LazyGrid(8, 2, 2);
         this.field = new TextField();
         this.area = new TextArea();
         this.status = new LiveStatus("Ready");
@@ -173,6 +238,9 @@ public final class ControlGallery {
         this.tooltip = new Tooltip("Hint");
         this.tabs = new Tabs(List.of("One", "Two"));
         this.split = new SplitPane(0.4f);
+        this.flex = new Flex(1.0f, 1.0f);
+        this.flow = new Flow();
+        this.layoutGrid = new Grid(2);
         this.tree = new Tree(List.of(
                 new Tree.Item("root", "Root", 0, true),
                 new Tree.Item("child", "Child", 1, false)
@@ -235,6 +303,97 @@ public final class ControlGallery {
         return radio;
     }
 
+    /// Returns the combo box.
+    ///
+    /// @return the combo box
+    public ComboBox combo() {
+        return combo;
+    }
+
+    /// Returns the date picker.
+    ///
+    /// @return the date picker
+    public DatePicker datePicker() {
+        return datePicker;
+    }
+
+    /// Returns the time picker.
+    ///
+    /// @return the time picker
+    public TimePicker timePicker() {
+        return timePicker;
+    }
+
+    /// Returns the color picker.
+    ///
+    /// @return the color picker
+    public ColorPicker colorPicker() {
+        return colorPicker;
+    }
+
+    /// Returns the integer stepper.
+    ///
+    /// @return the stepper
+    public NumberStepper stepper() {
+        return stepper;
+    }
+
+    /// Returns the disclosure.
+    ///
+    /// @return the disclosure
+    public Disclosure disclosure() {
+        return disclosure;
+    }
+
+    /// Returns the search field.
+    ///
+    /// @return the search field
+    public SearchField search() {
+        return search;
+    }
+
+    /// Returns the separator.
+    ///
+    /// @return the separator
+    public Separator separator() {
+        return separator;
+    }
+
+    /// Returns the toolbar.
+    ///
+    /// @return the toolbar
+    public Toolbar toolbar() {
+        return toolbar;
+    }
+
+    /// Returns the breadcrumb.
+    ///
+    /// @return the breadcrumb
+    public Breadcrumb breadcrumb() {
+        return breadcrumb;
+    }
+
+    /// Returns the hyperlink.
+    ///
+    /// @return the hyperlink
+    public Hyperlink link() {
+        return link;
+    }
+
+    /// Returns the accordion.
+    ///
+    /// @return the accordion
+    public Accordion accordion() {
+        return accordion;
+    }
+
+    /// Returns the matched-geometry pair.
+    ///
+    /// @return the shared element
+    public SharedElement shared() {
+        return shared;
+    }
+
     /// Returns the toggle.
     ///
     /// @return the toggle
@@ -282,6 +441,13 @@ public final class ControlGallery {
     /// @return the table
     public LazyTable table() {
         return table;
+    }
+
+    /// Returns the virtualized grid.
+    ///
+    /// @return the grid
+    public LazyGrid grid() {
+        return grid;
     }
 
     /// Returns the text field.
@@ -345,6 +511,27 @@ public final class ControlGallery {
     /// @return the split
     public SplitPane split() {
         return split;
+    }
+
+    /// Returns the flex row.
+    ///
+    /// @return the flex
+    public Flex flex() {
+        return flex;
+    }
+
+    /// Returns the wrapping flow.
+    ///
+    /// @return the flow
+    public Flow flow() {
+        return flow;
+    }
+
+    /// Returns the constraint grid.
+    ///
+    /// @return the grid
+    public Grid layoutGrid() {
+        return layoutGrid;
     }
 
     /// Returns the tree.
@@ -711,6 +898,19 @@ public final class ControlGallery {
                 spacer.create(factory, "spacer"),
                 checkbox.create(factory, "checkbox"),
                 radio.create(factory, "radio"),
+                combo.create(factory, "combo"),
+                datePicker.create(factory, "date"),
+                timePicker.create(factory, "time"),
+                colorPicker.create(factory, "color"),
+                stepper.create(factory, "stepper"),
+                disclosure.create(factory, "disclosure"),
+                search.create(factory, "search"),
+                separator.create(factory, "separator"),
+                toolbar.create(factory, "toolbar"),
+                breadcrumb.create(factory, "breadcrumb"),
+                link.create(factory, "link"),
+                accordion.create(factory, "accordion"),
+                shared.create(factory, "shared"),
                 toggle.create(factory, "toggle"),
                 slider.create(factory, "slider"),
                 scrollbar.create(factory, "scrollbar"),
@@ -718,6 +918,7 @@ public final class ControlGallery {
                 scroll.create(factory, "scroll", tallContent),
                 list.create(factory, "list"),
                 table.create(factory, "table"),
+                grid.create(factory, "grid"),
                 field.create(factory, "field"),
                 area.create(factory, "area"),
                 status.create(factory, "status"),
@@ -727,6 +928,9 @@ public final class ControlGallery {
                 tooltip.create(factory, "tooltip"),
                 tabs.create(factory, "tabs"),
                 split.create(factory, "split"),
+                flex.create(factory, "flex"),
+                flow.create(factory, "flow"),
+                layoutGrid.create(factory, "layout-grid"),
                 this.tree.create(factory, "tree")
         );
     }
@@ -743,7 +947,8 @@ public final class ControlGallery {
 
     /// Dispatches a timestamped pointer event through popups, the gesture arena, then the tree.
     ///
-    /// An accepted drag applies its last vertical delta to the scroll viewport. A long press
+    /// An accepted drag applies its last vertical delta to the scroll viewport. An accepted
+    /// drag `UP` starts a fling from the arena velocity. A long press
     /// announces through the gallery status. Down and up events still reach the layout tree so
     /// existing activation and focus routing remain unchanged.
     ///
@@ -766,6 +971,17 @@ public final class ControlGallery {
         }
         if (gestures.dragAccepted() && event.type() == PointerEventType.MOVE) {
             scroll.scrollBy(Math.max(0.0f, -gestures.lastDeltaY()));
+            return true;
+        }
+        if (gestures.dragAccepted() && event.type() == PointerEventType.UP) {
+            scroll.fling(-gestures.velocity().y());
+        }
+        if (gestures.scrollAccepted() && event.type() == PointerEventType.WHEEL) {
+            scroll.scrollBy(-gestures.lastScrollDelta() * scroll.step());
+            return true;
+        }
+        if (gestures.scrollAccepted() && event.type() == PointerEventType.WHEEL_HORIZONTAL) {
+            scroll.scrollByHorizontal(-gestures.lastScrollDelta() * scroll.step());
             return true;
         }
         if (event.type() == PointerEventType.MOVE) {

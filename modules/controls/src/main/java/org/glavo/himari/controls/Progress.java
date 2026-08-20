@@ -111,6 +111,7 @@ public final class Progress {
                 null
         );
         created.setRangeValue(value);
+        created.setRangeExtent(minimum, maximum);
         created.setDisabled(disabled);
         this.node = created;
         return created;

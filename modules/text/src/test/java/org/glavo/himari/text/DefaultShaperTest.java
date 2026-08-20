@@ -6,6 +6,7 @@ import org.glavo.himari.font.GposChainSampleFont;
 import org.glavo.himari.font.GposContextSampleFont;
 import org.glavo.himari.font.GposCursiveSampleFont;
 import org.glavo.himari.font.GposMarkAttachSampleFont;
+import org.glavo.himari.font.GposMarkLigSampleFont;
 import org.glavo.himari.font.GposMarkMarkSampleFont;
 import org.glavo.himari.font.GposMarkSkipSampleFont;
 import org.glavo.himari.font.GposSingleSampleFont;
@@ -94,6 +95,7 @@ import org.glavo.himari.font.GsubMultipleSampleFont;
 import org.glavo.himari.font.GsubReverseSampleFont;
 import org.glavo.himari.font.GdefMarkSampleFont;
 import org.glavo.himari.font.GsubSampleFont;
+import org.glavo.himari.font.HebrewWideOnlySampleFont;
 import org.glavo.himari.font.ScriptSampleFont;
 import org.glavo.himari.font.SfntFont;
 import org.jetbrains.annotations.NotNullByDefault;
@@ -1004,6 +1006,18 @@ final class DefaultShaperTest {
         assertEquals(GposChainSampleFont.ADVANCE_LETTER, DefaultShaper.shape(chain, "AB").get(0).xAdvance());
     }
 
+    /// Places fatha on ligature `A` through GPOS type-5 and the shipped shaper.
+    @Test
+    void shapesMarkToLigatureOffset() {
+        SfntFont font = GposMarkLigSampleFont.create();
+        List<ShapedGlyph> glyphs = DefaultShaper.shape(font, "A\u064E");
+        assertEquals(2, glyphs.size());
+        assertEquals(GposMarkLigSampleFont.GLYPH_LIGA, glyphs.get(0).glyphId());
+        assertEquals(GposMarkLigSampleFont.GLYPH_FATHA, glyphs.get(1).glyphId());
+        assertEquals(GposMarkLigSampleFont.MARK_X_OFFSET, glyphs.get(1).xOffset());
+        assertEquals(GposMarkLigSampleFont.MARK_Y_OFFSET, glyphs.get(1).yOffset());
+    }
+
     /// Places kasra on fatha through GPOS type-6 and the shipped shaper.
     @Test
     void shapesMarkToMarkOffset() {
@@ -1259,6 +1273,22 @@ final class DefaultShaperTest {
         List<ShapedGlyph> finalTsadi = DefaultShaper.shape(font, "\u05E5\u05BC");
         assertEquals(1, finalTsadi.size());
         assertEquals(0xFB45, finalTsadi.getFirst().codePoint());
+        List<ShapedGlyph> het = DefaultShaper.shape(font, "\u05D7\u05BC");
+        assertEquals(1, het.size());
+        assertEquals(0xFB37, het.getFirst().codePoint());
+        assertNotEquals(font.glyphId('\u05D7'), het.getFirst().glyphId());
+        List<ShapedGlyph> finalMem = DefaultShaper.shape(font, "\u05DD\u05BC");
+        assertEquals(1, finalMem.size());
+        assertEquals(0xFB3D, finalMem.getFirst().codePoint());
+        assertNotEquals(font.glyphId('\u05DD'), finalMem.getFirst().glyphId());
+        assertEquals(0xFB32, DefaultShaper.shape(font, "\u05D2\u05BC").getFirst().codePoint());
+        assertEquals(0xFB38, DefaultShaper.shape(font, "\u05D8\u05BC").getFirst().codePoint());
+        assertEquals(0xFB3E, DefaultShaper.shape(font, "\u05DE\u05BC").getFirst().codePoint());
+        assertEquals(0xFB40, DefaultShaper.shape(font, "\u05E0\u05BC").getFirst().codePoint());
+        assertEquals(0xFB44, DefaultShaper.shape(font, "\u05E4\u05BC").getFirst().codePoint());
+        assertEquals(0xFB4A, DefaultShaper.shape(font, "\u05EA\u05BC").getFirst().codePoint());
+        assertEquals(0xFB37, HebrewPresentation.compose(0x05D7, 0x05BC));
+        assertEquals(0xFB3D, HebrewPresentation.compose(0x05DD, 0x05BC));
     }
 
     /// Composes Hangul choseong plus jungseong into `가`.
@@ -1472,6 +1502,36 @@ final class DefaultShaperTest {
         assertEquals(0xFB28, HebrewPresentation.wideForm(0x05EA));
         assertEquals(0, HebrewPresentation.wideForm(0x05D1));
         assertEquals(0xFB20, HebrewPresentation.alternativeAyin());
+        List<ShapedGlyph> ayin = DefaultShaper.shape(font, "\uFB20");
+        assertEquals(1, ayin.size());
+        assertEquals(0xFB20, ayin.getFirst().codePoint());
+        assertTrue(ayin.getFirst().glyphId() > 0);
+        List<ShapedGlyph> wideAlef = DefaultShaper.shape(font, "\uFB21");
+        assertEquals(1, wideAlef.size());
+        assertEquals(0xFB21, wideAlef.getFirst().codePoint());
+        assertNotEquals(font.glyphId('\u05D0'), wideAlef.getFirst().glyphId());
+        List<ShapedGlyph> wideTav = DefaultShaper.shape(font, "\uFB28");
+        assertEquals(1, wideTav.size());
+        assertEquals(0xFB28, wideTav.getFirst().codePoint());
+    }
+
+    /// Falls back to wide alef and alternative ayin when the font omits the nominal letters.
+    @Test
+    void fallsBackToHebrewWidePresentations() {
+        SfntFont font = HebrewWideOnlySampleFont.create();
+        assertEquals(0, font.glyphId('\u05D0'));
+        assertEquals(0, font.glyphId('\u05E2'));
+        List<ShapedGlyph> alef = DefaultShaper.shape(font, "\u05D0");
+        assertEquals(1, alef.size());
+        assertEquals(0xFB21, alef.getFirst().codePoint());
+        assertEquals(HebrewWideOnlySampleFont.GLYPH_FB21, alef.getFirst().glyphId());
+        List<ShapedGlyph> ayin = DefaultShaper.shape(font, "\u05E2");
+        assertEquals(1, ayin.size());
+        assertEquals(0xFB20, ayin.getFirst().codePoint());
+        assertEquals(HebrewWideOnlySampleFont.GLYPH_FB20, ayin.getFirst().glyphId());
+        SfntFont full = ScriptSampleFont.create();
+        List<ShapedGlyph> nominal = DefaultShaper.shape(full, "\u05D0");
+        assertEquals(0x05D0, nominal.getFirst().codePoint());
     }
 
     /// Composes isolated LAM plus alef onto Presentation Forms-B lam-alef.

@@ -32,6 +32,7 @@ QuartzCore
 nio.dll
 ole32.dll
 oleaut32.dll
+shcore.dll
 ucrtbase.dll
 UIAutomationCore.dll
 user32.dll

@@ -54,6 +54,9 @@ public record InspectorSnapshot(
             InspectorNode node = nodes.get(index);
             json.append("{\"id\":").append(node.id())
                     .append(",\"name\":").append(quote(node.name()))
+                    .append(",\"kind\":").append(quote(node.kind()))
+                    .append(",\"phase\":").append(quote(node.phase()))
+                    .append(",\"clipKind\":").append(quote(node.clipKind()))
                     .append(",\"role\":").append(quote(node.role()))
                     .append(",\"label\":").append(quote(node.label()))
                     .append(",\"x\":").append(node.x())
@@ -65,6 +68,13 @@ public record InspectorSnapshot(
                     .append(",\"textStart\":").append(node.textStart())
                     .append(",\"textEnd\":").append(node.textEnd())
                     .append(",\"caret\":").append(node.caret())
+                    .append(",\"rotation\":").append(node.rotation())
+                    .append(",\"translationX\":").append(node.translationX())
+                    .append(",\"translationY\":").append(node.translationY())
+                    .append(",\"shearX\":").append(node.shearX())
+                    .append(",\"shearY\":").append(node.shearY())
+                    .append(",\"rangeMinimum\":").append(node.rangeMinimum())
+                    .append(",\"rangeMaximum\":").append(node.rangeMaximum())
                     .append('}');
         }
         json.append("],\"trace\":");

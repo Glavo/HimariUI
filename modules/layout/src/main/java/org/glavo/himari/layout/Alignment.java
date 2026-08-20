@@ -12,7 +12,13 @@ public enum Alignment {
     CENTER,
 
     /// Align to the end of the axis.
-    END;
+    END,
+
+    /// Align published baselines on a row, flex, flow-line, or grid-row cross-axis.
+    ///
+    /// [`#place(float, float)`] treats this as [`#START`]. Those containers use
+    /// [`LayoutNode#alignmentLines()`] instead of extents for the cross axis.
+    BASELINE;
 
     /// Returns the origin that places `child` inside `parent`.
     ///
@@ -21,7 +27,7 @@ public enum Alignment {
     /// @return the origin
     public float place(float parent, float child) {
         return switch (this) {
-            case START -> 0.0f;
+            case START, BASELINE -> 0.0f;
             case CENTER -> (parent - child) * 0.5f;
             case END -> parent - child;
         };

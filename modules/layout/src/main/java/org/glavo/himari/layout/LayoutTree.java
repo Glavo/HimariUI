@@ -2,6 +2,7 @@ package org.glavo.himari.layout;
 
 import org.glavo.himari.layout.focus.FocusTree;
 import org.glavo.himari.layout.hit.HitTester;
+import org.glavo.himari.layout.hit.SpatialIndex;
 import org.glavo.himari.layout.input.KeyEvent;
 import org.glavo.himari.layout.input.KeyEventType;
 import org.glavo.himari.layout.input.LogicalKey;
@@ -35,6 +36,12 @@ public final class LayoutTree {
     /// Whether place must run after measure.
     private boolean needsPlace = true;
 
+    /// Reverse-z spatial index rebuilt after placement, or `null` before the first place.
+    private @Nullable SpatialIndex spatialIndex;
+
+    /// Pointer-capture target from the last `DOWN`, or `null` when none.
+    private @Nullable LayoutNode pointerCapture;
+
     /// Creates an empty tree.
     public LayoutTree() {
     }
@@ -55,6 +62,8 @@ public final class LayoutTree {
         this.root = Objects.requireNonNull(root, "root");
         needsMeasure = true;
         needsPlace = true;
+        spatialIndex = null;
+        pointerCapture = null;
     }
 
     /// Returns the root node.
@@ -91,7 +100,15 @@ public final class LayoutTree {
         LayoutNode current = requireRoot();
         current.place(Offset.ZERO, Offset.ZERO);
         needsPlace = false;
+        spatialIndex = SpatialIndex.build(current);
         focus.rebuild(current);
+    }
+
+    /// Returns the spatial index rebuilt by the last [#place()].
+    ///
+    /// @return the index, or `null` before the first successful place
+    public @Nullable SpatialIndex spatialIndex() {
+        return spatialIndex;
     }
 
     /// Returns whether placement is required.
@@ -99,6 +116,13 @@ public final class LayoutTree {
     /// @return whether [#place()] must run
     public boolean needsPlace() {
         return needsPlace;
+    }
+
+    /// Returns whether measure is required.
+    ///
+    /// @return whether [#measure(Constraints)] must run
+    public boolean needsMeasure() {
+        return needsMeasure;
     }
 
     /// Returns the focus model.
@@ -120,14 +144,48 @@ public final class LayoutTree {
         if (needsPlace) {
             throw new IllegalStateException("Pointer dispatch requires a placed layout tree");
         }
-        List<LayoutNode> path = HitTester.path(requireRoot(), event.x(), event.y());
+        SpatialIndex hits = spatialIndex;
+        if (hits != null) {
+            LayoutNode indexed = hits.hit(event.x(), event.y());
+            LayoutNode walked = HitTester.hit(requireRoot(), event.x(), event.y());
+            if (indexed != walked) {
+                throw new IllegalStateException("Spatial index disagreed with tree hit testing");
+            }
+        }
+        List<LayoutNode> path;
+        if (pointerCapture != null
+                && event.type() != PointerEventType.DOWN
+                && event.type() != PointerEventType.ENTER
+                && event.type() != PointerEventType.CAPTURE_CHANGED) {
+            path = pathTo(pointerCapture);
+        } else {
+            path = HitTester.path(requireRoot(), event.x(), event.y());
+        }
         if (path.isEmpty()) {
+            if (event.type() == PointerEventType.UP
+                    || event.type() == PointerEventType.LEAVE
+                    || event.type() == PointerEventType.CAPTURE_CHANGED) {
+                pointerCapture = null;
+            }
             return false;
         }
         LayoutNode target = path.getLast();
-        if (event.type() == PointerEventType.DOWN && target.focusable() && !target.disabled()) {
-            focus.request(target);
-            focus.setFocusVisible(false);
+        if (event.type() == PointerEventType.DOWN) {
+            pointerCapture = target;
+            if (target.focusable() && !target.disabled()) {
+                focus.request(target);
+                focus.setFocusVisible(false);
+            }
+        }
+        if (event.type() == PointerEventType.UP
+                || event.type() == PointerEventType.LEAVE
+                || event.type() == PointerEventType.CAPTURE_CHANGED) {
+            pointerCapture = null;
+        }
+        for (int index = path.size() - 1; index >= 0; index--) {
+            if (path.get(index).dispatchPointer(event)) {
+                return true;
+            }
         }
         if (event.type() == PointerEventType.UP) {
             for (int index = path.size() - 1; index >= 0; index--) {
@@ -143,6 +201,45 @@ public final class LayoutTree {
             }
         }
         return true;
+    }
+
+    /// Returns the node that currently holds pointer capture.
+    ///
+    /// @return the capture target, or `null`
+    public @Nullable LayoutNode pointerCapture() {
+        return pointerCapture;
+    }
+
+    /// Builds the root-to-`target` path.
+    ///
+    /// @param target the captured node
+    /// @return the path, or empty when `target` is not in the tree
+    private List<LayoutNode> pathTo(LayoutNode target) {
+        ArrayList<LayoutNode> path = new ArrayList<>();
+        if (collectPath(requireRoot(), target, path)) {
+            return path;
+        }
+        return List.of();
+    }
+
+    /// Walks `node` until `target` is found.
+    ///
+    /// @param node the current node
+    /// @param target the captured node
+    /// @param path the accumulator
+    /// @return whether `target` was found
+    private static boolean collectPath(LayoutNode node, LayoutNode target, List<LayoutNode> path) {
+        path.add(node);
+        if (node == target) {
+            return true;
+        }
+        for (LayoutNode child : node.children()) {
+            if (collectPath(child, target, path)) {
+                return true;
+            }
+        }
+        path.removeLast();
+        return false;
     }
 
     /// Dispatches one keyboard event to the focused node.
@@ -203,6 +300,8 @@ public final class LayoutTree {
                 focus.focusedId() != null && focus.focusedId() == node.id(),
                 node.selected(),
                 node.rangeValue(),
+                node.rangeMinimum(),
+                node.rangeMaximum(),
                 node.liveRegion(),
                 node.textRange(),
                 node.grid(),

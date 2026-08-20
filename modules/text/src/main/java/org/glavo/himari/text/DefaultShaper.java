@@ -205,6 +205,17 @@ public final class DefaultShaper {
                     mapped = fin;
                 }
             }
+            if (consumed == 1 && font.glyphId(mapped) == 0) {
+                int wide = HebrewPresentation.wideForm(codePoint);
+                if (wide != 0 && font.glyphId(wide) != 0) {
+                    mapped = wide;
+                } else if (codePoint == 0x05E2) {
+                    int ayin = HebrewPresentation.alternativeAyin();
+                    if (font.glyphId(ayin) != 0) {
+                        mapped = ayin;
+                    }
+                }
+            }
             if (consumed == 1 && ArabicPresentation.isLam(codePoint)) {
                 int allah = ArabicPresentation.allahLigature(points, index, count);
                 if (allah != 0 && font.glyphId(allah) != 0) {

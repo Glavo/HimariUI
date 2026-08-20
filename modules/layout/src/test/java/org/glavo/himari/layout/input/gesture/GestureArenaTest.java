@@ -39,6 +39,9 @@ final class GestureArenaTest {
         assertEquals(10.0f, arena.lastDeltaY());
         assertEquals(30.0f, arena.translationY());
         assertTrue(arena.velocity().y() > 0.0f);
+        float beforeUp = arena.velocity().y();
+        arena.dispatch(new PointerEvent(PointerEventType.UP, 0.0f, 30.0f), 40_000_000L);
+        assertEquals(beforeUp, arena.velocity().y());
         assertSame(GestureDisposition.REJECTED, arena.disposition(GestureKind.TAP));
     }
 
@@ -111,5 +114,38 @@ final class GestureArenaTest {
         assertTrue(arena.rotationAccepted());
         assertEquals(Math.PI / 2.0, arena.rotation(), 0.01);
         assertSame(GestureDisposition.REJECTED, arena.disposition(GestureKind.SCALE));
+    }
+
+    /// Cancels an in-flight press on `CAPTURE_CHANGED` and rejects every recognizer.
+    @Test
+    void cancelsSequenceOnCaptureChanged() {
+        GestureArena arena = new GestureArena();
+        arena.dispatch(new PointerEvent(PointerEventType.DOWN, 4.0f, 4.0f), 0L);
+        assertSame(GestureDisposition.POSSIBLE, arena.disposition(GestureKind.TAP));
+        arena.dispatch(new PointerEvent(PointerEventType.CAPTURE_CHANGED, 4.0f, 4.0f), 8_000_000L);
+        assertTrue(arena.cancelled());
+        assertNull(arena.winner());
+        assertSame(GestureDisposition.CANCELLED, arena.disposition(GestureKind.TAP));
+        assertSame(GestureDisposition.CANCELLED, arena.disposition(GestureKind.DRAG));
+        arena.dispatch(new PointerEvent(PointerEventType.DOWN, 4.0f, 4.0f), 16_000_000L);
+        arena.dispatch(new PointerEvent(PointerEventType.UP, 4.0f, 4.0f), 40_000_000L);
+        assertTrue(arena.tapAccepted());
+        assertTrue(!arena.cancelled());
+    }
+
+    /// Accepts a teammate when the other member of the team wins.
+    @Test
+    void teamAcceptsTeammateWhenPartnerWins() {
+        GestureArena arena = new GestureArena();
+        arena.joinTeam(GestureKind.SCALE, GestureKind.ROTATION);
+        arena.dispatch(new PointerEvent(PointerEventType.DOWN, 0.0f, 0.0f, PointerDeviceKind.TOUCH, 0.0f, 1), 0L);
+        arena.dispatch(new PointerEvent(PointerEventType.DOWN, 100.0f, 0.0f, PointerDeviceKind.TOUCH, 0.0f, 2), 1L);
+        arena.dispatch(new PointerEvent(PointerEventType.MOVE, 130.0f, 0.0f, PointerDeviceKind.TOUCH, 0.0f, 2), 16_000_000L);
+        assertTrue(arena.scaleAccepted());
+        assertEquals(GestureKind.SCALE, arena.winner());
+        assertTrue(arena.rotationAccepted());
+        assertSame(GestureDisposition.ACCEPTED, arena.disposition(GestureKind.ROTATION));
+        assertSame(GestureDisposition.REJECTED, arena.disposition(GestureKind.DRAG));
+        assertSame(GestureDisposition.REJECTED, arena.disposition(GestureKind.TAP));
     }
 }

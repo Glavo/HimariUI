@@ -43,7 +43,7 @@ public final class ControlsConformance {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1200.0f));
+        tree.measure(Constraints.loose(400.0f, 2200.0f));
         tree.place();
         SemanticsNode button = first(tree, SemanticsRole.BUTTON);
         tree.dispatch(new PointerEvent(PointerEventType.DOWN, button.bounds().x() + 1.0f, button.bounds().y() + 1.0f));
@@ -141,12 +141,18 @@ public final class ControlsConformance {
         tree.dispatch(new PointerEvent(PointerEventType.DOWN, scrollbar.bounds().x() + 1.0f, scrollbar.bounds().y() + 1.0f));
         tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ARROW_RIGHT));
         if (gallery.button().activations() != 2 || !gallery.toggle().isOn() || gallery.slider().value() != 5.0f
+                || first(tree, SemanticsRole.SLIDER).rangeMinimum() != 0.0
+                || Math.abs(first(tree, SemanticsRole.SLIDER).rangeMaximum() - 10.0) > 1.0e-6
                 || gallery.progress().value() != 0.5f
                 || first(tree, SemanticsRole.PROGRESS).rangeValue() == null
                 || Math.abs(first(tree, SemanticsRole.PROGRESS).rangeValue() - 0.5) > 1.0e-6
+                || first(tree, SemanticsRole.PROGRESS).rangeMinimum() != 0.0
+                || Math.abs(first(tree, SemanticsRole.PROGRESS).rangeMaximum() - 1.0) > 1.0e-6
                 || gallery.scrollbar().value() != 30.0f
                 || first(tree, SemanticsRole.SCROLLBAR).rangeValue() == null
                 || Math.abs(first(tree, SemanticsRole.SCROLLBAR).rangeValue() - 30.0) > 1.0e-6
+                || first(tree, SemanticsRole.SCROLLBAR).rangeMinimum() != 0.0
+                || Math.abs(first(tree, SemanticsRole.SCROLLBAR).rangeMaximum() - 100.0) > 1.0e-6
                 || gallery.list().unmountedLabels().size() != 16
                 || gallery.radio().selected() != 1
                 || first(tree, SemanticsRole.CHECKBOX).bounds().height() <= 0.0f
@@ -161,14 +167,37 @@ public final class ControlsConformance {
                 || gallery.tree().visibleIndices().size() != 1
                 || first(tree, SemanticsRole.TAB_LIST).bounds().height() <= 0.0f
                 || first(tree, SemanticsRole.SPLIT_PANE).bounds().height() <= 0.0f
-                || first(tree, SemanticsRole.TREE).bounds().height() <= 0.0f) {
+                || gallery.flex().firstGrow() != 1.0f
+                || gallery.layoutGrid().columns() != 2
+                || first(tree, SemanticsRole.TREE).bounds().height() <= 0.0f
+                || !"2026-08-20".equals(gallery.datePicker().value())
+                || first(tree, SemanticsRole.DATE_PICKER).bounds().height() <= 0.0f
+                || !"13:45".equals(gallery.timePicker().value())
+                || first(tree, SemanticsRole.TIME_PICKER).bounds().height() <= 0.0f
+                || !"#336699".equals(gallery.colorPicker().value())
+                || first(tree, SemanticsRole.COLOR_PICKER).bounds().height() <= 0.0f
+                || gallery.stepper().value() != 3
+                || first(tree, SemanticsRole.STEPPER).bounds().height() <= 0.0f
+                || gallery.disclosure().isExpanded()
+                || first(tree, SemanticsRole.DISCLOSURE).bounds().height() <= 0.0f
+                || first(tree, SemanticsRole.SEARCH_BOX).bounds().height() <= 0.0f
+                || first(tree, SemanticsRole.SEPARATOR).bounds().height() <= 0.0f
+                || !"Cut".equals(gallery.toolbar().value())
+                || first(tree, SemanticsRole.TOOLBAR).bounds().height() <= 0.0f
+                || !"API".equals(gallery.breadcrumb().value())
+                || first(tree, SemanticsRole.BREADCRUMB).bounds().height() <= 0.0f
+                || !"plans".equals(gallery.link().href())
+                || first(tree, SemanticsRole.LINK).bounds().height() <= 0.0f
+                || !"Alpha".equals(gallery.accordion().value())
+                || first(tree, SemanticsRole.ACCORDION).bounds().height() <= 0.0f) {
             throw new IllegalStateException("Control gallery outcomes were incorrect");
         }
         if (gallery.scroll().offset() != 16.0f || gallery.list().firstVisible() != 1
                 || !"abz".equals(gallery.field().text())
                 || !"r0".equals(gallery.table().firstMaterializedKey())
-                || first(tree, SemanticsRole.TABLE).bounds().height() <= 0.0f) {
-            throw new IllegalStateException("Scroll, list, table, or text-field outcomes were incorrect");
+                || first(tree, SemanticsRole.TABLE).bounds().height() <= 0.0f
+                || first(tree, SemanticsRole.GRID).bounds().height() <= 0.0f) {
+            throw new IllegalStateException("Scroll, list, table, grid, or text-field outcomes were incorrect");
         }
         gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.DOWN, 24.0f, 60.0f), 0L);
         gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.MOVE, 24.0f, 40.0f), 16_000_000L);
@@ -339,7 +368,7 @@ public final class ControlsConformance {
     /// @param gallery the gallery
     private static void rebuild(LayoutTree tree, ControlGallery gallery) {
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1200.0f));
+        tree.measure(Constraints.loose(400.0f, 2200.0f));
         tree.place();
     }
 }

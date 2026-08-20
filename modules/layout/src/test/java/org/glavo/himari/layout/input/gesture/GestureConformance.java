@@ -80,6 +80,24 @@ public final class GestureConformance {
         if (!rotation.rotationAccepted() || Math.abs(rotation.rotation() - Math.PI / 2.0) > 0.01) {
             throw new IllegalStateException("Rotation did not win a twist");
         }
+        GestureArena cancelled = new GestureArena();
+        cancelled.dispatch(new PointerEvent(PointerEventType.DOWN, 4.0f, 4.0f), 0L);
+        cancelled.dispatch(new PointerEvent(PointerEventType.CAPTURE_CHANGED, 4.0f, 4.0f), 1L);
+        if (!cancelled.cancelled()
+                || cancelled.winner() != null
+                || cancelled.disposition(GestureKind.TAP) != GestureDisposition.CANCELLED) {
+            throw new IllegalStateException("Capture change did not cancel the arena");
+        }
+        GestureArena team = new GestureArena();
+        team.joinTeam(GestureKind.SCALE, GestureKind.ROTATION);
+        team.dispatch(new PointerEvent(PointerEventType.DOWN, 0.0f, 0.0f, org.glavo.himari.layout.input.PointerDeviceKind.TOUCH, 0.0f, 1), 0L);
+        team.dispatch(new PointerEvent(PointerEventType.DOWN, 100.0f, 0.0f, org.glavo.himari.layout.input.PointerDeviceKind.TOUCH, 0.0f, 2), 1L);
+        team.dispatch(new PointerEvent(PointerEventType.MOVE, 130.0f, 0.0f, org.glavo.himari.layout.input.PointerDeviceKind.TOUCH, 0.0f, 2), 16_000_000L);
+        if (!team.scaleAccepted()
+                || !team.rotationAccepted()
+                || team.disposition(GestureKind.DRAG) != GestureDisposition.REJECTED) {
+            throw new IllegalStateException("Scale/rotation team did not accept together");
+        }
         Path output = Path.of(arguments[0]);
         Files.createDirectories(output);
         Files.writeString(
@@ -97,7 +115,9 @@ public final class GestureConformance {
                           "doubleTapAccepted": true,
                           "scrollAccepted": true,
                           "scaleAccepted": true,
-                          "rotationAccepted": true
+                          "rotationAccepted": true,
+                          "cancelled": true,
+                          "teamAccepted": true
                         }
                         """.formatted(drag.translationY(), drag.velocity().y()),
                 StandardCharsets.UTF_8

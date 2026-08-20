@@ -18,6 +18,8 @@ import java.util.Set;
 /// @param focused whether the node owns focus
 /// @param selected the toggle state, or `null` when the node does not expose a boolean value
 /// @param rangeValue the numeric range value, or `null` when the node does not expose a range
+/// @param rangeMinimum the inclusive range minimum; ignored when `rangeValue` is `null`
+/// @param rangeMaximum the inclusive range maximum; ignored when `rangeValue` is `null`
 /// @param liveRegion the live-region politeness
 /// @param textRange the UTF-16 selection and caret, or `null` when the node is not an editor
 /// @param grid the table or grid extent, or `null` when the node does not expose a grid
@@ -68,6 +70,8 @@ public record SemanticsNode(
         boolean focused,
         @Nullable Boolean selected,
         @Nullable Double rangeValue,
+        double rangeMinimum,
+        double rangeMaximum,
         SemanticsLiveRegion liveRegion,
         @Nullable SemanticsTextRange textRange,
         @Nullable SemanticsGrid grid,
@@ -120,6 +124,12 @@ public record SemanticsNode(
         Objects.requireNonNull(bounds, "bounds");
         if (rangeValue != null && !Double.isFinite(rangeValue)) {
             throw new IllegalArgumentException("rangeValue must be finite when present");
+        }
+        if (!Double.isFinite(rangeMinimum) || !Double.isFinite(rangeMaximum)) {
+            throw new IllegalArgumentException("range extent must be finite");
+        }
+        if (rangeMaximum < rangeMinimum) {
+            throw new IllegalArgumentException("range maximum must be at least the minimum");
         }
         Objects.requireNonNull(liveRegion, "liveRegion");
         Objects.requireNonNull(hint, "hint");

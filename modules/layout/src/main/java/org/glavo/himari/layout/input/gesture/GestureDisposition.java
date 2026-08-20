@@ -12,5 +12,8 @@ public enum GestureDisposition {
     ACCEPTED,
 
     /// The recognizer lost the arena.
-    REJECTED
+    REJECTED,
+
+    /// The sequence was cancelled before a winner could complete.
+    CANCELLED
 }

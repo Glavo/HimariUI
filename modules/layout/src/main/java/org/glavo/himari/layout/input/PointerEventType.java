@@ -41,6 +41,15 @@ public enum PointerEventType {
     /// A non-client-area pointer release (`WM_NCPOINTERUP`).
     NON_CLIENT_UP,
 
+    /// A pointer was routed to this window (`WM_POINTERROUTEDTO`).
+    ROUTED_TO,
+
+    /// A pointer was routed away from this window (`WM_POINTERROUTEDAWAY`).
+    ROUTED_AWAY,
+
+    /// A routed pointer was released (`WM_POINTERROUTEDRELEASED`).
+    ROUTED_RELEASED,
+
     /// The secondary (right) button pressed.
     SECONDARY_DOWN,
 

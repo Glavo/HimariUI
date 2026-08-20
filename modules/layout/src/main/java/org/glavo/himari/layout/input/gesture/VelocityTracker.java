@@ -36,11 +36,15 @@ final class VelocityTracker {
     /// @param timestampNanos the sample timestamp
     void add(float x, float y, long timestampNanos) {
         if (Float.isFinite(previousX) && timestampNanos > previousNanos) {
-            double seconds = (timestampNanos - previousNanos) / 1_000_000_000.0;
-            velocity = new GestureVelocity(
-                    (float) ((x - previousX) / seconds),
-                    (float) ((y - previousY) / seconds)
-            );
+            float dx = x - previousX;
+            float dy = y - previousY;
+            if (dx != 0.0f || dy != 0.0f) {
+                double seconds = (timestampNanos - previousNanos) / 1_000_000_000.0;
+                velocity = new GestureVelocity(
+                        (float) (dx / seconds),
+                        (float) (dy / seconds)
+                );
+            }
         }
         previousX = x;
         previousY = y;

@@ -39,6 +39,24 @@ public final class InspectorConformance {
         if (!snapshot.toCanonicalJson().contains("\"liveRegion\":\"POLITE\"")) {
             throw new IllegalStateException("Inspector omitted the live-region field");
         }
+        if (snapshot.nodes().stream().noneMatch(node ->
+                "COLUMN".equals(node.kind()) || "LEAF".equals(node.kind()))) {
+            throw new IllegalStateException("Inspector omitted layout kind");
+        }
+        if (snapshot.nodes().stream().noneMatch(node -> "NONE".equals(node.phase()))) {
+            throw new IllegalStateException("Inspector omitted invalidation phase");
+        }
+        if (!snapshot.toCanonicalJson().contains("\"rotation\":")
+                || !snapshot.toCanonicalJson().contains("\"translationX\":")) {
+            throw new IllegalStateException("Inspector omitted transform fields");
+        }
+        if (!snapshot.toCanonicalJson().contains("\"rangeMinimum\":")
+                || !snapshot.toCanonicalJson().contains("\"rangeMaximum\":")) {
+            throw new IllegalStateException("Inspector omitted range extents");
+        }
+        if (!snapshot.toCanonicalJson().contains("\"clipKind\":")) {
+            throw new IllegalStateException("Inspector omitted clipKind");
+        }
         if (!snapshot.toCanonicalJson().contains("\"textStart\":-1")
                 || snapshot.nodes().stream().noneMatch(node ->
                         node.role().equals("TEXT_FIELD")

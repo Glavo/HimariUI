@@ -10,8 +10,9 @@ import java.util.Objects;
 /// Resolves tap, double-tap, drag, long-press, scroll, scale, and rotation competition.
 ///
 /// Members start as [GestureDisposition#POSSIBLE]. The first recognizer that meets its accept
-/// criterion wins and the others are rejected. Time is taken from caller-supplied timestamps so
-/// Headless tests can replay traces without sleeping.
+/// criterion wins and the others are rejected, except teammates joined by [#joinTeam], which
+/// stay accepted with the winner. Time is taken from caller-supplied timestamps so Headless
+/// tests can replay traces without sleeping.
 @NotNullByDefault
 public final class GestureArena {
     /// Maximum movement, in logical pixels, that still counts as a tap or long press.
@@ -80,6 +81,9 @@ public final class GestureArena {
     /// Exclusive winner, or `null` while the sequence is unresolved.
     private @Nullable GestureKind winner;
 
+    /// Whether the current sequence was cancelled.
+    private boolean cancelled;
+
     /// Velocity estimator for the current sequence.
     private final VelocityTracker tracker = new VelocityTracker();
 
@@ -110,8 +114,33 @@ public final class GestureArena {
     /// Latest wheel delta that accepted [GestureKind#SCROLL].
     private float lastScrollDelta;
 
+    /// Team identifier per [GestureKind#ordinal], or `0` when the kind is unteamed.
+    private final int[] teamOf = new int[GestureKind.values().length];
+
+    /// Next unused team identifier.
+    private int nextTeam = 1;
+
     /// Creates an empty arena.
     public GestureArena() {
+    }
+
+    /// Puts `first`, `second`, and `more` on one team so they accept together.
+    ///
+    /// Kinds already on another team are merged into this team. Teams survive [#reset].
+    ///
+    /// @param first the first teammate
+    /// @param second the second teammate
+    /// @param more additional teammates
+    public void joinTeam(GestureKind first, GestureKind second, GestureKind... more) {
+        Objects.requireNonNull(first, "first");
+        Objects.requireNonNull(second, "second");
+        Objects.requireNonNull(more, "more");
+        int team = nextTeam++;
+        adopt(first, team);
+        adopt(second, team);
+        for (GestureKind kind : more) {
+            adopt(Objects.requireNonNull(kind, "kind"), team);
+        }
     }
 
     /// Clears winner, samples, and pointer state. Remembers the last tap for double-tap.
@@ -129,13 +158,17 @@ public final class GestureArena {
         if (timestampNanos < 0L) {
             throw new IllegalArgumentException("timestampNanos must be nonnegative");
         }
+        if (event.canceled()) {
+            return cancel();
+        }
         return switch (event.type()) {
             case DOWN -> onDown(event.pointerId(), event.x(), event.y(), timestampNanos);
             case MOVE -> onMove(event.pointerId(), event.x(), event.y(), timestampNanos);
             case UP -> onUp(event.pointerId(), event.x(), event.y(), timestampNanos);
             case WHEEL, WHEEL_HORIZONTAL -> onWheel(event.wheelDelta());
-            case SECONDARY_DOWN, SECONDARY_UP, MIDDLE_DOWN, MIDDLE_UP, ENTER, LEAVE, CAPTURE_CHANGED, ACTIVATE,
-                    NON_CLIENT_MOVE, NON_CLIENT_DOWN, NON_CLIENT_UP -> false;
+            case CAPTURE_CHANGED -> cancel();
+            case SECONDARY_DOWN, SECONDARY_UP, MIDDLE_DOWN, MIDDLE_UP, ENTER, LEAVE, ACTIVATE,
+                    NON_CLIENT_MOVE, NON_CLIENT_DOWN, NON_CLIENT_UP, ROUTED_TO, ROUTED_AWAY, ROUTED_RELEASED -> false;
         };
     }
 
@@ -163,53 +196,69 @@ public final class GestureArena {
         return winner;
     }
 
+    /// Returns whether the current sequence was cancelled.
+    ///
+    /// @return whether [#cancel()] ran or a cancelled event arrived
+    public boolean cancelled() {
+        return cancelled;
+    }
+
+    /// Cancels the current sequence and rejects every recognizer.
+    ///
+    /// @return `true`
+    public boolean cancel() {
+        resetSequence();
+        cancelled = true;
+        return true;
+    }
+
     /// Returns whether a tap won the current sequence.
     ///
     /// @return whether the winner is a tap
     public boolean tapAccepted() {
-        return winner == GestureKind.TAP;
+        return accepted(GestureKind.TAP);
     }
 
     /// Returns whether a drag won the current sequence.
     ///
     /// @return whether the winner is a drag
     public boolean dragAccepted() {
-        return winner == GestureKind.DRAG;
+        return accepted(GestureKind.DRAG);
     }
 
     /// Returns whether a long press won the current sequence.
     ///
     /// @return whether the winner is a long press
     public boolean longPressAccepted() {
-        return winner == GestureKind.LONG_PRESS;
+        return accepted(GestureKind.LONG_PRESS);
     }
 
     /// Returns whether a double tap won the current sequence.
     ///
     /// @return whether the winner is a double tap
     public boolean doubleTapAccepted() {
-        return winner == GestureKind.DOUBLE_TAP;
+        return accepted(GestureKind.DOUBLE_TAP);
     }
 
     /// Returns whether a wheel notch won.
     ///
     /// @return whether the winner is a scroll
     public boolean scrollAccepted() {
-        return winner == GestureKind.SCROLL;
+        return accepted(GestureKind.SCROLL);
     }
 
     /// Returns whether a pinch won.
     ///
     /// @return whether the winner is a scale
     public boolean scaleAccepted() {
-        return winner == GestureKind.SCALE;
+        return accepted(GestureKind.SCALE);
     }
 
     /// Returns whether a two-pointer twist won.
     ///
     /// @return whether the winner is a rotation
     public boolean rotationAccepted() {
-        return winner == GestureKind.ROTATION;
+        return accepted(GestureKind.ROTATION);
     }
 
     /// Returns the total translation from the down origin.
@@ -274,12 +323,53 @@ public final class GestureArena {
     /// @return the disposition
     public GestureDisposition disposition(GestureKind kind) {
         Objects.requireNonNull(kind, "kind");
+        if (cancelled) {
+            return GestureDisposition.CANCELLED;
+        }
         if (winner == null) {
             return pointerDown || kind == GestureKind.SCROLL
                     ? GestureDisposition.POSSIBLE
                     : GestureDisposition.REJECTED;
         }
-        return winner == kind ? GestureDisposition.ACCEPTED : GestureDisposition.REJECTED;
+        if (winner == kind || teammates(winner, kind)) {
+            return GestureDisposition.ACCEPTED;
+        }
+        return GestureDisposition.REJECTED;
+    }
+
+    /// Returns whether `kind` is accepted as the winner or a teammate.
+    ///
+    /// @param kind the recognizer
+    /// @return whether the disposition is accepted
+    private boolean accepted(GestureKind kind) {
+        return disposition(kind) == GestureDisposition.ACCEPTED;
+    }
+
+    /// Merges `kind` into `team`, absorbing any previous team.
+    ///
+    /// @param kind the recognizer
+    /// @param team the team identifier
+    private void adopt(GestureKind kind, int team) {
+        int index = kind.ordinal();
+        int existing = teamOf[index];
+        if (existing != 0 && existing != team) {
+            for (int slot = 0; slot < teamOf.length; slot++) {
+                if (teamOf[slot] == existing) {
+                    teamOf[slot] = team;
+                }
+            }
+        }
+        teamOf[index] = team;
+    }
+
+    /// Returns whether two kinds share a nonzero team.
+    ///
+    /// @param first the first kind
+    /// @param second the second kind
+    /// @return whether they are teammates
+    private boolean teammates(GestureKind first, GestureKind second) {
+        int team = teamOf[first.ordinal()];
+        return team != 0 && team == teamOf[second.ordinal()];
     }
 
     /// Starts or extends a press sequence.
@@ -451,6 +541,7 @@ public final class GestureArena {
         lastScale = 1.0f;
         lastRotation = 0.0f;
         lastScrollDelta = 0.0f;
+        cancelled = false;
     }
 
     /// Returns the slot of `pointerId`, or `-1`.

@@ -52,6 +52,12 @@ public final class WindowsDataObject implements AutoCloseable {
     /// `DATA_E_FORMATETC`.
     private static final int DATA_E_FORMATETC = 0x8004_0064;
 
+    /// `E_NOTIMPL`.
+    private static final int E_NOTIMPL = 0x8000_4001;
+
+    /// `OLE_E_ADVISENOTSUPPORTED`.
+    private static final int OLE_E_ADVISENOTSUPPORTED = 0x8004_0003;
+
     /// Native bindings.
     private final Win32FfmBindings bindings;
 
@@ -96,7 +102,14 @@ public final class WindowsDataObject implements AutoCloseable {
         vtable.setAtIndex(ValueLayout.ADDRESS, 1L, bindings.createIunknownAddRefStub(this::addRef, failures, arena));
         vtable.setAtIndex(ValueLayout.ADDRESS, 2L, bindings.createIunknownReleaseStub(this::release, failures, arena));
         vtable.setAtIndex(ValueLayout.ADDRESS, 3L, bindings.createIdataObjectGetDataStub(this::getData, failures, arena));
+        vtable.setAtIndex(ValueLayout.ADDRESS, 4L, bindings.createIdataObjectGetDataHereStub(this::getDataHere, failures, arena));
         vtable.setAtIndex(ValueLayout.ADDRESS, 5L, bindings.createIdataObjectQueryGetDataStub(this::queryGetData, failures, arena));
+        vtable.setAtIndex(ValueLayout.ADDRESS, 6L, bindings.createIdataObjectGetCanonicalFormatEtcStub(this::getCanonicalFormatEtc, failures, arena));
+        vtable.setAtIndex(ValueLayout.ADDRESS, 7L, bindings.createIdataObjectSetDataStub(this::setData, failures, arena));
+        vtable.setAtIndex(ValueLayout.ADDRESS, 8L, bindings.createIdataObjectEnumFormatEtcStub(this::enumFormatEtc, failures, arena));
+        vtable.setAtIndex(ValueLayout.ADDRESS, 9L, bindings.createIdataObjectDAdviseStub(this::dAdvise, failures, arena));
+        vtable.setAtIndex(ValueLayout.ADDRESS, 10L, bindings.createIdataObjectDUnadviseStub(this::dUnadvise, failures, arena));
+        vtable.setAtIndex(ValueLayout.ADDRESS, 11L, bindings.createIdataObjectEnumDAdviseStub(this::enumDAdvise, failures, arena));
     }
 
     /// Creates a Unicode `IDataObject`.
@@ -211,6 +224,52 @@ public final class WindowsDataObject implements AutoCloseable {
             return E_POINTER;
         }
         return supports(format) ? S_OK : DATA_E_FORMATETC;
+    }
+
+    /// Implements `IDataObject::EnumFormatEtc` as not implemented.
+    private int enumFormatEtc(MemorySegment self, int direction, MemorySegment enumerator) {
+        if (enumerator.address() == 0L) {
+            return E_POINTER;
+        }
+        enumerator.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        return E_NOTIMPL;
+    }
+
+    /// Implements `IDataObject::GetDataHere` as not implemented.
+    private int getDataHere(MemorySegment self, MemorySegment format, MemorySegment medium) {
+        return E_NOTIMPL;
+    }
+
+    /// Implements `IDataObject::GetCanonicalFormatEtc` as not implemented.
+    private int getCanonicalFormatEtc(MemorySegment self, MemorySegment formatIn, MemorySegment formatOut) {
+        return DATA_E_FORMATETC;
+    }
+
+    /// Implements `IDataObject::SetData` as not implemented.
+    private int setData(MemorySegment self, MemorySegment format, MemorySegment medium, int releaseMedium) {
+        return E_NOTIMPL;
+    }
+
+    /// Implements `IDataObject::DAdvise` as not implemented.
+    private int dAdvise(MemorySegment self, MemorySegment format, int flags, MemorySegment sink, MemorySegment connection) {
+        if (connection.address() != 0L) {
+            connection.set(ValueLayout.JAVA_INT, 0L, 0);
+        }
+        return OLE_E_ADVISENOTSUPPORTED;
+    }
+
+    /// Implements `IDataObject::DUnadvise` as not implemented.
+    private int dUnadvise(MemorySegment self, int connection) {
+        return OLE_E_ADVISENOTSUPPORTED;
+    }
+
+    /// Implements `IDataObject::EnumDAdvise` as not implemented.
+    private int enumDAdvise(MemorySegment self, MemorySegment enumerator) {
+        if (enumerator.address() == 0L) {
+            return E_POINTER;
+        }
+        enumerator.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+        return OLE_E_ADVISENOTSUPPORTED;
     }
 
     /// Returns whether `format` requests Unicode HGLOBAL text or `CF_HDROP`.

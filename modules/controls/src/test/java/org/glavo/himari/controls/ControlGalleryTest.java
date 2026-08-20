@@ -41,7 +41,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 1600.0f));
         tree.place();
         SemanticsNode button = first(tree, SemanticsRole.BUTTON);
         click(tree, button);
@@ -102,7 +102,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 1600.0f));
         tree.place();
         SemanticsNode slider = first(tree, SemanticsRole.SLIDER);
         tree.dispatch(new PointerEvent(
@@ -111,6 +111,8 @@ final class ControlGalleryTest {
                 slider.bounds().y() + 1.0f
         ));
         assertEquals(3.0, slider.rangeValue());
+        assertEquals(0.0, slider.rangeMinimum());
+        assertEquals(10.0, slider.rangeMaximum());
         tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ARROW_RIGHT));
         assertEquals(4.0f, gallery.slider().value());
         assertEquals(4.0, first(tree, SemanticsRole.SLIDER).rangeValue());
@@ -129,7 +131,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 1600.0f));
         tree.place();
         gallery.scroll().scrollForward();
         assertEquals(16.0f, gallery.scroll().offset());
@@ -153,9 +155,12 @@ final class ControlGalleryTest {
         assertEquals(20, gallery.list().itemCount());
         assertTrue(gallery.list().disabled());
         gallery.list().setDisabled(false);
+        gallery.list().fling(40.0f);
+        assertTrue(gallery.list().advanceFling(250_000_000L));
+        assertTrue(gallery.list().firstVisible() > 1);
+        assertTrue(gallery.list().flingVelocity() < 40.0f);
+        gallery.list().scrollTo(0);
     }
-
-    /// Materializes only a window of a 100,000-item list and scrolls by index.
     @Test
     void virtualizesOneHundredThousandItems() {
         LazyList list = new LazyList(100_000, 16);
@@ -189,6 +194,13 @@ final class ControlGalleryTest {
         LayoutNode scrolled = list.create(new LayoutFactory(tree), "huge-end");
         assertEquals(16, scrolled.children().size());
         assertEquals(99_984, list.firstVisible());
+        assertSame(org.glavo.himari.layout.input.gesture.ClampingScrollPhysics.INSTANCE, list.physics());
+        list.setPhysics((index, min, max) -> Math.min(3, Math.max(min, index)));
+        list.scrollTo(50);
+        assertEquals(3, list.firstVisible());
+        list.setPhysics(org.glavo.himari.layout.input.gesture.ClampingScrollPhysics.INSTANCE);
+        list.scrollTo(99_990);
+        assertEquals(99_984, list.firstVisible());
         assertEquals("Item 99984", scrolled.children().getFirst().label());
         assertEquals("Item 99999", scrolled.children().getLast().label());
         list.page(-1);
@@ -212,7 +224,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 1600.0f));
         tree.place();
         assertEquals(0.25f, gallery.progress().value());
         SemanticsNode progress = first(tree, SemanticsRole.PROGRESS);
@@ -238,7 +250,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 1600.0f));
         tree.place();
         assertEquals("r0", gallery.table().firstMaterializedKey());
         SemanticsNode table = first(tree, SemanticsRole.TABLE);
@@ -251,6 +263,49 @@ final class ControlGalleryTest {
         assertEquals("r0", gallery.table().firstMaterializedKey());
         assertTrue(gallery.table().disabled());
         gallery.table().setDisabled(false);
+    }
+
+    /// Materializes the gallery grid through shipped GRID semantics.
+    @Test
+    void materializesGalleryGrid() {
+        LayoutTree tree = new LayoutTree();
+        ControlGallery gallery = new ControlGallery();
+        tree.setRoot(gallery.create(tree));
+        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.place();
+        assertEquals(0, gallery.grid().firstVisible());
+        SemanticsNode grid = first(tree, SemanticsRole.GRID);
+        assertTrue(grid.bounds().height() > 0.0f);
+        gallery.grid().scrollTo(1);
+        assertEquals(1, gallery.grid().firstVisible());
+        gallery.grid().setDisabled(true);
+        gallery.grid().scrollTo(2);
+        gallery.grid().insert(0);
+        assertEquals(1, gallery.grid().firstVisible());
+        assertEquals(8, gallery.grid().itemCount());
+        assertTrue(gallery.grid().disabled());
+        gallery.grid().setDisabled(false);
+    }
+
+    /// Materializes the gallery flex row through shipped FLEX layout.
+    @Test
+    void materializesGalleryFlex() {
+        LayoutTree tree = new LayoutTree();
+        ControlGallery gallery = new ControlGallery();
+        tree.setRoot(gallery.create(tree));
+        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.place();
+        assertEquals(1.0f, gallery.flex().firstGrow());
+        assertEquals(1.0f, gallery.flex().secondGrow());
+        LayoutNode row = gallery.flex().create(new LayoutFactory(tree), "flex-probe");
+        tree.setRoot(row);
+        tree.measure(Constraints.loose(80.0f, 40.0f));
+        tree.place();
+        assertEquals(40.0f, row.children().getFirst().size().width());
+        assertEquals(40.0f, row.children().getLast().size().width());
+        gallery.flex().setDisabled(true);
+        assertTrue(gallery.flex().disabled());
+        gallery.flex().setDisabled(false);
     }
 
     /// Commits IME composition into the text field.
@@ -3725,6 +3780,38 @@ final class ControlGalleryTest {
         gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.MOVE, 20.0f, 20.0f), 16_000_000L);
         assertTrue(gallery.gestures().dragAccepted());
         assertEquals(before + 20.0f, gallery.scroll().offset());
+        gallery.dispatchPointer(tree, new PointerEvent(PointerEventType.UP, 20.0f, 20.0f), 32_000_000L);
+        assertTrue(gallery.scroll().flingVelocity() > 0.0f);
+        float afterDrag = gallery.scroll().offset();
+        float startVelocity = gallery.scroll().flingVelocity();
+        assertTrue(gallery.scroll().advanceFling(100_000_000L));
+        assertTrue(gallery.scroll().offset() > afterDrag);
+        assertTrue(gallery.scroll().flingVelocity() < startVelocity);
+    }
+
+    /// Scrolls the viewport when a wheel notch wins the gallery gesture arena.
+    @Test
+    void wheelGestureScrollsViewport() {
+        LayoutTree tree = new LayoutTree();
+        ControlGallery gallery = new ControlGallery();
+        rebuild(tree, gallery);
+        float before = gallery.scroll().offset();
+        assertTrue(gallery.dispatchPointer(
+                tree,
+                new PointerEvent(PointerEventType.WHEEL, 20.0f, 20.0f, org.glavo.himari.layout.input.PointerDeviceKind.MOUSE, -1.0f),
+                0L
+        ));
+        assertTrue(gallery.gestures().scrollAccepted());
+        assertEquals(before + gallery.scroll().step(), gallery.scroll().offset());
+        float vertical = gallery.scroll().offset();
+        float horizontalBefore = gallery.scroll().horizontalOffset();
+        assertTrue(gallery.dispatchPointer(
+                tree,
+                new PointerEvent(PointerEventType.WHEEL_HORIZONTAL, 20.0f, 20.0f, org.glavo.himari.layout.input.PointerDeviceKind.MOUSE, -1.0f),
+                1L
+        ));
+        assertEquals(vertical, gallery.scroll().offset());
+        assertEquals(horizontalBefore + gallery.scroll().step(), gallery.scroll().horizontalOffset());
     }
 
     /// Announces a long press through the live-region status.
@@ -3821,7 +3908,7 @@ final class ControlGalleryTest {
     /// @param gallery the gallery
     private static void rebuild(LayoutTree tree, ControlGallery gallery) {
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 1600.0f));
         tree.place();
     }
 

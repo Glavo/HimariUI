@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Objects;
 
 /// Performs bounds-based hit testing in reverse document order.
+///
+/// Overflowing descendants remain hittable unless an ancestor
+/// [`org.glavo.himari.layout.LayoutNode#clipsHits()`] excludes the point.
 @NotNullByDefault
 public final class HitTester {
     /// Prevents instantiation.
@@ -48,8 +51,20 @@ public final class HitTester {
     /// @param y the point y
     /// @param path the accumulator from root to leaf
     private static boolean collectHits(LayoutNode node, float x, float y, List<LayoutNode> path) {
-        if (!node.bounds().contains(x, y)) {
+        if (node.ignoresPointer()) {
             return false;
+        }
+        HitClip clip = node.hitClip();
+        boolean inside = clip != null ? clip.contains(x, y) : node.bounds().contains(x, y);
+        if (clip != null && !inside) {
+            return false;
+        }
+        if (node.absorbsPointer()) {
+            if (!inside) {
+                return false;
+            }
+            path.add(node);
+            return true;
         }
         List<LayoutNode> children = node.children();
         for (int index = children.size() - 1; index >= 0; index--) {
@@ -57,6 +72,9 @@ public final class HitTester {
                 path.addFirst(node);
                 return true;
             }
+        }
+        if (!inside) {
+            return false;
         }
         path.add(node);
         return true;

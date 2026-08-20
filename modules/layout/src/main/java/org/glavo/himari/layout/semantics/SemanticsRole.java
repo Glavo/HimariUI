@@ -96,5 +96,44 @@ public enum SemanticsRole {
     TREE,
 
     /// One row inside a tree.
-    TREE_ITEM
+    TREE_ITEM,
+
+    /// A compact selectable list with a collapsed value.
+    COMBO_BOX,
+
+    /// A virtualized two-dimensional item grid.
+    GRID,
+
+    /// A Gregorian calendar date.
+    DATE_PICKER,
+
+    /// A 24-hour clock time.
+    TIME_PICKER,
+
+    /// An 8-bit RGB color well.
+    COLOR_PICKER,
+
+    /// An integer spin button.
+    STEPPER,
+
+    /// A labeled section that expands or collapses.
+    DISCLOSURE,
+
+    /// A single-line search field.
+    SEARCH_BOX,
+
+    /// A non-interactive visual separator.
+    SEPARATOR,
+
+    /// A strip of labeled commands.
+    TOOLBAR,
+
+    /// A trail of path segments.
+    BREADCRUMB,
+
+    /// An activatable destination.
+    LINK,
+
+    /// A mutually exclusive set of expandable sections.
+    ACCORDION
 }

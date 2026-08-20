@@ -84,6 +84,19 @@ public final class WindowsAutomationBridge {
             case SPLIT_PANE -> "Pane";
             case TREE -> "Tree";
             case TREE_ITEM -> "TreeItem";
+            case COMBO_BOX -> "ComboBox";
+            case GRID -> "DataGrid";
+            case DATE_PICKER -> "Calendar";
+            case TIME_PICKER -> "Spinner";
+            case COLOR_PICKER -> "Custom";
+            case STEPPER -> "Spinner";
+            case DISCLOSURE -> "Button";
+            case SEARCH_BOX -> "Edit";
+            case SEPARATOR -> "Separator";
+            case TOOLBAR -> "ToolBar";
+            case BREADCRUMB -> "Group";
+            case LINK -> "Hyperlink";
+            case ACCORDION -> "Group";
         };
     }
 

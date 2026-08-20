@@ -18,7 +18,7 @@ import java.lang.foreign.ValueLayout;
 import java.nio.ByteOrder;
 import java.util.Locale;
 
-/// Owns the Kernel32, User32, GDI32, DXGI, OLE, oleaut32, IMM32, and UIAutomationCore lookups for one
+/// Owns the Kernel32, User32, GDI32, DXGI, OLE, oleaut32, IMM32, UIAutomationCore, and Shcore lookups for one
 /// Windows session.
 @SuppressWarnings("restricted")
 @NotNullByDefault
@@ -72,7 +72,8 @@ public final class WindowsLibraries implements AutoCloseable {
                     .or(open("ole32.dll", arena))
                     .or(open("oleaut32.dll", arena))
                     .or(open("imm32.dll", arena))
-                    .or(open("UIAutomationCore.dll", arena));
+                    .or(open("UIAutomationCore.dll", arena))
+                    .or(open("shcore.dll", arena));
             Win32FfmBindings bindings = new Win32FfmBindings(symbols);
             int ole = bindings.oleInitialize(MemorySegment.NULL);
             if (ole < 0) {

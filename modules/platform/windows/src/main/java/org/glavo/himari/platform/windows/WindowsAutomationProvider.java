@@ -1330,6 +1330,12 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// Live range value.
     private double rangeValue;
 
+    /// Live inclusive range minimum.
+    private double rangeMinimum = RANGE_MINIMUM;
+
+    /// Live inclusive range maximum.
+    private double rangeMaximum = RANGE_MAXIMUM;
+
     /// Live expand/collapse state.
     private int expandState;
 
@@ -1526,6 +1532,13 @@ public final class WindowsAutomationProvider implements AutoCloseable {
         this.currentView = 1;
         this.toggleState = initialToggleState(node);
         this.rangeValue = node.rangeValue() == null ? 0.0 : node.rangeValue();
+        if (liveNode != null) {
+            this.rangeMinimum = liveNode.rangeMinimum();
+            this.rangeMaximum = liveNode.rangeMaximum();
+        } else {
+            this.rangeMinimum = node.rangeMinimum();
+            this.rangeMaximum = node.rangeMaximum();
+        }
         this.expandState = initialExpandState(node);
         this.itemSelected = node.selected() != null && node.selected();
         SemanticsGrid grid = node.grid();
@@ -2497,6 +2510,8 @@ public final class WindowsAutomationProvider implements AutoCloseable {
                 false,
                 live.selected(),
                 live.rangeValue(),
+                live.rangeMinimum(),
+                live.rangeMaximum(),
                 live.liveRegion(),
                 live.textRange(),
                 live.grid(),
@@ -6521,10 +6536,10 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, verticallyScrollable ? 1 : 0);
         } else if (propertyId == UIA_RANGE_VALUE_MINIMUM_PROPERTY_ID) {
             variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
-            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, RANGE_MINIMUM);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, rangeMinimum);
         } else if (propertyId == UIA_RANGE_VALUE_MAXIMUM_PROPERTY_ID) {
             variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_R8);
-            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, RANGE_MAXIMUM);
+            variant.set(ValueLayout.JAVA_DOUBLE, Win32Layouts.VARIANT_L_VAL_OFFSET, rangeMaximum);
         } else if (propertyId == UIA_RANGE_VALUE_IS_READ_ONLY_PROPERTY_ID) {
             variant.set(ValueLayout.JAVA_SHORT, Win32Layouts.VARIANT_VT_OFFSET, (short) VT_I4);
             variant.set(ValueLayout.JAVA_INT, Win32Layouts.VARIANT_L_VAL_OFFSET, node.readOnly() ? 1 : 0);
@@ -7801,12 +7816,12 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// Implements `IRangeValueProvider::get_Maximum`.
     private int getRangeMaximum(MemorySegment self, MemorySegment value) {
-        return writeDouble(value, RANGE_MAXIMUM);
+        return writeDouble(value, rangeMaximum);
     }
 
     /// Implements `IRangeValueProvider::get_Minimum`.
     private int getRangeMinimum(MemorySegment self, MemorySegment value) {
-        return writeDouble(value, RANGE_MINIMUM);
+        return writeDouble(value, rangeMinimum);
     }
 
     /// Implements `ITextProvider::RangeFromPoint` for a point inside the node bounds.
@@ -8651,7 +8666,7 @@ public final class WindowsAutomationProvider implements AutoCloseable {
 
     /// Returns whether the node publishes expand/collapse.
     private static boolean expandable(SemanticsNode node) {
-        return node.role() == SemanticsRole.TREE_ITEM
+        return (node.role() == SemanticsRole.TREE_ITEM || node.role() == SemanticsRole.COMBO_BOX)
                 && node.actions().contains(SemanticsAction.INCREMENT);
     }
 
@@ -8725,6 +8740,19 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             case SPLIT_PANE -> 50033;
             case TREE -> 50023;
             case TREE_ITEM -> 50024;
+            case COMBO_BOX -> 50003;
+            case GRID -> 50028;
+            case DATE_PICKER -> 50001;
+            case TIME_PICKER -> 50016;
+            case COLOR_PICKER -> 50025;
+            case STEPPER -> 50016;
+            case DISCLOSURE -> 50000;
+            case SEARCH_BOX -> 50004;
+            case SEPARATOR -> 50038;
+            case TOOLBAR -> 50021;
+            case BREADCRUMB -> 50026;
+            case LINK -> 50005;
+            case ACCORDION -> 50026;
         };
     }
 

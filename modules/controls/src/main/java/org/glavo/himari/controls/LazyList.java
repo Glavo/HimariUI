@@ -7,6 +7,8 @@ import org.glavo.himari.layout.LayoutNode;
 import org.glavo.himari.layout.Size;
 import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsRole;
+import org.glavo.himari.layout.input.gesture.ClampingScrollPhysics;
+import org.glavo.himari.layout.input.gesture.ScrollPhysics;
 import org.glavo.himari.layout.semantics.SemanticsScroll;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
@@ -40,6 +42,12 @@ public final class LazyList {
 
     /// Whether the list ignores scroll and mutation.
     private boolean disabled;
+
+    /// Policy that clamps window origins.
+    private ScrollPhysics physics = ClampingScrollPhysics.INSTANCE;
+
+    /// Remaining fling velocity in items per second.
+    private float flingVelocity;
 
     /// Mounted column that receives the published disabled state.
     private @Nullable LayoutNode node;
@@ -77,6 +85,58 @@ public final class LazyList {
     /// @return the overscan
     public int overscan() {
         return overscan;
+    }
+
+    /// Returns the scroll-physics policy.
+    ///
+    /// @return the policy
+    public ScrollPhysics physics() {
+        return physics;
+    }
+
+    /// Replaces the scroll-physics policy.
+    ///
+    /// @param physics the policy
+    public void setPhysics(ScrollPhysics physics) {
+        this.physics = Objects.requireNonNull(physics, "physics");
+        clampWindow();
+    }
+
+    /// Returns the remaining fling velocity.
+    ///
+    /// @return the velocity in items per second
+    public float flingVelocity() {
+        return flingVelocity;
+    }
+
+    /// Starts a fling with `velocity` items per second.
+    ///
+    /// @param velocity the finite velocity
+    public void fling(float velocity) {
+        if (disabled) {
+            return;
+        }
+        if (!Float.isFinite(velocity)) {
+            throw new IllegalArgumentException("Fling velocity must be finite");
+        }
+        flingVelocity = velocity;
+    }
+
+    /// Advances an active fling by `elapsedNanos` using [#physics()].
+    ///
+    /// @param elapsedNanos the nonnegative sample duration
+    /// @return whether the fling is still moving
+    public boolean advanceFling(long elapsedNanos) {
+        if (disabled || flingVelocity == 0.0f) {
+            return false;
+        }
+        float next = physics.decayVelocity(flingVelocity, elapsedNanos);
+        float dt = elapsedNanos / 1_000_000_000.0f;
+        int delta = Math.round((flingVelocity + next) * 0.5f * dt);
+        flingVelocity = next;
+        int maximum = Math.max(0, itemCount - windowSize);
+        firstVisible = physics.applyIndex(firstVisible, delta, 0, maximum);
+        return flingVelocity != 0.0f;
     }
 
     /// Returns the height used for `index`, preferring a measured height.
@@ -234,7 +294,7 @@ public final class LazyList {
             return;
         }
         int maximum = Math.max(0, itemCount - windowSize);
-        firstVisible = Math.min(maximum, Math.max(0, index));
+        firstVisible = physics.clampIndex(index, 0, maximum);
     }
 
     /// Inserts one logical item at `index` and preserves the first-visible anchor when possible.
@@ -294,7 +354,7 @@ public final class LazyList {
     /// Clamps [`#firstVisible`] after a count change.
     private void clampWindow() {
         int maximum = Math.max(0, itemCount - windowSize);
-        firstVisible = Math.min(maximum, Math.max(0, firstVisible));
+        firstVisible = physics.clampIndex(firstVisible, 0, maximum);
     }
 
     /// Pages the window by `pages` windows of [windowSize] items.
@@ -311,8 +371,7 @@ public final class LazyList {
         if (disabled) {
             return;
         }
-        int next = firstVisible + delta;
         int maximum = Math.max(0, itemCount - windowSize);
-        firstVisible = Math.min(maximum, Math.max(0, next));
+        firstVisible = physics.applyIndex(firstVisible, delta, 0, maximum);
     }
 }

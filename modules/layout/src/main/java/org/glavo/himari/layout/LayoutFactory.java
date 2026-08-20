@@ -5,6 +5,7 @@ import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -103,6 +104,115 @@ public final class LayoutFactory {
             LayoutNode... children
     ) {
         return container(name, LayoutKind.COLUMN, alignment, modifiers, role, label, children);
+    }
+
+    /// Creates a horizontal flex row that distributes leftover width by grow weights.
+    ///
+    /// @param name the diagnostic name
+    /// @param alignment the cross-axis alignment
+    /// @param modifiers the modifiers
+    /// @param children the children
+    /// @return the flex row
+    public LayoutNode flex(
+            String name,
+            Alignment alignment,
+            List<LayoutModifier> modifiers,
+            LayoutNode... children
+    ) {
+        return container(name, LayoutKind.FLEX, alignment, modifiers, SemanticsRole.NONE, name, children);
+    }
+
+    /// Creates a wrapping flow that fills the available width.
+    ///
+    /// @param name the diagnostic name
+    /// @param alignment the cross-axis alignment within each wrapping line
+    /// @param modifiers the modifiers
+    /// @param children the children
+    /// @return the flow
+    public LayoutNode flow(
+            String name,
+            Alignment alignment,
+            List<LayoutModifier> modifiers,
+            LayoutNode... children
+    ) {
+        Objects.requireNonNull(alignment, "alignment");
+        return container(name, LayoutKind.FLOW, alignment, modifiers, SemanticsRole.NONE, name, children);
+    }
+
+    /// Creates a fixed-column grid.
+    ///
+    /// @param name the diagnostic name
+    /// @param columns the positive column count
+    /// @param alignment the in-cell alignment, including [`Alignment#BASELINE`] on each row
+    /// @param modifiers the modifiers
+    /// @param children the children
+    /// @return the grid
+    public LayoutNode grid(
+            String name,
+            int columns,
+            Alignment alignment,
+            List<LayoutModifier> modifiers,
+            LayoutNode... children
+    ) {
+        Objects.requireNonNull(alignment, "alignment");
+        ArrayList<LayoutModifier> withColumns = new ArrayList<>(modifiers);
+        withColumns.add(new LayoutModifier.GridColumns(columns));
+        return container(name, LayoutKind.GRID, alignment, withColumns, SemanticsRole.NONE, name, children);
+    }
+
+    /// Creates a custom-layout container.
+    ///
+    /// @param name the diagnostic name
+    /// @param modifiers the modifiers
+    /// @param layout the measure and place delegate
+    /// @param children the children
+    /// @return the custom container
+    public LayoutNode custom(
+            String name,
+            List<LayoutModifier> modifiers,
+            CustomLayout layout,
+            LayoutNode... children
+    ) {
+        Objects.requireNonNull(layout, "layout");
+        LayoutNode node = new LayoutNode(
+                tree.allocateId(),
+                name,
+                LayoutKind.CUSTOM,
+                Alignment.START,
+                modifiers,
+                null,
+                false,
+                SemanticsRole.NONE,
+                name,
+                Set.of(),
+                null,
+                null,
+                layout
+        );
+        for (LayoutNode child : children) {
+            node.add(child);
+        }
+        return node;
+    }
+
+    /// Creates an overlay that sizes to the union of offset children.
+    ///
+    /// @param name the diagnostic name
+    /// @param modifiers the modifiers
+    /// @param children the children
+    /// @return the overlay
+    public LayoutNode overlay(String name, List<LayoutModifier> modifiers, LayoutNode... children) {
+        return container(name, LayoutKind.OVERLAY, Alignment.START, modifiers, SemanticsRole.NONE, name, children);
+    }
+
+    /// Creates a portal whose size is the first child's slot.
+    ///
+    /// @param name the diagnostic name
+    /// @param modifiers the modifiers
+    /// @param children the slot followed by portaled children
+    /// @return the portal
+    public LayoutNode portal(String name, List<LayoutModifier> modifiers, LayoutNode... children) {
+        return container(name, LayoutKind.PORTAL, Alignment.START, modifiers, SemanticsRole.NONE, name, children);
     }
 
     /// Creates a vertical scroll viewport.

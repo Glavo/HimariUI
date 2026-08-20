@@ -18,5 +18,23 @@ public enum LayoutKind {
     LEAF,
 
     /// Places children in a viewport and offsets them by a scroll position.
-    SCROLL
+    SCROLL,
+
+    /// Places children on a horizontal axis and distributes leftover width by grow weights.
+    FLEX,
+
+    /// Places children in wrapping rows that fill the available width.
+    FLOW,
+
+    /// Places children on a fixed-column grid.
+    GRID,
+
+    /// Delegates measure and place to a [CustomLayout].
+    CUSTOM,
+
+    /// Stacks children at explicit overlay offsets; the size is the union of those boxes.
+    OVERLAY,
+
+    /// Places trailing children at overlay offsets without growing the first child's slot.
+    PORTAL
 }

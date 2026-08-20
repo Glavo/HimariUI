@@ -109,6 +109,7 @@ public final class Scrollbar {
                 this::adjust
         );
         created.setRangeValue(value);
+        created.setRangeExtent(minimum, maximum);
         created.setScroll(scrollSnapshot());
         created.setDisabled(disabled);
         this.node = created;

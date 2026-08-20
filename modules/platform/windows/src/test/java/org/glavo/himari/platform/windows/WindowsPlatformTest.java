@@ -38,8 +38,12 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -349,6 +353,526 @@ final class WindowsPlatformTest {
         }
     }
 
+    /// Translates virtual keys through generated `ToUnicodeW`, `VkKeyScanW`, `GetKeyNameTextW`, and `GetKeyboardLayout`.
+    @Test
+    void translatesVirtualKeysThroughGeneratedUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ToUnicode", 32.0, 32.0);
+            platform.pump();
+            window.postVirtualKey(true, 0x20);
+            platform.pump();
+            List<org.glavo.himari.layout.input.KeyEvent> keys = window.takeKeyEvents();
+            assertEquals(1, keys.size());
+            assertEquals(LogicalKey.SPACE, keys.getFirst().key());
+            assertEquals(" ", keys.getFirst().text());
+            assertEquals(" ", window.takeTranslatedCharacters());
+            assertTrue(window.rawInputRegistered(), "HWND creation must call RegisterRawInputDevices");
+            assertTrue(
+                    window.lastRegisteredRawInputDevices() != Integer.MIN_VALUE,
+                    "HWND creation must call GetRegisteredRawInputDevices"
+            );
+            window.sendMessage(0x00FF, 0L, 0L);
+            assertTrue(
+                    window.lastRawInputBytes() != Integer.MIN_VALUE,
+                    "WM_INPUT must call GetRawInputData"
+            );
+            assertTrue(
+                    window.lastRawInputBufferBytes() != Integer.MIN_VALUE,
+                    "WM_INPUT must call GetRawInputBuffer"
+            );
+            assertTrue(
+                    window.lastRawInputBufferPackets() != Integer.MIN_VALUE,
+                    "WM_INPUT must record GetRawInputBuffer packets"
+            );
+            assertTrue(
+                    window.lastRawInputDeviceInfoBytes() != Integer.MIN_VALUE,
+                    "WM_INPUT must call GetRawInputDeviceInfoW"
+            );
+            assertTrue(
+                    window.lastRawInputDeviceListCount() != Integer.MIN_VALUE,
+                    "HWND creation must call GetRawInputDeviceList"
+            );
+            window.postInputDeviceChange(1);
+            platform.pump();
+            assertEquals(1, window.lastInputDeviceChange());
+            assertTrue(
+                    window.lastMouseInPointerEnabled() != Integer.MIN_VALUE,
+                    "HWND creation must call EnableMouseInPointer/IsMouseInPointerEnabled"
+            );
+            assertTrue(
+                    window.lastPointerDeviceCount() != Integer.MIN_VALUE,
+                    "HWND creation must call GetPointerDevices"
+            );
+            assertTrue(window.lastKeyboardLayout() != 0L, "GetKeyboardLayout must return a non-NULL HKL");
+            assertFalse(window.lastKeyName().isEmpty(), "GetKeyNameTextW must name VK_SPACE");
+            if ((window.lastCharVirtualKeyScan() & 0xFF) != 0x20) {
+                window.postChar(' ');
+                platform.pump();
+            }
+            assertEquals(0x20, window.lastCharVirtualKeyScan() & 0xFF);
+            assertEquals(0x20, window.scanVirtualKey(' ') & 0xFF);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads IMM32 composition through generated `ImmGetCompositionStringW` on `WM_IME_COMPOSITION`.
+    @Test
+    void readsImmCompositionStringThroughWndProc() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ImmComposition", 32.0, 32.0);
+            platform.pump();
+            assertTrue(
+                    window.lastAssociateContext() != -1L,
+                    "HWND create must call ImmAssociateContext"
+            );
+            assertTrue(
+                    window.lastAssociateContextExResult() != Integer.MIN_VALUE,
+                    "HWND create must call ImmAssociateContextEx"
+            );
+            assertTrue(
+                    window.lastCreateContext() != -1L,
+                    "HWND create must call ImmCreateContext"
+            );
+            assertTrue(
+                    window.lastClipboardFormatCount() != Integer.MIN_VALUE,
+                    "HWND create must call CountClipboardFormats"
+            );
+            assertTrue(
+                    window.lastClipboardSequence() != Integer.MIN_VALUE,
+                    "HWND create must call GetClipboardSequenceNumber"
+            );
+            assertTrue(
+                    window.lastClipboardOwner() != -1L,
+                    "HWND create must call GetClipboardOwner"
+            );
+            assertTrue(
+                    window.lastOpenClipboardWindow() != -1L,
+                    "HWND create must call GetOpenClipboardWindow"
+            );
+            assertTrue(
+                    window.lastClipboardUnicodeAvailable() != Integer.MIN_VALUE,
+                    "HWND create must call IsClipboardFormatAvailable"
+            );
+            assertTrue(
+                    window.lastPriorityClipboardFormat() != Integer.MIN_VALUE,
+                    "HWND create must call GetPriorityClipboardFormat"
+            );
+            assertTrue(
+                    window.lastEnumClipboardFormat() != Integer.MIN_VALUE,
+                    "HWND create must call EnumClipboardFormats"
+            );
+            assertTrue(
+                    window.lastEnumClipboardFormatCount() != Integer.MIN_VALUE,
+                    "HWND create must walk EnumClipboardFormats"
+            );
+            assertTrue(
+                    window.lastClipboardFormatNameChars() != Integer.MIN_VALUE,
+                    "HWND create must call GetClipboardFormatNameW"
+            );
+            assertTrue(
+                    window.lastUpdatedClipboardFormatsResult() != Integer.MIN_VALUE,
+                    "HWND create must call GetUpdatedClipboardFormats"
+            );
+            assertTrue(
+                    window.lastUpdatedClipboardFormatCount() != Integer.MIN_VALUE,
+                    "HWND create must read GetUpdatedClipboardFormats count"
+            );
+            assertTrue(
+                    window.lastAddClipboardFormatListenerResult() != Integer.MIN_VALUE,
+                    "HWND create must call AddClipboardFormatListener"
+            );
+            window.sendMessage(0x0281, 1L, 0L);
+            assertEquals(1, window.lastImeSetContext());
+            window.sendMessage(0x0285, 1L, 0L);
+            assertEquals(1, window.lastImeSelect());
+            window.postImeStart();
+            platform.pump();
+            assertTrue(window.imeActive());
+            window.ime().setConversionStatus(0, 0);
+            window.ime().setOpenStatus(true);
+            platform.pump();
+            assertTrue(
+                    window.lastSetConversionStatusResult() != Integer.MIN_VALUE,
+                    "ImeSession conversion write-back must call ImmSetConversionStatus"
+            );
+            assertTrue(
+                    window.lastSetOpenStatusResult() != Integer.MIN_VALUE,
+                    "ImeSession open write-back must call ImmSetOpenStatus"
+            );
+            window.ime().setCompositionFontFace("Segoe UI");
+            platform.pump();
+            assertTrue(
+                    window.lastSetCompositionFontResult() != Integer.MIN_VALUE,
+                    "ImeSession font write-back must call ImmSetCompositionFontW"
+            );
+            assertTrue(
+                    window.lastCompositionFontResult() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetCompositionFontW"
+            );
+            assertTrue(
+                    window.lastConversionStatus() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetConversionStatus"
+            );
+            assertTrue(
+                    window.lastImeOpenStatus() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetOpenStatus"
+            );
+            assertTrue(
+                    window.lastCompositionWindowResult() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetCompositionWindow"
+            );
+            assertTrue(
+                    window.lastImeVirtualKey() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetVirtualKey"
+            );
+            assertTrue(
+                    window.lastImeIsIme() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmIsIME"
+            );
+            assertTrue(
+                    window.lastImeMenuItemCount() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetImeMenuItemsW"
+            );
+            assertTrue(
+                    window.lastImeEscapeResult() != Long.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmEscapeW"
+            );
+            assertTrue(
+                    window.lastImeDescriptionChars() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetDescriptionW"
+            );
+            assertTrue(
+                    window.lastImeProperty() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetProperty"
+            );
+            assertTrue(
+                    window.lastDefaultImeWnd() != -1L,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetDefaultIMEWnd"
+            );
+            Objects.requireNonNull(window.lastImeDescription(), "ImmGetDescriptionW");
+            assertTrue(
+                    window.lastStatusWindowPosResult() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetStatusWindowPos"
+            );
+            assertTrue(
+                    window.lastImeHotKeyResult() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetHotKey"
+            );
+            assertTrue(
+                    window.lastSetHotKeyResult() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmSetHotKey"
+            );
+            assertTrue(
+                    window.lastConversionReverseBytes() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must fill ImmGetConversionListW GCL_REVERSECONVERSION"
+            );
+            assertTrue(
+                    window.lastImeIsUiMessage() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmIsUIMessageW"
+            );
+            assertTrue(
+                    window.lastRegisterWordStyleCount() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetRegisterWordStyleW"
+            );
+            assertTrue(
+                    window.lastEnumInputContextResult() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmEnumInputContext"
+            );
+            assertTrue(
+                    window.lastEnumRegisterWordCount() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmEnumRegisterWordW"
+            );
+            assertTrue(
+                    window.lastImmRequestMessageResult() != Long.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmRequestMessageW"
+            );
+            assertTrue(
+                    window.lastRegisterWordResult() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmRegisterWordW"
+            );
+            assertTrue(
+                    window.lastUnregisterWordResult() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmUnregisterWordW"
+            );
+            assertTrue(
+                    window.lastConversionListBytes() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetConversionListW"
+            );
+            assertTrue(
+                    window.lastConversionReverseLength() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmGetConversionListW GCL_REVERSE_LENGTH"
+            );
+            assertTrue(
+                    window.lastSimulateHotKeyResult() != Integer.MIN_VALUE,
+                    "WM_IME_STARTCOMPOSITION must call ImmSimulateHotKey"
+            );
+            window.sendMessage(0x0283, WindowsNativeWindow.IMC_GETSTATUSWINDOWPOS, 0L);
+            assertEquals(WindowsNativeWindow.IMC_GETSTATUSWINDOWPOS, window.lastImeControl());
+            Objects.requireNonNull(window.lastImeFileName(), "ImmGetIMEFileNameW");
+            window.postImeComposition(WindowsNativeWindow.GCS_COMPSTR);
+            platform.pump();
+            assertTrue(
+                    window.lastCompositionStringBytes() != Integer.MIN_VALUE,
+                    "WndProc must call ImmGetCompositionStringW"
+            );
+            assertTrue(
+                    window.lastCompositionCursor() != Integer.MIN_VALUE,
+                    "WM_IME_COMPOSITION must call ImmGetCompositionStringW GCS_CURSORPOS"
+            );
+            assertTrue(
+                    window.lastCompositionAttrBytes() != Integer.MIN_VALUE,
+                    "WM_IME_COMPOSITION must call ImmGetCompositionStringW GCS_COMPATTR"
+            );
+            assertEquals(
+                    window.lastCompositionCursor() < 0 ? -1 : window.lastCompositionCursor(),
+                    window.ime().compositionCursor()
+            );
+            if (window.lastCompositionAttrBytes() <= 0) {
+                assertEquals(0, window.ime().compositionAttributes().length);
+            } else {
+                assertEquals(window.lastCompositionAttrBytes(), window.ime().compositionAttributes().length);
+            }
+            assertTrue(
+                    window.lastCompositionReadingBytes() != Integer.MIN_VALUE,
+                    "WM_IME_COMPOSITION must call ImmGetCompositionStringW GCS_COMPREADSTR"
+            );
+            assertTrue(
+                    window.lastCompositionClauseBytes() != Integer.MIN_VALUE,
+                    "WM_IME_COMPOSITION must call ImmGetCompositionStringW GCS_COMPCLAUSE"
+            );
+            assertTrue(
+                    window.lastResultReadingBytes() != Integer.MIN_VALUE,
+                    "WM_IME_COMPOSITION must call ImmGetCompositionStringW GCS_RESULTREADSTR"
+            );
+            assertTrue(
+                    window.lastResultClauseBytes() != Integer.MIN_VALUE,
+                    "WM_IME_COMPOSITION must call ImmGetCompositionStringW GCS_RESULTCLAUSE"
+            );
+            assertTrue(
+                    window.lastCompositionDeltaStart() != Integer.MIN_VALUE,
+                    "WM_IME_COMPOSITION must call ImmGetCompositionStringW GCS_DELTASTART"
+            );
+            assertEquals(
+                    window.lastCompositionDeltaStart() < 0 ? -1 : window.lastCompositionDeltaStart(),
+                    window.ime().compositionDeltaStart()
+            );
+            if (window.lastCompositionClauseBytes() <= 0) {
+                assertEquals(0, window.ime().compositionClause().length);
+            } else {
+                assertEquals(window.lastCompositionClauseBytes() / 4, window.ime().compositionClause().length);
+            }
+            assertTrue(
+                    window.lastCompositionReadingAttrBytes() != Integer.MIN_VALUE,
+                    "WM_IME_COMPOSITION must call ImmGetCompositionStringW GCS_COMPREADATTR"
+            );
+            assertTrue(
+                    window.lastCompositionReadingClauseBytes() != Integer.MIN_VALUE,
+                    "WM_IME_COMPOSITION must call ImmGetCompositionStringW GCS_COMPREADCLAUSE"
+            );
+            assertTrue(
+                    window.lastResultReadingClauseBytes() != Integer.MIN_VALUE,
+                    "WM_IME_COMPOSITION must call ImmGetCompositionStringW GCS_RESULTREADCLAUSE"
+            );
+            boolean written = window.setCompositionString("ni");
+            window.postImeComposition(WindowsNativeWindow.GCS_COMPSTR);
+            platform.pump();
+            if (written) {
+                assertEquals("ni", window.ime().composition());
+            }
+            window.postImeChar('z');
+            platform.pump();
+            assertTrue(window.ime().surroundingText().contains("z"));
+            window.postImeNotify(WindowsNativeWindow.IMN_OPENCANDIDATE, 0);
+            platform.pump();
+            assertTrue(
+                    window.lastCandidateCount() != Integer.MIN_VALUE,
+                    "WM_IME_NOTIFY must call ImmGetCandidateListW"
+            );
+            assertTrue(
+                    window.lastCandidateListCount() != Integer.MIN_VALUE,
+                    "WM_IME_NOTIFY must call ImmGetCandidateListCountW"
+            );
+            assertTrue(
+                    window.lastCandidateWindowResult() != Integer.MIN_VALUE,
+                    "WM_IME_NOTIFY must call ImmGetCandidateWindow"
+            );
+            window.postImeNotify(WindowsNativeWindow.IMN_GUIDELINE, 0);
+            platform.pump();
+            assertTrue(
+                    window.lastGuideLineBytes() != Integer.MIN_VALUE,
+                    "WM_IME_NOTIFY IMN_GUIDELINE must call ImmGetGuideLineW"
+            );
+            assertEquals("", window.ime().guideline());
+            window.ime().setSurroundingText("hello", 5);
+            window.ime().setCandidateRectangle(4.0f, 6.0f, 8.0f, 12.0f);
+            platform.pump();
+            assertTrue(
+                    window.lastSetStatusWindowPosResult() != Integer.MIN_VALUE,
+                    "ImeSession candidate rectangle write-back must call ImmSetStatusWindowPos"
+            );
+            long documentBytes = window.sendImeRequest(WindowsNativeWindow.IMR_DOCUMENTFEED);
+            assertEquals(WindowsNativeWindow.IMR_DOCUMENTFEED, window.lastImeRequest());
+            assertTrue(
+                    documentBytes > 32L && window.lastImeRequestBytes() > 32,
+                    "IMR_DOCUMENTFEED must return a RECONVERTSTRING plus document bytes"
+            );
+            assertTrue(window.sendImeRequest(WindowsNativeWindow.IMR_RECONVERTSTRING) > 32L);
+            assertEquals(WindowsNativeWindow.IMR_RECONVERTSTRING, window.lastImeRequest());
+            window.sendImeRequest(WindowsNativeWindow.IMR_CONFIRMRECONVERTSTRING);
+            assertEquals(WindowsNativeWindow.IMR_CONFIRMRECONVERTSTRING, window.lastImeRequest());
+            assertTrue(window.sendImeRequest(WindowsNativeWindow.IMR_QUERYCHARPOSITION) >= 36L);
+            assertEquals(WindowsNativeWindow.IMR_QUERYCHARPOSITION, window.lastImeRequest());
+            assertTrue(window.lastImeRequestBytes() >= 36);
+            assertTrue(window.sendImeRequest(WindowsNativeWindow.IMR_COMPOSITIONWINDOW) >= 28L);
+            assertEquals(WindowsNativeWindow.IMR_COMPOSITIONWINDOW, window.lastImeRequest());
+            assertTrue(window.sendImeRequest(WindowsNativeWindow.IMR_CANDIDATEWINDOW) >= 32L);
+            assertTrue(window.sendImeRequest(WindowsNativeWindow.IMR_COMPOSITIONFONT) >= 92L);
+            try (Arena arena = Arena.ofConfined()) {
+                MemorySegment position = arena.allocate(36);
+                position.fill((byte) 0);
+                position.set(ValueLayout.JAVA_INT, 4L, 2);
+                long answered = window.sendMessage(0x0288, WindowsNativeWindow.IMR_QUERYCHARPOSITION, position.address());
+                assertTrue(answered >= 36L);
+                assertEquals(2, window.lastImeCharPos());
+                assertEquals(4, position.get(ValueLayout.JAVA_INT, 8L));
+                assertEquals(6, position.get(ValueLayout.JAVA_INT, 12L));
+                MemorySegment reconvert = arena.allocate(window.lastImeRequestBytes() < 64 ? 64 : window.lastImeRequestBytes());
+                reconvert.fill((byte) 0);
+                long filled = window.sendMessage(0x0288, WindowsNativeWindow.IMR_DOCUMENTFEED, reconvert.address());
+                assertTrue(filled > 32L);
+                assertEquals((int) filled, reconvert.get(ValueLayout.JAVA_INT, 0L));
+                assertEquals(5, reconvert.get(ValueLayout.JAVA_INT, 8L));
+            }
+            window.postImeEnd();
+            platform.pump();
+            assertFalse(window.imeActive());
+            assertTrue(
+                    window.lastImmNotifyResult() != Integer.MIN_VALUE,
+                    "WM_IME_ENDCOMPOSITION must call ImmNotifyIME"
+            );
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Delivers `WM_MOUSELEAVE` after generated `TrackMouseEvent(TME_LEAVE)` on `WM_MOUSEMOVE`.
+    @Test
+    void deliversMouseLeaveThroughTrackMouseEvent() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MouseLeave", 32.0, 32.0);
+            platform.pump();
+            window.postPointer(PointerEventType.MOVE, 11, 13);
+            platform.pump();
+            List<PointerEvent> events = window.takePointerEvents();
+            assertEquals(PointerEventType.MOVE, events.getFirst().type());
+            assertEquals(11.0f, events.getFirst().x());
+            assertEquals(13.0f, events.getFirst().y());
+            assertTrue(window.lastTrackMouseEventSucceeded(), "WM_MOUSEMOVE must call TrackMouseEvent");
+            boolean sawLeave = events.stream().anyMatch(event -> event.type() == PointerEventType.LEAVE);
+            if (!sawLeave) {
+                window.postMouseLeave();
+                platform.pump();
+                events = window.takePointerEvents();
+                sawLeave = events.stream().anyMatch(event -> event.type() == PointerEventType.LEAVE);
+            }
+            assertTrue(sawLeave, "WM_MOUSELEAVE must be delivered after TrackMouseEvent");
+            PointerEvent leave = events.stream()
+                    .filter(event -> event.type() == PointerEventType.LEAVE)
+                    .findFirst()
+                    .orElseThrow();
+            assertEquals(PointerDeviceKind.MOUSE, leave.device());
+            assertEquals(11.0f, leave.x());
+            assertEquals(13.0f, leave.y());
+            assertFalse(window.mouseLeaveTracked());
+            WindowsNativeWindow.PenAxes axes = new WindowsNativeWindow.PenAxes(0.25f, 0.0f, 0.0f, 0.0f);
+            window.postPen(PointerEventType.ROUTED_TO, 4, 5, 6, axes);
+            window.postPen(PointerEventType.ROUTED_AWAY, 4, 5, 6, axes);
+            window.postPen(PointerEventType.ROUTED_RELEASED, 4, 5, 6, axes);
+            platform.pump();
+            List<PointerEvent> routed = window.takePointerEvents();
+            assertEquals(3, routed.size());
+            assertEquals(PointerEventType.ROUTED_TO, routed.get(0).type());
+            assertEquals(PointerEventType.ROUTED_AWAY, routed.get(1).type());
+            assertEquals(PointerEventType.ROUTED_RELEASED, routed.get(2).type());
+            assertEquals(PointerDeviceKind.PEN, routed.get(0).device());
+            assertEquals(6, routed.get(0).pointerId());
+            assertTrue(
+                    window.lastPointerFrameCount() != Integer.MIN_VALUE,
+                    "WM_POINTER* must call GetPointerFrameInfo"
+            );
+            assertTrue(
+                    window.lastPointerFrameHistoryEntries() != Integer.MIN_VALUE,
+                    "WM_POINTER* must call GetPointerFrameInfoHistory"
+            );
+            assertTrue(
+                    window.lastPointerSourceDevice() != -1L,
+                    "WM_POINTER* must read POINTER_INFO.sourceDevice"
+            );
+            assertTrue(
+                    window.lastPointerHwndTarget() != -1L,
+                    "WM_POINTER* must read POINTER_INFO.hwndTarget"
+            );
+            assertEquals(window.lastPointerSourceDevice(), routed.get(2).sourceDevice());
+            assertEquals(window.lastPointerHwndTarget(), routed.get(2).hwndTarget());
+            assertTrue(
+                    window.lastPointerFramePenCount() != Integer.MIN_VALUE,
+                    "pen WM_POINTER* must call GetPointerFramePenInfo"
+            );
+            assertTrue(
+                    window.lastPointerHistoryCount() != Integer.MIN_VALUE,
+                    "WM_POINTER* must call GetPointerInfoHistory"
+            );
+            assertTrue(
+                    window.lastPointerPenHistoryCount() != Integer.MIN_VALUE,
+                    "pen WM_POINTER* must call GetPointerPenInfoHistory"
+            );
+            assertTrue(
+                    window.lastPointerFramePenHistoryEntries() != Integer.MIN_VALUE,
+                    "pen WM_POINTER* must call GetPointerFramePenInfoHistory"
+            );
+            assertTrue(
+                    window.lastPointerCursorId() != Integer.MIN_VALUE,
+                    "WM_POINTER* must call GetPointerCursorId"
+            );
+            assertTrue(
+                    window.lastPointerDevice() != -1L,
+                    "WM_POINTER* must call GetPointerDevice"
+            );
+            assertTrue(
+                    window.lastPointerDeviceRectsResult() != Integer.MIN_VALUE,
+                    "WM_POINTER* must call GetPointerDeviceRects"
+            );
+            assertTrue(
+                    window.lastPointerDevicePropertyCount() != Integer.MIN_VALUE,
+                    "WM_POINTER* must call GetPointerDeviceProperties"
+            );
+            assertTrue(
+                    window.lastPointerDeviceCursorCount() != Integer.MIN_VALUE,
+                    "WM_POINTER* must call GetPointerDeviceCursors"
+            );
+            assertTrue(
+                    window.lastSkipPointerFrameResult() != Integer.MIN_VALUE,
+                    "WM_POINTER* must call SkipPointerFrameMessages"
+            );
+            window.postPointer(PointerEventType.DOWN, 4, 5, PointerDeviceKind.TOUCH, 7);
+            platform.pump();
+            assertTrue(
+                    window.lastPointerFrameTouchCount() != Integer.MIN_VALUE,
+                    "touch WM_POINTER* must call GetPointerFrameTouchInfo"
+            );
+            assertTrue(
+                    window.lastPointerTouchHistoryCount() != Integer.MIN_VALUE,
+                    "touch WM_POINTER* must call GetPointerTouchInfoHistory"
+            );
+        } finally {
+            platform.close();
+        }
+    }
+
     /// Delivers `WM_MOUSEWHEEL` through the production WndProc as one wheel notch.
     @Test
     void deliversPostedWheelThroughWndProc() throws Exception {
@@ -560,6 +1084,726 @@ final class WindowsPlatformTest {
             WindowsWindow window = openToplevel(platform, "Cursor", 32.0, 32.0);
             platform.pump();
             assertTrue(window.setSystemCursor(WindowsNativeWindow.IDC_ARROW));
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Loads additional system cursors and reads `GetCursor` / `GetCursorPos` / `ShowCursor`.
+    @Test
+    void loadsSystemCursorsAndReadsCursorState() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "Cursors", 32.0, 32.0);
+            platform.pump();
+            int[] ids = {
+                    WindowsNativeWindow.IDC_IBEAM,
+                    WindowsNativeWindow.IDC_WAIT,
+                    WindowsNativeWindow.IDC_CROSS,
+                    WindowsNativeWindow.IDC_SIZEWE,
+                    WindowsNativeWindow.IDC_SIZENS,
+                    WindowsNativeWindow.IDC_SIZEALL,
+                    WindowsNativeWindow.IDC_NO,
+                    WindowsNativeWindow.IDC_HAND,
+                    WindowsNativeWindow.IDC_APPSTARTING,
+                    WindowsNativeWindow.IDC_HELP
+            };
+            for (int cursorId : ids) {
+                assertTrue(window.setSystemCursor(cursorId), "cursor " + cursorId);
+            }
+            assertTrue(window.currentCursor().address() != 0L);
+            WindowsNativeWindow.ScreenPoint position = window.cursorPosition();
+            assertTrue(Integer.MIN_VALUE < position.x() && position.x() < Integer.MAX_VALUE);
+            int shown = window.showCursor(true);
+            int hidden = window.showCursor(false);
+            assertEquals(shown - 1, hidden);
+            assertTrue(window.setSystemCursor(WindowsNativeWindow.IDC_HAND));
+            long handled = window.nativeWindow().sendMessage(0x0020, window.nativeHandle().address(), 1L);
+            assertEquals(1L, handled);
+            assertTrue(window.currentCursor().address() != 0L);
+            WindowsNativeWindow.CursorInfo info = window.cursorInfo();
+            assertTrue(info.showing());
+            WindowsNativeWindow.ScreenPoint current = window.cursorPosition();
+            assertTrue(window.setCursorPosition(current.x(), current.y()));
+            WindowsNativeWindow.ClipRect clip = window.clipCursorRect();
+            assertTrue(clip.right() > clip.left());
+            assertTrue(clip.bottom() > clip.top());
+            assertTrue(window.releaseCursorClip());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETWHEELSCROLLLINES` and `SPI_GETWHEELSCROLLCHARS`.
+    @Test
+    void readsWheelScrollMetricsThroughSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "WheelMetrics", 32.0, 32.0);
+            platform.pump();
+            assertTrue(Integer.toUnsignedLong(window.wheelScrollLines()) >= 1L);
+            assertTrue(Integer.toUnsignedLong(window.wheelScrollChars()) >= 1L);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads effective monitor DPI through generated `MonitorFromWindow` and `GetDpiForMonitor`.
+    @Test
+    void monitorDpiMatchesWindowDpiOnTheSameDisplay() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MonitorDpi", 64.0, 64.0);
+            platform.pump();
+            WindowsNativeWindow.MonitorDpi monitor = window.monitorDpi();
+            assertTrue(monitor.x() >= 96);
+            assertTrue(monitor.y() >= 96);
+            assertEquals(window.dpi(), monitor.x());
+            assertEquals(monitor.x(), window.nativeWindow().monitorDpi().x());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads monitor and work rectangles through generated `GetMonitorInfoW`.
+    @Test
+    void monitorInfoReportsDisplayAndWorkArea() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MonitorInfo", 64.0, 64.0);
+            platform.pump();
+            WindowsNativeWindow.MonitorInfo info = window.monitorInfo();
+            assertTrue(info.monitor().right() > info.monitor().left());
+            assertTrue(info.monitor().bottom() > info.monitor().top());
+            assertTrue(info.work().left() >= info.monitor().left());
+            assertTrue(info.work().top() >= info.monitor().top());
+            assertTrue(info.work().right() <= info.monitor().right());
+            assertTrue(info.work().bottom() <= info.monitor().bottom());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_SWAPBUTTON` through generated `GetSystemMetrics`.
+    @Test
+    void swapButtonsReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "SwapButtons", 32.0, 32.0);
+            platform.pump();
+            boolean swapped = window.swapButtons();
+            assertEquals(swapped, window.nativeWindow().swapButtons());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXDRAG` / `SM_CYDRAG` through generated `GetSystemMetrics`.
+    @Test
+    void dragThresholdReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "DragThreshold", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.dragThresholdX() >= 1);
+            assertTrue(window.dragThresholdY() >= 1);
+            assertEquals(window.dragThresholdX(), window.nativeWindow().dragThresholdX());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETMOUSESPEED` through generated `SystemParametersInfoW`.
+    @Test
+    void mouseSpeedReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MouseSpeed", 32.0, 32.0);
+            platform.pump();
+            int speed = window.mouseSpeed();
+            assertTrue(speed >= 1 && speed <= 20);
+            assertEquals(speed, window.nativeWindow().mouseSpeed());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `GetDoubleClickTime` through the generated User32 binding.
+    @Test
+    void doubleClickTimeReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "DoubleClickTime", 32.0, 32.0);
+            platform.pump();
+            int time = window.doubleClickTime();
+            assertTrue(time > 0);
+            assertEquals(time, window.nativeWindow().doubleClickTime());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXDOUBLECLK` / `SM_CYDOUBLECLK` through generated `GetSystemMetrics`.
+    @Test
+    void doubleClickThresholdReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "DoubleClickThreshold", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.doubleClickThresholdX() >= 1);
+            assertTrue(window.doubleClickThresholdY() >= 1);
+            assertEquals(window.doubleClickThresholdX(), window.nativeWindow().doubleClickThresholdX());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `GetCaretBlinkTime` through the generated User32 binding.
+    @Test
+    void caretBlinkTimeReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "CaretBlinkTime", 32.0, 32.0);
+            platform.pump();
+            int time = window.caretBlinkTime();
+            assertEquals(time, window.nativeWindow().caretBlinkTime());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETKEYBOARDDELAY` through generated `SystemParametersInfoW`.
+    @Test
+    void keyboardDelayReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "KeyboardDelay", 32.0, 32.0);
+            platform.pump();
+            int delay = window.keyboardDelay();
+            assertTrue(delay >= 0 && delay <= 3);
+            assertEquals(delay, window.nativeWindow().keyboardDelay());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETKEYBOARDSPEED` through generated `SystemParametersInfoW`.
+    @Test
+    void keyboardSpeedReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "KeyboardSpeed", 32.0, 32.0);
+            platform.pump();
+            int speed = window.keyboardSpeed();
+            assertTrue(speed >= 0 && speed <= 31);
+            assertEquals(speed, window.nativeWindow().keyboardSpeed());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETCARETWIDTH` through generated `SystemParametersInfoW`.
+    @Test
+    void caretWidthReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "CaretWidth", 32.0, 32.0);
+            platform.pump();
+            int width = window.caretWidth();
+            assertTrue(width >= 1);
+            assertEquals(width, window.nativeWindow().caretWidth());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETMOUSEHOVERTIME` through generated `SystemParametersInfoW`.
+    @Test
+    void mouseHoverTimeReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MouseHoverTime", 32.0, 32.0);
+            platform.pump();
+            int time = window.mouseHoverTime();
+            assertTrue(time > 0);
+            assertEquals(time, window.nativeWindow().mouseHoverTime());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETMOUSEHOVERWIDTH` / `SPI_GETMOUSEHOVERHEIGHT` through generated `SystemParametersInfoW`.
+    @Test
+    void mouseHoverSizeReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MouseHoverSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.mouseHoverWidth() >= 1);
+            assertTrue(window.mouseHoverHeight() >= 1);
+            assertEquals(window.mouseHoverWidth(), window.nativeWindow().mouseHoverWidth());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXICON` / `SM_CYICON` through generated `GetSystemMetrics`.
+    @Test
+    void iconSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "IconSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.iconWidth() >= 1);
+            assertTrue(window.iconHeight() >= 1);
+            assertEquals(window.iconWidth(), window.nativeWindow().iconWidth());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads loaded keyboard layouts through generated `GetKeyboardLayoutList`.
+    @Test
+    void keyboardLayoutListReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "KeyboardLayoutList", 32.0, 32.0);
+            platform.pump();
+            long[] layouts = window.keyboardLayouts();
+            assertTrue(layouts.length >= 1);
+            assertTrue(layouts[0] != 0L);
+            assertEquals(layouts.length, window.nativeWindow().keyboardLayouts().length);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `GetKeyboardLayoutNameW` through the generated User32 binding.
+    @Test
+    void keyboardLayoutNameReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "KeyboardLayoutName", 32.0, 32.0);
+            platform.pump();
+            String name = window.keyboardLayoutName();
+            assertTrue(name.length() >= 8);
+            assertEquals(name, window.nativeWindow().keyboardLayoutName());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETFONTSMOOTHING` through generated `SystemParametersInfoW`.
+    @Test
+    void fontSmoothingReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "FontSmoothing", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.fontSmoothingEnabled();
+            assertEquals(enabled, window.nativeWindow().fontSmoothingEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETKEYBOARDPREF` through generated `SystemParametersInfoW`.
+    @Test
+    void keyboardPrefReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "KeyboardPref", 32.0, 32.0);
+            platform.pump();
+            boolean preferred = window.keyboardPreferred();
+            assertEquals(preferred, window.nativeWindow().keyboardPreferred());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXSMICON` / `SM_CYSMICON` through generated `GetSystemMetrics`.
+    @Test
+    void smallIconSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "SmallIconSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.smallIconWidth() >= 1);
+            assertTrue(window.smallIconHeight() >= 1);
+            assertEquals(window.smallIconWidth(), window.nativeWindow().smallIconWidth());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXCURSOR` / `SM_CYCURSOR` through generated `GetSystemMetrics`.
+    @Test
+    void cursorSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "CursorSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.cursorWidth() >= 1);
+            assertTrue(window.cursorHeight() >= 1);
+            assertEquals(window.cursorWidth(), window.nativeWindow().cursorWidth());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `GetSysColor` `COLOR_WINDOW` / `COLOR_WINDOWTEXT` through the generated User32 binding.
+    @Test
+    void sysColorReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "SysColor", 32.0, 32.0);
+            platform.pump();
+            int background = window.windowColor();
+            int text = window.windowTextColor();
+            assertTrue(background != text);
+            assertEquals(background, window.nativeWindow().windowColor());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETDROPSHADOW` through generated `SystemParametersInfoW`.
+    @Test
+    void dropShadowReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "DropShadow", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.dropShadowEnabled();
+            assertEquals(enabled, window.nativeWindow().dropShadowEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CYCAPTION` through generated `GetSystemMetrics`.
+    @Test
+    void captionHeightReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "CaptionHeight", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.captionHeight() >= 1);
+            assertEquals(window.captionHeight(), window.nativeWindow().captionHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETMENUANIMATION` through generated `SystemParametersInfoW`.
+    @Test
+    void menuAnimationReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MenuAnimation", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.menuAnimationEnabled();
+            assertEquals(enabled, window.nativeWindow().menuAnimationEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETFLATMENU` through generated `SystemParametersInfoW`.
+    @Test
+    void flatMenuReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "FlatMenu", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.flatMenuEnabled();
+            assertEquals(enabled, window.nativeWindow().flatMenuEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CYMENU` through generated `GetSystemMetrics`.
+    @Test
+    void menuHeightReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MenuHeight", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.menuHeight() >= 1);
+            assertEquals(window.menuHeight(), window.nativeWindow().menuHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXBORDER` / `SM_CYBORDER` through generated `GetSystemMetrics`.
+    @Test
+    void borderSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "BorderSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.borderWidth() >= 1);
+            assertTrue(window.borderHeight() >= 1);
+            assertEquals(window.borderWidth(), window.nativeWindow().borderWidth());
+            assertEquals(window.borderHeight(), window.nativeWindow().borderHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETMENUDROPALIGNMENT` through generated `SystemParametersInfoW`.
+    @Test
+    void menuDropAlignmentReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MenuDropAlignment", 32.0, 32.0);
+            platform.pump();
+            boolean left = window.menuDropAlignsLeft();
+            assertEquals(left, window.nativeWindow().menuDropAlignsLeft());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETMENUFADE` through generated `SystemParametersInfoW`.
+    @Test
+    void menuFadeReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MenuFade", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.menuFadeEnabled();
+            assertEquals(enabled, window.nativeWindow().menuFadeEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETCOMBOBOXANIMATION` through generated `SystemParametersInfoW`.
+    @Test
+    void comboBoxAnimationReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ComboBoxAnimation", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.comboBoxAnimationEnabled();
+            assertEquals(enabled, window.nativeWindow().comboBoxAnimationEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_HIGHLIGHT` / `COLOR_HIGHLIGHTTEXT` through generated `GetSysColor`.
+    @Test
+    void highlightColorReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "HighlightColor", 32.0, 32.0);
+            platform.pump();
+            int background = window.highlightColor();
+            int foreground = window.highlightTextColor();
+            assertEquals(background, window.nativeWindow().highlightColor());
+            assertEquals(foreground, window.nativeWindow().highlightTextColor());
+            assertTrue((background & 0xFF000000) == 0);
+            assertTrue((foreground & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXFRAME` / `SM_CYFRAME` through generated `GetSystemMetrics`.
+    @Test
+    void frameSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "FrameSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.frameWidth() >= 1);
+            assertTrue(window.frameHeight() >= 1);
+            assertEquals(window.frameWidth(), window.nativeWindow().frameWidth());
+            assertEquals(window.frameHeight(), window.nativeWindow().frameHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETTOOLTIPANIMATION` through generated `SystemParametersInfoW`.
+    @Test
+    void tooltipAnimationReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "TooltipAnimation", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.tooltipAnimationEnabled();
+            assertEquals(enabled, window.nativeWindow().tooltipAnimationEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_GRAYTEXT` through generated `GetSysColor`.
+    @Test
+    void grayTextColorReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "GrayText", 32.0, 32.0);
+            platform.pump();
+            int color = window.grayTextColor();
+            assertEquals(color, window.nativeWindow().grayTextColor());
+            assertTrue((color & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXFULLSCREEN` / `SM_CYFULLSCREEN` through generated `GetSystemMetrics`.
+    @Test
+    void fullscreenSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "FullscreenSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.fullscreenWidth() >= 1);
+            assertTrue(window.fullscreenHeight() >= 1);
+            assertEquals(window.fullscreenWidth(), window.nativeWindow().fullscreenWidth());
+            assertEquals(window.fullscreenHeight(), window.nativeWindow().fullscreenHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETSELECTIONFADE` through generated `SystemParametersInfoW`.
+    @Test
+    void selectionFadeReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "SelectionFade", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.selectionFadeEnabled();
+            assertEquals(enabled, window.nativeWindow().selectionFadeEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETLISTBOXSMOOTHSCROLLING` through generated `SystemParametersInfoW`.
+    @Test
+    void listBoxSmoothScrollingReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ListBoxSmoothScrolling", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.listBoxSmoothScrollingEnabled();
+            assertEquals(enabled, window.nativeWindow().listBoxSmoothScrollingEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETSNAPTODEFBUTTON` through generated `SystemParametersInfoW`.
+    @Test
+    void snapToDefaultButtonReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "SnapToDefaultButton", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.snapToDefaultButtonEnabled();
+            assertEquals(enabled, window.nativeWindow().snapToDefaultButtonEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_BTNFACE` through generated `GetSysColor`.
+    @Test
+    void buttonFaceColorReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ButtonFace", 32.0, 32.0);
+            platform.pump();
+            int color = window.buttonFaceColor();
+            assertEquals(color, window.nativeWindow().buttonFaceColor());
+            assertTrue((color & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXHSCROLL` / `SM_CYHSCROLL` / `SM_CXVSCROLL` / `SM_CYVSCROLL` through generated `GetSystemMetrics`.
+    @Test
+    void scrollBarMetricsReadSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ScrollBarMetrics", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.horizontalScrollArrowWidth() >= 1);
+            assertTrue(window.horizontalScrollBarHeight() >= 1);
+            assertTrue(window.verticalScrollBarWidth() >= 1);
+            assertTrue(window.verticalScrollArrowHeight() >= 1);
+            assertEquals(window.horizontalScrollArrowWidth(), window.nativeWindow().horizontalScrollArrowWidth());
+            assertEquals(window.horizontalScrollBarHeight(), window.nativeWindow().horizontalScrollBarHeight());
+            assertEquals(window.verticalScrollBarWidth(), window.nativeWindow().verticalScrollBarWidth());
+            assertEquals(window.verticalScrollArrowHeight(), window.nativeWindow().verticalScrollArrowHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETMENUUNDERLINES` through generated `SystemParametersInfoW`.
+    @Test
+    void menuUnderlinesReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MenuUnderlines", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.menuUnderlinesEnabled();
+            assertEquals(enabled, window.nativeWindow().menuUnderlinesEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETHOTTRACKING` through generated `SystemParametersInfoW`.
+    @Test
+    void hotTrackingReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "HotTracking", 32.0, 32.0);
+            platform.pump();
+            boolean enabled = window.hotTrackingEnabled();
+            assertEquals(enabled, window.nativeWindow().hotTrackingEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_BTNTEXT` through generated `GetSysColor`.
+    @Test
+    void buttonTextColorReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ButtonText", 32.0, 32.0);
+            platform.pump();
+            int color = window.buttonTextColor();
+            assertEquals(color, window.nativeWindow().buttonTextColor());
+            assertTrue((color & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_INACTIVEBORDER` through generated `GetSysColor`.
+    @Test
+    void inactiveBorderColorReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "InactiveBorder", 32.0, 32.0);
+            platform.pump();
+            int color = window.inactiveBorderColor();
+            assertEquals(color, window.nativeWindow().inactiveBorderColor());
+            assertTrue((color & 0xFF000000) == 0);
         } finally {
             platform.close();
         }
@@ -1401,6 +2645,70 @@ final class WindowsPlatformTest {
                 files.invokeDrop(drop.nativeObject(), 8, 12);
                 assertEquals(List.of("C:\\HimariUI\\dropped.txt"), files.lastDroppedFiles());
             }
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Rejects NULL COM arguments through generated `DoDragDrop`.
+    @Test
+    void oleDoDragDropRejectsNullArguments() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "DoDragDrop", 72.0, 72.0);
+            platform.pump();
+            try (WindowsDropSource source = window.createDropSource()) {
+                assertEquals(WindowsDropSource.E_INVALIDARG, source.probeDoDragDrop());
+            }
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Cancels through `IDropSource::QueryContinueDrag` on the generated COM vtable.
+    @Test
+    void oleDropSourceQueryContinueCancelsThroughVtable() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "DropSource", 72.0, 72.0);
+            platform.pump();
+            try (WindowsDropSource source = window.createDropSource()) {
+                assertEquals(WindowsDropSource.DRAGDROP_S_CANCEL, source.invokeQueryContinueDrag());
+                assertTrue(source.queryContinueCount() >= 1);
+                assertEquals(WindowsDropSource.DRAGDROP_S_USEDEFAULTCURSORS, source.invokeGiveFeedback());
+                assertTrue(source.giveFeedbackCount() >= 1);
+            }
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETHIGHCONTRAST` through generated `SystemParametersInfoW`.
+    @Test
+    void systemParametersInfoReadsHighContrast() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "HighContrast", 64.0, 64.0);
+            platform.pump();
+            window.highContrastOn();
+            assertEquals(window.highContrastOn(), window.nativeWindow().highContrastOn());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETCLIENTAREAANIMATION` through generated `SystemParametersInfoW`.
+    @Test
+    void systemParametersInfoReadsClientAreaAnimation() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ClientAnim", 64.0, 64.0);
+            platform.pump();
+            window.clientAreaAnimationEnabled();
+            assertEquals(
+                    window.clientAreaAnimationEnabled(),
+                    window.nativeWindow().clientAreaAnimationEnabled()
+            );
         } finally {
             platform.close();
         }
@@ -2305,6 +3613,29 @@ final class WindowsPlatformTest {
                 );
                 assertEquals(7.5, rangeProvider.setRangeValue(7.5));
                 assertEquals(7.5, rangeProvider.rangeValue());
+            }
+            LayoutTree extentTree = new LayoutTree();
+            LayoutNode volumeNode = new LayoutFactory(extentTree).leaf(
+                    "volume",
+                    new Size(160.0f, 24.0f),
+                    List.of(),
+                    true,
+                    SemanticsRole.SLIDER,
+                    "Volume",
+                    java.util.Set.of(SemanticsAction.INCREMENT, SemanticsAction.DECREMENT),
+                    null
+            );
+            volumeNode.setRangeValue(3.0);
+            volumeNode.setRangeExtent(0.0, 10.0);
+            extentTree.setRoot(volumeNode);
+            extentTree.measure(Constraints.loose(200.0f, 40.0f));
+            extentTree.place();
+            try (WindowsAutomationProvider extentProvider = window.automationProvider(volumeNode)) {
+                assertEquals(0.0, extentProvider.invokePropertyValueDouble(
+                        WindowsAutomationProvider.UIA_RANGE_VALUE_MINIMUM_PROPERTY_ID), 0.001);
+                assertEquals(10.0, extentProvider.invokePropertyValueDouble(
+                        WindowsAutomationProvider.UIA_RANGE_VALUE_MAXIMUM_PROPERTY_ID), 0.001);
+                assertEquals(3.0, extentProvider.rangeValue(), 0.001);
             }
             try (WindowsAutomationProvider selectionProvider = window.automationProvider(optionNode)) {
                 assertTrue(selectionProvider.invokePatternProvider(WindowsAutomationProvider.UIA_SELECTION_ITEM_PATTERN_ID));

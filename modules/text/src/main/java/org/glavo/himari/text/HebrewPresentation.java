@@ -7,7 +7,8 @@ import org.jetbrains.annotations.NotNullByDefault;
 /// Pair and shin triple forms that have a dedicated presentation code point are composed,
 /// including yod plus hiriq (`U+FB1D`), alef plus patah or qamats/qamats-qatan
 /// (`U+FB2E` / `U+FB2F`), vav plus holam or holam haser (`U+FB4B`), bet/kaf/pe plus rafe
-/// (`U+FB4C` / `U+FB4D` / `U+FB4E`), final nun or tsadi plus dagesh (`U+FB3F` / `U+FB45`),
+/// (`U+FB4C` / `U+FB4D` / `U+FB4E`), het or final mem plus dagesh (`U+FB37` / `U+FB3D`),
+/// final nun or tsadi plus dagesh (`U+FB3F` / `U+FB45`),
 /// and alef plus lamed (`U+FB4F`).
 /// The shaper applies a composition only when the font maps that form.
 @NotNullByDefault
@@ -62,11 +63,13 @@ public final class HebrewPresentation {
             case 0x05D4 -> 0xFB34;
             case 0x05D5 -> 0xFB35;
             case 0x05D6 -> 0xFB36;
+            case 0x05D7 -> 0xFB37;
             case 0x05D8 -> 0xFB38;
             case 0x05D9 -> 0xFB39;
             case 0x05DA -> 0xFB3A;
             case 0x05DB -> 0xFB3B;
             case 0x05DC -> 0xFB3C;
+            case 0x05DD -> 0xFB3D;
             case 0x05DE -> 0xFB3E;
             case 0x05DF -> 0xFB3F;
             case 0x05E0 -> 0xFB40;

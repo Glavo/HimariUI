@@ -1,5 +1,8 @@
 package org.glavo.himari.layout;
 
+import org.glavo.himari.layout.hit.HitClip;
+import org.glavo.himari.layout.input.PointerEvent;
+import org.glavo.himari.layout.input.PointerListener;
 import org.glavo.himari.layout.semantics.SemanticsAction;
 import org.glavo.himari.layout.semantics.SemanticsGrid;
 import org.glavo.himari.layout.semantics.SemanticsGridItem;
@@ -7,6 +10,7 @@ import org.glavo.himari.layout.semantics.SemanticsLiveRegion;
 import org.glavo.himari.layout.semantics.SemanticsRole;
 import org.glavo.himari.layout.semantics.SemanticsScroll;
 import org.glavo.himari.layout.semantics.SemanticsTextRange;
+import org.glavo.himari.layout.semantics.TextDirection;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -62,11 +66,20 @@ public final class LayoutNode {
     /// The increment/decrement callback, or `null`.
     private final @Nullable IntConsumer onAdjust;
 
+    /// Custom measure/place delegate used when [`#kind`] is [LayoutKind#CUSTOM].
+    private final @Nullable CustomLayout customLayout;
+
     /// Toggle state published to semantics, or `null`.
     private @Nullable Boolean selected;
 
     /// Range value published to semantics, or `null`.
     private @Nullable Double rangeValue;
+
+    /// Inclusive range minimum published to UIA, default `0`.
+    private double rangeMinimum = 0.0;
+
+    /// Inclusive range maximum published to UIA, default `100`.
+    private double rangeMaximum = 100.0;
 
     /// Live-region politeness published to semantics.
     private SemanticsLiveRegion liveRegion = SemanticsLiveRegion.OFF;
@@ -185,6 +198,9 @@ public final class LayoutNode {
     /// Listeners invoked after [#setLabel(String)] when this node is a live region.
     private final ArrayList<Runnable> labelListeners = new ArrayList<>(0);
 
+    /// Pointer listeners invoked from the target toward the root during dispatch.
+    private final ArrayList<PointerListener> pointerListeners = new ArrayList<>(0);
+
     /// Scroll offset applied when this node uses [LayoutKind#SCROLL].
     private float scrollOffset;
 
@@ -205,6 +221,12 @@ public final class LayoutNode {
 
     /// Whether this node was placed in the current pass.
     private boolean placed;
+
+    /// Baseline relative to this node's top edge after measure.
+    private float baseline;
+
+    /// First-class alignment lines published after measure.
+    private AlignmentLines alignmentLines = AlignmentLines.ZERO;
 
     /// Creates one node.
     ///
@@ -234,6 +256,53 @@ public final class LayoutNode {
             @Nullable Runnable onActivate,
             @Nullable IntConsumer onAdjust
     ) {
+        this(
+                id,
+                name,
+                kind,
+                alignment,
+                modifiers,
+                intrinsicSize,
+                focusable,
+                role,
+                label,
+                actions,
+                onActivate,
+                onAdjust,
+                null
+        );
+    }
+
+    /// Creates a node that may own a custom layout delegate.
+    ///
+    /// @param id the identity
+    /// @param name the diagnostic name
+    /// @param kind the policy
+    /// @param alignment the cross-axis alignment
+    /// @param modifiers the modifiers
+    /// @param intrinsicSize the leaf size, or `null`
+    /// @param focusable whether the node is focusable
+    /// @param role the semantics role
+    /// @param label the semantics label
+    /// @param actions the semantics actions
+    /// @param onActivate the activation callback, or `null`
+    /// @param onAdjust the increment/decrement callback, or `null`
+    /// @param customLayout the custom delegate, or `null`
+    LayoutNode(
+            long id,
+            String name,
+            LayoutKind kind,
+            Alignment alignment,
+            List<LayoutModifier> modifiers,
+            @Nullable Size intrinsicSize,
+            boolean focusable,
+            SemanticsRole role,
+            String label,
+            Set<SemanticsAction> actions,
+            @Nullable Runnable onActivate,
+            @Nullable IntConsumer onAdjust,
+            @Nullable CustomLayout customLayout
+    ) {
         this.id = id;
         this.name = Objects.requireNonNull(name, "name");
         this.kind = Objects.requireNonNull(kind, "kind");
@@ -246,6 +315,10 @@ public final class LayoutNode {
         this.actions = Set.copyOf(actions);
         this.onActivate = onActivate;
         this.onAdjust = onAdjust;
+        this.customLayout = customLayout;
+        if (kind == LayoutKind.CUSTOM && customLayout == null) {
+            throw new IllegalArgumentException("CUSTOM layout requires a CustomLayout");
+        }
     }
 
     /// Returns the identity.
@@ -267,6 +340,133 @@ public final class LayoutNode {
     /// @return the kind
     public LayoutKind kind() {
         return kind;
+    }
+
+    /// Returns the pending invalidation phase for inspector localization.
+    ///
+    /// `MEASURE` means this node has not been measured in the current pass.
+    /// `PLACE` means it has a size but has not been placed. `NONE` means layout
+    /// is committed and remaining faults are outside measure/place.
+    ///
+    /// @return `MEASURE`, `PLACE`, or `NONE`
+    public String invalidationPhase() {
+        if (!measured) {
+            return "MEASURE";
+        }
+        if (!placed) {
+            return "PLACE";
+        }
+        return "NONE";
+    }
+
+    /// Returns the leaf intrinsic size, or [`Size#ZERO`] for a container.
+    ///
+    /// @return the intrinsic size
+    public Size intrinsicSize() {
+        return intrinsicSize == null ? Size.ZERO : intrinsicSize;
+    }
+
+    /// Returns the clockwise rotation in degrees declared on this node.
+    ///
+    /// @return the rotation, or `0` when absent
+    public float rotationDegrees() {
+        for (LayoutModifier modifier : modifiers) {
+            if (modifier instanceof LayoutModifier.Rotate rotate) {
+                return rotate.degrees();
+            }
+        }
+        return 0.0f;
+    }
+
+    /// Returns the translation declared on this node.
+    ///
+    /// @return the translation, or zero when absent
+    public Offset translation() {
+        for (LayoutModifier modifier : modifiers) {
+            if (modifier instanceof LayoutModifier.Translate translate) {
+                return new Offset(translate.x(), translate.y());
+            }
+        }
+        return Offset.ZERO;
+    }
+
+    /// Returns the shear factors declared on this node.
+    ///
+    /// @return the shear, or zero when absent
+    public Offset shear() {
+        for (LayoutModifier modifier : modifiers) {
+            if (modifier instanceof LayoutModifier.Skew skew) {
+                return new Offset(skew.x(), skew.y());
+            }
+        }
+        return Offset.ZERO;
+    }
+
+    /// Returns whether hit testing clips descendants to this node's clip shape.
+    ///
+    /// Scroll viewports always clip to their bounds. Other nodes clip when they
+    /// declare [`LayoutModifier.Clip`], [`LayoutModifier.ClipRRect`],
+    /// [`LayoutModifier.ClipOval`], or [`LayoutModifier.ClipPath`].
+    ///
+    /// @return whether hits are clipped
+    public boolean clipsHits() {
+        return hitClip() != null;
+    }
+
+    /// Returns this node's hit-testing clip in root coordinates, or `null`.
+    ///
+    /// @return the clip, or `null` when hits are not clipped
+    public @Nullable HitClip hitClip() {
+        if (kind == LayoutKind.SCROLL) {
+            return HitClip.rect(bounds());
+        }
+        for (LayoutModifier modifier : modifiers) {
+            if (modifier instanceof LayoutModifier.Clip) {
+                return HitClip.rect(bounds());
+            }
+            if (modifier instanceof LayoutModifier.ClipRRect rounded) {
+                return HitClip.rounded(bounds(), rounded.radius());
+            }
+            if (modifier instanceof LayoutModifier.ClipOval) {
+                return HitClip.oval(bounds());
+            }
+            if (modifier instanceof LayoutModifier.ClipPath path) {
+                return HitClip.path(bounds(), path.points());
+            }
+        }
+        return null;
+    }
+
+    /// Returns the hit-clip kind name, or `NONE` when unclipped.
+    ///
+    /// @return `NONE`, `RECT`, `ROUNDED`, `OVAL`, or `PATH`
+    public String clipKind() {
+        HitClip clip = hitClip();
+        return clip == null ? "NONE" : clip.kind().name();
+    }
+
+    /// Returns whether this node and its descendants are excluded from hit testing.
+    ///
+    /// @return whether pointer hits are ignored
+    public boolean ignoresPointer() {
+        for (LayoutModifier modifier : modifiers) {
+            if (modifier instanceof LayoutModifier.IgnorePointer) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// Returns whether this node absorbs pointer hits without targeting descendants.
+    ///
+    /// @return whether pointer hits stop on this node
+    public boolean absorbsPointer() {
+        for (LayoutModifier modifier : modifiers) {
+            if (modifier instanceof LayoutModifier.AbsorbPointer) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// Returns the children in document order.
@@ -362,6 +562,40 @@ public final class LayoutNode {
         labelListeners.remove(Objects.requireNonNull(listener, "listener"));
     }
 
+    /// Registers a pointer listener for target-to-bubble routing.
+    ///
+    /// @param listener the callback
+    public void addPointerListener(PointerListener listener) {
+        pointerListeners.add(Objects.requireNonNull(listener, "listener"));
+    }
+
+    /// Removes a listener previously passed to [#addPointerListener(PointerListener)].
+    ///
+    /// @param listener the callback
+    public void removePointerListener(PointerListener listener) {
+        pointerListeners.remove(Objects.requireNonNull(listener, "listener"));
+    }
+
+    /// Delivers one pointer event to listeners registered on this node.
+    ///
+    /// The first listener that returns `true` stops later listeners on this node.
+    ///
+    /// @param event the routed event
+    /// @return whether a listener consumed the event
+    public boolean dispatchPointer(PointerEvent event) {
+        Objects.requireNonNull(event, "event");
+        if (pointerListeners.isEmpty()) {
+            return false;
+        }
+        PointerListener[] snapshot = pointerListeners.toArray(PointerListener[]::new);
+        for (PointerListener listener : snapshot) {
+            if (listener.onPointer(event)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// Returns the accessible hint.
     ///
     /// @return the hint, empty when absent
@@ -395,6 +629,20 @@ public final class LayoutNode {
     /// @return the value
     public @Nullable Double rangeValue() {
         return rangeValue;
+    }
+
+    /// Returns the published inclusive range minimum.
+    ///
+    /// @return the minimum
+    public double rangeMinimum() {
+        return rangeMinimum;
+    }
+
+    /// Returns the published inclusive range maximum.
+    ///
+    /// @return the maximum
+    public double rangeMaximum() {
+        return rangeMaximum;
     }
 
     /// Returns the published live-region politeness.
@@ -937,6 +1185,21 @@ public final class LayoutNode {
         this.rangeValue = value;
     }
 
+    /// Publishes the inclusive range extent for UIA `IRangeValueProvider`.
+    ///
+    /// @param minimum the inclusive minimum
+    /// @param maximum the inclusive maximum
+    public void setRangeExtent(double minimum, double maximum) {
+        if (!Double.isFinite(minimum) || !Double.isFinite(maximum)) {
+            throw new IllegalArgumentException("Range extent must be finite");
+        }
+        if (maximum < minimum) {
+            throw new IllegalArgumentException("Range maximum must be at least the minimum");
+        }
+        this.rangeMinimum = minimum;
+        this.rangeMaximum = maximum;
+    }
+
     /// Publishes live-region politeness for the next semantics snapshot.
     ///
     /// @param liveRegion the politeness
@@ -991,9 +1254,12 @@ public final class LayoutNode {
 
     /// Measures this node once under the incoming constraints.
     ///
+    /// A [CustomLayout] must measure each child through this method at most once per pass.
+    /// A second call in the same pass throws [IllegalStateException].
+    ///
     /// @param incoming the parent constraints
     /// @return the published size
-    Size measure(Constraints incoming) {
+    public Size measure(Constraints incoming) {
         if (measured) {
             throw new IllegalStateException("Layout node " + name + " was measured more than once");
         }
@@ -1008,21 +1274,58 @@ public final class LayoutNode {
             case ROW -> measureRow(current);
             case COLUMN -> measureColumn(current);
             case SCROLL -> measureScroll(current);
+            case FLEX -> measureFlex(current);
+            case FLOW -> measureFlow(current);
+            case GRID -> measureGrid(current);
+            case CUSTOM -> measureCustom(current);
+            case OVERLAY -> measureOverlay(current, false);
+            case PORTAL -> measureOverlay(current, true);
         };
         Size wrapped = inner;
         for (int index = modifiers.size() - 1; index >= 0; index--) {
             wrapped = modifiers.get(index).wrap(wrapped);
         }
         size = incoming.constrain(wrapped.width(), wrapped.height());
+        baseline = resolveBaseline();
+        alignmentLines = new AlignmentLines(baseline, size.width() * 0.5f, size.height() * 0.5f);
         measured = true;
         return size;
     }
 
+    /// Returns the baseline distance from this node's top edge.
+    ///
+    /// Leaves use their measured height. Containers use the first child's baseline.
+    ///
+    /// @return the baseline
+    public float baseline() {
+        return baseline;
+    }
+
+    /// Returns the alignment lines published by the last measure.
+    ///
+    /// @return the lines
+    public AlignmentLines alignmentLines() {
+        return alignmentLines;
+    }
+
+    /// Computes the published baseline after measure.
+    ///
+    /// @return the baseline
+    private float resolveBaseline() {
+        if (kind == LayoutKind.LEAF || children.isEmpty()) {
+            return size.height();
+        }
+        return children.getFirst().baseline();
+    }
+
     /// Places this node at a parent-relative offset and a root origin.
+    ///
+    /// A [CustomLayout] must place each previously measured child through this method
+    /// exactly once per pass.
     ///
     /// @param parentOffset the parent-relative origin
     /// @param rootOrigin the root-relative origin
-    void place(Offset parentOffset, Offset rootOrigin) {
+    public void place(Offset parentOffset, Offset rootOrigin) {
         if (!measured) {
             throw new IllegalStateException("Layout node " + name + " was placed before measure");
         }
@@ -1043,6 +1346,11 @@ public final class LayoutNode {
             case ROW -> placeRow(inner, rootOrigin.plus(inner), childConstraints);
             case COLUMN -> placeColumn(inner, rootOrigin.plus(inner), childConstraints);
             case SCROLL -> placeScroll(inner, rootOrigin.plus(inner));
+            case FLEX -> placeRow(inner, rootOrigin.plus(inner), childConstraints);
+            case FLOW -> placeFlow(inner, rootOrigin.plus(inner), childConstraints);
+            case GRID -> placeGrid(inner, rootOrigin.plus(inner));
+            case CUSTOM -> placeCustom(inner, rootOrigin.plus(inner));
+            case OVERLAY, PORTAL -> placeOverlay(inner, rootOrigin.plus(inner));
         }
         placed = true;
     }
@@ -1117,11 +1425,18 @@ public final class LayoutNode {
         float width = 0.0f;
         float height = constraints.minHeight();
         float remaining = constraints.maxWidth();
+        float rowBaseline = 0.0f;
+        float belowBaseline = 0.0f;
         for (LayoutNode child : children) {
             Size childSize = child.measure(Constraints.loose(remaining, constraints.maxHeight()));
             width += childSize.width();
             remaining = Math.max(0.0f, remaining - childSize.width());
             height = Math.max(height, childSize.height());
+            rowBaseline = Math.max(rowBaseline, child.baseline());
+            belowBaseline = Math.max(belowBaseline, childSize.height() - child.baseline());
+        }
+        if (alignment == Alignment.BASELINE) {
+            height = Math.max(height, rowBaseline + belowBaseline);
         }
         return constraints.constrain(width, height);
     }
@@ -1143,6 +1458,181 @@ public final class LayoutNode {
                 ? Math.max(constraints.minHeight(), contentHeight)
                 : constraints.maxHeight();
         return constraints.constrain(width, viewportHeight);
+    }
+
+    /// Measures children on a horizontal axis and distributes leftover width by grow weights.
+    ///
+    /// Inflexible children are measured first. Remaining finite width is then split among
+    /// children whose [`LayoutModifier.FlexGrow`] weight is positive. When the incoming
+    /// maximum width is unbounded, growers measure as loose children.
+    ///
+    /// @param constraints the inner constraints
+    /// @return the flex size
+    private Size measureFlex(Constraints constraints) {
+        float height = constraints.minHeight();
+        float remaining = constraints.maxWidth();
+        float totalGrow = 0.0f;
+        int growerCount = 0;
+        for (LayoutNode child : children) {
+            float grow = child.flexGrow();
+            if (grow > 0.0f) {
+                totalGrow += grow;
+                growerCount++;
+                continue;
+            }
+            Size childSize = child.measure(Constraints.loose(remaining, constraints.maxHeight()));
+            remaining = Math.max(0.0f, remaining - childSize.width());
+            height = Math.max(height, childSize.height());
+        }
+        float leftover = remaining;
+        float assigned = 0.0f;
+        int seen = 0;
+        for (LayoutNode child : children) {
+            float grow = child.flexGrow();
+            if (grow <= 0.0f) {
+                continue;
+            }
+            seen++;
+            Constraints childConstraints;
+            if (leftover == Float.MAX_VALUE || totalGrow <= 0.0f) {
+                childConstraints = Constraints.loose(leftover, constraints.maxHeight());
+            } else {
+                float share = seen == growerCount ? leftover - assigned : leftover * (grow / totalGrow);
+                assigned += share;
+                childConstraints = new Constraints(share, share, 0.0f, constraints.maxHeight());
+            }
+            Size childSize = child.measure(childConstraints);
+            height = Math.max(height, childSize.height());
+        }
+        if (alignment == Alignment.BASELINE) {
+            float rowBaseline = 0.0f;
+            float belowBaseline = 0.0f;
+            for (LayoutNode child : children) {
+                rowBaseline = Math.max(rowBaseline, child.baseline());
+                belowBaseline = Math.max(belowBaseline, child.size.height() - child.baseline());
+            }
+            height = Math.max(height, rowBaseline + belowBaseline);
+        }
+        float used = 0.0f;
+        for (LayoutNode child : children) {
+            used += child.size.width();
+        }
+        float width = growerCount > 0 && constraints.maxWidth() != Float.MAX_VALUE
+                ? constraints.maxWidth()
+                : used;
+        return constraints.constrain(width, height);
+    }
+
+    /// Measures wrapping rows that fill the available width.
+    ///
+    /// @param constraints the inner constraints
+    /// @return the flow size
+    private Size measureFlow(Constraints constraints) {
+        float maxWidth = constraints.maxWidth();
+        float x = 0.0f;
+        float lineHeight = 0.0f;
+        float lineBaseline = 0.0f;
+        float lineBelow = 0.0f;
+        float width = constraints.minWidth();
+        float height = 0.0f;
+        for (LayoutNode child : children) {
+            Size childSize = child.measure(Constraints.loose(maxWidth, constraints.maxHeight()));
+            if (x > 0.0f && maxWidth != Float.MAX_VALUE && x + childSize.width() > maxWidth) {
+                width = Math.max(width, x);
+                height += flowLineHeight(lineHeight, lineBaseline, lineBelow);
+                x = 0.0f;
+                lineHeight = 0.0f;
+                lineBaseline = 0.0f;
+                lineBelow = 0.0f;
+            }
+            x += childSize.width();
+            lineHeight = Math.max(lineHeight, childSize.height());
+            lineBaseline = Math.max(lineBaseline, child.baseline());
+            lineBelow = Math.max(lineBelow, childSize.height() - child.baseline());
+        }
+        width = Math.max(width, x);
+        height += flowLineHeight(lineHeight, lineBaseline, lineBelow);
+        return constraints.constrain(width, Math.max(constraints.minHeight(), height));
+    }
+
+    /// Returns the height of one wrapping line.
+    ///
+    /// @param lineHeight the maximum child height
+    /// @param lineBaseline the maximum published baseline
+    /// @param lineBelow the maximum distance below the baseline
+    /// @return the line height
+    private float flowLineHeight(float lineHeight, float lineBaseline, float lineBelow) {
+        if (alignment == Alignment.BASELINE) {
+            return Math.max(lineHeight, lineBaseline + lineBelow);
+        }
+        return lineHeight;
+    }
+
+    /// Measures a fixed-column grid from child intrinsic sizes.
+    ///
+    /// When [`Alignment#BASELINE`] is set, each row height is the maximum published
+    /// baseline plus the maximum distance below that baseline.
+    ///
+    /// @param constraints the inner constraints
+    /// @return the grid size
+    private Size measureGrid(Constraints constraints) {
+        int columns = gridColumns();
+        float[] columnWidths = new float[columns];
+        float height = 0.0f;
+        float rowHeight = 0.0f;
+        float rowBaseline = 0.0f;
+        float rowBelow = 0.0f;
+        int column = 0;
+        for (LayoutNode child : children) {
+            Size childSize = child.measure(Constraints.loose(constraints.maxWidth(), constraints.maxHeight()));
+            columnWidths[column] = Math.max(columnWidths[column], childSize.width());
+            rowHeight = Math.max(rowHeight, childSize.height());
+            rowBaseline = Math.max(rowBaseline, child.baseline());
+            rowBelow = Math.max(rowBelow, childSize.height() - child.baseline());
+            column++;
+            if (column == columns) {
+                height += gridRowHeight(rowHeight, rowBaseline, rowBelow);
+                rowHeight = 0.0f;
+                rowBaseline = 0.0f;
+                rowBelow = 0.0f;
+                column = 0;
+            }
+        }
+        if (column != 0) {
+            height += gridRowHeight(rowHeight, rowBaseline, rowBelow);
+        }
+        float width = 0.0f;
+        for (float columnWidth : columnWidths) {
+            width += columnWidth;
+        }
+        return constraints.constrain(
+                Math.max(constraints.minWidth(), width),
+                Math.max(constraints.minHeight(), height)
+        );
+    }
+
+    /// Returns the first [`LayoutModifier.FlexGrow`] weight, or `0` when absent.
+    ///
+    /// @return the nonnegative weight
+    private float flexGrow() {
+        for (LayoutModifier modifier : modifiers) {
+            if (modifier instanceof LayoutModifier.FlexGrow grow) {
+                return grow.weight();
+            }
+        }
+        return 0.0f;
+    }
+
+    /// Returns the [`LayoutModifier.GridColumns`] count, or `1` when absent.
+    ///
+    /// @return the positive column count
+    private int gridColumns() {
+        for (LayoutModifier modifier : modifiers) {
+            if (modifier instanceof LayoutModifier.GridColumns columns) {
+                return columns.columns();
+            }
+        }
+        return 1;
     }
 
     /// Measures children on a vertical axis.
@@ -1182,13 +1672,53 @@ public final class LayoutNode {
     /// @param root the inner origin in root coordinates
     /// @param constraints the inner constraints
     private void placeRow(Offset inner, Offset root, Constraints constraints) {
+        float rowBaseline = 0.0f;
+        if (alignment == Alignment.BASELINE) {
+            for (LayoutNode child : children) {
+                rowBaseline = Math.max(rowBaseline, child.baseline());
+            }
+        }
+        if (readingDirection() == TextDirection.RTL) {
+            float x = size.width();
+            for (LayoutNode child : children) {
+                x -= child.size.width();
+                float y = rowCrossAxis(child, rowBaseline);
+                Offset childOffset = inner.plus(new Offset(x, y));
+                child.place(childOffset, root.plus(new Offset(x, y)));
+            }
+            return;
+        }
         float x = 0.0f;
         for (LayoutNode child : children) {
-            float y = alignment.place(size.height(), child.size.height());
+            float y = rowCrossAxis(child, rowBaseline);
             Offset childOffset = inner.plus(new Offset(x, y));
             child.place(childOffset, root.plus(new Offset(x, y)));
             x += child.size.width();
         }
+    }
+
+    /// Returns the row cross-axis origin for `child`.
+    ///
+    /// @param child the child
+    /// @param rowBaseline the maximum published baseline when [`Alignment#BASELINE`] is set
+    /// @return the Y origin relative to the row
+    private float rowCrossAxis(LayoutNode child, float rowBaseline) {
+        if (alignment == Alignment.BASELINE) {
+            return Math.max(0.0f, rowBaseline - child.baseline());
+        }
+        return alignment.place(size.height(), child.size.height());
+    }
+
+    /// Returns the reading direction declared on this node.
+    ///
+    /// @return the direction, defaulting to LTR
+    private TextDirection readingDirection() {
+        for (LayoutModifier modifier : modifiers) {
+            if (modifier instanceof LayoutModifier.ReadingDirection direction) {
+                return direction.direction();
+            }
+        }
+        return TextDirection.LTR;
     }
 
     /// Places scroll children using the stored offset.
@@ -1217,5 +1747,214 @@ public final class LayoutNode {
             child.place(childOffset, root.plus(new Offset(x, y)));
             y += child.size.height();
         }
+    }
+
+    /// Places wrapping flow children.
+    ///
+    /// @param inner the inner origin relative to this node
+    /// @param root the inner origin in root coordinates
+    /// @param constraints the inner constraints
+    private void placeFlow(Offset inner, Offset root, Constraints constraints) {
+        float maxWidth = constraints.maxWidth();
+        boolean rtl = readingDirection() == TextDirection.RTL;
+        int index = 0;
+        int count = children.size();
+        float y = 0.0f;
+        while (index < count) {
+            int start = index;
+            float x = 0.0f;
+            float lineHeight = 0.0f;
+            float lineBaseline = 0.0f;
+            float lineBelow = 0.0f;
+            while (index < count) {
+                LayoutNode child = children.get(index);
+                if (x > 0.0f && maxWidth != Float.MAX_VALUE && x + child.size.width() > maxWidth) {
+                    break;
+                }
+                x += child.size.width();
+                lineHeight = Math.max(lineHeight, child.size.height());
+                lineBaseline = Math.max(lineBaseline, child.baseline());
+                lineBelow = Math.max(lineBelow, child.size.height() - child.baseline());
+                index++;
+            }
+            float used = 0.0f;
+            for (int childIndex = start; childIndex < index; childIndex++) {
+                LayoutNode child = children.get(childIndex);
+                float placedX = rtl ? size.width() - used - child.size.width() : used;
+                float placedY = y + flowCrossAxis(child, lineHeight, lineBaseline);
+                Offset childOffset = inner.plus(new Offset(placedX, placedY));
+                child.place(childOffset, root.plus(new Offset(placedX, placedY)));
+                used += child.size.width();
+            }
+            y += flowLineHeight(lineHeight, lineBaseline, lineBelow);
+        }
+    }
+
+    /// Returns the in-line cross-axis origin for a wrapping child.
+    ///
+    /// @param child the child
+    /// @param lineHeight the line height
+    /// @param lineBaseline the line baseline
+    /// @return the Y origin relative to the line
+    private float flowCrossAxis(LayoutNode child, float lineHeight, float lineBaseline) {
+        if (alignment == Alignment.BASELINE) {
+            return Math.max(0.0f, lineBaseline - child.baseline());
+        }
+        return alignment.place(lineHeight, child.size.height());
+    }
+
+    /// Places fixed-column grid children.
+    ///
+    /// Each child is aligned inside its cell. [`Alignment#BASELINE`] uses published
+    /// alignment lines on the row cross-axis and [`Alignment#place(float, float)`] for
+    /// leftover column width.
+    ///
+    /// @param inner the inner origin relative to this node
+    /// @param root the inner origin in root coordinates
+    private void placeGrid(Offset inner, Offset root) {
+        int columns = gridColumns();
+        float[] columnWidths = new float[columns];
+        int index = 0;
+        for (LayoutNode child : children) {
+            int column = index % columns;
+            columnWidths[column] = Math.max(columnWidths[column], child.size.width());
+            index++;
+        }
+        boolean rtl = readingDirection() == TextDirection.RTL;
+        float x = rtl ? size.width() : 0.0f;
+        float y = 0.0f;
+        float rowHeight = 0.0f;
+        float rowBaseline = 0.0f;
+        int column = 0;
+        index = 0;
+        for (LayoutNode child : children) {
+            if (column == 0) {
+                rowHeight = 0.0f;
+                rowBaseline = 0.0f;
+                float rowBelow = 0.0f;
+                for (int look = index; look < children.size() && look - index < columns; look++) {
+                    LayoutNode rowChild = children.get(look);
+                    rowHeight = Math.max(rowHeight, rowChild.size.height());
+                    rowBaseline = Math.max(rowBaseline, rowChild.baseline());
+                    rowBelow = Math.max(rowBelow, rowChild.size.height() - rowChild.baseline());
+                }
+                rowHeight = gridRowHeight(rowHeight, rowBaseline, rowBelow);
+            }
+            if (rtl) {
+                x -= columnWidths[column];
+            }
+            float placedX = x + alignment.place(columnWidths[column], child.size.width());
+            float placedY = y + gridCrossAxis(child, rowHeight, rowBaseline);
+            Offset childOffset = inner.plus(new Offset(placedX, placedY));
+            child.place(childOffset, root.plus(new Offset(placedX, placedY)));
+            if (!rtl) {
+                x += columnWidths[column];
+            }
+            column++;
+            index++;
+            if (column == columns) {
+                y += rowHeight;
+                x = rtl ? size.width() : 0.0f;
+                column = 0;
+            }
+        }
+    }
+
+    /// Returns the in-cell cross-axis origin for a grid child.
+    ///
+    /// @param child the child
+    /// @param rowHeight the row height
+    /// @param rowBaseline the maximum published baseline when [`Alignment#BASELINE`] is set
+    /// @return the Y origin relative to the row
+    private float gridCrossAxis(LayoutNode child, float rowHeight, float rowBaseline) {
+        if (alignment == Alignment.BASELINE) {
+            return Math.max(0.0f, rowBaseline - child.baseline());
+        }
+        return alignment.place(rowHeight, child.size.height());
+    }
+
+    /// Returns the height of one grid row.
+    ///
+    /// @param rowHeight the maximum child height
+    /// @param rowBaseline the maximum published baseline
+    /// @param rowBelow the maximum distance below the published baseline
+    /// @return the row height
+    private float gridRowHeight(float rowHeight, float rowBaseline, float rowBelow) {
+        if (alignment == Alignment.BASELINE) {
+            return Math.max(rowHeight, rowBaseline + rowBelow);
+        }
+        return rowHeight;
+    }
+
+    /// Measures children through [`#customLayout`].
+    ///
+    /// @param constraints the inner constraints
+    /// @return the custom size
+    private Size measureCustom(Constraints constraints) {
+        CustomLayout delegate = Objects.requireNonNull(customLayout, "customLayout");
+        return delegate.measure(constraints, List.copyOf(children));
+    }
+
+    /// Measures overlay or portal children.
+    ///
+    /// Overlay size is the union of each child's box at its overlay offset. Portal size is
+    /// the first child's size, or zero when empty.
+    ///
+    /// @param constraints the inner constraints
+    /// @param portal whether trailing children are excluded from the slot size
+    /// @return the overlay size
+    private Size measureOverlay(Constraints constraints, boolean portal) {
+        float width = constraints.minWidth();
+        float height = constraints.minHeight();
+        int index = 0;
+        for (LayoutNode child : children) {
+            Size childSize = child.measure(Constraints.loose(constraints.maxWidth(), constraints.maxHeight()));
+            Offset placed = overlayOffset(child);
+            if (portal) {
+                if (index == 0) {
+                    width = Math.max(width, childSize.width());
+                    height = Math.max(height, childSize.height());
+                }
+            } else {
+                width = Math.max(width, placed.x() + childSize.width());
+                height = Math.max(height, placed.y() + childSize.height());
+            }
+            index++;
+        }
+        return constraints.constrain(width, height);
+    }
+
+    /// Places children through [`#customLayout`].
+    ///
+    /// @param inner the inner origin relative to this node
+    /// @param root the inner origin in root coordinates
+    private void placeCustom(Offset inner, Offset root) {
+        CustomLayout delegate = Objects.requireNonNull(customLayout, "customLayout");
+        delegate.place(inner, root, size, List.copyOf(children));
+    }
+
+    /// Places overlay or portal children at their overlay offsets.
+    ///
+    /// @param inner the inner origin relative to this node
+    /// @param root the inner origin in root coordinates
+    private void placeOverlay(Offset inner, Offset root) {
+        for (LayoutNode child : children) {
+            Offset placed = overlayOffset(child);
+            Offset childOffset = inner.plus(placed);
+            child.place(childOffset, root.plus(placed));
+        }
+    }
+
+    /// Returns the [`LayoutModifier.OverlayOffset`] of `child`, or zero.
+    ///
+    /// @param child the child
+    /// @return the offset
+    private static Offset overlayOffset(LayoutNode child) {
+        for (LayoutModifier modifier : child.modifiers) {
+            if (modifier instanceof LayoutModifier.OverlayOffset offset) {
+                return new Offset(offset.x(), offset.y());
+            }
+        }
+        return Offset.ZERO;
     }
 }

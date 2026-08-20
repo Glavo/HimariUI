@@ -38,6 +38,9 @@ public final class WindowsPlatformConformance {
         boolean modalTick = false;
         boolean oleDrop = false;
         boolean dataObjectGetData = false;
+        boolean oleDoDragDrop = false;
+        boolean highContrastQuery = false;
+        boolean clientAreaAnimationQuery = false;
         boolean tsfThreadMgr = false;
         boolean messageLoop = false;
         WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
@@ -77,6 +80,16 @@ public final class WindowsPlatformConformance {
             if (dpi < 96 || scale <= 0.0 || displayWidth <= 0) {
                 throw new IllegalStateException("Windows display DPI or metrics were not queried");
             }
+            WindowsNativeWindow.MonitorDpi monitorDpi = first.monitorDpi();
+            if (monitorDpi.x() < 96 || monitorDpi.y() < 96 || monitorDpi.x() != dpi) {
+                throw new IllegalStateException("GetDpiForMonitor did not match GetDpiForWindow");
+            }
+            WindowsNativeWindow.MonitorInfo monitorInfo = first.monitorInfo();
+            if (monitorInfo.monitor().right() <= monitorInfo.monitor().left()
+                    || monitorInfo.work().right() <= monitorInfo.work().left()) {
+                throw new IllegalStateException("GetMonitorInfoW did not report a display rectangle");
+            }
+            first.swapButtons();
             first.postPointer(PointerEventType.DOWN, 8, 8);
             platform.pump();
             if (!first.captured()) {
@@ -90,6 +103,23 @@ public final class WindowsPlatformConformance {
             }
             if (!first.setSystemCursor(WindowsNativeWindow.IDC_ARROW)) {
                 throw new IllegalStateException("LoadCursorW/SetCursor failed for IDC_ARROW");
+            }
+            if (!first.setSystemCursor(WindowsNativeWindow.IDC_IBEAM)
+                    || first.currentCursor().address() == 0L) {
+                throw new IllegalStateException("LoadCursorW/SetCursor/GetCursor failed for IDC_IBEAM");
+            }
+            WindowsNativeWindow.ScreenPoint cursor = first.cursorPosition();
+            if (cursor.x() == Integer.MIN_VALUE && cursor.y() == Integer.MIN_VALUE) {
+                throw new IllegalStateException("GetCursorPos returned an unusable point");
+            }
+            int shown = first.showCursor(true);
+            int hidden = first.showCursor(false);
+            if (hidden != shown - 1) {
+                throw new IllegalStateException("ShowCursor display count did not decrement");
+            }
+            if (Integer.toUnsignedLong(first.wheelScrollLines()) < 1L
+                    || Integer.toUnsignedLong(first.wheelScrollChars()) < 1L) {
+                throw new IllegalStateException("SPI_GETWHEELSCROLL* did not report a positive count");
             }
             java.util.List<org.glavo.himari.layout.input.PointerEvent> delivered = first.takePointerEvents();
             pointerCount = delivered.size();
@@ -149,6 +179,19 @@ public final class WindowsPlatformConformance {
             if (!dataObjectGetData) {
                 throw new IllegalStateException("IDataObject::GetData did not yield Unicode text");
             }
+            try (WindowsDropSource source = first.createDropSource()) {
+                oleDoDragDrop = source.probeDoDragDrop() == WindowsDropSource.E_INVALIDARG
+                        && source.invokeQueryContinueDrag() == WindowsDropSource.DRAGDROP_S_CANCEL
+                        && source.queryContinueCount() >= 1
+                        && source.invokeGiveFeedback() == WindowsDropSource.DRAGDROP_S_USEDEFAULTCURSORS;
+            }
+            if (!oleDoDragDrop) {
+                throw new IllegalStateException("DoDragDrop or IDropSource vtable was not dispatched");
+            }
+            first.highContrastOn();
+            highContrastQuery = true;
+            first.clientAreaAnimationEnabled();
+            clientAreaAnimationQuery = true;
             try (WindowsTsfSession tsf = first.openTsf()) {
                 tsfThreadMgr = tsf.available() && tsf.activate();
             }
@@ -221,6 +264,9 @@ public final class WindowsPlatformConformance {
                           "modalLoop": %s,
                           "oleDrop": %s,
                           "dataObjectGetData": %s,
+                          "oleDoDragDrop": %s,
+                          "highContrastQuery": %s,
+                          "clientAreaAnimationQuery": %s,
                           "tsfThreadMgr": %s,
                           "messageLoop": %s,
                           "sdrFallback": true
@@ -236,6 +282,9 @@ public final class WindowsPlatformConformance {
                         modalTick,
                         oleDrop,
                         dataObjectGetData,
+                        oleDoDragDrop,
+                        highContrastQuery,
+                        clientAreaAnimationQuery,
                         tsfThreadMgr,
                         messageLoop
                 ),

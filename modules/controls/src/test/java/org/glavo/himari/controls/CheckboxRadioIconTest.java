@@ -52,6 +52,32 @@ final class CheckboxRadioIconTest {
         gallery.radio().setDisabled(false);
     }
 
+    /// Selects a combo-box option through the shipped control.
+    @Test
+    void comboBoxSelectsAndExpands() {
+        LayoutTree tree = new LayoutTree();
+        ControlGallery gallery = new ControlGallery();
+        assertEquals("Red", gallery.combo().value());
+        assertFalse(gallery.combo().isOpen());
+        gallery.combo().select(1);
+        assertEquals("Green", gallery.combo().value());
+        tree.setRoot(gallery.create(tree));
+        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.place();
+        SemanticsNode combo = first(tree, SemanticsRole.COMBO_BOX);
+        assertEquals("Green", combo.label());
+        assertEquals("collapsed", combo.itemStatus());
+        click(tree, combo);
+        assertTrue(gallery.combo().isOpen());
+        gallery.combo().selectNext();
+        assertEquals("Blue", gallery.combo().value());
+        gallery.combo().setDisabled(true);
+        gallery.combo().select(0);
+        assertEquals("Blue", gallery.combo().value());
+        assertTrue(gallery.combo().disabled());
+        gallery.combo().setDisabled(false);
+    }
+
     /// Activates the gallery icon button through pointer input.
     @Test
     void iconButtonActivates() {

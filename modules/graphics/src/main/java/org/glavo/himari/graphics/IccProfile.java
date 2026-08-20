@@ -11,11 +11,28 @@ import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.Objects;
 
-/// Parses a bounded ICC v2/v4 matrix/TRC RGB profile and converts samples to extended-linear sRGB.
+/// Parses a bounded ICC v2/v4 matrix/TRC RGB or GRAY profile, or a CMYK LUT profile, and converts samples to extended-linear sRGB.
 ///
-/// Profiles are treated as untrusted input. The parser accepts RGB-to-XYZ matrix profiles with
-/// `curv` or parametric `para` tone curves (function types 0–4) and rejects larger or malformed
-/// tables.
+/// Profiles are treated as untrusted input. The parser accepts RGB-to-XYZ or RGB-to-Lab matrix profiles with
+/// `curv` or parametric `para` tone curves (function types 0–4), optional `mft1`/`mft2`
+/// AToB/BToA CLUTs, optional `ncl2` named colors, optional `chad` chromatic-adaptation
+/// matrices, optional `wtpt`/`bkpt` media white and black points, optional `lumi`
+/// luminance, optional `view` viewing conditions, optional `desc`/`vued`/`cprt` ASCII
+/// descriptions (`desc`/`text`/`mluc`), optional `tech`/`dmnd`/`dmdd` device identity, optional `calt`
+/// calibration date, optional `meas` measurement, optional `gamt` gamut table,
+/// optional `pre0`/`pre1`/`pre2` preview LUTs, optional `cicp` code points,
+/// optional `resp` output-response curves, optional `clrt`/`clot` colorant tables,
+/// optional `pseq` profile-sequence descriptions, optional `psid` profile identifiers,
+/// optional `meta` dictionary metadata, optional `chrm` chromaticities,
+/// optional `clro` colorant order, optional `scrn` screening, optional `bfd ` UCR/BG curves,
+/// optional `targ` characterization target, optional `crdi`/`ps2s`/`ps2i` `data` payloads,
+/// optional `psd0`/`psd1`/`psd2`/`psd3` PostScript descriptions, optional `devs` device
+/// settings, optional `crdInfoType` companion names, optional `scrd` screening description,
+/// optional CMYK `mft1`/`mft2`/`mAB `/`mBA ` 4×3 and 3×4 LUTs, optional
+/// `B2D0`–`B2D3`/`D2B0`–`D2B3` `mpet` 3-channel curve (`curf` type 0/1 or `samf`)/CLUT/matrix
+/// pipelines, optional `gbd `
+/// gamut-boundary vertices, and
+/// rejects larger or malformed tables.
 ///
 /// @param size the declared profile size in bytes
 /// @param version the packed ICC version word
@@ -43,6 +60,53 @@ import java.util.Objects;
 /// @param clutBToA1 the optional BToA1 `mft2` CLUT, or `null` when unused
 /// @param clutAToB2 the optional AToB2 `mft2` CLUT, or `null` when unused
 /// @param clutBToA2 the optional BToA2 `mft2` CLUT, or `null` when unused
+/// @param clutAToB3 the optional AToB3 `mft2` CLUT, or `null` when unused
+/// @param clutBToA3 the optional BToA3 `mft2` CLUT, or `null` when unused
+/// @param namedColors the optional `ncl2` table, or `null` when unused
+/// @param chromaticAdaptation the optional `chad` 3×3 row-major matrix, or `null` when unused
+/// @param mediaWhite the optional `wtpt` XYZ, or `null` when unused
+/// @param mediaBlack the optional `bkpt` XYZ, or `null` when unused
+/// @param luminance the optional `lumi` XYZ, or `null` when unused
+/// @param viewingConditions the optional `view` tag, or `null` when unused
+/// @param description the optional `desc` ASCII profile description, or `null` when unused
+/// @param viewingDescription the optional `vued` ASCII viewing-condition description, or `null`
+/// @param copyright the optional `cprt` ASCII copyright, or `null` when unused
+/// @param technology the optional `tech` 4-character signature, or `null` when unused
+/// @param deviceManufacturer the optional `dmnd` ASCII manufacturer, or `null` when unused
+/// @param deviceModel the optional `dmdd` ASCII model, or `null` when unused
+/// @param calibrationDate the optional `calt` calibration date-time, or `null` when unused
+/// @param measurement the optional `meas` measurement, or `null` when unused
+/// @param gamut the optional `gamt` 3×1 table, or `null` when unused
+/// @param preview0 the optional `pre0` preview LUT, or `null` when unused
+/// @param preview1 the optional `pre1` preview LUT, or `null` when unused
+/// @param preview2 the optional `pre2` preview LUT, or `null` when unused
+/// @param cicp the optional `cicp` code points, or `null` when unused
+/// @param outputResponse the optional `resp` curves, or `null` when unused
+/// @param colorants the optional `clrt` table, or `null` when unused
+/// @param colorantsOut the optional `clot` table, or `null` when unused
+/// @param profileSequence the optional `pseq` sequence, or `null` when unused
+/// @param profileSequenceIds the optional `psid` identifiers, or `null` when unused
+/// @param metadata the optional `meta` dictionary, or `null` when unused
+/// @param chromaticity the optional `chrm` chromaticities, or `null` when unused
+/// @param colorantOrder the optional `clro` order, or `null` when unused
+/// @param screening the optional `scrn` table, or `null` when unused
+/// @param ucrBg the optional `bfd ` UCR/BG curves, or `null` when unused
+/// @param characterizationTarget the optional `targ` ASCII target name, or `null` when unused
+/// @param colorRenderingDict the optional `crdi` data, or `null` when unused
+/// @param postScript2Csa the optional `ps2s` data, or `null` when unused
+/// @param postScript2Crd the optional `ps2i` data, or `null` when unused
+/// @param postScriptDesc0 the optional `psd0` ASCII description, or `null` when unused
+/// @param postScriptDesc1 the optional `psd1` ASCII description, or `null` when unused
+/// @param postScriptDesc2 the optional `psd2` ASCII description, or `null` when unused
+/// @param postScriptDesc3 the optional `psd3` ASCII description, or `null` when unused
+/// @param deviceSettings the optional `devs` table, or `null` when unused
+/// @param crdInfo the optional `crdInfoType` companion names, or `null` when unused
+/// @param screeningDescription the optional `scrd` ASCII description, or `null` when unused
+/// @param cmyk the optional CMYK AToB LUT, or `null` when unused
+/// @param cmykBToA the optional CMYK BToA LUT, or `null` when unused
+/// @param bToD0 the first present `B2D0`–`B2D3` `mpet` pipeline, or `null` when unused
+/// @param dToB0 the first present `D2B0`–`D2B3` `mpet` pipeline, or `null` when unused
+/// @param gamutBoundary the optional `gbd ` vertices, or `null` when unused
 @NotNullByDefault
 public record IccProfile(
         int size,
@@ -70,7 +134,54 @@ public record IccProfile(
         @Nullable IccClut clutBToA0,
         @Nullable IccClut clutBToA1,
         @Nullable IccClut clutAToB2,
-        @Nullable IccClut clutBToA2
+        @Nullable IccClut clutBToA2,
+        @Nullable IccClut clutAToB3,
+        @Nullable IccClut clutBToA3,
+        @Nullable IccNamedColors namedColors,
+        float @Nullable @Unmodifiable [] chromaticAdaptation,
+        float @Nullable @Unmodifiable [] mediaWhite,
+        float @Nullable @Unmodifiable [] mediaBlack,
+        float @Nullable @Unmodifiable [] luminance,
+        @Nullable IccViewingConditions viewingConditions,
+        @Nullable String description,
+        @Nullable String viewingDescription,
+        @Nullable String copyright,
+        @Nullable String technology,
+        @Nullable String deviceManufacturer,
+        @Nullable String deviceModel,
+        @Nullable IccDateTime calibrationDate,
+        @Nullable IccMeasurement measurement,
+        @Nullable IccGamut gamut,
+        @Nullable IccClut preview0,
+        @Nullable IccClut preview1,
+        @Nullable IccClut preview2,
+        @Nullable IccCicp cicp,
+        @Nullable IccOutputResponse outputResponse,
+        @Nullable IccColorants colorants,
+        @Nullable IccColorants colorantsOut,
+        @Nullable IccProfileSequence profileSequence,
+        @Nullable IccProfileSequenceIds profileSequenceIds,
+        @Nullable IccMetadata metadata,
+        @Nullable IccChromaticity chromaticity,
+        @Nullable IccColorantOrder colorantOrder,
+        @Nullable IccScreening screening,
+        @Nullable IccUcrBg ucrBg,
+        @Nullable String characterizationTarget,
+        @Nullable IccData colorRenderingDict,
+        @Nullable IccData postScript2Csa,
+        @Nullable IccData postScript2Crd,
+        @Nullable String postScriptDesc0,
+        @Nullable String postScriptDesc1,
+        @Nullable String postScriptDesc2,
+        @Nullable String postScriptDesc3,
+        @Nullable IccDeviceSettings deviceSettings,
+        @Nullable IccCrdInfo crdInfo,
+        @Nullable String screeningDescription,
+        @Nullable IccCmykLut cmyk,
+        @Nullable IccCmykLut cmykBToA,
+        @Nullable IccMpe bToD0,
+        @Nullable IccMpe dToB0,
+        @Nullable IccGamutBoundary gamutBoundary
 ) {
     /// Maximum accepted profile size.
     public static final int MAX_PROFILE_BYTES = 1_048_576;
@@ -87,8 +198,23 @@ public record IccProfile(
     /// ICC `'RGB '`.
     private static final int SPACE_RGB = 0x5247_4220;
 
+    /// ICC `'GRAY'`.
+    private static final int SPACE_GRAY = 0x4752_4159;
+
+    /// ICC `'CMYK'`.
+    private static final int SPACE_CMYK = 0x434D_594B;
+
     /// ICC `'XYZ '`.
     private static final int SPACE_XYZ = 0x5859_5A20;
+
+    /// ICC `'Lab '`.
+    private static final int SPACE_LAB = 0x4C61_6220;
+
+    /// CIE Lab `ε` = `216/24389`.
+    private static final float LAB_EPSILON = 216.0f / 24389.0f;
+
+    /// CIE Lab `κ` = `24389/27`.
+    private static final float LAB_KAPPA = 24389.0f / 27.0f;
 
     /// Tag `'rXYZ'`.
     private static final int TAG_R_XYZ = 0x7258_595A;
@@ -108,6 +234,9 @@ public record IccProfile(
     /// Tag `'bTRC'`.
     private static final int TAG_B_TRC = 0x6254_5243;
 
+    /// Tag `'kTRC'`.
+    private static final int TAG_K_TRC = 0x6B54_5243;
+
     /// Tag `'A2B0'`.
     private static final int TAG_A2B0 = 0x4132_4230;
 
@@ -125,6 +254,174 @@ public record IccProfile(
 
     /// Tag `'B2A2'`.
     private static final int TAG_B2A2 = 0x4232_4132;
+
+    /// Tag `'A2B3'`.
+    private static final int TAG_A2B3 = 0x4132_4233;
+
+    /// Tag `'B2A3'`.
+    private static final int TAG_B2A3 = 0x4232_4133;
+
+    /// Tag `'ncl2'`.
+    private static final int TAG_NCL2 = 0x6E63_6C32;
+
+    /// Tag `'ncl '`.
+    private static final int TAG_NCL = 0x6E63_6C20;
+
+    /// Tag `'chad'`.
+    private static final int TAG_CHAD = 0x6368_6164;
+
+    /// Tag `'wtpt'`.
+    private static final int TAG_WTPT = 0x7774_7074;
+
+    /// Tag `'bkpt'`.
+    private static final int TAG_BKPT = 0x626B_7074;
+
+    /// Tag `'lumi'`.
+    private static final int TAG_LUMI = 0x6C75_6D69;
+
+    /// Tag `'view'`.
+    private static final int TAG_VIEW = IccViewingConditions.SIGNATURE;
+
+    /// Tag `'desc'`.
+    private static final int TAG_DESC = 0x6465_7363;
+
+    /// Tag `'vued'`.
+    private static final int TAG_VUED = 0x7675_6564;
+
+    /// Tag `'cprt'`.
+    private static final int TAG_CPRT = 0x6370_7274;
+
+    /// Tag `'tech'`.
+    private static final int TAG_TECH = 0x7465_6368;
+
+    /// Tag `'dmnd'`.
+    private static final int TAG_DMND = 0x646D_6E64;
+
+    /// Tag `'dmdd'`.
+    private static final int TAG_DMDD = 0x646D_6464;
+
+    /// Tag `'calt'`.
+    private static final int TAG_CALT = 0x6361_6C74;
+
+    /// Tag `'meas'`.
+    private static final int TAG_MEAS = IccMeasurement.SIGNATURE;
+
+    /// Tag `'gamt'`.
+    private static final int TAG_GAMT = IccGamut.SIGNATURE;
+
+    /// Tag `'pre0'`.
+    private static final int TAG_PRE0 = 0x7072_6530;
+
+    /// Tag `'pre1'`.
+    private static final int TAG_PRE1 = 0x7072_6531;
+
+    /// Tag `'pre2'`.
+    private static final int TAG_PRE2 = 0x7072_6532;
+
+    /// Tag `'cicp'`.
+    private static final int TAG_CICP = IccCicp.SIGNATURE;
+
+    /// Tag `'resp'`.
+    private static final int TAG_RESP = IccOutputResponse.SIGNATURE;
+
+    /// Tag `'clrt'`.
+    private static final int TAG_CLRT = IccColorants.TAG_CLRT;
+
+    /// Tag `'clot'`.
+    private static final int TAG_CLOT = IccColorants.TAG_CLOT;
+
+    /// Tag `'pseq'`.
+    private static final int TAG_PSEQ = IccProfileSequence.SIGNATURE;
+
+    /// Tag `'psid'`.
+    private static final int TAG_PSID = IccProfileSequenceIds.SIGNATURE;
+
+    /// Tag `'meta'`.
+    private static final int TAG_META = IccMetadata.SIGNATURE;
+
+    /// Tag `'chrm'`.
+    private static final int TAG_CHRM = IccChromaticity.SIGNATURE;
+
+    /// Tag `'clro'`.
+    private static final int TAG_CLRO = IccColorantOrder.SIGNATURE;
+
+    /// Tag `'scrn'`.
+    private static final int TAG_SCRN = IccScreening.SIGNATURE;
+
+    /// Tag `'bfd '`.
+    private static final int TAG_BFD = IccUcrBg.SIGNATURE;
+
+    /// Tag `'targ'`.
+    private static final int TAG_TARG = 0x7461_7267;
+
+    /// Tag `'crdi'`.
+    private static final int TAG_CRDI = IccData.TAG_CRDI;
+
+    /// Tag `'ps2s'`.
+    private static final int TAG_PS2S = IccData.TAG_PS2S;
+
+    /// Tag `'ps2i'`.
+    private static final int TAG_PS2I = IccData.TAG_PS2I;
+
+    /// Tag `'psd0'`.
+    private static final int TAG_PSD0 = 0x7073_6430;
+
+    /// Tag `'psd1'`.
+    private static final int TAG_PSD1 = 0x7073_6431;
+
+    /// Tag `'psd2'`.
+    private static final int TAG_PSD2 = 0x7073_6432;
+
+    /// Tag `'psd3'`.
+    private static final int TAG_PSD3 = 0x7073_6433;
+
+    /// Tag `'devs'`.
+    private static final int TAG_DEVS = IccDeviceSettings.SIGNATURE;
+
+    /// Tag `'scrd'`.
+    private static final int TAG_SCRD = 0x7363_7264;
+
+    /// Tag `'B2D0'`.
+    private static final int TAG_B2D0 = IccMpe.TAG_B2D0;
+
+    /// Tag `'B2D1'`.
+    private static final int TAG_B2D1 = IccMpe.TAG_B2D1;
+
+    /// Tag `'B2D2'`.
+    private static final int TAG_B2D2 = IccMpe.TAG_B2D2;
+
+    /// Tag `'B2D3'`.
+    private static final int TAG_B2D3 = IccMpe.TAG_B2D3;
+
+    /// Tag `'D2B0'`.
+    private static final int TAG_D2B0 = IccMpe.TAG_D2B0;
+
+    /// Tag `'D2B1'`.
+    private static final int TAG_D2B1 = IccMpe.TAG_D2B1;
+
+    /// Tag `'D2B2'`.
+    private static final int TAG_D2B2 = IccMpe.TAG_D2B2;
+
+    /// Tag `'D2B3'`.
+    private static final int TAG_D2B3 = IccMpe.TAG_D2B3;
+
+    /// Tag `'gbd '`.
+    private static final int TAG_GBD = IccGamutBoundary.SIGNATURE;
+
+    /// Type `'sig '`.
+    private static final int TYPE_SIG = 0x7369_6720;
+
+    /// Type `'sf32'`.
+    private static final int TYPE_SF32 = 0x7366_3332;
+
+    /// D50 X used when a `chad` matrix has already mapped PCS to D50.
+    private static final float D50_X = 0.9642f;
+
+    /// D50 Y.
+    private static final float D50_Y = 1.0f;
+
+    /// D50 Z.
+    private static final float D50_Z = 0.8249f;
 
     /// Type `'XYZ '`.
     private static final int TYPE_XYZ = 0x5859_5A20;
@@ -152,9 +449,56 @@ public record IccProfile(
         if (sha256.length() != 64) {
             throw new IllegalArgumentException("ICC digest must be a 64-digit SHA-256 hex string");
         }
+        if (chromaticAdaptation != null) {
+            if (chromaticAdaptation.length != 9) {
+                throw new IllegalArgumentException("ICC chad matrix must have nine entries");
+            }
+            for (float value : chromaticAdaptation) {
+                if (!Float.isFinite(value)) {
+                    throw new IllegalArgumentException("ICC chad matrix entries must be finite");
+                }
+            }
+            chromaticAdaptation = chromaticAdaptation.clone();
+        }
+        if (mediaWhite != null) {
+            if (mediaWhite.length != 3) {
+                throw new IllegalArgumentException("ICC wtpt must have three XYZ coordinates");
+            }
+            for (float value : mediaWhite) {
+                if (!Float.isFinite(value)) {
+                    throw new IllegalArgumentException("ICC wtpt coordinates must be finite");
+                }
+            }
+            mediaWhite = mediaWhite.clone();
+        }
+        if (mediaBlack != null) {
+            if (mediaBlack.length != 3) {
+                throw new IllegalArgumentException("ICC bkpt must have three XYZ coordinates");
+            }
+            for (float value : mediaBlack) {
+                if (!Float.isFinite(value)) {
+                    throw new IllegalArgumentException("ICC bkpt coordinates must be finite");
+                }
+            }
+            mediaBlack = mediaBlack.clone();
+        }
+        if (luminance != null) {
+            if (luminance.length != 3) {
+                throw new IllegalArgumentException("ICC lumi must have three XYZ coordinates");
+            }
+            for (float value : luminance) {
+                if (!Float.isFinite(value) || value < 0.0f) {
+                    throw new IllegalArgumentException("ICC lumi coordinates must be finite and nonnegative");
+                }
+            }
+            luminance = luminance.clone();
+        }
+        if (technology != null && technology.length() != 4) {
+            throw new IllegalArgumentException("ICC technology signature must be four characters");
+        }
     }
 
-    /// Parses one RGB matrix/TRC profile.
+    /// Parses one RGB or GRAY matrix/TRC profile, or a CMYK LUT profile.
     ///
     /// @param bytes the exact profile bytes
     /// @return the parsed profile
@@ -170,11 +514,13 @@ public record IccProfile(
         if (u32(bytes, 36) != MAGIC_ACSP) {
             throw new IllegalArgumentException("ICC magic is not acsp");
         }
-        if (u32(bytes, 16) != SPACE_RGB) {
-            throw new IllegalArgumentException("Only RGB ICC profiles are accepted");
+        int space = u32(bytes, 16);
+        if (space != SPACE_RGB && space != SPACE_GRAY && space != SPACE_CMYK) {
+            throw new IllegalArgumentException("Only RGB, GRAY, or CMYK ICC profiles are accepted");
         }
-        if (u32(bytes, 20) != SPACE_XYZ) {
-            throw new IllegalArgumentException("Only XYZ PCS ICC profiles are accepted");
+        int pcsSpace = u32(bytes, 20);
+        if (pcsSpace != SPACE_XYZ && pcsSpace != SPACE_LAB) {
+            throw new IllegalArgumentException("Only XYZ or Lab PCS ICC profiles are accepted");
         }
         int version = u32(bytes, 8);
         int major = (version >>> 24) & 0xFF;
@@ -189,9 +535,50 @@ public record IccProfile(
         if (tableEnd > bytes.length) {
             throw new IllegalArgumentException("ICC tag table exceeds the profile");
         }
-        float[] redXyz = readXyz(bytes, requireTag(bytes, tagCount, TAG_R_XYZ));
-        float[] greenXyz = readXyz(bytes, requireTag(bytes, tagCount, TAG_G_XYZ));
-        float[] blueXyz = readXyz(bytes, requireTag(bytes, tagCount, TAG_B_XYZ));
+        float[] redXyz;
+        float[] greenXyz;
+        float[] blueXyz;
+        Curve redTrc;
+        Curve greenTrc;
+        Curve blueTrc;
+        IccCmykLut parsedCmyk = null;
+        IccCmykLut parsedCmykBToA = null;
+        if (space == SPACE_GRAY) {
+            Curve gray = readCurve(bytes, requireTag(bytes, tagCount, TAG_K_TRC));
+            float[] white = readMediaWhite(bytes, tagCount);
+            if (white == null) {
+                white = new float[] {s15(bytes, 68), s15(bytes, 72), s15(bytes, 76)};
+            }
+            redXyz = new float[] {white[0] / 3.0f, white[1] / 3.0f, white[2] / 3.0f};
+            greenXyz = new float[] {white[0] / 3.0f, white[1] / 3.0f, white[2] / 3.0f};
+            blueXyz = new float[] {white[0] / 3.0f, white[1] / 3.0f, white[2] / 3.0f};
+            redTrc = gray;
+            greenTrc = gray;
+            blueTrc = gray;
+        } else if (space == SPACE_CMYK) {
+            parsedCmyk = firstCmykLut(bytes, tagCount, TAG_A2B0, TAG_A2B1, TAG_A2B2, TAG_A2B3);
+            if (parsedCmyk == null || parsedCmyk.inverse()) {
+                throw new IllegalArgumentException("CMYK ICC profiles require a 4×3 AToB LUT");
+            }
+            parsedCmykBToA = firstCmykLut(bytes, tagCount, TAG_B2A0, TAG_B2A1, TAG_B2A2, TAG_B2A3);
+            if (parsedCmykBToA != null && !parsedCmykBToA.inverse()) {
+                throw new IllegalArgumentException("CMYK BToA LUTs must be 3×4");
+            }
+            Curve identity = new Curve(1.0f, new float[0]);
+            redXyz = new float[] {0.0f, 0.0f, 0.0f};
+            greenXyz = new float[] {0.0f, 0.0f, 0.0f};
+            blueXyz = new float[] {0.0f, 0.0f, 0.0f};
+            redTrc = identity;
+            greenTrc = identity;
+            blueTrc = identity;
+        } else {
+            redXyz = readXyz(bytes, requireTag(bytes, tagCount, TAG_R_XYZ));
+            greenXyz = readXyz(bytes, requireTag(bytes, tagCount, TAG_G_XYZ));
+            blueXyz = readXyz(bytes, requireTag(bytes, tagCount, TAG_B_XYZ));
+            redTrc = readCurve(bytes, requireTag(bytes, tagCount, TAG_R_TRC));
+            greenTrc = readCurve(bytes, requireTag(bytes, tagCount, TAG_G_TRC));
+            blueTrc = readCurve(bytes, requireTag(bytes, tagCount, TAG_B_TRC));
+        }
         return new IccProfile(
                 declared,
                 version,
@@ -209,24 +596,79 @@ public record IccProfile(
                 blueXyz[0],
                 blueXyz[1],
                 blueXyz[2],
-                readCurve(bytes, requireTag(bytes, tagCount, TAG_R_TRC)),
-                readCurve(bytes, requireTag(bytes, tagCount, TAG_G_TRC)),
-                readCurve(bytes, requireTag(bytes, tagCount, TAG_B_TRC)),
+                redTrc,
+                greenTrc,
+                blueTrc,
                 sha256(bytes),
-                readClut(bytes, tagCount, TAG_A2B0),
-                readClut(bytes, tagCount, TAG_A2B1),
-                readClut(bytes, tagCount, TAG_B2A0),
-                readClut(bytes, tagCount, TAG_B2A1),
-                readClut(bytes, tagCount, TAG_A2B2),
-                readClut(bytes, tagCount, TAG_B2A2)
+                space == SPACE_CMYK ? null : readClut(bytes, tagCount, TAG_A2B0),
+                space == SPACE_CMYK ? null : readClut(bytes, tagCount, TAG_A2B1),
+                space == SPACE_CMYK ? null : readClut(bytes, tagCount, TAG_B2A0),
+                space == SPACE_CMYK ? null : readClut(bytes, tagCount, TAG_B2A1),
+                space == SPACE_CMYK ? null : readClut(bytes, tagCount, TAG_A2B2),
+                space == SPACE_CMYK ? null : readClut(bytes, tagCount, TAG_B2A2),
+                space == SPACE_CMYK ? null : readClut(bytes, tagCount, TAG_A2B3),
+                space == SPACE_CMYK ? null : readClut(bytes, tagCount, TAG_B2A3),
+                readNamedColors(bytes, tagCount),
+                readChad(bytes, tagCount),
+                readMediaWhite(bytes, tagCount),
+                readMediaBlack(bytes, tagCount),
+                readLuminance(bytes, tagCount),
+                readViewingConditions(bytes, tagCount),
+                readText(bytes, tagCount, TAG_DESC),
+                readText(bytes, tagCount, TAG_VUED),
+                readText(bytes, tagCount, TAG_CPRT),
+                readSignature(bytes, tagCount, TAG_TECH),
+                readText(bytes, tagCount, TAG_DMND),
+                readText(bytes, tagCount, TAG_DMDD),
+                readDateTime(bytes, tagCount, TAG_CALT),
+                readMeasurement(bytes, tagCount),
+                readGamut(bytes, tagCount),
+                readClut(bytes, tagCount, TAG_PRE0),
+                readClut(bytes, tagCount, TAG_PRE1),
+                readClut(bytes, tagCount, TAG_PRE2),
+                readCicp(bytes, tagCount),
+                readOutputResponse(bytes, tagCount),
+                readColorants(bytes, tagCount, TAG_CLRT),
+                readColorants(bytes, tagCount, TAG_CLOT),
+                readProfileSequence(bytes, tagCount),
+                readProfileSequenceIds(bytes, tagCount),
+                readMetadata(bytes, tagCount),
+                readChromaticity(bytes, tagCount),
+                readColorantOrder(bytes, tagCount),
+                readScreening(bytes, tagCount),
+                readUcrBg(bytes, tagCount),
+                readText(bytes, tagCount, TAG_TARG),
+                readData(bytes, tagCount, TAG_CRDI),
+                readData(bytes, tagCount, TAG_PS2S),
+                readData(bytes, tagCount, TAG_PS2I),
+                readText(bytes, tagCount, TAG_PSD0),
+                readText(bytes, tagCount, TAG_PSD1),
+                readText(bytes, tagCount, TAG_PSD2),
+                readText(bytes, tagCount, TAG_PSD3),
+                readDeviceSettings(bytes, tagCount),
+                readCrdInfo(bytes, tagCount),
+                readText(bytes, tagCount, TAG_SCRD),
+                parsedCmyk,
+                parsedCmykBToA,
+                firstMpe(bytes, tagCount, TAG_B2D0, TAG_B2D1, TAG_B2D2, TAG_B2D3),
+                firstMpe(bytes, tagCount, TAG_D2B0, TAG_D2B1, TAG_D2B2, TAG_D2B3),
+                readGamutBoundary(bytes, tagCount)
         );
     }
 
     /// Converts one RGB sample through this profile into extended-linear sRGB.
     ///
-    /// When [`#clut()`] is present, the AToB0 `mft2` table is used. Otherwise [`#clutAToB1()`]
-    /// is used when present. Otherwise [`#clutAToB2()`] is used when present. Otherwise the
-    /// matrix/TRC path is used. PCS XYZ is chromatically
+    /// When [`#bToD0()`] is present (the first of `B2D0`–`B2D3`), that `mpet` pipeline is used
+    /// and treated as XYZ PCS.
+    /// Otherwise when [`#clut()`] is present, the AToB0 `mft2` table is used. Otherwise [`#clutAToB1()`]
+    /// is used when present. Otherwise [`#clutAToB2()`] is used when present. Otherwise
+    /// [`#clutAToB3()`] is used when present. Otherwise the
+    /// matrix/TRC path is used. A `GRAY` profile stores the `kTRC` curve as all three tone curves
+    /// and one-third of the media white in each primary, so callers pass equal RGB codes. A `CMYK`
+    /// profile uses [`#cmyk()`] with K=`0`; callers that have a black channel must use
+    /// [`#toExtendedLinearCmyk(float, float, float, float, float)`]. When the
+    /// PCS is `Lab `, AToB CLUT outputs are 8-bit ICC L*a*b* and are converted to D50 XYZ before
+    /// adaptation. Matrix/TRC primaries remain XYZ. PCS XYZ is chromatically
     /// adapted from the header illuminant to D65 when the illuminant is not already D65-like.
     /// The result is not clamped.
     ///
@@ -245,12 +687,30 @@ public record IccProfile(
         float x;
         float y;
         float z;
-        IccClut forward = clut != null ? clut : clutAToB1 != null ? clutAToB1 : clutAToB2;
-        if (forward != null) {
-            float[] xyz = forward.transform(red, green, blue);
-            x = xyz[0];
-            y = xyz[1];
-            z = xyz[2];
+        if (cmyk != null) {
+            return toExtendedLinearCmyk(red, green, blue, 0.0f, alpha);
+        }
+        IccClut forward = clut != null ? clut
+                : clutAToB1 != null ? clutAToB1
+                : clutAToB2 != null ? clutAToB2
+                : clutAToB3;
+        if (bToD0 != null) {
+            float[] pcs = bToD0.transform(red, green, blue);
+            x = pcs[0];
+            y = pcs[1];
+            z = pcs[2];
+        } else if (forward != null) {
+            float[] pcs = forward.transform(red, green, blue);
+            if (labPcs()) {
+                float[] xyz = lab8ToXyz(pcs[0], pcs[1], pcs[2]);
+                x = xyz[0];
+                y = xyz[1];
+                z = xyz[2];
+            } else {
+                x = pcs[0];
+                y = pcs[1];
+                z = pcs[2];
+            }
         } else {
             float linearRed = redTrc.decode(red);
             float linearGreen = greenTrc.decode(green);
@@ -259,20 +719,157 @@ public record IccProfile(
             y = redY * linearRed + greenY * linearGreen + blueY * linearBlue;
             z = redZ * linearRed + greenZ * linearGreen + blueZ * linearBlue;
         }
-        if (!isD65(illuminantX, illuminantY, illuminantZ)) {
-            float[] adapted = adaptBradford(x, y, z, illuminantX, illuminantY, illuminantZ, 0.95047f, 1.0f, 1.08883f);
-            x = adapted[0];
-            y = adapted[1];
-            z = adapted[2];
+        float[] adapted = adaptToD65(x, y, z);
+        return Color.xyzD65ToExtended(adapted[0], adapted[1], adapted[2], alpha);
+    }
+
+    /// Converts one CMYK sample through this profile into extended-linear sRGB.
+    ///
+    /// Requires [`#cmyk()`]. Lab PCS outputs use 8-bit ICC L*a*b* units. The result is
+    /// chromatically adapted from the header illuminant to D65 when that illuminant is not
+    /// already D65-like. The result is not clamped.
+    ///
+    /// @param cyan the device cyan in `[0, 1]`
+    /// @param magenta the device magenta in `[0, 1]`
+    /// @param yellow the device yellow in `[0, 1]`
+    /// @param black the device black in `[0, 1]`
+    /// @param alpha the linear coverage
+    /// @return the extended-linear color
+    public Color toExtendedLinearCmyk(float cyan, float magenta, float yellow, float black, float alpha) {
+        if (cmyk == null) {
+            throw new IllegalStateException("ICC profile has no CMYK AToB LUT");
         }
-        return Color.xyzD65ToExtended(x, y, z, alpha);
+        if (!Float.isFinite(cyan) || !Float.isFinite(magenta) || !Float.isFinite(yellow)
+                || !Float.isFinite(black) || !Float.isFinite(alpha)) {
+            throw new IllegalArgumentException("ICC sample components must be finite");
+        }
+        if (outsideUnit(cyan) || outsideUnit(magenta) || outsideUnit(yellow)
+                || outsideUnit(black) || outsideUnit(alpha)) {
+            throw new IllegalArgumentException("ICC sample components must be in [0, 1]");
+        }
+        float[] pcs = cmyk.transform(cyan, magenta, yellow, black);
+        float x;
+        float y;
+        float z;
+        if (labPcs()) {
+            float[] xyz = lab8ToXyz(pcs[0], pcs[1], pcs[2]);
+            x = xyz[0];
+            y = xyz[1];
+            z = xyz[2];
+        } else {
+            x = pcs[0];
+            y = pcs[1];
+            z = pcs[2];
+        }
+        float[] adapted = adaptToD65(x, y, z);
+        return Color.xyzD65ToExtended(adapted[0], adapted[1], adapted[2], alpha);
+    }
+
+    /// Returns the `lumi` Y coordinate in candelas per square metre, or `0` when absent.
+    ///
+    /// @return the nonnegative luminance in nits
+    public float luminanceNits() {
+        return luminance == null ? 0.0f : luminance[1];
+    }
+
+    /// Returns the `view` illuminant Y in candelas per square metre, or `0` when absent.
+    ///
+    /// @return the nonnegative viewing illuminant luminance
+    public float viewingIlluminantNits() {
+        return viewingConditions == null ? 0.0f : viewingConditions.illuminantY();
+    }
+
+    /// Returns the `gamt` alarm at unit-cube PCS coordinates, or `0` when the tag is absent.
+    ///
+    /// @param x the PCS X coordinate in `[0, 1]`
+    /// @param y the PCS Y coordinate in `[0, 1]`
+    /// @param z the PCS Z coordinate in `[0, 1]`
+    /// @return the alarm in `[0, 1]`; `0` is in-gamut
+    public float gamutAlarm(float x, float y, float z) {
+        return gamut == null ? 0.0f : gamut.transform(x, y, z);
+    }
+
+    /// Returns whether the PCS sample is in gamut according to [`#gamut()`].
+    ///
+    /// A missing `gamt` tag is treated as fully in-gamut. A zero alarm is in-gamut; any
+    /// positive alarm is out-of-gamut.
+    ///
+    /// @param x the PCS X coordinate in `[0, 1]`
+    /// @param y the PCS Y coordinate in `[0, 1]`
+    /// @param z the PCS Z coordinate in `[0, 1]`
+    /// @return `true` when the sample is in gamut
+    public boolean inGamut(float x, float y, float z) {
+        return gamut == null || gamut.inGamut(x, y, z);
+    }
+
+    /// Converts a named color's PCS into extended-linear sRGB.
+    ///
+    /// XYZ PCS values are used directly. Lab PCS values use the ICC 16-bit L*a*b* encoding
+    /// stored as `uInt16 / 32768`. The result is chromatically adapted from the header
+    /// illuminant to D65 when that illuminant is not already D65-like. Missing names return `null`.
+    ///
+    /// @param rootName the `ncl2` root name
+    /// @param alpha the linear coverage
+    /// @return the color, or `null` when the name is absent
+    public @Nullable Color namedColorToExtendedLinear(String rootName, float alpha) {
+        Objects.requireNonNull(rootName, "rootName");
+        if (!Float.isFinite(alpha) || outsideUnit(alpha)) {
+            throw new IllegalArgumentException("ICC named-color alpha must be finite and in [0, 1]");
+        }
+        if (namedColors == null) {
+            return null;
+        }
+        IccNamedColors.Entry entry = namedColors.lookup(rootName);
+        if (entry == null) {
+            return null;
+        }
+        float[] xyz;
+        if (labPcs()) {
+            xyz = lab16ToXyz(entry.pcsX(), entry.pcsY(), entry.pcsZ());
+        } else {
+            xyz = new float[] {entry.pcsX(), entry.pcsY(), entry.pcsZ()};
+        }
+        float[] adapted = adaptToD65(xyz[0], xyz[1], xyz[2]);
+        return Color.xyzD65ToExtended(adapted[0], adapted[1], adapted[2], alpha);
+    }
+
+    /// Returns the first three device coordinates of a named color as encoded sRGB.
+    ///
+    /// Missing names or tables with fewer than three device coordinates return `null`.
+    ///
+    /// @param rootName the `ncl2` root name
+    /// @param alpha the linear coverage
+    /// @return the device RGB color, or `null`
+    public @Nullable Color namedColorDeviceRgb(String rootName, float alpha) {
+        Objects.requireNonNull(rootName, "rootName");
+        if (!Float.isFinite(alpha) || outsideUnit(alpha)) {
+            throw new IllegalArgumentException("ICC named-color alpha must be finite and in [0, 1]");
+        }
+        if (namedColors == null) {
+            return null;
+        }
+        IccNamedColors.Entry entry = namedColors.lookup(rootName);
+        if (entry == null || entry.device().length < 3) {
+            return null;
+        }
+        return Color.srgb(
+                clamp01(entry.device()[0]),
+                clamp01(entry.device()[1]),
+                clamp01(entry.device()[2]),
+                alpha
+        );
     }
 
     /// Converts one extended-linear color into encoded device RGB through this profile.
     ///
-    /// When [`#clutBToA0()`] is present, that `mft2` table is used with PCS XYZ as the three
-    /// inputs. Otherwise [`#clutBToA1()`] is used when present. Otherwise [`#clutBToA2()`] is
-    /// used when present. Otherwise the inverse
+    /// When [`#cmykBToA()`] is present, that 3×4 table is used and the returned color stores
+    /// C, M, and Y. Callers that need K must use [`#fromExtendedLinearCmyk(Color)`].
+    /// Otherwise when [`#clutBToA0()`] is present, that table is used with PCS XYZ, or 8-bit ICC L*a*b*
+    /// when the PCS is `Lab `. Otherwise [`#dToB0()`] is used when present (the first of
+    /// `D2B0`–`D2B3`). Otherwise
+    /// [`#clutBToA1()`] is used when present. Otherwise
+    /// [`#clutBToA2()`] is used when present. Otherwise [`#clutBToA3()`] is used when present.
+    /// Otherwise the inverse
     /// matrix/TRC path is used. D65 working XYZ is adapted to the
     /// header illuminant when that illuminant is not already D65-like. Encoded components are
     /// clamped to `[0, 1]`.
@@ -283,21 +880,32 @@ public record IccProfile(
         Objects.requireNonNull(color, "color");
         Color linear = color.toExtendedLinear();
         float[] xyz = Color.extendedToXyzD65(linear.red(), linear.green(), linear.blue());
-        float x = xyz[0];
-        float y = xyz[1];
-        float z = xyz[2];
-        if (!isD65(illuminantX, illuminantY, illuminantZ)) {
-            float[] adapted = adaptBradford(x, y, z, 0.95047f, 1.0f, 1.08883f, illuminantX, illuminantY, illuminantZ);
-            x = adapted[0];
-            y = adapted[1];
-            z = adapted[2];
-        }
+        float[] adapted = adaptFromD65(xyz[0], xyz[1], xyz[2]);
+        float x = adapted[0];
+        float y = adapted[1];
+        float z = adapted[2];
         float red;
         float green;
         float blue;
-        IccClut inverseClut = clutBToA0 != null ? clutBToA0 : clutBToA1 != null ? clutBToA1 : clutBToA2;
-        if (inverseClut != null) {
-            float[] rgb = inverseClut.transform(x, y, z);
+        if (cmykBToA != null) {
+            float[] device = fromExtendedLinearCmyk(color);
+            return Color.srgb(clamp01(device[0]), clamp01(device[1]), clamp01(device[2]), linear.alpha());
+        }
+        if (cmyk != null) {
+            throw new IllegalStateException("ICC CMYK profile has no BToA LUT");
+        }
+        IccClut inverseClut = clutBToA0 != null ? clutBToA0
+                : clutBToA1 != null ? clutBToA1
+                : clutBToA2 != null ? clutBToA2
+                : clutBToA3;
+        if (dToB0 != null) {
+            float[] rgb = dToB0.transform(x, y, z);
+            red = rgb[0];
+            green = rgb[1];
+            blue = rgb[2];
+        } else if (inverseClut != null) {
+            float[] pcs = labPcs() ? xyzToLab8(x, y, z) : new float[] {x, y, z};
+            float[] rgb = inverseClut.transform(pcs[0], pcs[1], pcs[2]);
             red = rgb[0];
             green = rgb[1];
             blue = rgb[2];
@@ -311,6 +919,28 @@ public record IccProfile(
             blue = blueTrc.encode(linearBlue);
         }
         return Color.srgb(clamp01(red), clamp01(green), clamp01(blue), linear.alpha());
+    }
+
+    /// Converts one extended-linear color into device CMYK through this profile.
+    ///
+    /// Requires [`#cmykBToA()`]. D65 working XYZ is adapted to the header illuminant.
+    /// Lab PCS uses 8-bit ICC L*a*b* units as BToA inputs. Components are not clamped
+    /// beyond the LUT domain.
+    ///
+    /// @param color the source color
+    /// @return `{C, M, Y, K}`
+    public float[] fromExtendedLinearCmyk(Color color) {
+        Objects.requireNonNull(color, "color");
+        if (cmykBToA == null) {
+            throw new IllegalStateException("ICC profile has no CMYK BToA LUT");
+        }
+        Color linear = color.toExtendedLinear();
+        float[] xyz = Color.extendedToXyzD65(linear.red(), linear.green(), linear.blue());
+        float[] adapted = adaptFromD65(xyz[0], xyz[1], xyz[2]);
+        float[] pcs = labPcs()
+                ? xyzToLab8(adapted[0], adapted[1], adapted[2])
+                : new float[] {adapted[0], adapted[1], adapted[2]};
+        return cmykBToA.transformPcs(pcs[0], pcs[1], pcs[2]);
     }
 
     /// Inverts the 3×3 PCS matrix whose columns are the RGB primaries.
@@ -500,7 +1130,59 @@ public record IccProfile(
         }
     }
 
-    /// Parses an optional `mft2` tag with `signature`.
+    /// Parses the first present CMYK `mft1` or `mft2` tag among `signatures`.
+    ///
+    /// @param bytes the profile bytes
+    /// @param tagCount the tag-table length
+    /// @param signatures AToB or BToA signatures in preference order
+    /// @return the LUT, or `null` when none of the tags are present
+    private static @Nullable IccCmykLut firstCmykLut(byte[] bytes, int tagCount, int... signatures) {
+        for (int signature : signatures) {
+            int entry = findTag(bytes, tagCount, signature);
+            if (entry < 0) {
+                continue;
+            }
+            int offset = u32(bytes, entry + 4);
+            int size = u32(bytes, entry + 8);
+            return IccCmykLut.parse(bytes, offset, size);
+        }
+        return null;
+    }
+
+    /// Parses the first present `mpet` tag among `signatures`.
+    private static @Nullable IccMpe firstMpe(byte[] bytes, int tagCount, int... signatures) {
+        for (int signature : signatures) {
+            IccMpe parsed = readMpe(bytes, tagCount, signature);
+            if (parsed != null) {
+                return parsed;
+            }
+        }
+        return null;
+    }
+
+    /// Parses an optional `mpet` tag with `signature`.
+    private static @Nullable IccMpe readMpe(byte[] bytes, int tagCount, int signature) {
+        int entry = findTag(bytes, tagCount, signature);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccMpe.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `gbd ` tag.
+    private static @Nullable IccGamutBoundary readGamutBoundary(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_GBD);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccGamutBoundary.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `mft1` or `mft2` tag with `signature`.
     private static @Nullable IccClut readClut(byte[] bytes, int tagCount, int signature) {
         int entry = findTag(bytes, tagCount, signature);
         if (entry < 0) {
@@ -508,7 +1190,482 @@ public record IccProfile(
         }
         int offset = u32(bytes, entry + 4);
         int size = u32(bytes, entry + 8);
+        if (offset < 0 || size < 4 || offset > bytes.length - size) {
+            throw new IllegalArgumentException("ICC LUT tag is outside the profile");
+        }
+        int type = u32(bytes, offset);
+        if (type == 0x6D41_4220) {
+            return IccClut.parseMab(bytes, offset, size);
+        }
+        if (type == 0x6D42_4120) {
+            return IccClut.parseMba(bytes, offset, size);
+        }
+        if (type == 0x6D66_7431) {
+            return IccClut.parseMft1(bytes, offset, size);
+        }
         return IccClut.parseMft2(bytes, offset, size);
+    }
+
+    /// Parses an optional `ncl2` tag.
+    private static @Nullable IccNamedColors readNamedColors(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_NCL2);
+        if (entry < 0) {
+            entry = findTag(bytes, tagCount, TAG_NCL);
+        }
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccNamedColors.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `chad` `sf32` 3×3 matrix.
+    private static float @Nullable [] readChad(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_CHAD);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        if (offset < 0 || size < 44 || offset > bytes.length - size) {
+            throw new IllegalArgumentException("ICC chad tag is outside the profile");
+        }
+        if (u32(bytes, offset) != TYPE_SF32) {
+            throw new IllegalArgumentException("ICC chad tag is not sf32");
+        }
+        float[] matrix = new float[9];
+        for (int index = 0; index < 9; index++) {
+            matrix[index] = s15(bytes, offset + 8 + index * 4);
+        }
+        return matrix;
+    }
+
+    /// Parses an optional `wtpt` XYZ tag.
+    private static float @Nullable [] readMediaWhite(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_WTPT);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        if (offset < 0 || size < 20 || offset > bytes.length - size) {
+            throw new IllegalArgumentException("ICC wtpt tag is outside the profile");
+        }
+        return readXyz(bytes, offset);
+    }
+
+    /// Parses an optional `bkpt` XYZ tag.
+    private static float @Nullable [] readMediaBlack(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_BKPT);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        if (offset < 0 || size < 20 || offset > bytes.length - size) {
+            throw new IllegalArgumentException("ICC bkpt tag is outside the profile");
+        }
+        return readXyz(bytes, offset);
+    }
+
+    /// Parses an optional `lumi` XYZ tag.
+    private static float @Nullable [] readLuminance(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_LUMI);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        if (offset < 0 || size < 20 || offset > bytes.length - size) {
+            throw new IllegalArgumentException("ICC lumi tag is outside the profile");
+        }
+        return readXyz(bytes, offset);
+    }
+
+    /// Parses an optional `view` tag.
+    private static @Nullable IccViewingConditions readViewingConditions(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_VIEW);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccViewingConditions.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `desc`, `vued`, or `cprt` ASCII tag.
+    private static @Nullable String readText(byte[] bytes, int tagCount, int signature) {
+        int entry = findTag(bytes, tagCount, signature);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccProfileText.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `signatureType` tag such as `tech`.
+    private static @Nullable String readSignature(byte[] bytes, int tagCount, int signature) {
+        int entry = findTag(bytes, tagCount, signature);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        if (offset < 0 || size < 12 || offset > bytes.length - size) {
+            throw new IllegalArgumentException("ICC signature tag is outside the profile");
+        }
+        if (u32(bytes, offset) != TYPE_SIG) {
+            throw new IllegalArgumentException("ICC signature tag is not sig");
+        }
+        return signature(bytes, offset + 8);
+    }
+
+    /// Parses an optional `dtim` tag such as `calt`.
+    private static @Nullable IccDateTime readDateTime(byte[] bytes, int tagCount, int signature) {
+        int entry = findTag(bytes, tagCount, signature);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccDateTime.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `meas` tag.
+    private static @Nullable IccMeasurement readMeasurement(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_MEAS);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccMeasurement.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `gamt` tag.
+    private static @Nullable IccGamut readGamut(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_GAMT);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccGamut.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `cicp` tag.
+    private static @Nullable IccCicp readCicp(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_CICP);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccCicp.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `resp` tag.
+    private static @Nullable IccOutputResponse readOutputResponse(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_RESP);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccOutputResponse.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `clrt` or `clot` tag.
+    private static @Nullable IccColorants readColorants(byte[] bytes, int tagCount, int signature) {
+        int entry = findTag(bytes, tagCount, signature);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccColorants.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `pseq` tag.
+    private static @Nullable IccProfileSequence readProfileSequence(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_PSEQ);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccProfileSequence.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `psid` tag.
+    private static @Nullable IccProfileSequenceIds readProfileSequenceIds(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_PSID);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccProfileSequenceIds.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `meta` tag.
+    private static @Nullable IccMetadata readMetadata(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_META);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccMetadata.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `chrm` tag.
+    private static @Nullable IccChromaticity readChromaticity(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_CHRM);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccChromaticity.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `clro` tag.
+    private static @Nullable IccColorantOrder readColorantOrder(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_CLRO);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccColorantOrder.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `scrn` tag.
+    private static @Nullable IccScreening readScreening(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_SCRN);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccScreening.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `bfd ` tag.
+    private static @Nullable IccUcrBg readUcrBg(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_BFD);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccUcrBg.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `data` tag such as `crdi`, `ps2s`, or `ps2i`.
+    private static @Nullable IccData readData(byte[] bytes, int tagCount, int signature) {
+        int entry = findTag(bytes, tagCount, signature);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        if (offset < 0 || size < 4 || offset > bytes.length - size) {
+            throw new IllegalArgumentException("ICC data tag is outside the profile");
+        }
+        if (u32(bytes, offset) != IccData.TYPE_DATA) {
+            return null;
+        }
+        return IccData.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `devs` tag.
+    private static @Nullable IccDeviceSettings readDeviceSettings(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_DEVS);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        return IccDeviceSettings.parse(bytes, offset, size);
+    }
+
+    /// Parses an optional `crdInfoType` stored under `crdi`.
+    private static @Nullable IccCrdInfo readCrdInfo(byte[] bytes, int tagCount) {
+        int entry = findTag(bytes, tagCount, TAG_CRDI);
+        if (entry < 0) {
+            return null;
+        }
+        int offset = u32(bytes, entry + 4);
+        int size = u32(bytes, entry + 8);
+        if (offset < 0 || size < 4 || offset > bytes.length - size) {
+            throw new IllegalArgumentException("ICC crdInfo tag is outside the profile");
+        }
+        if (u32(bytes, offset) != IccCrdInfo.TYPE_CRDI) {
+            return null;
+        }
+        return IccCrdInfo.parse(bytes, offset, size);
+    }
+
+    /// Returns whether the header PCS is `Lab `.
+    ///
+    /// @return `true` when [`#pcs()`] is `Lab `
+    public boolean labPcs() {
+        return "Lab ".equals(pcs);
+    }
+
+    /// Converts 8-bit ICC Lab units in `[0, 1]` to D50 XYZ.
+    private float[] lab8ToXyz(float lUnit, float aUnit, float bUnit) {
+        return labToXyzD50(lUnit * 100.0f, aUnit * 255.0f - 128.0f, bUnit * 255.0f - 128.0f);
+    }
+
+    /// Converts `ncl2` Lab values stored as `uInt16 / 32768` to D50 XYZ.
+    private float[] lab16ToXyz(float pcsX, float pcsY, float pcsZ) {
+        return labToXyzD50(
+                pcsX * 32768.0f / 65280.0f * 100.0f,
+                pcsY * 32768.0f / 65280.0f * 255.0f - 128.0f,
+                pcsZ * 32768.0f / 65280.0f * 255.0f - 128.0f
+        );
+    }
+
+    /// Converts D50 XYZ to 8-bit ICC Lab units in `[0, 1]`.
+    private float[] xyzToLab8(float x, float y, float z) {
+        float[] lab = xyzD50ToLab(x, y, z);
+        return new float[] {
+                clamp01(lab[0] / 100.0f),
+                clamp01((lab[1] + 128.0f) / 255.0f),
+                clamp01((lab[2] + 128.0f) / 255.0f)
+        };
+    }
+
+    /// Converts CIE L*a*b* to D50 XYZ.
+    private static float[] labToXyzD50(float lStar, float aStar, float bStar) {
+        float fy = (lStar + 16.0f) / 116.0f;
+        float fx = aStar / 500.0f + fy;
+        float fz = fy - bStar / 200.0f;
+        return new float[] {
+                inverseLabF(fx) * D50_X,
+                inverseLabF(fy) * D50_Y,
+                inverseLabF(fz) * D50_Z
+        };
+    }
+
+    /// Converts D50 XYZ to CIE L*a*b*.
+    private static float[] xyzD50ToLab(float x, float y, float z) {
+        float fx = labF(x / D50_X);
+        float fy = labF(y / D50_Y);
+        float fz = labF(z / D50_Z);
+        return new float[] {
+                116.0f * fy - 16.0f,
+                500.0f * (fx - fy),
+                200.0f * (fy - fz)
+        };
+    }
+
+    /// Applies the CIE Lab `f` function.
+    private static float labF(float ratio) {
+        return ratio > LAB_EPSILON ? (float) Math.cbrt(ratio) : (LAB_KAPPA * ratio + 16.0f) / 116.0f;
+    }
+
+    /// Inverts the CIE Lab `f` function.
+    private static float inverseLabF(float f) {
+        float cubed = f * f * f;
+        return cubed > LAB_EPSILON ? cubed : (116.0f * f - 16.0f) / LAB_KAPPA;
+    }
+
+    /// Returns the white point used for Bradford adaptation when `chad` is absent.
+    private float sourceWhiteX() {
+        return mediaWhite != null ? mediaWhite[0] : illuminantX;
+    }
+
+    /// Returns the white-point Y used for Bradford adaptation when `chad` is absent.
+    private float sourceWhiteY() {
+        return mediaWhite != null ? mediaWhite[1] : illuminantY;
+    }
+
+    /// Returns the white-point Z used for Bradford adaptation when `chad` is absent.
+    private float sourceWhiteZ() {
+        return mediaWhite != null ? mediaWhite[2] : illuminantZ;
+    }
+
+    /// Maps profile PCS XYZ to D65 working XYZ.
+    ///
+    /// When [`#chromaticAdaptation()`] is present, the `chad` matrix is applied first and the
+    /// result is treated as D50. Otherwise Bradford adaptation uses [`#mediaWhite()`] when
+    /// present, or the header illuminant.
+    private float[] adaptToD65(float x, float y, float z) {
+        if (mediaBlack != null) {
+            x -= mediaBlack[0];
+            y -= mediaBlack[1];
+            z -= mediaBlack[2];
+        }
+        if (chromaticAdaptation != null) {
+            float[] pcs = multiply3x3(chromaticAdaptation, x, y, z);
+            return adaptBradford(pcs[0], pcs[1], pcs[2], D50_X, D50_Y, D50_Z, 0.95047f, 1.0f, 1.08883f);
+        }
+        float whiteX = sourceWhiteX();
+        float whiteY = sourceWhiteY();
+        float whiteZ = sourceWhiteZ();
+        if (!isD65(whiteX, whiteY, whiteZ)) {
+            return adaptBradford(x, y, z, whiteX, whiteY, whiteZ, 0.95047f, 1.0f, 1.08883f);
+        }
+        return new float[] {x, y, z};
+    }
+
+    /// Maps D65 working XYZ back to profile PCS XYZ.
+    private float[] adaptFromD65(float x, float y, float z) {
+        float[] pcs;
+        if (chromaticAdaptation != null) {
+            float[] d50 = adaptBradford(x, y, z, 0.95047f, 1.0f, 1.08883f, D50_X, D50_Y, D50_Z);
+            pcs = multiply3x3(invert3x3(chromaticAdaptation), d50[0], d50[1], d50[2]);
+        } else {
+            float whiteX = sourceWhiteX();
+            float whiteY = sourceWhiteY();
+            float whiteZ = sourceWhiteZ();
+            pcs = !isD65(whiteX, whiteY, whiteZ)
+                    ? adaptBradford(x, y, z, 0.95047f, 1.0f, 1.08883f, whiteX, whiteY, whiteZ)
+                    : new float[] {x, y, z};
+        }
+        if (mediaBlack != null) {
+            pcs[0] += mediaBlack[0];
+            pcs[1] += mediaBlack[1];
+            pcs[2] += mediaBlack[2];
+        }
+        return pcs;
+    }
+
+    /// Multiplies a row-major 3×3 matrix by a column vector.
+    private static float[] multiply3x3(float[] matrix, float x, float y, float z) {
+        return new float[] {
+                matrix[0] * x + matrix[1] * y + matrix[2] * z,
+                matrix[3] * x + matrix[4] * y + matrix[5] * z,
+                matrix[6] * x + matrix[7] * y + matrix[8] * z
+        };
+    }
+
+    /// Inverts a row-major 3×3 matrix.
+    private static float[] invert3x3(float[] matrix) {
+        float det = matrix[0] * (matrix[4] * matrix[8] - matrix[5] * matrix[7])
+                - matrix[1] * (matrix[3] * matrix[8] - matrix[5] * matrix[6])
+                + matrix[2] * (matrix[3] * matrix[7] - matrix[4] * matrix[6]);
+        if (!Float.isFinite(det) || Math.abs(det) < 1.0e-8f) {
+            throw new IllegalStateException("ICC chad matrix is not invertible");
+        }
+        float inv = 1.0f / det;
+        return new float[] {
+                inv * (matrix[4] * matrix[8] - matrix[5] * matrix[7]),
+                inv * (matrix[2] * matrix[7] - matrix[1] * matrix[8]),
+                inv * (matrix[1] * matrix[5] - matrix[2] * matrix[4]),
+                inv * (matrix[5] * matrix[6] - matrix[3] * matrix[8]),
+                inv * (matrix[0] * matrix[8] - matrix[2] * matrix[6]),
+                inv * (matrix[2] * matrix[3] - matrix[0] * matrix[5]),
+                inv * (matrix[3] * matrix[7] - matrix[4] * matrix[6]),
+                inv * (matrix[1] * matrix[6] - matrix[0] * matrix[7]),
+                inv * (matrix[0] * matrix[4] - matrix[1] * matrix[3])
+        };
     }
 
     /// Locates one tag-table entry, or `-1` when absent.

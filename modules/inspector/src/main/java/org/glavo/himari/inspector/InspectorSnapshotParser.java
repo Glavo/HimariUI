@@ -70,6 +70,15 @@ final class InspectorSnapshotParser {
         expectKey("name");
         String name = string();
         expect(',');
+        expectKey("kind");
+        String kind = string();
+        expect(',');
+        expectKey("phase");
+        String phase = string();
+        expect(',');
+        expectKey("clipKind");
+        String clipKind = string();
+        expect(',');
         expectKey("role");
         String role = string();
         expect(',');
@@ -102,8 +111,53 @@ final class InspectorSnapshotParser {
         expect(',');
         expectKey("caret");
         int caret = (int) number();
+        expect(',');
+        expectKey("rotation");
+        float rotation = (float) number();
+        expect(',');
+        expectKey("translationX");
+        float translationX = (float) number();
+        expect(',');
+        expectKey("translationY");
+        float translationY = (float) number();
+        expect(',');
+        expectKey("shearX");
+        float shearX = (float) number();
+        expect(',');
+        expectKey("shearY");
+        float shearY = (float) number();
+        expect(',');
+        expectKey("rangeMinimum");
+        double rangeMinimum = number();
+        expect(',');
+        expectKey("rangeMaximum");
+        double rangeMaximum = number();
         expect('}');
-        return new InspectorNode(id, name, role, label, x, y, width, height, focused, liveRegion, textStart, textEnd, caret);
+        return new InspectorNode(
+                id,
+                name,
+                kind,
+                phase,
+                clipKind,
+                role,
+                label,
+                x,
+                y,
+                width,
+                height,
+                focused,
+                liveRegion,
+                textStart,
+                textEnd,
+                caret,
+                rotation,
+                translationX,
+                translationY,
+                shearX,
+                shearY,
+                rangeMinimum,
+                rangeMaximum
+        );
     }
 
     /// Reads `null` or a JSON value as its raw source text.

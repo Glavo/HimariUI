@@ -3,6 +3,8 @@ package org.glavo.himari.controls;
 import org.glavo.himari.layout.LayoutFactory;
 import org.glavo.himari.layout.LayoutModifier;
 import org.glavo.himari.layout.LayoutNode;
+import org.glavo.himari.layout.input.gesture.ClampingScrollPhysics;
+import org.glavo.himari.layout.input.gesture.ScrollPhysics;
 import org.jetbrains.annotations.NotNullByDefault;
 
 import java.util.List;
@@ -14,14 +16,23 @@ public final class ScrollViewport {
     /// Pixel step applied by increment or decrement.
     private final float step;
 
-    /// Logical scroll offset retained across tree rebuilds.
+    /// Logical vertical scroll offset retained across tree rebuilds.
     private float offset;
+
+    /// Logical horizontal scroll offset retained across tree rebuilds.
+    private float horizontalOffset;
 
     /// The viewport node after [#create], or unused before then.
     private LayoutNode viewport;
 
     /// Whether the viewport ignores scroll deltas.
     private boolean disabled;
+
+    /// Policy that clamps offsets and decays fling velocity.
+    private ScrollPhysics physics = ClampingScrollPhysics.INSTANCE;
+
+    /// Remaining fling velocity in logical pixels per second.
+    private float flingVelocity;
 
     /// Creates a viewport.
     ///
@@ -38,6 +49,70 @@ public final class ScrollViewport {
     /// @return the offset
     public float offset() {
         return offset;
+    }
+
+    /// Returns the current horizontal offset.
+    ///
+    /// @return the horizontal offset
+    public float horizontalOffset() {
+        return horizontalOffset;
+    }
+
+    /// Returns the increment/decrement step.
+    ///
+    /// @return the positive step
+    public float step() {
+        return step;
+    }
+
+    /// Returns the scroll-physics policy.
+    ///
+    /// @return the policy
+    public ScrollPhysics physics() {
+        return physics;
+    }
+
+    /// Replaces the scroll-physics policy.
+    ///
+    /// @param physics the policy
+    public void setPhysics(ScrollPhysics physics) {
+        this.physics = Objects.requireNonNull(physics, "physics");
+    }
+
+    /// Returns the remaining fling velocity.
+    ///
+    /// @return the velocity in logical pixels per second
+    public float flingVelocity() {
+        return flingVelocity;
+    }
+
+    /// Starts a fling with `velocity` logical pixels per second.
+    ///
+    /// @param velocity the finite velocity
+    public void fling(float velocity) {
+        if (disabled) {
+            return;
+        }
+        if (!Float.isFinite(velocity)) {
+            throw new IllegalArgumentException("Fling velocity must be finite");
+        }
+        flingVelocity = velocity;
+    }
+
+    /// Advances an active fling by `elapsedNanos` using [#physics()].
+    ///
+    /// @param elapsedNanos the nonnegative sample duration
+    /// @return whether the fling is still moving
+    public boolean advanceFling(long elapsedNanos) {
+        if (disabled || flingVelocity == 0.0f) {
+            return false;
+        }
+        float next = physics.decayVelocity(flingVelocity, elapsedNanos);
+        float dt = elapsedNanos / 1_000_000_000.0f;
+        float delta = (flingVelocity + next) * 0.5f * dt;
+        flingVelocity = next;
+        scrollBy(delta);
+        return flingVelocity != 0.0f;
     }
 
     /// Builds the viewport around one content node.
@@ -89,10 +164,23 @@ public final class ScrollViewport {
             throw new IllegalArgumentException("Scroll delta must be finite");
         }
         float current = viewport == null ? offset : viewport.scrollOffset();
-        offset = Math.max(0.0f, current + delta);
+        offset = physics.applyOffset(current, delta, 0.0f, Float.MAX_VALUE);
         if (viewport != null) {
             viewport.setScrollOffset(offset);
         }
+    }
+
+    /// Applies a signed logical-pixel horizontal delta and clamps the offset at zero.
+    ///
+    /// @param delta the signed delta
+    public void scrollByHorizontal(float delta) {
+        if (disabled) {
+            return;
+        }
+        if (!Float.isFinite(delta)) {
+            throw new IllegalArgumentException("Scroll delta must be finite");
+        }
+        horizontalOffset = physics.applyOffset(horizontalOffset, delta, 0.0f, Float.MAX_VALUE);
     }
 
     /// Rewinds the viewport by one step, stopping at zero.

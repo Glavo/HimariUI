@@ -108,6 +108,7 @@ public final class Slider {
                 this::adjust
         );
         created.setRangeValue(value);
+        created.setRangeExtent(minimum, maximum);
         created.setDisabled(disabled);
         this.node = created;
         return created;

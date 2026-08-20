@@ -2,7 +2,7 @@ package org.glavo.himari.layout.input.gesture;
 
 import org.jetbrains.annotations.NotNullByDefault;
 
-/// Identifies the exclusive winner of one pointer sequence.
+/// Identifies one recognizer that may win a pointer sequence or share a team win.
 @NotNullByDefault
 public enum GestureKind {
     /// A press and release inside slop and tap timeout.

@@ -56,6 +56,8 @@ import java.util.Objects;
 /// @param himetricRawX host `POINTER_INFO.ptHimetricLocationRaw.x`; `0` when unreported
 /// @param himetricRawY host `POINTER_INFO.ptHimetricLocationRaw.y`; `0` when unreported
 /// @param pointerTime host `POINTER_INFO.dwTime`; `0` when unreported
+/// @param sourceDevice host `POINTER_INFO.sourceDevice` handle address; `0` when unreported
+/// @param hwndTarget host `POINTER_INFO.hwndTarget` handle address; `0` when unreported
 @NotNullByDefault
 public record PointerEvent(
         PointerEventType type,
@@ -107,7 +109,9 @@ public record PointerEvent(
         int himetricY,
         int himetricRawX,
         int himetricRawY,
-        int pointerTime
+        int pointerTime,
+        long sourceDevice,
+        long hwndTarget
 ) {
     /// Primary / left button bit.
     public static final int BUTTON_PRIMARY = 1;
@@ -2464,6 +2468,166 @@ public record PointerEvent(
                 himetricRawX,
                 himetricRawY,
                 0
+        );
+    }
+
+    /// Creates an event with `POINTER_INFO.dwTime` and no producer handles.
+    ///
+    /// @param type the event kind
+    /// @param x the horizontal coordinate
+    /// @param y the vertical coordinate
+    /// @param device the physical pointer
+    /// @param wheelDelta signed wheel notches
+    /// @param pointerId the host pointer identity
+    /// @param pressure normalized pen pressure
+    /// @param tiltX pen tilt from the YZ plane
+    /// @param tiltY pen tilt from the XZ plane
+    /// @param rotation clockwise barrel rotation
+    /// @param timestampMillis monotonic host message time
+    /// @param buttons currently pressed button mask
+    /// @param sequenceId host delivery sequence
+    /// @param synthetic whether the event was injected
+    /// @param inverted whether the stylus is inverted
+    /// @param eraser whether `PEN_FLAG_ERASER` is set
+    /// @param contactWidth contact ellipse width
+    /// @param contactHeight contact ellipse height
+    /// @param orientation clockwise touch contact angle
+    /// @param inRange whether `POINTER_FLAG_INRANGE` is set
+    /// @param inContact whether `POINTER_FLAG_INCONTACT` is set
+    /// @param frameId host `POINTER_INFO.frameId`
+    /// @param canceled whether `POINTER_FLAG_CANCELED` is set
+    /// @param primary whether `POINTER_FLAG_PRIMARY` is set
+    /// @param firstButton whether `POINTER_FLAG_FIRSTBUTTON` is set
+    /// @param secondButton whether `POINTER_FLAG_SECONDBUTTON` is set
+    /// @param thirdButton whether `POINTER_FLAG_THIRDBUTTON` is set
+    /// @param fourthButton whether `POINTER_FLAG_FOURTHBUTTON` is set
+    /// @param fifthButton whether `POINTER_FLAG_FIFTHBUTTON` is set
+    /// @param newPointer whether `POINTER_FLAG_NEW` is set
+    /// @param confidence whether `POINTER_FLAG_CONFIDENCE` is set
+    /// @param down whether `POINTER_FLAG_DOWN` is set
+    /// @param update whether `POINTER_FLAG_UPDATE` is set
+    /// @param wheel whether `POINTER_FLAG_WHEEL` is set
+    /// @param horizontalWheel whether `POINTER_FLAG_HWHEEL` is set
+    /// @param captureChanged whether `POINTER_FLAG_CAPTURECHANGED` is set
+    /// @param hasTransform whether `POINTER_FLAG_HASTRANSFORM` is set
+    /// @param up whether `POINTER_FLAG_UP` is set
+    /// @param historyCount host `POINTER_INFO.historyCount`
+    /// @param keyStates host `POINTER_INFO.dwKeyStates`
+    /// @param buttonChangeType host `POINTER_INFO.ButtonChangeType`
+    /// @param inputData host `POINTER_INFO.InputData`
+    /// @param performanceCount host `POINTER_INFO.PerformanceCount`
+    /// @param rawX host `POINTER_INFO.ptPixelLocationRaw.x`
+    /// @param rawY host `POINTER_INFO.ptPixelLocationRaw.y`
+    /// @param himetricX host `POINTER_INFO.ptHimetricLocation.x`
+    /// @param himetricY host `POINTER_INFO.ptHimetricLocation.y`
+    /// @param himetricRawX host `POINTER_INFO.ptHimetricLocationRaw.x`
+    /// @param himetricRawY host `POINTER_INFO.ptHimetricLocationRaw.y`
+    /// @param pointerTime host `POINTER_INFO.dwTime`
+    public PointerEvent(
+            PointerEventType type,
+            float x,
+            float y,
+            PointerDeviceKind device,
+            float wheelDelta,
+            int pointerId,
+            float pressure,
+            float tiltX,
+            float tiltY,
+            float rotation,
+            long timestampMillis,
+            int buttons,
+            int sequenceId,
+            boolean synthetic,
+            boolean inverted,
+            boolean eraser,
+            float contactWidth,
+            float contactHeight,
+            float orientation,
+            boolean inRange,
+            boolean inContact,
+            int frameId,
+            boolean canceled,
+            boolean primary,
+            boolean firstButton,
+            boolean secondButton,
+            boolean thirdButton,
+            boolean fourthButton,
+            boolean fifthButton,
+            boolean newPointer,
+            boolean confidence,
+            boolean down,
+            boolean update,
+            boolean wheel,
+            boolean horizontalWheel,
+            boolean captureChanged,
+            boolean hasTransform,
+            boolean up,
+            int historyCount,
+            int keyStates,
+            int buttonChangeType,
+            int inputData,
+            long performanceCount,
+            int rawX,
+            int rawY,
+            int himetricX,
+            int himetricY,
+            int himetricRawX,
+            int himetricRawY,
+            int pointerTime
+    ) {
+        this(
+                type,
+                x,
+                y,
+                device,
+                wheelDelta,
+                pointerId,
+                pressure,
+                tiltX,
+                tiltY,
+                rotation,
+                timestampMillis,
+                buttons,
+                sequenceId,
+                synthetic,
+                inverted,
+                eraser,
+                contactWidth,
+                contactHeight,
+                orientation,
+                inRange,
+                inContact,
+                frameId,
+                canceled,
+                primary,
+                firstButton,
+                secondButton,
+                thirdButton,
+                fourthButton,
+                fifthButton,
+                newPointer,
+                confidence,
+                down,
+                update,
+                wheel,
+                horizontalWheel,
+                captureChanged,
+                hasTransform,
+                up,
+                historyCount,
+                keyStates,
+                buttonChangeType,
+                inputData,
+                performanceCount,
+                rawX,
+                rawY,
+                himetricX,
+                himetricY,
+                himetricRawX,
+                himetricRawY,
+                pointerTime,
+                0L,
+                0L
         );
     }
 }

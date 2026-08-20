@@ -183,6 +183,33 @@ public final class ScriptSampleFont {
     /// Glyph of final tsadi plus dagesh `U+FB45`.
     private static final int GLYPH_FB45 = GLYPH_FB3F + 1;
 
+    /// Glyph of het plus dagesh `U+FB37`.
+    private static final int GLYPH_FB37 = GLYPH_FB45 + 1;
+
+    /// Glyph of final mem plus dagesh `U+FB3D`.
+    private static final int GLYPH_FB3D = GLYPH_FB37 + 1;
+
+    /// First glyph of gimel-plus-dagesh through zayin-plus-dagesh `U+FB32`–`U+FB36`.
+    private static final int GLYPH_FB32 = GLYPH_FB3D + 1;
+
+    /// First glyph of tet-plus-dagesh through lamed-plus-dagesh `U+FB38`–`U+FB3C`.
+    private static final int GLYPH_FB38 = GLYPH_FB32 + 5;
+
+    /// Glyph of mem plus dagesh `U+FB3E`.
+    private static final int GLYPH_FB3E = GLYPH_FB38 + 5;
+
+    /// First glyph of nun-plus-dagesh through samekh-plus-dagesh `U+FB40`–`U+FB41`.
+    private static final int GLYPH_FB40 = GLYPH_FB3E + 1;
+
+    /// First glyph of final-pe-plus-dagesh through pe-plus-dagesh `U+FB43`–`U+FB44`.
+    private static final int GLYPH_FB43 = GLYPH_FB40 + 2;
+
+    /// First glyph of tsadi-plus-dagesh through tav-plus-dagesh `U+FB46`–`U+FB4A`.
+    private static final int GLYPH_FB46 = GLYPH_FB43 + 2;
+
+    /// First glyph of alternative ayin through wide tav `U+FB20`–`U+FB28`.
+    private static final int GLYPH_FB20 = GLYPH_FB46 + 5;
+
     /// Prevents instantiation.
     private ScriptSampleFont() {
     }
@@ -216,7 +243,7 @@ public final class ScriptSampleFont {
     ///
     /// @return the count
     static int glyphCount() {
-        return GLYPH_FB45 + 1;
+        return GLYPH_FB20 + 9;
     }
 
     /// Returns whether `glyphId` is an empty outline.
@@ -249,7 +276,7 @@ public final class ScriptSampleFont {
                 ASCII_FIRST, 0x05B9, 0x05BC, 0x05C1, 0x05C7, 0x05D0, 0x05F0, 0x0621, 0x064B,
                 0x0671, 0x0679, 0x067E, 0x0686, 0x0698, 0x06A4, 0x06A9, 0x06AF, 0x06BA, 0x06CC, 0x06D2,
                 0x0E01, 0x0E81, 0x0EDC, 0x1100, 0x1161, 0x11A8, 0xAC00,
-                0xFB1D, 0xFB1F, 0xFB2A, 0xFB2E, 0xFB30, 0xFB3F, 0xFB45, 0xFB4B, 0xFB4C, 0xFB50,
+                0xFB1D, 0xFB1F, 0xFB20, 0xFB2A, 0xFB2E, 0xFB30, 0xFB32, 0xFB37, 0xFB38, 0xFB3D, 0xFB3E, 0xFB3F, 0xFB40, 0xFB43, 0xFB45, 0xFB46, 0xFB4B, 0xFB4C, 0xFB50,
                 0xFB56, 0xFB66, 0xFB6A, 0xFB7A, 0xFB8A, 0xFB8E, 0xFB92, 0xFB9E, 0xFBAE, 0xFBFC,
                 0xFC5E, 0xFDF2, 0xFE80, 0xFFFF
         };
@@ -257,7 +284,7 @@ public final class ScriptSampleFont {
                 ASCII_LAST, 0x05BA, 0x05BC, 0x05C2, 0x05C7, 0x05EA, 0x05F2, 0x064A, 0x0652,
                 0x0671, 0x0679, 0x067E, 0x0686, 0x0698, 0x06A4, 0x06A9, 0x06AF, 0x06BA, 0x06CC, 0x06D2,
                 THAI_LAST, LAO_LAST, 0x0EDD, 0x1100, 0x1161, 0x11A8, 0xAC01,
-                0xFB1D, 0xFB1F, 0xFB2D, 0xFB2F, 0xFB31, 0xFB3F, 0xFB45, 0xFB4B, 0xFB4F, 0xFB51,
+                0xFB1D, 0xFB1F, 0xFB28, 0xFB2D, 0xFB2F, 0xFB31, 0xFB36, 0xFB37, 0xFB3C, 0xFB3D, 0xFB3E, 0xFB3F, 0xFB41, 0xFB44, 0xFB45, 0xFB4A, 0xFB4B, 0xFB4F, 0xFB51,
                 0xFB59, 0xFB69, 0xFB6D, 0xFB7D, 0xFB8B, 0xFB91, 0xFB95, 0xFB9F, 0xFBAF, 0xFBFF,
                 0xFC63, 0xFDF2, FE_LAST, 0xFFFF
         };
@@ -269,14 +296,14 @@ public final class ScriptSampleFont {
                 GLYPH_NOON_GHUNNA, GLYPH_FARSI, GLYPH_YEH_BARREE,
                 GLYPH_THAI, GLYPH_LAO, GLYPH_LAO_LIGATURE,
                 GLYPH_HANGUL_LEAD, GLYPH_HANGUL_VOWEL, GLYPH_HANGUL_TRAIL, GLYPH_HANGUL_GA,
-                GLYPH_FB1D, GLYPH_FB1F, GLYPH_FB2A, GLYPH_FB2E, GLYPH_FB30, GLYPH_FB3F, GLYPH_FB45, GLYPH_FB4B,
+                GLYPH_FB1D, GLYPH_FB1F, GLYPH_FB20, GLYPH_FB2A, GLYPH_FB2E, GLYPH_FB30, GLYPH_FB32, GLYPH_FB37, GLYPH_FB38, GLYPH_FB3D, GLYPH_FB3E, GLYPH_FB3F, GLYPH_FB40, GLYPH_FB43, GLYPH_FB45, GLYPH_FB46, GLYPH_FB4B,
                 GLYPH_FB4C, GLYPH_FB50,
                 GLYPH_FB56, GLYPH_FB66, GLYPH_FB6A, GLYPH_FB7A, GLYPH_FB8A, GLYPH_FB8E, GLYPH_FB92, GLYPH_FB9E,
                 GLYPH_FBAE, GLYPH_FBFC,
                 GLYPH_SHADDA, GLYPH_ALLAH, GLYPH_FE80, 0
         };
         int segCount = starts.length;
-        ByteBuffer buffer = ByteBuffer.allocate(512).order(ByteOrder.BIG_ENDIAN);
+        ByteBuffer buffer = ByteBuffer.allocate(640).order(ByteOrder.BIG_ENDIAN);
         buffer.putShort((short) 0);
         buffer.putShort((short) 1);
         buffer.putShort((short) 3);

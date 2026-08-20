@@ -1,6 +1,7 @@
 package org.glavo.himari.layout.input;
 
 import org.jetbrains.annotations.NotNullByDefault;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -17,6 +18,7 @@ import java.util.Objects;
 /// @param meta whether a Windows / Super modifier was latched
 /// @param location the physical key location
 /// @param timestampMillis host message time in milliseconds; `0` when unreported
+/// @param text `ToUnicodeW` translation for this virtual key, or `null` when the host produced none
 @NotNullByDefault
 public record KeyEvent(
         KeyEventType type,
@@ -29,7 +31,8 @@ public record KeyEvent(
         boolean extended,
         boolean meta,
         KeyLocation location,
-        long timestampMillis
+        long timestampMillis,
+        @Nullable String text
 ) {
     /// Validates the event.
     public KeyEvent {
@@ -165,6 +168,35 @@ public record KeyEvent(
             boolean meta,
             KeyLocation location
     ) {
-        this(type, key, shift, ctrl, alt, scanCode, repeat, extended, meta, location, 0L);
+        this(type, key, shift, ctrl, alt, scanCode, repeat, extended, meta, location, 0L, null);
+    }
+
+    /// Creates an event with a host timestamp and no translated text.
+    ///
+    /// @param type the event kind
+    /// @param key the logical key
+    /// @param shift whether a shift modifier was latched
+    /// @param ctrl whether a control modifier was latched
+    /// @param alt whether an alt modifier was latched
+    /// @param scanCode the physical OEM scan code
+    /// @param repeat whether this is an auto-repeat
+    /// @param extended whether Win32 `KF_EXTENDED` was set
+    /// @param meta whether a Windows / Super modifier was latched
+    /// @param location the physical key location
+    /// @param timestampMillis host message time in milliseconds
+    public KeyEvent(
+            KeyEventType type,
+            LogicalKey key,
+            boolean shift,
+            boolean ctrl,
+            boolean alt,
+            int scanCode,
+            boolean repeat,
+            boolean extended,
+            boolean meta,
+            KeyLocation location,
+            long timestampMillis
+    ) {
+        this(type, key, shift, ctrl, alt, scanCode, repeat, extended, meta, location, timestampMillis, null);
     }
 }

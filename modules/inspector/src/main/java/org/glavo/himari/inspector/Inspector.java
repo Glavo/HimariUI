@@ -27,16 +27,20 @@ public final class Inspector {
     /// @return the snapshot
     public static InspectorSnapshot capture(LayoutTree tree, @Nullable RuntimeTrace trace) {
         Objects.requireNonNull(tree, "tree");
-        SemanticsSnapshot semantics = tree.semantics();
         LinkedHashMap<Long, SemanticsNode> byId = new LinkedHashMap<>();
-        for (SemanticsNode node : semantics.nodes()) {
-            byId.put(node.id(), node);
+        @Nullable Long focusedId = null;
+        if (!tree.needsPlace() && !tree.needsMeasure()) {
+            SemanticsSnapshot semantics = tree.semantics();
+            focusedId = semantics.focusedId();
+            for (SemanticsNode node : semantics.nodes()) {
+                byId.put(node.id(), node);
+            }
         }
         ArrayList<InspectorNode> nodes = new ArrayList<>();
         collect(tree.root(), byId, nodes);
         return new InspectorSnapshot(
                 nodes,
-                semantics.focusedId(),
+                focusedId,
                 trace == null ? null : trace.toCanonicalJson()
         );
     }
@@ -56,6 +60,9 @@ public final class Inspector {
         nodes.add(new InspectorNode(
                 node.id(),
                 node.name(),
+                node.kind().name(),
+                node.invalidationPhase(),
+                node.clipKind(),
                 node.role().name(),
                 node.label(),
                 node.origin().x(),
@@ -66,7 +73,14 @@ public final class Inspector {
                 node.liveRegion().name(),
                 range == null ? -1 : range.start(),
                 range == null ? -1 : range.end(),
-                range == null ? -1 : range.caret()
+                range == null ? -1 : range.caret(),
+                node.rotationDegrees(),
+                node.translation().x(),
+                node.translation().y(),
+                node.shear().x(),
+                node.shear().y(),
+                node.rangeMinimum(),
+                node.rangeMaximum()
         ));
         for (LayoutNode child : node.children()) {
             collect(child, semantics, nodes);
