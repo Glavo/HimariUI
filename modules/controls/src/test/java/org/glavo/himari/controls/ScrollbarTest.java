@@ -24,7 +24,7 @@ final class ScrollbarTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode bar = first(tree, SemanticsRole.SCROLLBAR);
         tree.dispatch(new PointerEvent(

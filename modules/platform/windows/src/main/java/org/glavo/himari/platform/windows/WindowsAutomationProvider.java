@@ -8703,7 +8703,7 @@ public final class WindowsAutomationProvider implements AutoCloseable {
     /// @return `None`, `Horizontal`, or `Vertical`
     private static int orientationId(SemanticsNode node) {
         return switch (node.role()) {
-            case SLIDER, PROGRESS, SPLIT_PANE -> ORIENTATION_HORIZONTAL;
+            case SLIDER, PROGRESS, SPLIT_PANE, RATING, CAROUSEL -> ORIENTATION_HORIZONTAL;
             case SCROLLBAR -> ORIENTATION_VERTICAL;
             default -> ORIENTATION_NONE;
         };
@@ -8753,6 +8753,19 @@ public final class WindowsAutomationProvider implements AutoCloseable {
             case BREADCRUMB -> 50026;
             case LINK -> 50005;
             case ACCORDION -> 50026;
+            case PAGINATION -> 50026;
+            case CONTEXT_MENU -> 50009;
+            case BADGE -> 50020;
+            case CHIP -> 50002;
+            case CARD -> 50026;
+            case AVATAR -> 50006;
+            case BANNER -> 50020;
+            case SNACKBAR -> 50020;
+            case SKELETON -> 50033;
+            case RATING -> 50015;
+            case EMPTY -> 50020;
+            case CAROUSEL -> 50026;
+            case DRAWER -> 50033;
         };
     }
 

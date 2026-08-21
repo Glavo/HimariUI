@@ -25,7 +25,7 @@ final class NumberStepperTest {
         ControlGallery gallery = new ControlGallery();
         assertEquals(3, gallery.stepper().value());
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode stepper = first(tree, SemanticsRole.STEPPER);
         assertEquals("3", stepper.label());

@@ -41,7 +41,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode button = first(tree, SemanticsRole.BUTTON);
         click(tree, button);
@@ -102,7 +102,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode slider = first(tree, SemanticsRole.SLIDER);
         tree.dispatch(new PointerEvent(
@@ -131,7 +131,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         gallery.scroll().scrollForward();
         assertEquals(16.0f, gallery.scroll().offset());
@@ -224,7 +224,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         assertEquals(0.25f, gallery.progress().value());
         SemanticsNode progress = first(tree, SemanticsRole.PROGRESS);
@@ -250,7 +250,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         assertEquals("r0", gallery.table().firstMaterializedKey());
         SemanticsNode table = first(tree, SemanticsRole.TABLE);
@@ -271,7 +271,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         assertEquals(0, gallery.grid().firstVisible());
         SemanticsNode grid = first(tree, SemanticsRole.GRID);
@@ -293,7 +293,7 @@ final class ControlGalleryTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         assertEquals(1.0f, gallery.flex().firstGrow());
         assertEquals(1.0f, gallery.flex().secondGrow());
@@ -3908,7 +3908,7 @@ final class ControlGalleryTest {
     /// @param gallery the gallery
     private static void rebuild(LayoutTree tree, ControlGallery gallery) {
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
     }
 

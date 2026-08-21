@@ -321,6 +321,24 @@
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }
     },
     {
+      "kind": "aggregate", "name": "windowplacement", "aggregateKind": "struct", "byteSize": 44, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "length", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "flags", "type": "u32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "show_cmd", "type": "u32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "min_x", "type": "i32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "min_y", "type": "i32", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "max_x", "type": "i32", "byteOffset": 20, "bitOffset": null, "bitWidth": null },
+        { "name": "max_y", "type": "i32", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "normal_left", "type": "i32", "byteOffset": 28, "bitOffset": null, "bitWidth": null },
+        { "name": "normal_top", "type": "i32", "byteOffset": 32, "bitOffset": null, "bitWidth": null },
+        { "name": "normal_right", "type": "i32", "byteOffset": 36, "bitOffset": null, "bitWidth": null },
+        { "name": "normal_bottom", "type": "i32", "byteOffset": 40, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "windowplacement_ptr", "pointee": "windowplacement", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    {
       "kind": "aggregate", "name": "monitorinfo", "aggregateKind": "struct", "byteSize": 40, "alignment": 4, "packing": 0,
       "fields": [
         { "name": "cb_size", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
@@ -674,7 +692,63 @@
       ],
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }
     },
-    { "kind": "pointer", "name": "highcontrastw_ptr", "pointee": "highcontrastw", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } }
+    { "kind": "pointer", "name": "highcontrastw_ptr", "pointee": "highcontrastw", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    {
+      "kind": "aggregate", "name": "animationinfo", "aggregateKind": "struct", "byteSize": 8, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "cb_size", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "i_min_animate", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "animationinfo_ptr", "pointee": "animationinfo", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    {
+      "kind": "aggregate", "name": "nonclientmetricsw", "aggregateKind": "struct", "byteSize": 504, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "cb_size", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "i_border_width", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "i_scroll_width", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "i_scroll_height", "type": "i32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "i_caption_width", "type": "i32", "byteOffset": 16, "bitOffset": null, "bitWidth": null },
+        { "name": "i_caption_height", "type": "i32", "byteOffset": 20, "bitOffset": null, "bitWidth": null },
+        { "name": "lf_caption_font", "type": "logfontw", "byteOffset": 24, "bitOffset": null, "bitWidth": null },
+        { "name": "i_sm_caption_width", "type": "i32", "byteOffset": 116, "bitOffset": null, "bitWidth": null },
+        { "name": "i_sm_caption_height", "type": "i32", "byteOffset": 120, "bitOffset": null, "bitWidth": null },
+        { "name": "lf_sm_caption_font", "type": "logfontw", "byteOffset": 124, "bitOffset": null, "bitWidth": null },
+        { "name": "i_menu_width", "type": "i32", "byteOffset": 216, "bitOffset": null, "bitWidth": null },
+        { "name": "i_menu_height", "type": "i32", "byteOffset": 220, "bitOffset": null, "bitWidth": null },
+        { "name": "lf_menu_font", "type": "logfontw", "byteOffset": 224, "bitOffset": null, "bitWidth": null },
+        { "name": "lf_status_font", "type": "logfontw", "byteOffset": 316, "bitOffset": null, "bitWidth": null },
+        { "name": "lf_message_font", "type": "logfontw", "byteOffset": 408, "bitOffset": null, "bitWidth": null },
+        { "name": "i_padded_border_width", "type": "i32", "byteOffset": 500, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "nonclientmetricsw_ptr", "pointee": "nonclientmetricsw", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    {
+      "kind": "aggregate", "name": "minimizedmetrics", "aggregateKind": "struct", "byteSize": 20, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "cb_size", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "i_width", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "i_horz_gap", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "i_vert_gap", "type": "i32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "i_arrange", "type": "i32", "byteOffset": 16, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "minimizedmetrics_ptr", "pointee": "minimizedmetrics", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } },
+    {
+      "kind": "aggregate", "name": "iconmetricsw", "aggregateKind": "struct", "byteSize": 108, "alignment": 4, "packing": 0,
+      "fields": [
+        { "name": "cb_size", "type": "u32", "byteOffset": 0, "bitOffset": null, "bitWidth": null },
+        { "name": "i_horz_spacing", "type": "i32", "byteOffset": 4, "bitOffset": null, "bitWidth": null },
+        { "name": "i_vert_spacing", "type": "i32", "byteOffset": 8, "bitOffset": null, "bitWidth": null },
+        { "name": "i_title_wrap", "type": "i32", "byteOffset": 12, "bitOffset": null, "bitWidth": null },
+        { "name": "lf_font", "type": "logfontw", "byteOffset": 16, "bitOffset": null, "bitWidth": null }
+      ],
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    { "kind": "pointer", "name": "iconmetricsw_ptr", "pointee": "iconmetricsw", "constant": false, "availability": { "introduced": null, "deprecated": null, "unavailable": false } }
   ],
   "callbacks": [
     {
@@ -2783,6 +2857,16 @@
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }
     },
     {
+      "name": "enum_windows_proc",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "lParam", "type": "i64", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "threadRestriction": "ui", "lifetime": "scoped", "exceptionPolicy": "contain",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
       "name": "register_word_enum_proc_w",
       "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
       "parameters": [
@@ -4457,6 +4541,322 @@
       "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
       "parameters": [],
       "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getForegroundWindow", "symbol": "GetForegroundWindow",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getFocus", "symbol": "GetFocus",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "setFocus", "symbol": "SetFocus",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "setForegroundWindow", "symbol": "SetForegroundWindow",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "setActiveWindow", "symbol": "SetActiveWindow",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getWindowThreadProcessId", "symbol": "GetWindowThreadProcessId",
+      "result": { "type": "u32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "processId", "type": "u32_ptr", "direction": "out", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "isWindow", "symbol": "IsWindow",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getParent", "symbol": "GetParent",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getDesktopWindow", "symbol": "GetDesktopWindow",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getAncestor", "symbol": "GetAncestor",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "flags", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getTopWindow", "symbol": "GetTopWindow",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getWindow", "symbol": "GetWindow",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "command", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getShellWindow", "symbol": "GetShellWindow",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "enumWindows", "symbol": "EnumWindows",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "callback", "type": "enum_windows_proc", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "lParam", "type": "i64", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "enumChildWindows", "symbol": "EnumChildWindows",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "parent", "type": "hwnd", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "callback", "type": "enum_windows_proc", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "lParam", "type": "i64", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "findWindowW", "symbol": "FindWindowW",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "className", "type": "const_wchar_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "windowName", "type": "const_wchar_ptr", "direction": "in", "nullability": "nullable", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getLastActivePopup", "symbol": "GetLastActivePopup",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getSystemMenu", "symbol": "GetSystemMenu",
+      "result": { "type": "hmenu", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "revert", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "bringWindowToTop", "symbol": "BringWindowToTop",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "mapWindowPoints", "symbol": "MapWindowPoints",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "from", "type": "hwnd", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "to", "type": "hwnd", "direction": "in", "nullability": "nullable", "ownership": "borrowed" },
+        { "name": "points", "type": "point_ptr", "direction": "in_out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "count", "type": "u32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getActiveWindow", "symbol": "GetActiveWindow",
+      "result": { "type": "hwnd", "nullability": "nullable", "ownership": "borrowed" },
+      "parameters": [],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getCaretPos", "symbol": "GetCaretPos",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "point", "type": "point_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getWindowPlacement", "symbol": "GetWindowPlacement",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "placement", "type": "windowplacement_ptr", "direction": "in_out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "isIconic", "symbol": "IsIconic",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "isZoomed", "symbol": "IsZoomed",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "isWindowVisible", "symbol": "IsWindowVisible",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "isWindowEnabled", "symbol": "IsWindowEnabled",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "enableWindow", "symbol": "EnableWindow",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "enable", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getWindowTextLengthW", "symbol": "GetWindowTextLengthW",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getWindowTextW", "symbol": "GetWindowTextW",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "buffer", "type": "wchar_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "maxCount", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "none", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "setWindowTextW", "symbol": "SetWindowTextW",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "text", "type": "const_wchar_ptr", "direction": "in", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "clientToScreen", "symbol": "ClientToScreen",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "point", "type": "point_ptr", "direction": "in_out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "screenToClient", "symbol": "ScreenToClient",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "point", "type": "point_ptr", "direction": "in_out", "nullability": "non_null", "ownership": "borrowed" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
+      "availability": { "introduced": null, "deprecated": null, "unavailable": false }
+    },
+    {
+      "name": "getClassNameW", "symbol": "GetClassNameW",
+      "result": { "type": "i32", "nullability": "unspecified", "ownership": "none" },
+      "parameters": [
+        { "name": "window", "type": "hwnd", "direction": "in", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "buffer", "type": "wchar_ptr", "direction": "out", "nullability": "non_null", "ownership": "borrowed" },
+        { "name": "maxCount", "type": "i32", "direction": "in", "nullability": "unspecified", "ownership": "none" }
+      ],
+      "callingConvention": "system", "variadicFrom": null, "errorPolicy": "get_last_error", "threadRestriction": "ui",
       "availability": { "introduced": null, "deprecated": null, "unavailable": false }
     },
     {

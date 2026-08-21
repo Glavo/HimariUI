@@ -25,7 +25,7 @@ final class DateTimePickerTest {
         ControlGallery gallery = new ControlGallery();
         assertEquals("2026-08-20", gallery.datePicker().value());
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode date = first(tree, SemanticsRole.DATE_PICKER);
         assertEquals("2026-08-20", date.label());
@@ -55,7 +55,7 @@ final class DateTimePickerTest {
         ControlGallery gallery = new ControlGallery();
         assertEquals("13:45", gallery.timePicker().value());
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode time = first(tree, SemanticsRole.TIME_PICKER);
         assertEquals("13:45", time.label());

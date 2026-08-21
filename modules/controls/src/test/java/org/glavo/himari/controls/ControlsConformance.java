@@ -43,7 +43,7 @@ public final class ControlsConformance {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 2200.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode button = first(tree, SemanticsRole.BUTTON);
         tree.dispatch(new PointerEvent(PointerEventType.DOWN, button.bounds().x() + 1.0f, button.bounds().y() + 1.0f));
@@ -132,6 +132,33 @@ public final class ControlsConformance {
                 || gallery.tooltip().isOpen()) {
             throw new IllegalStateException("Tooltip did not show or dismiss");
         }
+        SemanticsNode context = first(tree, SemanticsRole.CONTEXT_MENU);
+        gallery.dispatchPointer(tree, new PointerEvent(
+                PointerEventType.DOWN,
+                context.bounds().x() + 1.0f,
+                context.bounds().y() + 1.0f
+        ));
+        gallery.dispatchPointer(tree, new PointerEvent(
+                PointerEventType.UP,
+                context.bounds().x() + 1.0f,
+                context.bounds().y() + 1.0f
+        ));
+        if (gallery.contextMenu().isOpen()) {
+            throw new IllegalStateException("Primary pointer opened the context menu");
+        }
+        gallery.dispatchPointer(tree, new PointerEvent(
+                PointerEventType.SECONDARY_DOWN,
+                context.bounds().x() + 1.0f,
+                context.bounds().y() + 1.0f
+        ));
+        if (!gallery.contextMenu().isOpen()) {
+            throw new IllegalStateException("Secondary pointer did not open the context menu");
+        }
+        rebuild(tree, gallery);
+        if (!gallery.dispatchKey(tree, new KeyEvent(KeyEventType.DOWN, LogicalKey.ESCAPE))
+                || gallery.contextMenu().isOpen()) {
+            throw new IllegalStateException("Escape did not dismiss the context menu");
+        }
         gallery.radio().select(1);
         gallery.tabs().select(1);
         gallery.split().setFraction(0.6f);
@@ -189,7 +216,33 @@ public final class ControlsConformance {
                 || !"plans".equals(gallery.link().href())
                 || first(tree, SemanticsRole.LINK).bounds().height() <= 0.0f
                 || !"Alpha".equals(gallery.accordion().value())
-                || first(tree, SemanticsRole.ACCORDION).bounds().height() <= 0.0f) {
+                || first(tree, SemanticsRole.ACCORDION).bounds().height() <= 0.0f
+                || !"1".equals(gallery.pagination().value())
+                || first(tree, SemanticsRole.PAGINATION).bounds().height() <= 0.0f
+                || gallery.contextMenu().isOpen()
+                || first(tree, SemanticsRole.CONTEXT_MENU).bounds().height() <= 0.0f
+                || !"New".equals(gallery.badge().label())
+                || first(tree, SemanticsRole.BADGE).bounds().height() <= 0.0f
+                || gallery.chip().selected()
+                || first(tree, SemanticsRole.CHIP).bounds().height() <= 0.0f
+                || !"Summary".equals(gallery.card().title())
+                || first(tree, SemanticsRole.CARD).bounds().height() <= 0.0f
+                || !"AL".equals(gallery.avatar().initials())
+                || first(tree, SemanticsRole.AVATAR).bounds().height() <= 0.0f
+                || !gallery.banner().visible()
+                || first(tree, SemanticsRole.BANNER).bounds().height() <= 0.0f
+                || gallery.snackbar().visible()
+                || first(tree, SemanticsRole.SNACKBAR).bounds().height() <= 0.0f
+                || !gallery.skeleton().loading()
+                || first(tree, SemanticsRole.SKELETON).bounds().height() <= 0.0f
+                || gallery.rating().value() != 3
+                || first(tree, SemanticsRole.RATING).bounds().height() <= 0.0f
+                || !"No items".equals(gallery.empty().description())
+                || first(tree, SemanticsRole.EMPTY).bounds().height() <= 0.0f
+                || !"One".equals(gallery.carousel().value())
+                || first(tree, SemanticsRole.CAROUSEL).bounds().height() <= 0.0f
+                || gallery.drawer().isOpen()
+                || first(tree, SemanticsRole.DRAWER).bounds().height() <= 0.0f) {
             throw new IllegalStateException("Control gallery outcomes were incorrect");
         }
         if (gallery.scroll().offset() != 16.0f || gallery.list().firstVisible() != 1
@@ -368,7 +421,7 @@ public final class ControlsConformance {
     /// @param gallery the gallery
     private static void rebuild(LayoutTree tree, ControlGallery gallery) {
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 2200.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
     }
 }

@@ -1809,6 +1809,875 @@ final class WindowsPlatformTest {
         }
     }
 
+    /// Reads `SM_CMONITORS` through generated `GetSystemMetrics`.
+    @Test
+    void monitorCountReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MonitorCount", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.monitorCount() >= 1);
+            assertEquals(window.monitorCount(), window.nativeWindow().monitorCount());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXMIN` / `SM_CYMIN` through generated `GetSystemMetrics`.
+    @Test
+    void minWindowSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MinWindowSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.minWindowWidth() >= 1);
+            assertTrue(window.minWindowHeight() >= 1);
+            assertEquals(window.minWindowWidth(), window.nativeWindow().minWindowWidth());
+            assertEquals(window.minWindowHeight(), window.nativeWindow().minWindowHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXMAXIMIZED` / `SM_CYMAXIMIZED` through generated `GetSystemMetrics`.
+    @Test
+    void maximizedWindowSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MaximizedWindowSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.maximizedWindowWidth() >= window.minWindowWidth());
+            assertTrue(window.maximizedWindowHeight() >= window.minWindowHeight());
+            assertEquals(window.maximizedWindowWidth(), window.nativeWindow().maximizedWindowWidth());
+            assertEquals(window.maximizedWindowHeight(), window.nativeWindow().maximizedWindowHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXSCREEN` / `SM_CYSCREEN` through generated `GetSystemMetrics`.
+    @Test
+    void screenSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ScreenSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.screenWidth() > 0);
+            assertTrue(window.screenHeight() > 0);
+            assertEquals(window.screenWidth(), window.nativeWindow().screenWidth());
+            assertEquals(window.screenHeight(), window.nativeWindow().screenHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXVIRTUALSCREEN` / `SM_CYVIRTUALSCREEN` through generated `GetSystemMetrics`.
+    @Test
+    void virtualScreenSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "VirtualScreenSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.virtualScreenWidth() >= window.screenWidth());
+            assertTrue(window.virtualScreenHeight() >= window.screenHeight());
+            assertEquals(window.virtualScreenWidth(), window.nativeWindow().virtualScreenWidth());
+            assertEquals(window.virtualScreenHeight(), window.nativeWindow().virtualScreenHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETWORKAREA` through generated `SystemParametersInfoW`.
+    @Test
+    void workAreaReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "WorkArea", 32.0, 32.0);
+            platform.pump();
+            WindowsNativeWindow.ClipRect area = window.workArea();
+            assertTrue(area.right() > area.left());
+            assertTrue(area.bottom() > area.top());
+            assertEquals(area, window.nativeWindow().workArea());
+            assertTrue((area.right() - area.left()) <= window.virtualScreenWidth());
+            assertTrue((area.bottom() - area.top()) <= window.virtualScreenHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CMOUSEBUTTONS` / `SM_MOUSEPRESENT` / `SM_MOUSEWHEELPRESENT` through generated `GetSystemMetrics`.
+    @Test
+    void mousePresenceReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MousePresence", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.mouseButtonCount() >= 0);
+            assertEquals(window.mouseButtonCount(), window.nativeWindow().mouseButtonCount());
+            assertEquals(window.mousePresent(), window.nativeWindow().mousePresent());
+            assertEquals(window.mouseWheelPresent(), window.nativeWindow().mouseWheelPresent());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXEDGE` / `SM_CYEDGE` through generated `GetSystemMetrics`.
+    @Test
+    void edgeSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "EdgeSize", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.edgeWidth() >= 0);
+            assertTrue(window.edgeHeight() >= 0);
+            assertEquals(window.edgeWidth(), window.nativeWindow().edgeWidth());
+            assertEquals(window.edgeHeight(), window.nativeWindow().edgeHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CYSMCAPTION` through generated `GetSystemMetrics`.
+    @Test
+    void smallCaptionHeightReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "SmallCaption", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.smallCaptionHeight() > 0);
+            assertEquals(window.smallCaptionHeight(), window.nativeWindow().smallCaptionHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_MENU` / `COLOR_MENUTEXT` through generated `GetSysColor`.
+    @Test
+    void menuColorsReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MenuColors", 32.0, 32.0);
+            platform.pump();
+            int menu = window.menuColor();
+            int text = window.menuTextColor();
+            assertEquals(menu, window.nativeWindow().menuColor());
+            assertEquals(text, window.nativeWindow().menuTextColor());
+            assertTrue((menu & 0xFF000000) == 0);
+            assertTrue((text & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_MENUBAR` through generated `GetSysColor`.
+    @Test
+    void menuBarColorReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MenuBarColor", 32.0, 32.0);
+            platform.pump();
+            int color = window.menuBarColor();
+            assertEquals(color, window.nativeWindow().menuBarColor());
+            assertTrue((color & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_INFOBK` / `COLOR_INFOTEXT` through generated `GetSysColor`.
+    @Test
+    void infoColorsReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "InfoColors", 32.0, 32.0);
+            platform.pump();
+            int background = window.infoBackgroundColor();
+            int text = window.infoTextColor();
+            assertEquals(background, window.nativeWindow().infoBackgroundColor());
+            assertEquals(text, window.nativeWindow().infoTextColor());
+            assertTrue((background & 0xFF000000) == 0);
+            assertTrue((text & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_HOTLIGHT` through generated `GetSysColor`.
+    @Test
+    void hotLightColorReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "HotLight", 32.0, 32.0);
+            platform.pump();
+            int color = window.hotLightColor();
+            assertEquals(color, window.nativeWindow().hotLightColor());
+            assertTrue((color & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_SCROLLBAR` / `COLOR_APPWORKSPACE` / `COLOR_WINDOWFRAME` through generated `GetSysColor`.
+    @Test
+    void frameWorkspaceColorsReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "FrameWorkspaceColors", 32.0, 32.0);
+            platform.pump();
+            int scroll = window.scrollBarColor();
+            int workspace = window.appWorkspaceColor();
+            int frame = window.windowFrameColor();
+            assertEquals(scroll, window.nativeWindow().scrollBarColor());
+            assertEquals(workspace, window.nativeWindow().appWorkspaceColor());
+            assertEquals(frame, window.nativeWindow().windowFrameColor());
+            assertTrue((scroll & 0xFF000000) == 0);
+            assertTrue((workspace & 0xFF000000) == 0);
+            assertTrue((frame & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXSIZE` / `SM_CYSIZE` / `SM_CXMENUSIZE` / `SM_CYMENUSIZE` through generated `GetSystemMetrics`.
+    @Test
+    void captionAndMenuButtonSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "CaptionMenuButtons", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.captionButtonWidth() > 0);
+            assertTrue(window.captionButtonHeight() > 0);
+            assertTrue(window.menuButtonWidth() > 0);
+            assertTrue(window.menuButtonHeight() > 0);
+            assertEquals(window.captionButtonWidth(), window.nativeWindow().captionButtonWidth());
+            assertEquals(window.captionButtonHeight(), window.nativeWindow().captionButtonHeight());
+            assertEquals(window.menuButtonWidth(), window.nativeWindow().menuButtonWidth());
+            assertEquals(window.menuButtonHeight(), window.nativeWindow().menuButtonHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_XVIRTUALSCREEN` / `SM_YVIRTUALSCREEN` through generated `GetSystemMetrics`.
+    @Test
+    void virtualScreenOriginReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "VirtualScreenOrigin", 32.0, 32.0);
+            platform.pump();
+            assertEquals(window.virtualScreenX(), window.nativeWindow().virtualScreenX());
+            assertEquals(window.virtualScreenY(), window.nativeWindow().virtualScreenY());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETUIEFFECTS` / `SPI_GETDRAGFULLWINDOWS` through generated `SystemParametersInfoW`.
+    @Test
+    void uiEffectsAndFullWindowDragReadSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "UiEffectsDrag", 32.0, 32.0);
+            platform.pump();
+            assertEquals(window.uiEffectsEnabled(), window.nativeWindow().uiEffectsEnabled());
+            assertEquals(window.dragFullWindowsEnabled(), window.nativeWindow().dragFullWindowsEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_ACTIVECAPTION` / `COLOR_INACTIVECAPTION` through generated `GetSysColor`.
+    @Test
+    void captionColorsReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "CaptionColors", 32.0, 32.0);
+            platform.pump();
+            int active = window.activeCaptionColor();
+            int inactive = window.inactiveCaptionColor();
+            assertEquals(active, window.nativeWindow().activeCaptionColor());
+            assertEquals(inactive, window.nativeWindow().inactiveCaptionColor());
+            assertTrue((active & 0xFF000000) == 0);
+            assertTrue((inactive & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `GetForegroundWindow` / `GetFocus` / `GetActiveWindow` through generated User32 bindings.
+    @Test
+    void foregroundFocusAndActiveWindowsReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ForegroundFocus", 32.0, 32.0);
+            platform.pump();
+            MemorySegment foreground = window.foregroundWindow();
+            MemorySegment focus = window.focusWindow();
+            MemorySegment active = window.activeWindow();
+            assertEquals(foreground.address(), window.nativeWindow().foregroundWindow().address());
+            assertEquals(focus.address(), window.nativeWindow().focusWindow().address());
+            assertEquals(active.address(), window.nativeWindow().activeWindow().address());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `GetCaretPos` through the generated User32 binding.
+    @Test
+    void caretPositionReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "CaretPos", 32.0, 32.0);
+            platform.pump();
+            WindowsNativeWindow.ScreenPoint caret = window.caretPosition();
+            WindowsNativeWindow.ScreenPoint again = window.nativeWindow().caretPosition();
+            assertEquals(caret.x(), again.x());
+            assertEquals(caret.y(), again.y());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads restored bounds through generated `GetWindowPlacement`.
+    @Test
+    void windowPlacementReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "WindowPlacement", 120.0, 80.0);
+            platform.pump();
+            WindowsNativeWindow.WindowPlacement placement = window.windowPlacement();
+            WindowsNativeWindow.WindowPlacement again = window.nativeWindow().windowPlacement();
+            assertEquals(placement.showCmd(), again.showCmd());
+            assertTrue(placement.normal().right() > placement.normal().left());
+            assertTrue(placement.normal().bottom() > placement.normal().top());
+            assertEquals(placement.normal().left(), again.normal().left());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_CAPTIONTEXT` / `COLOR_INACTIVECAPTIONTEXT` through generated `GetSysColor`.
+    @Test
+    void captionTextColorReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "CaptionText", 32.0, 32.0);
+            platform.pump();
+            int color = window.captionTextColor();
+            int inactive = window.inactiveCaptionTextColor();
+            assertEquals(color, window.nativeWindow().captionTextColor());
+            assertEquals(inactive, window.nativeWindow().inactiveCaptionTextColor());
+            assertTrue((color & 0xFF000000) == 0);
+            assertTrue((inactive & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `IsIconic` / `IsZoomed` / `IsWindowVisible` through generated User32 bindings.
+    @Test
+    void windowStateQueriesReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "WindowStateQueries", 32.0, 32.0);
+            platform.pump();
+            assertFalse(window.iconic());
+            assertFalse(window.zoomed());
+            assertEquals(window.iconic(), window.nativeWindow().iconic());
+            assertEquals(window.zoomed(), window.nativeWindow().zoomed());
+            assertEquals(window.windowVisible(), window.nativeWindow().windowVisible());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Disables and re-enables the HWND through generated `EnableWindow` / `IsWindowEnabled`.
+    @Test
+    void enableWindowTogglesInputThroughUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "EnableWindow", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.windowEnabled());
+            window.setWindowEnabled(false);
+            assertFalse(window.windowEnabled());
+            assertEquals(window.windowEnabled(), window.nativeWindow().windowEnabled());
+            window.setWindowEnabled(true);
+            assertTrue(window.windowEnabled());
+            assertTrue(window.nativeWindow().windowEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads the HWND title through generated `GetWindowTextLengthW` / `GetWindowTextW`.
+    @Test
+    void windowTextReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "HimariTitle", 32.0, 32.0);
+            platform.pump();
+            assertEquals("HimariTitle", window.windowText());
+            assertEquals(window.windowText(), window.nativeWindow().windowText());
+            window.setWindowText("HimariRenamed");
+            assertEquals("HimariRenamed", window.windowText());
+            assertEquals("HimariRenamed", window.nativeWindow().windowText());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads the window class through generated `GetClassNameW`.
+    @Test
+    void classNameReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ClassName", 32.0, 32.0);
+            platform.pump();
+            String name = window.className();
+            assertTrue(name.startsWith("HimariUIWindow"));
+            assertEquals(name, window.nativeWindow().className());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Round-trips the client origin through generated `ClientToScreen` / `ScreenToClient`.
+    @Test
+    void clientToScreenRoundTripsThroughUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ClientToScreen", 32.0, 32.0);
+            platform.pump();
+            WindowsNativeWindow.ScreenPoint screen = window.clientToScreen(0, 0);
+            WindowsNativeWindow.ScreenPoint client = window.screenToClient(screen.x(), screen.y());
+            assertEquals(0, client.x());
+            assertEquals(0, client.y());
+            assertEquals(screen, window.nativeWindow().clientToScreen(0, 0));
+            assertEquals(client, window.nativeWindow().screenToClient(screen.x(), screen.y()));
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Assigns keyboard focus through generated `SetFocus` and reads it back with `GetFocus`.
+    @Test
+    void setFocusRoundTripsThroughUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "SetFocus", 32.0, 32.0);
+            platform.pump();
+            window.setFocus();
+            assertEquals(window.nativeHandle().address(), window.focusWindow().address());
+            window.nativeWindow().setFocus();
+            assertEquals(window.nativeHandle().address(), window.nativeWindow().focusWindow().address());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Invokes generated `SetForegroundWindow` on a live HWND.
+    @Test
+    void setForegroundWindowInvokesUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "SetForegroundWindow", 32.0, 32.0);
+            platform.pump();
+            window.setFocus();
+            boolean accepted = window.setForegroundWindow();
+            boolean again = window.nativeWindow().setForegroundWindow();
+            if (accepted || again) {
+                assertEquals(window.nativeHandle().address(), window.foregroundWindow().address());
+                assertEquals(window.nativeHandle().address(), window.nativeWindow().foregroundWindow().address());
+            }
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Assigns the active window through generated `SetActiveWindow`.
+    @Test
+    void setActiveWindowInvokesUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "SetActiveWindow", 32.0, 32.0);
+            platform.pump();
+            window.setFocus();
+            window.setActiveWindow();
+            window.nativeWindow().setActiveWindow();
+            MemorySegment active = window.activeWindow();
+            assertEquals(active.address(), window.nativeWindow().activeWindow().address());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `GetWindowThreadProcessId` through the generated User32 binding.
+    @Test
+    void windowThreadProcessIdsReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ThreadProcessIds", 32.0, 32.0);
+            platform.pump();
+            WindowsNativeWindow.ThreadProcessIds ids = window.threadProcessIds();
+            assertTrue(ids.threadId() != 0);
+            assertTrue(ids.processId() != 0);
+            assertEquals(ids, window.nativeWindow().threadProcessIds());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETANIMATION` through generated `SystemParametersInfoW` into `ANIMATIONINFO`.
+    @Test
+    void minimizeMaximizeAnimationReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "AnimationInfo", 32.0, 32.0);
+            platform.pump();
+            int minAnimate = window.animationMinAnimate();
+            assertEquals(minAnimate, window.nativeWindow().animationMinAnimate());
+            assertEquals(minAnimate != 0, window.animationMinAnimate() != 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETACTIVEWINDOWTRACKING` / `SPI_GETFOREGROUNDLOCKTIMEOUT` through generated `SystemParametersInfoW`.
+    @Test
+    void foregroundTrackingReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ForegroundTracking", 32.0, 32.0);
+            platform.pump();
+            assertEquals(window.activeWindowTrackingEnabled(), window.nativeWindow().activeWindowTrackingEnabled());
+            assertTrue(window.foregroundLockTimeoutMillis() >= 0);
+            assertEquals(window.foregroundLockTimeoutMillis(), window.nativeWindow().foregroundLockTimeoutMillis());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXMINTRACK` / `SM_CYMINTRACK` through generated `GetSystemMetrics`.
+    @Test
+    void minTrackSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MinTrack", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.minTrackWidth() >= window.minWindowWidth());
+            assertTrue(window.minTrackHeight() >= window.minWindowHeight());
+            assertEquals(window.minTrackWidth(), window.nativeWindow().minTrackWidth());
+            assertEquals(window.minTrackHeight(), window.nativeWindow().minTrackHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_GRADIENTACTIVECAPTION` / `COLOR_GRADIENTINACTIVECAPTION` through generated `GetSysColor`.
+    @Test
+    void gradientCaptionColorsReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "GradientCaption", 32.0, 32.0);
+            platform.pump();
+            int active = window.gradientActiveCaptionColor();
+            int inactive = window.gradientInactiveCaptionColor();
+            assertEquals(active, window.nativeWindow().gradientActiveCaptionColor());
+            assertEquals(inactive, window.nativeWindow().gradientInactiveCaptionColor());
+            assertTrue((active & 0xFF000000) == 0);
+            assertTrue((inactive & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `IsWindow` / `GetParent` / `GetDesktopWindow` / `GetAncestor` through generated User32 bindings.
+    @Test
+    void windowAncestryReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "WindowAncestry", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.isWindow());
+            assertTrue(window.nativeWindow().isWindow());
+            assertEquals(0L, window.parentWindow().address());
+            assertEquals(0L, window.nativeWindow().parentWindow().address());
+            assertTrue(window.desktopWindow().address() != 0L);
+            assertEquals(window.desktopWindow().address(), window.nativeWindow().desktopWindow().address());
+            assertEquals(window.nativeHandle().address(), window.rootAncestor().address());
+            assertEquals(window.rootAncestor().address(), window.nativeWindow().rootAncestor().address());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Raises the HWND through generated `BringWindowToTop`.
+    @Test
+    void bringWindowToTopInvokesUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "BringWindowToTop", 32.0, 32.0);
+            platform.pump();
+            window.bringToTop();
+            window.nativeWindow().bringToTop();
+            assertTrue(window.isWindow());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXMAXTRACK` / `SM_CYMAXTRACK` through generated `GetSystemMetrics`.
+    @Test
+    void maxTrackSizeReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MaxTrack", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.maxTrackWidth() >= window.minTrackWidth());
+            assertTrue(window.maxTrackHeight() >= window.minTrackHeight());
+            assertEquals(window.maxTrackWidth(), window.nativeWindow().maxTrackWidth());
+            assertEquals(window.maxTrackHeight(), window.nativeWindow().maxTrackHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_BTNSHADOW` / `COLOR_BTNHIGHLIGHT` through generated `GetSysColor`.
+    @Test
+    void buttonEdgeColorsReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ButtonEdgeColors", 32.0, 32.0);
+            platform.pump();
+            int shadow = window.buttonShadowColor();
+            int highlight = window.buttonHighlightColor();
+            assertEquals(shadow, window.nativeWindow().buttonShadowColor());
+            assertEquals(highlight, window.nativeWindow().buttonHighlightColor());
+            assertTrue((shadow & 0xFF000000) == 0);
+            assertTrue((highlight & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETFOREGROUNDFLASHCOUNT` / `SPI_GETMOUSEVANISH` through generated `SystemParametersInfoW`.
+    @Test
+    void foregroundFlashAndMouseVanishReadSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "FlashVanish", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.foregroundFlashCount() >= 0);
+            assertEquals(window.foregroundFlashCount(), window.nativeWindow().foregroundFlashCount());
+            assertEquals(window.mouseVanishEnabled(), window.nativeWindow().mouseVanishEnabled());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Maps the client origin through generated `MapWindowPoints` and matches `ClientToScreen`.
+    @Test
+    void mapWindowPointsMatchesClientToScreen() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MapWindowPoints", 32.0, 32.0);
+            platform.pump();
+            WindowsNativeWindow.ScreenPoint mapped = window.mapClientToScreen(0, 0);
+            WindowsNativeWindow.ScreenPoint direct = window.clientToScreen(0, 0);
+            assertEquals(direct, mapped);
+            assertEquals(mapped, window.nativeWindow().mapClientToScreen(0, 0));
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_3DDKSHADOW` / `COLOR_3DLIGHT` through generated `GetSysColor`.
+    @Test
+    void threeDEdgeColorsReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ThreeDEdgeColors", 32.0, 32.0);
+            platform.pump();
+            int dark = window.darkShadowColor();
+            int light = window.lightEdgeColor();
+            assertEquals(dark, window.nativeWindow().darkShadowColor());
+            assertEquals(light, window.nativeWindow().lightEdgeColor());
+            assertTrue((dark & 0xFF000000) == 0);
+            assertTrue((light & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETNONCLIENTMETRICS` through generated `SystemParametersInfoW` into `NONCLIENTMETRICSW`.
+    @Test
+    void nonClientMetricsReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "NonClientMetrics", 32.0, 32.0);
+            platform.pump();
+            WindowsNativeWindow.NonClientMetrics metrics = window.nonClientMetrics();
+            assertTrue(metrics.captionHeight() > 0);
+            assertTrue(metrics.menuHeight() > 0);
+            assertTrue(metrics.scrollWidth() > 0);
+            assertTrue(metrics.captionWidth() > 0);
+            assertFalse(metrics.captionFontFace().isEmpty());
+            assertTrue(metrics.paddedBorderWidth() >= 0);
+            assertEquals(metrics, window.nativeWindow().nonClientMetrics());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Enumerates Z-order siblings through generated `GetTopWindow` / `GetWindow`.
+    @Test
+    void topWindowAndSiblingsReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "TopWindowSiblings", 32.0, 32.0);
+            platform.pump();
+            assertEquals(0L, window.topWindow().address());
+            assertEquals(0L, window.ownerWindow().address());
+            assertEquals(0L, window.childWindow().address());
+            MemorySegment top = window.desktopTopWindow();
+            assertTrue(window.isWindowHandle(top));
+            assertEquals(top.address(), window.nativeWindow().desktopTopWindow().address());
+            MemorySegment next = window.nextWindow(top);
+            if (next.address() != 0L) {
+                assertTrue(window.isWindowHandle(next));
+                assertEquals(next.address(), window.nativeWindow().nextWindow(top).address());
+                MemorySegment previous = window.previousWindow(next);
+                if (previous.address() != 0L) {
+                    assertTrue(window.isWindowHandle(previous));
+                }
+            }
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `GetShellWindow` and `FindWindowW` through generated User32 bindings.
+    @Test
+    void shellWindowReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "ShellWindow", 32.0, 32.0);
+            platform.pump();
+            MemorySegment shell = window.shellWindow();
+            assertTrue(shell.address() != 0L);
+            assertEquals(shell.address(), window.nativeWindow().shellWindow().address());
+            MemorySegment tray = window.findWindow("Shell_TrayWnd");
+            if (tray.address() != 0L) {
+                assertEquals(tray.address(), window.nativeWindow().findWindow("Shell_TrayWnd").address());
+            }
+            WindowsNativeWindow.TopLevelWindows enumerated = window.enumerateTopLevelWindows();
+            assertTrue(enumerated.count() >= 1);
+            assertTrue(enumerated.containsSelf());
+            assertEquals(enumerated, window.nativeWindow().enumerateTopLevelWindows());
+            assertEquals(0, window.enumerateChildWindows(window.nativeHandle()));
+            assertTrue(window.enumerateChildWindows(window.desktopWindow()) >= 1);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETMINIMIZEDMETRICS` through generated `SystemParametersInfoW`.
+    @Test
+    void minimizedMetricsReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "MinimizedMetrics", 32.0, 32.0);
+            platform.pump();
+            WindowsNativeWindow.MinimizedMetrics metrics = window.minimizedMetrics();
+            assertTrue(metrics.width() > 0);
+            assertTrue(metrics.horzGap() >= 0);
+            assertTrue(metrics.vertGap() >= 0);
+            assertEquals(metrics, window.nativeWindow().minimizedMetrics());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETICONMETRICS` through generated `SystemParametersInfoW` into `ICONMETRICSW`.
+    @Test
+    void iconMetricsReadsSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "IconMetrics", 32.0, 32.0);
+            platform.pump();
+            WindowsNativeWindow.IconMetrics metrics = window.iconMetrics();
+            assertTrue(metrics.horzSpacing() > 0);
+            assertTrue(metrics.vertSpacing() > 0);
+            assertFalse(metrics.fontFace().isEmpty());
+            assertEquals(metrics, window.nativeWindow().iconMetrics());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `GetLastActivePopup` / `GetSystemMenu` through generated User32 bindings.
+    @Test
+    void lastActivePopupAndSystemMenuReadUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "LastPopupMenu", 32.0, 32.0);
+            platform.pump();
+            assertEquals(window.nativeHandle().address(), window.lastActivePopup().address());
+            assertEquals(window.lastActivePopup().address(), window.nativeWindow().lastActivePopup().address());
+            assertTrue(window.systemMenu().address() != 0L);
+            assertEquals(window.systemMenu().address(), window.nativeWindow().systemMenu().address());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SM_CXICONSPACING` / `SM_CYICONSPACING` through generated `GetSystemMetrics`.
+    @Test
+    void iconSpacingReadsSystemMetrics() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "IconSpacing", 32.0, 32.0);
+            platform.pump();
+            assertTrue(window.iconSpacingWidth() > 0);
+            assertTrue(window.iconSpacingHeight() > 0);
+            assertEquals(window.iconSpacingWidth(), window.nativeWindow().iconSpacingWidth());
+            assertEquals(window.iconSpacingHeight(), window.nativeWindow().iconSpacingHeight());
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `COLOR_BACKGROUND` through generated `GetSysColor`.
+    @Test
+    void backgroundColorReadsUser32() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "BackgroundColor", 32.0, 32.0);
+            platform.pump();
+            int color = window.backgroundColor();
+            assertEquals(color, window.nativeWindow().backgroundColor());
+            assertTrue((color & 0xFF000000) == 0);
+        } finally {
+            platform.close();
+        }
+    }
+
+    /// Reads `SPI_GETICONTITLEWRAP` / `SPI_GETFONTSMOOTHINGTYPE` through generated `SystemParametersInfoW`.
+    @Test
+    void iconTitleWrapAndFontSmoothingTypeReadSystemParameters() throws Exception {
+        WindowsPlatform platform = new WindowsBackend().open().toCompletableFuture().get();
+        try {
+            WindowsWindow window = openToplevel(platform, "IconTitleFont", 32.0, 32.0);
+            platform.pump();
+            assertEquals(window.iconTitleWrapEnabled(), window.nativeWindow().iconTitleWrapEnabled());
+            assertTrue(window.fontSmoothingType() >= 0);
+            assertEquals(window.fontSmoothingType(), window.nativeWindow().fontSmoothingType());
+        } finally {
+            platform.close();
+        }
+    }
+
     /// Delivers `WM_RBUTTON*` as secondary pointer events.
     @Test
     void deliversPostedSecondaryButtonThroughWndProc() throws Exception {

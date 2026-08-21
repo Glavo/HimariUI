@@ -15,29 +15,30 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/// Verifies the unstyled accordion through the shipped gallery control.
+/// Verifies the unstyled pagination control through the shipped gallery.
 @NotNullByDefault
-final class AccordionTest {
-    /// Advances the expanded section through pointer activation and arrow keys.
+final class PaginationTest {
+    /// Advances pages through pointer activation and arrow keys.
     @Test
-    void expandsThroughShippedLeaf() {
+    void pagesThroughShippedLeaf() {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
-        assertEquals("Alpha", gallery.accordion().value());
+        assertEquals("1", gallery.pagination().value());
         tree.setRoot(gallery.create(tree));
         tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
-        SemanticsNode accordion = first(tree, SemanticsRole.ACCORDION);
-        assertEquals("Alpha", accordion.label());
-        assertEquals("expanded", accordion.itemStatus());
-        click(tree, accordion);
-        assertEquals("Beta", gallery.accordion().value());
+        SemanticsNode pages = first(tree, SemanticsRole.PAGINATION);
+        assertEquals("1", pages.label());
+        assertEquals(0.0, pages.rangeMinimum());
+        assertEquals(2.0, pages.rangeMaximum());
+        click(tree, pages);
+        assertEquals("2", gallery.pagination().value());
         assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ARROW_RIGHT)));
-        assertEquals("Gamma", gallery.accordion().value());
-        gallery.accordion().setDisabled(true);
-        gallery.accordion().expand(0);
-        assertEquals("Gamma", gallery.accordion().value());
-        assertTrue(gallery.accordion().disabled());
+        assertEquals("3", gallery.pagination().value());
+        gallery.pagination().setDisabled(true);
+        gallery.pagination().setPage(0);
+        assertEquals("3", gallery.pagination().value());
+        assertTrue(gallery.pagination().disabled());
     }
 
     /// Dispatches a pointer press on `node`.

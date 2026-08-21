@@ -22,7 +22,7 @@ final class SharedElementTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1200.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         LogicalRect overlay = gallery.shared().overlay(0.5);
         assertNotNull(gallery.shared().link());
@@ -44,7 +44,7 @@ final class SharedElementTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1200.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         gallery.shared().overlay(0.0);
         gallery.shared().show(0L);

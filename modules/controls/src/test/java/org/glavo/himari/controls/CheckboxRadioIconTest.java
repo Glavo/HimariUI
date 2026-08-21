@@ -22,7 +22,7 @@ final class CheckboxRadioIconTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         assertFalse(gallery.checkbox().isChecked());
         click(tree, first(tree, SemanticsRole.CHECKBOX));
@@ -39,7 +39,7 @@ final class CheckboxRadioIconTest {
         gallery.radio().select(1);
         assertEquals(1, gallery.radio().selected());
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         assertTrue(tree.semantics().nodes().stream().anyMatch(node ->
                 node.role() == SemanticsRole.RADIO && node.label().equals("B") && Boolean.TRUE.equals(node.selected())));
@@ -62,7 +62,7 @@ final class CheckboxRadioIconTest {
         gallery.combo().select(1);
         assertEquals("Green", gallery.combo().value());
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode combo = first(tree, SemanticsRole.COMBO_BOX);
         assertEquals("Green", combo.label());
@@ -84,7 +84,7 @@ final class CheckboxRadioIconTest {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 800.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode icon = tree.semantics().nodes().stream()
                 .filter(node -> node.role() == SemanticsRole.BUTTON && node.label().equals("plus"))

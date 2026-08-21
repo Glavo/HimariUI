@@ -91,6 +91,42 @@ public final class ControlGallery {
     /// Accordion used by the gallery.
     private final Accordion accordion;
 
+    /// Pagination used by the gallery.
+    private final Pagination pagination;
+
+    /// Badge used by the gallery.
+    private final Badge badge;
+
+    /// Filter chip used by the gallery.
+    private final Chip chip;
+
+    /// Grouping card used by the gallery.
+    private final Card card;
+
+    /// Identity avatar used by the gallery.
+    private final Avatar avatar;
+
+    /// Inline banner used by the gallery.
+    private final Banner banner;
+
+    /// Transient snackbar used by the gallery.
+    private final Snackbar snackbar;
+
+    /// Loading skeleton used by the gallery.
+    private final Skeleton skeleton;
+
+    /// Discrete star rating used by the gallery.
+    private final Rating rating;
+
+    /// Empty-state placeholder used by the gallery.
+    private final Empty empty;
+
+    /// Labeled slide carousel used by the gallery.
+    private final Carousel carousel;
+
+    /// Non-modal drawer used by the gallery.
+    private final Drawer drawer;
+
     /// Matched-geometry pair used by the gallery.
     private final SharedElement shared;
 
@@ -132,6 +168,9 @@ public final class ControlGallery {
 
     /// Menu used by the gallery.
     private final Menu menu;
+
+    /// Context menu used by the gallery.
+    private final ContextMenu contextMenu;
 
     /// Dialog used by the gallery.
     private final Dialog dialog;
@@ -214,6 +253,18 @@ public final class ControlGallery {
         this.breadcrumb = new Breadcrumb(List.of("Home", "Docs", "API"));
         this.link = new Hyperlink("Plans", "plans");
         this.accordion = new Accordion(List.of("Alpha", "Beta", "Gamma"));
+        this.pagination = new Pagination(3);
+        this.badge = new Badge("New");
+        this.chip = new Chip("Filter");
+        this.card = new Card("Summary");
+        this.avatar = new Avatar("Ada Lovelace", "AL");
+        this.banner = new Banner("Saved");
+        this.snackbar = new Snackbar("Deleted", "Undo");
+        this.skeleton = new Skeleton();
+        this.rating = new Rating(5, 3);
+        this.empty = new Empty("No items");
+        this.carousel = new Carousel(List.of("One", "Two", "Three"));
+        this.drawer = new Drawer("Sidebar");
         this.shared = new SharedElement("gallery", "hero");
         this.toggle = new Toggle("Muted");
         this.slider = new Slider("Volume", 0.0f, 10.0f, 1.0f, 3.0f);
@@ -234,6 +285,7 @@ public final class ControlGallery {
         this.status = new LiveStatus("Ready");
         this.popup = new Popup("Overlay");
         this.menu = new Menu("File", List.of(new Button("Open", () -> { })));
+        this.contextMenu = new ContextMenu("Context", List.of(new Button("Rename", () -> { })));
         this.dialog = new Dialog("Confirm");
         this.tooltip = new Tooltip("Hint");
         this.tabs = new Tabs(List.of("One", "Two"));
@@ -387,6 +439,90 @@ public final class ControlGallery {
         return accordion;
     }
 
+    /// Returns the pagination control.
+    ///
+    /// @return the pagination
+    public Pagination pagination() {
+        return pagination;
+    }
+
+    /// Returns the badge.
+    ///
+    /// @return the badge
+    public Badge badge() {
+        return badge;
+    }
+
+    /// Returns the filter chip.
+    ///
+    /// @return the chip
+    public Chip chip() {
+        return chip;
+    }
+
+    /// Returns the grouping card.
+    ///
+    /// @return the card
+    public Card card() {
+        return card;
+    }
+
+    /// Returns the identity avatar.
+    ///
+    /// @return the avatar
+    public Avatar avatar() {
+        return avatar;
+    }
+
+    /// Returns the inline banner.
+    ///
+    /// @return the banner
+    public Banner banner() {
+        return banner;
+    }
+
+    /// Returns the transient snackbar.
+    ///
+    /// @return the snackbar
+    public Snackbar snackbar() {
+        return snackbar;
+    }
+
+    /// Returns the loading skeleton.
+    ///
+    /// @return the skeleton
+    public Skeleton skeleton() {
+        return skeleton;
+    }
+
+    /// Returns the discrete star rating.
+    ///
+    /// @return the rating
+    public Rating rating() {
+        return rating;
+    }
+
+    /// Returns the empty-state placeholder.
+    ///
+    /// @return the empty state
+    public Empty empty() {
+        return empty;
+    }
+
+    /// Returns the labeled slide carousel.
+    ///
+    /// @return the carousel
+    public Carousel carousel() {
+        return carousel;
+    }
+
+    /// Returns the non-modal drawer.
+    ///
+    /// @return the drawer
+    public Drawer drawer() {
+        return drawer;
+    }
+
     /// Returns the matched-geometry pair.
     ///
     /// @return the shared element
@@ -483,6 +619,13 @@ public final class ControlGallery {
     /// @return the menu
     public Menu menu() {
         return menu;
+    }
+
+    /// Returns the context menu.
+    ///
+    /// @return the context menu
+    public ContextMenu contextMenu() {
+        return contextMenu;
     }
 
     /// Returns the dialog.
@@ -910,6 +1053,18 @@ public final class ControlGallery {
                 breadcrumb.create(factory, "breadcrumb"),
                 link.create(factory, "link"),
                 accordion.create(factory, "accordion"),
+                pagination.create(factory, "pagination"),
+                badge.create(factory, "badge"),
+                chip.create(factory, "chip"),
+                card.create(factory, "card"),
+                avatar.create(factory, "avatar"),
+                banner.create(factory, "banner"),
+                snackbar.create(factory, "snackbar"),
+                skeleton.create(factory, "skeleton"),
+                rating.create(factory, "rating"),
+                empty.create(factory, "empty"),
+                carousel.create(factory, "carousel"),
+                drawer.create(factory, "drawer"),
                 shared.create(factory, "shared"),
                 toggle.create(factory, "toggle"),
                 slider.create(factory, "slider"),
@@ -924,6 +1079,7 @@ public final class ControlGallery {
                 status.create(factory, "status"),
                 popup.create(factory, "popup"),
                 menu.create(factory, "menu"),
+                contextMenu.create(factory, "context-menu"),
                 dialog.create(factory, "dialog"),
                 tooltip.create(factory, "tooltip"),
                 tabs.create(factory, "tabs"),
@@ -961,6 +1117,7 @@ public final class ControlGallery {
         Objects.requireNonNull(event, "event");
         if (dialog.handlePointer(tree, event)
                 || menu.handlePointer(tree, event)
+                || contextMenu.handlePointer(tree, event)
                 || tooltip.handlePointer(tree, event)
                 || popup.handlePointer(tree, event)) {
             return true;
@@ -1000,6 +1157,7 @@ public final class ControlGallery {
         Objects.requireNonNull(event, "event");
         if (dialog.handleKey(event)
                 || menu.handleKey(event)
+                || contextMenu.handleKey(event)
                 || tooltip.handleKey(event)
                 || popup.handleKey(event)) {
             return true;

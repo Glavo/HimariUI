@@ -15,5 +15,8 @@ public enum PopupKind {
     DIALOG,
 
     /// A non-activating tooltip.
-    TOOLTIP
+    TOOLTIP,
+
+    /// A context menu opened from a secondary pointer press.
+    CONTEXT_MENU
 }

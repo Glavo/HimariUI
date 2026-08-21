@@ -27,7 +27,7 @@ final class SearchFieldTest {
         assertEquals("", gallery.search().submitted());
         gallery.search().setQuery("fonts");
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1800.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode search = first(tree, SemanticsRole.SEARCH_BOX);
         assertEquals("fonts", search.label());

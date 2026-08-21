@@ -135,5 +135,44 @@ public enum SemanticsRole {
     LINK,
 
     /// A mutually exclusive set of expandable sections.
-    ACCORDION
+    ACCORDION,
+
+    /// A numbered page selector.
+    PAGINATION,
+
+    /// A target that opens a context menu on secondary pointer press.
+    CONTEXT_MENU,
+
+    /// A non-interactive status badge.
+    BADGE,
+
+    /// A selectable filter chip.
+    CHIP,
+
+    /// A titled grouping card.
+    CARD,
+
+    /// A non-interactive identity avatar.
+    AVATAR,
+
+    /// A dismissible inline banner.
+    BANNER,
+
+    /// A transient snackbar with an optional action.
+    SNACKBAR,
+
+    /// A non-interactive loading skeleton.
+    SKELETON,
+
+    /// A discrete star rating.
+    RATING,
+
+    /// A no-content placeholder.
+    EMPTY,
+
+    /// A labeled slide carousel that clamps at the ends.
+    CAROUSEL,
+
+    /// A non-modal drawer pane.
+    DRAWER
 }

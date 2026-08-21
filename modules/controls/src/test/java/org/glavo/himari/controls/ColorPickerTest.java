@@ -25,7 +25,7 @@ final class ColorPickerTest {
         ControlGallery gallery = new ControlGallery();
         assertEquals("#336699", gallery.colorPicker().value());
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 1600.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode color = first(tree, SemanticsRole.COLOR_PICKER);
         assertEquals("#336699", color.label());

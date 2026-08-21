@@ -163,6 +163,7 @@ public final class Popup {
             case MENU -> SemanticsRole.MENU;
             case DIALOG -> SemanticsRole.DIALOG;
             case TOOLTIP -> SemanticsRole.TOOLTIP;
+            case CONTEXT_MENU -> SemanticsRole.CONTEXT_MENU;
         };
     }
 

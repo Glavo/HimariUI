@@ -97,6 +97,19 @@ public final class WindowsAutomationBridge {
             case BREADCRUMB -> "Group";
             case LINK -> "Hyperlink";
             case ACCORDION -> "Group";
+            case PAGINATION -> "Group";
+            case CONTEXT_MENU -> "Menu";
+            case BADGE -> "Text";
+            case CHIP -> "CheckBox";
+            case CARD -> "Group";
+            case AVATAR -> "Image";
+            case BANNER -> "Text";
+            case SNACKBAR -> "Text";
+            case SKELETON -> "Pane";
+            case RATING -> "Slider";
+            case EMPTY -> "Text";
+            case CAROUSEL -> "Group";
+            case DRAWER -> "Pane";
         };
     }
 

@@ -206,6 +206,24 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// `SPI_GETCLIENTAREAANIMATION`.
     public static final int SPI_GETCLIENTAREAANIMATION = 0x1042;
 
+    /// `SPI_GETANIMATION`.
+    public static final int SPI_GETANIMATION = 0x0048;
+
+    /// `SPI_GETNONCLIENTMETRICS`.
+    public static final int SPI_GETNONCLIENTMETRICS = 0x0029;
+
+    /// `SPI_GETMINIMIZEDMETRICS`.
+    public static final int SPI_GETMINIMIZEDMETRICS = 0x002B;
+
+    /// `SPI_GETICONMETRICS`.
+    public static final int SPI_GETICONMETRICS = 0x002D;
+
+    /// `SPI_GETACTIVEWINDOWTRACKING`.
+    public static final int SPI_GETACTIVEWINDOWTRACKING = 0x1000;
+
+    /// `SPI_GETFOREGROUNDLOCKTIMEOUT`.
+    public static final int SPI_GETFOREGROUNDLOCKTIMEOUT = 0x2000;
+
     /// `HCF_HIGHCONTRASTON`.
     public static final int HCF_HIGHCONTRASTON = 0x0000_0001;
 
@@ -1247,6 +1265,36 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// `SM_CYVSCROLL`.
     public static final int SM_CYVSCROLL = 20;
 
+    /// `SM_CMONITORS`.
+    public static final int SM_CMONITORS = 80;
+
+    /// `SM_CXMIN`.
+    public static final int SM_CXMIN = 28;
+
+    /// `SM_CYMIN`.
+    public static final int SM_CYMIN = 29;
+
+    /// `SM_CXMAXIMIZED`.
+    public static final int SM_CXMAXIMIZED = 61;
+
+    /// `SM_CYMAXIMIZED`.
+    public static final int SM_CYMAXIMIZED = 62;
+
+    /// `SM_CXSCREEN`.
+    public static final int SM_CXSCREEN = 0;
+
+    /// `SM_CYSCREEN`.
+    public static final int SM_CYSCREEN = 1;
+
+    /// `SM_CXVIRTUALSCREEN`.
+    public static final int SM_CXVIRTUALSCREEN = 78;
+
+    /// `SM_CYVIRTUALSCREEN`.
+    public static final int SM_CYVIRTUALSCREEN = 79;
+
+    /// `SPI_GETWORKAREA`.
+    public static final int SPI_GETWORKAREA = 0x0030;
+
     /// `COLOR_WINDOW`.
     public static final int COLOR_WINDOW = 5;
 
@@ -1270,6 +1318,156 @@ public final class WindowsNativeWindow implements AutoCloseable {
 
     /// `COLOR_INACTIVEBORDER`.
     public static final int COLOR_INACTIVEBORDER = 11;
+
+    /// `COLOR_ACTIVECAPTION`.
+    public static final int COLOR_ACTIVECAPTION = 2;
+
+    /// `COLOR_INACTIVECAPTION`.
+    public static final int COLOR_INACTIVECAPTION = 3;
+
+    /// `COLOR_CAPTIONTEXT`.
+    public static final int COLOR_CAPTIONTEXT = 9;
+
+    /// `COLOR_INACTIVECAPTIONTEXT`.
+    public static final int COLOR_INACTIVECAPTIONTEXT = 19;
+
+    /// `COLOR_MENU`.
+    public static final int COLOR_MENU = 4;
+
+    /// `COLOR_MENUTEXT`.
+    public static final int COLOR_MENUTEXT = 7;
+
+    /// `SM_CMOUSEBUTTONS`.
+    public static final int SM_CMOUSEBUTTONS = 43;
+
+    /// `SM_MOUSEPRESENT`.
+    public static final int SM_MOUSEPRESENT = 19;
+
+    /// `SM_MOUSEWHEELPRESENT`.
+    public static final int SM_MOUSEWHEELPRESENT = 75;
+
+    /// `SM_CXEDGE`.
+    public static final int SM_CXEDGE = 45;
+
+    /// `SM_CYEDGE`.
+    public static final int SM_CYEDGE = 46;
+
+    /// `SM_CYSMCAPTION`.
+    public static final int SM_CYSMCAPTION = 51;
+
+    /// `COLOR_MENUBAR`.
+    public static final int COLOR_MENUBAR = 30;
+
+    /// `COLOR_INFOBK`.
+    public static final int COLOR_INFOBK = 24;
+
+    /// `COLOR_INFOTEXT`.
+    public static final int COLOR_INFOTEXT = 23;
+
+    /// `COLOR_HOTLIGHT`.
+    public static final int COLOR_HOTLIGHT = 26;
+
+    /// `COLOR_SCROLLBAR`.
+    public static final int COLOR_SCROLLBAR = 0;
+
+    /// `COLOR_APPWORKSPACE`.
+    public static final int COLOR_APPWORKSPACE = 12;
+
+    /// `COLOR_WINDOWFRAME`.
+    public static final int COLOR_WINDOWFRAME = 6;
+
+    /// `SM_CXSIZE`.
+    public static final int SM_CXSIZE = 30;
+
+    /// `SM_CYSIZE`.
+    public static final int SM_CYSIZE = 31;
+
+    /// `SM_CXMENUSIZE`.
+    public static final int SM_CXMENUSIZE = 54;
+
+    /// `SM_CYMENUSIZE`.
+    public static final int SM_CYMENUSIZE = 55;
+
+    /// `SM_XVIRTUALSCREEN`.
+    public static final int SM_XVIRTUALSCREEN = 76;
+
+    /// `SM_YVIRTUALSCREEN`.
+    public static final int SM_YVIRTUALSCREEN = 77;
+
+    /// `SPI_GETUIEFFECTS`.
+    public static final int SPI_GETUIEFFECTS = 0x103E;
+
+    /// `SPI_GETDRAGFULLWINDOWS`.
+    public static final int SPI_GETDRAGFULLWINDOWS = 0x0026;
+
+    /// `SM_CXMINTRACK`.
+    public static final int SM_CXMINTRACK = 34;
+
+    /// `SM_CYMINTRACK`.
+    public static final int SM_CYMINTRACK = 35;
+
+    /// `COLOR_GRADIENTACTIVECAPTION`.
+    public static final int COLOR_GRADIENTACTIVECAPTION = 27;
+
+    /// `COLOR_GRADIENTINACTIVECAPTION`.
+    public static final int COLOR_GRADIENTINACTIVECAPTION = 28;
+
+    /// `SM_CXMAXTRACK`.
+    public static final int SM_CXMAXTRACK = 59;
+
+    /// `SM_CYMAXTRACK`.
+    public static final int SM_CYMAXTRACK = 60;
+
+    /// `COLOR_BTNSHADOW` / `COLOR_3DSHADOW`.
+    public static final int COLOR_BTNSHADOW = 16;
+
+    /// `COLOR_BTNHIGHLIGHT` / `COLOR_3DHILIGHT`.
+    public static final int COLOR_BTNHIGHLIGHT = 20;
+
+    /// `SPI_GETFOREGROUNDFLASHCOUNT`.
+    public static final int SPI_GETFOREGROUNDFLASHCOUNT = 0x2004;
+
+    /// `SPI_GETMOUSEVANISH`.
+    public static final int SPI_GETMOUSEVANISH = 0x1020;
+
+    /// `COLOR_3DDKSHADOW`.
+    public static final int COLOR_3DDKSHADOW = 21;
+
+    /// `COLOR_3DLIGHT`.
+    public static final int COLOR_3DLIGHT = 22;
+
+    /// `GA_ROOT`.
+    public static final int GA_ROOT = 2;
+
+    /// `GW_HWNDNEXT`.
+    public static final int GW_HWNDNEXT = 2;
+
+    /// `GW_OWNER`.
+    public static final int GW_OWNER = 4;
+
+    /// `GW_CHILD`.
+    public static final int GW_CHILD = 5;
+
+    /// `GW_HWNDPREV`.
+    public static final int GW_HWNDPREV = 3;
+
+    /// `SM_CXICONSPACING`.
+    public static final int SM_CXICONSPACING = 38;
+
+    /// `SM_CYICONSPACING`.
+    public static final int SM_CYICONSPACING = 39;
+
+    /// `COLOR_BACKGROUND` / `COLOR_DESKTOP`.
+    public static final int COLOR_BACKGROUND = 1;
+
+    /// `SPI_GETICONTITLEWRAP`.
+    public static final int SPI_GETICONTITLEWRAP = 0x0019;
+
+    /// `SPI_GETFONTSMOOTHINGTYPE`.
+    public static final int SPI_GETFONTSMOOTHINGTYPE = 0x200A;
+
+    /// Byte offset of `LOGFONTW.lfFaceName`.
+    private static final long LOGFONT_FACE_OFFSET = 28L;
 
     /// `SPI_GETMOUSESPEED`.
     public static final int SPI_GETMOUSESPEED = 0x0070;
@@ -1872,6 +2070,957 @@ public final class WindowsNativeWindow implements AutoCloseable {
         return sysColor(COLOR_INACTIVEBORDER);
     }
 
+    /// Reads `SM_CMONITORS` through generated `GetSystemMetrics`.
+    ///
+    /// @return the display count, at least `1`
+    public int monitorCount() {
+        requireOpen();
+        int count = bindings.getSystemMetrics(SM_CMONITORS);
+        if (count < 1) {
+            throw new IllegalStateException("SM_CMONITORS returned " + count);
+        }
+        return count;
+    }
+
+    /// Reads `SM_CXMIN` through generated `GetSystemMetrics`.
+    ///
+    /// @return the minimum window width in pixels
+    public int minWindowWidth() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CXMIN);
+    }
+
+    /// Reads `SM_CYMIN` through generated `GetSystemMetrics`.
+    ///
+    /// @return the minimum window height in pixels
+    public int minWindowHeight() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CYMIN);
+    }
+
+    /// Reads `SM_CXMAXIMIZED` through generated `GetSystemMetrics`.
+    ///
+    /// @return the default maximized-window width in pixels
+    public int maximizedWindowWidth() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CXMAXIMIZED);
+    }
+
+    /// Reads `SM_CYMAXIMIZED` through generated `GetSystemMetrics`.
+    ///
+    /// @return the default maximized-window height in pixels
+    public int maximizedWindowHeight() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CYMAXIMIZED);
+    }
+
+    /// Reads `SM_CXSCREEN` through generated `GetSystemMetrics`.
+    ///
+    /// @return the primary display width in pixels
+    public int screenWidth() {
+        requireOpen();
+        int width = bindings.getSystemMetrics(SM_CXSCREEN);
+        if (width <= 0) {
+            throw new IllegalStateException("SM_CXSCREEN returned " + width);
+        }
+        return width;
+    }
+
+    /// Reads `SM_CYSCREEN` through generated `GetSystemMetrics`.
+    ///
+    /// @return the primary display height in pixels
+    public int screenHeight() {
+        requireOpen();
+        int height = bindings.getSystemMetrics(SM_CYSCREEN);
+        if (height <= 0) {
+            throw new IllegalStateException("SM_CYSCREEN returned " + height);
+        }
+        return height;
+    }
+
+    /// Reads `SM_CXVIRTUALSCREEN` through generated `GetSystemMetrics`.
+    ///
+    /// @return the virtual-screen width in pixels
+    public int virtualScreenWidth() {
+        requireOpen();
+        int width = bindings.getSystemMetrics(SM_CXVIRTUALSCREEN);
+        if (width <= 0) {
+            throw new IllegalStateException("SM_CXVIRTUALSCREEN returned " + width);
+        }
+        return width;
+    }
+
+    /// Reads `SM_CYVIRTUALSCREEN` through generated `GetSystemMetrics`.
+    ///
+    /// @return the virtual-screen height in pixels
+    public int virtualScreenHeight() {
+        requireOpen();
+        int height = bindings.getSystemMetrics(SM_CYVIRTUALSCREEN);
+        if (height <= 0) {
+            throw new IllegalStateException("SM_CYVIRTUALSCREEN returned " + height);
+        }
+        return height;
+    }
+
+    /// Reads `SPI_GETWORKAREA` through generated `SystemParametersInfoW`.
+    ///
+    /// @return the primary-monitor work-area rectangle in screen pixels
+    public ClipRect workArea() {
+        requireOpen();
+        MemorySegment rect = arena.allocate(Win32Layouts.RECT);
+        rect.fill((byte) 0);
+        Win32FfmBindings.SystemParametersInfoWResult result = bindings.systemParametersInfoW(
+                SPI_GETWORKAREA,
+                0,
+                rect,
+                0
+        );
+        if (result.value() == 0) {
+            throw new IllegalStateException("SystemParametersInfoW failed for SPI_GETWORKAREA: "
+                    + result.errorCode());
+        }
+        int left = rect.get(ValueLayout.JAVA_INT, Win32Layouts.RECT_LEFT_OFFSET);
+        int top = rect.get(ValueLayout.JAVA_INT, Win32Layouts.RECT_TOP_OFFSET);
+        int right = rect.get(ValueLayout.JAVA_INT, Win32Layouts.RECT_RIGHT_OFFSET);
+        int bottom = rect.get(ValueLayout.JAVA_INT, Win32Layouts.RECT_BOTTOM_OFFSET);
+        if (right <= left || bottom <= top) {
+            throw new IllegalStateException("SPI_GETWORKAREA returned an empty rectangle");
+        }
+        return new ClipRect(left, top, right, bottom);
+    }
+
+    /// Reads `SM_CMOUSEBUTTONS` through generated `GetSystemMetrics`.
+    ///
+    /// @return the mouse button count
+    public int mouseButtonCount() {
+        requireOpen();
+        int count = bindings.getSystemMetrics(SM_CMOUSEBUTTONS);
+        if (count < 0) {
+            throw new IllegalStateException("SM_CMOUSEBUTTONS returned " + count);
+        }
+        return count;
+    }
+
+    /// Reads `SM_MOUSEPRESENT` through generated `GetSystemMetrics`.
+    ///
+    /// @return whether a mouse is present
+    public boolean mousePresent() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_MOUSEPRESENT) != 0;
+    }
+
+    /// Reads `SM_MOUSEWHEELPRESENT` through generated `GetSystemMetrics`.
+    ///
+    /// @return whether a mouse wheel is present
+    public boolean mouseWheelPresent() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_MOUSEWHEELPRESENT) != 0;
+    }
+
+    /// Reads `SM_CXEDGE` through generated `GetSystemMetrics`.
+    ///
+    /// @return the 3-D edge width in pixels
+    public int edgeWidth() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CXEDGE);
+    }
+
+    /// Reads `SM_CYEDGE` through generated `GetSystemMetrics`.
+    ///
+    /// @return the 3-D edge height in pixels
+    public int edgeHeight() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CYEDGE);
+    }
+
+    /// Reads `SM_CYSMCAPTION` through generated `GetSystemMetrics`.
+    ///
+    /// @return the small-caption height in pixels
+    public int smallCaptionHeight() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CYSMCAPTION);
+    }
+
+    /// Reads `COLOR_MENU`.
+    ///
+    /// @return the menu-background `COLORREF`
+    public int menuColor() {
+        return sysColor(COLOR_MENU);
+    }
+
+    /// Reads `COLOR_MENUTEXT`.
+    ///
+    /// @return the menu-text `COLORREF`
+    public int menuTextColor() {
+        return sysColor(COLOR_MENUTEXT);
+    }
+
+    /// Reads `COLOR_MENUBAR`.
+    ///
+    /// @return the menu-bar `COLORREF`
+    public int menuBarColor() {
+        return sysColor(COLOR_MENUBAR);
+    }
+
+    /// Reads `COLOR_INFOBK`.
+    ///
+    /// @return the tooltip-background `COLORREF`
+    public int infoBackgroundColor() {
+        return sysColor(COLOR_INFOBK);
+    }
+
+    /// Reads `COLOR_INFOTEXT`.
+    ///
+    /// @return the tooltip-text `COLORREF`
+    public int infoTextColor() {
+        return sysColor(COLOR_INFOTEXT);
+    }
+
+    /// Reads `COLOR_HOTLIGHT`.
+    ///
+    /// @return the hot-tracked hyperlink `COLORREF`
+    public int hotLightColor() {
+        return sysColor(COLOR_HOTLIGHT);
+    }
+
+    /// Reads `COLOR_SCROLLBAR`.
+    ///
+    /// @return the scrollbar `COLORREF`
+    public int scrollBarColor() {
+        return sysColor(COLOR_SCROLLBAR);
+    }
+
+    /// Reads `COLOR_APPWORKSPACE`.
+    ///
+    /// @return the MDI workspace `COLORREF`
+    public int appWorkspaceColor() {
+        return sysColor(COLOR_APPWORKSPACE);
+    }
+
+    /// Reads `COLOR_WINDOWFRAME`.
+    ///
+    /// @return the window-frame `COLORREF`
+    public int windowFrameColor() {
+        return sysColor(COLOR_WINDOWFRAME);
+    }
+
+    /// Reads `SM_CXSIZE` through generated `GetSystemMetrics`.
+    ///
+    /// @return the caption-button width in pixels
+    public int captionButtonWidth() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CXSIZE);
+    }
+
+    /// Reads `SM_CYSIZE` through generated `GetSystemMetrics`.
+    ///
+    /// @return the caption-button height in pixels
+    public int captionButtonHeight() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CYSIZE);
+    }
+
+    /// Reads `SM_CXMENUSIZE` through generated `GetSystemMetrics`.
+    ///
+    /// @return the menu-bar button width in pixels
+    public int menuButtonWidth() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CXMENUSIZE);
+    }
+
+    /// Reads `SM_CYMENUSIZE` through generated `GetSystemMetrics`.
+    ///
+    /// @return the menu-bar button height in pixels
+    public int menuButtonHeight() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CYMENUSIZE);
+    }
+
+    /// Reads `SM_XVIRTUALSCREEN` through generated `GetSystemMetrics`.
+    ///
+    /// @return the virtual-screen origin x in pixels
+    public int virtualScreenX() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_XVIRTUALSCREEN);
+    }
+
+    /// Reads `SM_YVIRTUALSCREEN` through generated `GetSystemMetrics`.
+    ///
+    /// @return the virtual-screen origin y in pixels
+    public int virtualScreenY() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_YVIRTUALSCREEN);
+    }
+
+    /// Reads `SPI_GETUIEFFECTS` through generated `SystemParametersInfoW`.
+    ///
+    /// @return whether master UI effects are enabled
+    public boolean uiEffectsEnabled() {
+        return systemParameterUint(SPI_GETUIEFFECTS) != 0;
+    }
+
+    /// Reads `SPI_GETDRAGFULLWINDOWS` through generated `SystemParametersInfoW`.
+    ///
+    /// @return whether full-window drag is enabled
+    public boolean dragFullWindowsEnabled() {
+        return systemParameterUint(SPI_GETDRAGFULLWINDOWS) != 0;
+    }
+
+    /// Reads `SM_CXMINTRACK` through generated `GetSystemMetrics`.
+    ///
+    /// @return the minimum tracking width in pixels
+    public int minTrackWidth() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CXMINTRACK);
+    }
+
+    /// Reads `SM_CYMINTRACK` through generated `GetSystemMetrics`.
+    ///
+    /// @return the minimum tracking height in pixels
+    public int minTrackHeight() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CYMINTRACK);
+    }
+
+    /// Reads `COLOR_GRADIENTACTIVECAPTION`.
+    ///
+    /// @return the gradient active-caption `COLORREF`
+    public int gradientActiveCaptionColor() {
+        return sysColor(COLOR_GRADIENTACTIVECAPTION);
+    }
+
+    /// Reads `COLOR_GRADIENTINACTIVECAPTION`.
+    ///
+    /// @return the gradient inactive-caption `COLORREF`
+    public int gradientInactiveCaptionColor() {
+        return sysColor(COLOR_GRADIENTINACTIVECAPTION);
+    }
+
+    /// Reads `SM_CXMAXTRACK` through generated `GetSystemMetrics`.
+    ///
+    /// @return the maximum tracking width in pixels
+    public int maxTrackWidth() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CXMAXTRACK);
+    }
+
+    /// Reads `SM_CYMAXTRACK` through generated `GetSystemMetrics`.
+    ///
+    /// @return the maximum tracking height in pixels
+    public int maxTrackHeight() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CYMAXTRACK);
+    }
+
+    /// Reads `COLOR_BTNSHADOW`.
+    ///
+    /// @return the button-shadow `COLORREF`
+    public int buttonShadowColor() {
+        return sysColor(COLOR_BTNSHADOW);
+    }
+
+    /// Reads `COLOR_BTNHIGHLIGHT`.
+    ///
+    /// @return the button-highlight `COLORREF`
+    public int buttonHighlightColor() {
+        return sysColor(COLOR_BTNHIGHLIGHT);
+    }
+
+    /// Reads `SPI_GETFOREGROUNDFLASHCOUNT` through generated `SystemParametersInfoW`.
+    ///
+    /// @return the foreground flash count
+    public int foregroundFlashCount() {
+        int count = systemParameterUint(SPI_GETFOREGROUNDFLASHCOUNT);
+        if (count < 0) {
+            throw new IllegalStateException("SPI_GETFOREGROUNDFLASHCOUNT returned " + count);
+        }
+        return count;
+    }
+
+    /// Reads `SPI_GETMOUSEVANISH` through generated `SystemParametersInfoW`.
+    ///
+    /// @return whether the pointer hides while typing
+    public boolean mouseVanishEnabled() {
+        return systemParameterUint(SPI_GETMOUSEVANISH) != 0;
+    }
+
+    /// Reads `COLOR_ACTIVECAPTION`.
+    ///
+    /// @return the active-caption `COLORREF`
+    public int activeCaptionColor() {
+        return sysColor(COLOR_ACTIVECAPTION);
+    }
+
+    /// Reads `COLOR_INACTIVECAPTION`.
+    ///
+    /// @return the inactive-caption `COLORREF`
+    public int inactiveCaptionColor() {
+        return sysColor(COLOR_INACTIVECAPTION);
+    }
+
+    /// Reads `COLOR_CAPTIONTEXT`.
+    ///
+    /// @return the caption-text `COLORREF`
+    public int captionTextColor() {
+        return sysColor(COLOR_CAPTIONTEXT);
+    }
+
+    /// Reads `COLOR_INACTIVECAPTIONTEXT`.
+    ///
+    /// @return the inactive-caption-text `COLORREF`
+    public int inactiveCaptionTextColor() {
+        return sysColor(COLOR_INACTIVECAPTIONTEXT);
+    }
+
+    /// Reads generated `IsIconic`.
+    ///
+    /// @return whether the window is minimized
+    public boolean iconic() {
+        requireOpen();
+        return bindings.isIconic(window) != 0;
+    }
+
+    /// Reads generated `IsZoomed`.
+    ///
+    /// @return whether the window is maximized
+    public boolean zoomed() {
+        requireOpen();
+        return bindings.isZoomed(window) != 0;
+    }
+
+    /// Reads generated `IsWindowVisible`.
+    ///
+    /// @return whether the window is visible
+    public boolean windowVisible() {
+        requireOpen();
+        return bindings.isWindowVisible(window) != 0;
+    }
+
+    /// Reads generated `IsWindowEnabled`.
+    ///
+    /// @return whether the window accepts mouse and keyboard input
+    public boolean windowEnabled() {
+        requireOpen();
+        return bindings.isWindowEnabled(window) != 0;
+    }
+
+    /// Enables or disables mouse and keyboard input through generated `EnableWindow`.
+    ///
+    /// @param enable `true` to enable input, `false` to disable it
+    /// @return the previous enabled state
+    public boolean setWindowEnabled(boolean enable) {
+        requireOpen();
+        return bindings.enableWindow(window, enable ? 1 : 0) != 0;
+    }
+
+    /// Reads the window title through generated `GetWindowTextLengthW` and `GetWindowTextW`.
+    ///
+    /// @return the title, empty when none is stored
+    public String windowText() {
+        requireOpen();
+        int length = bindings.getWindowTextLengthW(window);
+        if (length < 0) {
+            throw new IllegalStateException("GetWindowTextLengthW returned " + length);
+        }
+        int maxCount = length + 1;
+        MemorySegment buffer = arena.allocate(maxCount * 2L);
+        buffer.fill((byte) 0);
+        int written = bindings.getWindowTextW(window, buffer, maxCount);
+        if (written < 0 || written > length) {
+            throw new IllegalStateException("GetWindowTextW wrote " + written);
+        }
+        return buffer.getString(0L, StandardCharsets.UTF_16LE);
+    }
+
+    /// Writes the window title through generated `SetWindowTextW`.
+    ///
+    /// @param title the next title
+    public void setWindowText(String title) {
+        Objects.requireNonNull(title, "title");
+        requireOpen();
+        MemorySegment encoded = arena.allocateFrom(title, StandardCharsets.UTF_16LE);
+        Win32FfmBindings.SetWindowTextWResult result = bindings.setWindowTextW(window, encoded);
+        if (result.value() == 0) {
+            throw new IllegalStateException("SetWindowTextW failed: " + result.errorCode());
+        }
+    }
+
+    /// Maps a client point to screen coordinates through generated `ClientToScreen`.
+    ///
+    /// @param x the client x in pixels
+    /// @param y the client y in pixels
+    /// @return the screen coordinates
+    public ScreenPoint clientToScreen(int x, int y) {
+        requireOpen();
+        MemorySegment point = arena.allocate(Win32Layouts.POINT);
+        point.set(ValueLayout.JAVA_INT, Win32Layouts.POINT_X_OFFSET, x);
+        point.set(ValueLayout.JAVA_INT, Win32Layouts.POINT_Y_OFFSET, y);
+        Win32FfmBindings.ClientToScreenResult result = bindings.clientToScreen(window, point);
+        if (result.value() == 0) {
+            throw new IllegalStateException("ClientToScreen failed: " + result.errorCode());
+        }
+        return new ScreenPoint(
+                point.get(ValueLayout.JAVA_INT, Win32Layouts.POINT_X_OFFSET),
+                point.get(ValueLayout.JAVA_INT, Win32Layouts.POINT_Y_OFFSET)
+        );
+    }
+
+    /// Maps a screen point to client coordinates through generated `ScreenToClient`.
+    ///
+    /// @param x the screen x in pixels
+    /// @param y the screen y in pixels
+    /// @return the client coordinates
+    public ScreenPoint screenToClient(int x, int y) {
+        requireOpen();
+        MemorySegment point = arena.allocate(Win32Layouts.POINT);
+        point.set(ValueLayout.JAVA_INT, Win32Layouts.POINT_X_OFFSET, x);
+        point.set(ValueLayout.JAVA_INT, Win32Layouts.POINT_Y_OFFSET, y);
+        Win32FfmBindings.ScreenToClientResult result = bindings.screenToClient(window, point);
+        if (result.value() == 0) {
+            throw new IllegalStateException("ScreenToClient failed: " + result.errorCode());
+        }
+        return new ScreenPoint(
+                point.get(ValueLayout.JAVA_INT, Win32Layouts.POINT_X_OFFSET),
+                point.get(ValueLayout.JAVA_INT, Win32Layouts.POINT_Y_OFFSET)
+        );
+    }
+
+    /// Reads the window class name through generated `GetClassNameW`.
+    ///
+    /// @return the class name
+    public String className() {
+        requireOpen();
+        int maxCount = 256;
+        MemorySegment buffer = arena.allocate(ValueLayout.JAVA_CHAR, maxCount);
+        buffer.fill((byte) 0);
+        Win32FfmBindings.GetClassNameWResult result = bindings.getClassNameW(window, buffer, maxCount);
+        if (result.value() <= 0) {
+            throw new IllegalStateException("GetClassNameW failed: " + result.errorCode());
+        }
+        return buffer.getString(0L, StandardCharsets.UTF_16LE);
+    }
+
+    /// Reads generated `GetForegroundWindow`.
+    ///
+    /// @return the foreground HWND, or a null segment when none is reported
+    public MemorySegment foregroundWindow() {
+        requireOpen();
+        return bindings.getForegroundWindow();
+    }
+
+    /// Reads generated `GetFocus`.
+    ///
+    /// @return the keyboard-focus HWND, or a null segment when none is reported
+    public MemorySegment focusWindow() {
+        requireOpen();
+        return bindings.getFocus();
+    }
+
+    /// Reads generated `GetActiveWindow`.
+    ///
+    /// @return the active HWND, or a null segment when none is reported
+    public MemorySegment activeWindow() {
+        requireOpen();
+        return bindings.getActiveWindow();
+    }
+
+    /// Assigns keyboard focus through generated `SetFocus`.
+    ///
+    /// @return the previous focus HWND, or a null segment when none was reported
+    public MemorySegment setFocus() {
+        requireOpen();
+        return bindings.setFocus(window);
+    }
+
+    /// Requests foreground activation through generated `SetForegroundWindow`.
+    ///
+    /// @return whether the host accepted the request
+    public boolean setForegroundWindow() {
+        requireOpen();
+        return bindings.setForegroundWindow(window) != 0;
+    }
+
+    /// Assigns the active window through generated `SetActiveWindow`.
+    ///
+    /// @return the previous active HWND, or a null segment when none was reported
+    public MemorySegment setActiveWindow() {
+        requireOpen();
+        return bindings.setActiveWindow(window);
+    }
+
+    /// Thread and process identifiers reported by [`#threadProcessIds()`].
+    ///
+    /// @param threadId the creating thread identifier
+    /// @param processId the creating process identifier
+    public record ThreadProcessIds(int threadId, int processId) {
+    }
+
+    /// Reads generated `GetWindowThreadProcessId`.
+    ///
+    /// @return the thread and process identifiers
+    public ThreadProcessIds threadProcessIds() {
+        requireOpen();
+        MemorySegment processId = arena.allocate(ValueLayout.JAVA_INT);
+        processId.set(ValueLayout.JAVA_INT, 0, 0);
+        int threadId = bindings.getWindowThreadProcessId(window, processId);
+        if (threadId == 0) {
+            throw new IllegalStateException("GetWindowThreadProcessId returned 0");
+        }
+        int pid = processId.get(ValueLayout.JAVA_INT, 0);
+        if (pid == 0) {
+            throw new IllegalStateException("GetWindowThreadProcessId wrote process id 0");
+        }
+        return new ThreadProcessIds(threadId, pid);
+    }
+
+    /// Reads generated `IsWindow`.
+    ///
+    /// @return whether the HWND is still a window
+    public boolean isWindow() {
+        return isWindowHandle(window);
+    }
+
+    /// Reads generated `IsWindow` for an arbitrary handle.
+    ///
+    /// @param hwnd the candidate HWND
+    /// @return whether the handle is still a window
+    public boolean isWindowHandle(MemorySegment hwnd) {
+        Objects.requireNonNull(hwnd, "hwnd");
+        requireOpen();
+        return hwnd.address() != 0L && bindings.isWindow(hwnd) != 0;
+    }
+
+    /// Reads generated `GetParent`.
+    ///
+    /// @return the owner or parent HWND, or a null segment for a top-level window
+    public MemorySegment parentWindow() {
+        requireOpen();
+        return bindings.getParent(window);
+    }
+
+    /// Reads generated `GetDesktopWindow`.
+    ///
+    /// @return the desktop HWND
+    public MemorySegment desktopWindow() {
+        requireOpen();
+        MemorySegment desktop = bindings.getDesktopWindow();
+        if (desktop.address() == 0L) {
+            throw new IllegalStateException("GetDesktopWindow returned NULL");
+        }
+        return desktop;
+    }
+
+    /// Reads generated `GetAncestor` with `GA_ROOT`.
+    ///
+    /// @return the root owner HWND
+    public MemorySegment rootAncestor() {
+        requireOpen();
+        MemorySegment ancestor = bindings.getAncestor(window, GA_ROOT);
+        if (ancestor.address() == 0L) {
+            throw new IllegalStateException("GetAncestor(GA_ROOT) returned NULL");
+        }
+        return ancestor;
+    }
+
+    /// Reads generated `GetTopWindow` for this HWND's children.
+    ///
+    /// @return the top child HWND, or a null segment when this window has no children
+    public MemorySegment topWindow() {
+        requireOpen();
+        return bindings.getTopWindow(window);
+    }
+
+    /// Reads generated `GetTopWindow` for the desktop.
+    ///
+    /// @return a top-level HWND
+    public MemorySegment desktopTopWindow() {
+        requireOpen();
+        MemorySegment top = bindings.getTopWindow(desktopWindow());
+        if (top.address() == 0L) {
+            throw new IllegalStateException("GetTopWindow(desktop) returned NULL");
+        }
+        return top;
+    }
+
+    /// Reads generated `GetWindow` with `GW_HWNDNEXT`.
+    ///
+    /// @param hwnd the reference window
+    /// @return the next Z-order sibling, or a null segment when none exists
+    public MemorySegment nextWindow(MemorySegment hwnd) {
+        Objects.requireNonNull(hwnd, "hwnd");
+        requireOpen();
+        return bindings.getWindow(hwnd, GW_HWNDNEXT);
+    }
+
+    /// Reads generated `GetWindow` with `GW_OWNER`.
+    ///
+    /// @return the owner HWND, or a null segment for an unowned top-level window
+    public MemorySegment ownerWindow() {
+        requireOpen();
+        return bindings.getWindow(window, GW_OWNER);
+    }
+
+    /// Reads generated `GetWindow` with `GW_CHILD`.
+    ///
+    /// @return the first child HWND, or a null segment when none exists
+    public MemorySegment childWindow() {
+        requireOpen();
+        return bindings.getWindow(window, GW_CHILD);
+    }
+
+    /// Reads generated `GetShellWindow`.
+    ///
+    /// @return the shell HWND
+    public MemorySegment shellWindow() {
+        requireOpen();
+        MemorySegment shell = bindings.getShellWindow();
+        if (shell.address() == 0L) {
+            throw new IllegalStateException("GetShellWindow returned NULL");
+        }
+        return shell;
+    }
+
+    /// Finds a top-level window through generated `FindWindowW`.
+    ///
+    /// @param className the class name
+    /// @return the HWND, or a null segment when no window matches
+    public MemorySegment findWindow(String className) {
+        Objects.requireNonNull(className, "className");
+        requireOpen();
+        MemorySegment encoded = arena.allocateFrom(className, StandardCharsets.UTF_16LE);
+        return bindings.findWindowW(encoded, MemorySegment.NULL);
+    }
+
+    /// Top-level windows reported by [`#enumerateTopLevelWindows()`].
+    ///
+    /// @param count the number of windows passed to the callback
+    /// @param containsSelf whether this HWND was among them
+    public record TopLevelWindows(int count, boolean containsSelf) {
+    }
+
+    /// Enumerates top-level windows through generated `EnumWindows`.
+    ///
+    /// @return the count and whether this HWND was observed
+    public TopLevelWindows enumerateTopLevelWindows() {
+        requireOpen();
+        int[] count = new int[1];
+        boolean[] sawSelf = new boolean[1];
+        try (Arena enumArena = Arena.ofConfined()) {
+            MemorySegment stub = bindings.createEnumWindowsProcStub(
+                    (hwnd, ignored) -> {
+                        count[0]++;
+                        if (hwnd.address() == window.address()) {
+                            sawSelf[0] = true;
+                        }
+                        return 1;
+                    },
+                    callbackFailures,
+                    enumArena
+            );
+            Win32FfmBindings.EnumWindowsResult result = bindings.enumWindows(stub, 0L);
+            if (result.value() == 0) {
+                throw new IllegalStateException("EnumWindows failed: " + result.errorCode());
+            }
+        }
+        if (count[0] < 1) {
+            throw new IllegalStateException("EnumWindows enumerated 0 windows");
+        }
+        return new TopLevelWindows(count[0], sawSelf[0]);
+    }
+
+    /// Enumerates child windows through generated `EnumChildWindows`.
+    ///
+    /// @param parent the parent HWND
+    /// @return the number of children passed to the callback
+    public int enumerateChildWindows(MemorySegment parent) {
+        Objects.requireNonNull(parent, "parent");
+        requireOpen();
+        int[] count = new int[1];
+        try (Arena enumArena = Arena.ofConfined()) {
+            MemorySegment stub = bindings.createEnumWindowsProcStub(
+                    (hwnd, ignored) -> {
+                        count[0]++;
+                        return 1;
+                    },
+                    callbackFailures,
+                    enumArena
+            );
+            bindings.enumChildWindows(parent, stub, 0L);
+        }
+        return count[0];
+    }
+
+    /// Reads generated `GetWindow` with `GW_HWNDPREV`.
+    ///
+    /// @param hwnd the reference window
+    /// @return the previous Z-order sibling, or a null segment when none exists
+    public MemorySegment previousWindow(MemorySegment hwnd) {
+        Objects.requireNonNull(hwnd, "hwnd");
+        requireOpen();
+        return bindings.getWindow(hwnd, GW_HWNDPREV);
+    }
+
+    /// Reads generated `GetLastActivePopup`.
+    ///
+    /// @return the last active popup HWND
+    public MemorySegment lastActivePopup() {
+        requireOpen();
+        MemorySegment popup = bindings.getLastActivePopup(window);
+        if (popup.address() == 0L) {
+            throw new IllegalStateException("GetLastActivePopup returned NULL");
+        }
+        return popup;
+    }
+
+    /// Reads generated `GetSystemMenu` without reverting.
+    ///
+    /// @return the system-menu handle
+    public MemorySegment systemMenu() {
+        requireOpen();
+        MemorySegment menu = bindings.getSystemMenu(window, 0);
+        if (menu.address() == 0L) {
+            throw new IllegalStateException("GetSystemMenu returned NULL");
+        }
+        return menu;
+    }
+
+    /// Reads `SM_CXICONSPACING` through generated `GetSystemMetrics`.
+    ///
+    /// @return the desktop icon grid width in pixels
+    public int iconSpacingWidth() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CXICONSPACING);
+    }
+
+    /// Reads `SM_CYICONSPACING` through generated `GetSystemMetrics`.
+    ///
+    /// @return the desktop icon grid height in pixels
+    public int iconSpacingHeight() {
+        requireOpen();
+        return bindings.getSystemMetrics(SM_CYICONSPACING);
+    }
+
+    /// Reads `COLOR_BACKGROUND`.
+    ///
+    /// @return the desktop `COLORREF`
+    public int backgroundColor() {
+        return sysColor(COLOR_BACKGROUND);
+    }
+
+    /// Reads `SPI_GETICONTITLEWRAP` through generated `SystemParametersInfoW`.
+    ///
+    /// @return whether icon titles wrap
+    public boolean iconTitleWrapEnabled() {
+        return systemParameterUint(SPI_GETICONTITLEWRAP) != 0;
+    }
+
+    /// Reads `SPI_GETFONTSMOOTHINGTYPE` through generated `SystemParametersInfoW`.
+    ///
+    /// @return the font-smoothing type
+    public int fontSmoothingType() {
+        return systemParameterUint(SPI_GETFONTSMOOTHINGTYPE);
+    }
+
+    /// Raises the HWND through generated `BringWindowToTop`.
+    ///
+    /// @return whether the host accepted the request
+    public boolean bringToTop() {
+        requireOpen();
+        Win32FfmBindings.BringWindowToTopResult result = bindings.bringWindowToTop(window);
+        return result.value() != 0;
+    }
+
+    /// Maps a client point to screen coordinates through generated `MapWindowPoints`.
+    ///
+    /// @param x the client x in pixels
+    /// @param y the client y in pixels
+    /// @return the screen coordinates
+    public ScreenPoint mapClientToScreen(int x, int y) {
+        requireOpen();
+        MemorySegment point = arena.allocate(Win32Layouts.POINT);
+        point.set(ValueLayout.JAVA_INT, Win32Layouts.POINT_X_OFFSET, x);
+        point.set(ValueLayout.JAVA_INT, Win32Layouts.POINT_Y_OFFSET, y);
+        Win32FfmBindings.MapWindowPointsResult result = bindings.mapWindowPoints(
+                window,
+                MemorySegment.NULL,
+                point,
+                1
+        );
+        if (result.value() == 0 && result.errorCode() != 0) {
+            throw new IllegalStateException("MapWindowPoints failed: " + result.errorCode());
+        }
+        return new ScreenPoint(
+                point.get(ValueLayout.JAVA_INT, Win32Layouts.POINT_X_OFFSET),
+                point.get(ValueLayout.JAVA_INT, Win32Layouts.POINT_Y_OFFSET)
+        );
+    }
+
+    /// Reads `COLOR_3DDKSHADOW`.
+    ///
+    /// @return the dark 3-D shadow `COLORREF`
+    public int darkShadowColor() {
+        return sysColor(COLOR_3DDKSHADOW);
+    }
+
+    /// Reads `COLOR_3DLIGHT`.
+    ///
+    /// @return the light 3-D edge `COLORREF`
+    public int lightEdgeColor() {
+        return sysColor(COLOR_3DLIGHT);
+    }
+
+    /// Placement reported by generated `GetWindowPlacement`.
+    ///
+    /// @param showCmd the `SW_*` show command
+    /// @param normal the restored rectangle in screen pixels
+    public record WindowPlacement(int showCmd, ClipRect normal) {
+        /// Validates the restored rectangle.
+        public WindowPlacement {
+            Objects.requireNonNull(normal, "normal");
+        }
+    }
+
+    /// Reads restored bounds through generated `GetWindowPlacement`.
+    ///
+    /// @return the show command and restored rectangle
+    public WindowPlacement windowPlacement() {
+        requireOpen();
+        MemorySegment placement = arena.allocate(Win32Layouts.WINDOWPLACEMENT);
+        placement.fill((byte) 0);
+        placement.set(ValueLayout.JAVA_INT, Win32Layouts.WINDOWPLACEMENT_LENGTH_OFFSET,
+                Math.toIntExact(Win32Layouts.WINDOWPLACEMENT.byteSize()));
+        Win32FfmBindings.GetWindowPlacementResult result = bindings.getWindowPlacement(window, placement);
+        if (result.value() == 0) {
+            throw new IllegalStateException("GetWindowPlacement failed: " + result.errorCode());
+        }
+        return new WindowPlacement(
+                placement.get(ValueLayout.JAVA_INT, Win32Layouts.WINDOWPLACEMENT_SHOW_CMD_OFFSET),
+                new ClipRect(
+                        placement.get(ValueLayout.JAVA_INT, Win32Layouts.WINDOWPLACEMENT_NORMAL_LEFT_OFFSET),
+                        placement.get(ValueLayout.JAVA_INT, Win32Layouts.WINDOWPLACEMENT_NORMAL_TOP_OFFSET),
+                        placement.get(ValueLayout.JAVA_INT, Win32Layouts.WINDOWPLACEMENT_NORMAL_RIGHT_OFFSET),
+                        placement.get(ValueLayout.JAVA_INT, Win32Layouts.WINDOWPLACEMENT_NORMAL_BOTTOM_OFFSET)
+                )
+        );
+    }
+
+    /// Reads the caret location through generated `GetCaretPos`.
+    ///
+    /// A thread without a caret still invokes the generated symbol; the reported
+    /// coordinates then stay at the host-written `POINT`, commonly `(0, 0)`.
+    ///
+    /// @return the client coordinates
+    public ScreenPoint caretPosition() {
+        requireOpen();
+        MemorySegment point = arena.allocate(Win32Layouts.POINT);
+        point.fill((byte) 0);
+        bindings.getCaretPos(point);
+        return new ScreenPoint(
+                point.get(ValueLayout.JAVA_INT, Win32Layouts.POINT_X_OFFSET),
+                point.get(ValueLayout.JAVA_INT, Win32Layouts.POINT_Y_OFFSET)
+        );
+    }
+
     /// Shows the window without activation.
     public void show() {
         requireOpen();
@@ -2171,6 +3320,194 @@ public final class WindowsNativeWindow implements AutoCloseable {
     /// @return whether client-area animations are enabled
     public boolean clientAreaAnimationEnabled() {
         return systemParameterUint(SPI_GETCLIENTAREAANIMATION) != 0;
+    }
+
+    /// Reads `SPI_GETANIMATION` through generated `SystemParametersInfoW`.
+    ///
+    /// @return the `iMinAnimate` field from `ANIMATIONINFO`
+    public int animationMinAnimate() {
+        requireOpen();
+        MemorySegment info = arena.allocate(Win32Layouts.ANIMATIONINFO);
+        info.fill((byte) 0);
+        int size = Math.toIntExact(Win32Layouts.ANIMATIONINFO.byteSize());
+        info.set(ValueLayout.JAVA_INT, Win32Layouts.ANIMATIONINFO_CB_SIZE_OFFSET, size);
+        Win32FfmBindings.SystemParametersInfoWResult result = bindings.systemParametersInfoW(
+                SPI_GETANIMATION,
+                size,
+                info,
+                0
+        );
+        if (result.value() == 0) {
+            throw new IllegalStateException("SystemParametersInfoW failed for SPI_GETANIMATION: "
+                    + result.errorCode());
+        }
+        return info.get(ValueLayout.JAVA_INT, Win32Layouts.ANIMATIONINFO_I_MIN_ANIMATE_OFFSET);
+    }
+
+    /// Non-client metrics reported by [`#nonClientMetrics()`].
+    ///
+    /// @param borderWidth the border width in pixels
+    /// @param scrollWidth the vertical-scrollbar width in pixels
+    /// @param scrollHeight the horizontal-scrollbar height in pixels
+    /// @param captionWidth the caption-button width in pixels
+    /// @param captionHeight the caption height in pixels
+    /// @param captionFontFace the caption `LOGFONTW` face name
+    /// @param smallCaptionWidth the small-caption-button width in pixels
+    /// @param smallCaptionHeight the small-caption height in pixels
+    /// @param menuWidth the menu-bar button width in pixels
+    /// @param menuHeight the menu-bar height in pixels
+    /// @param paddedBorderWidth the padded-border width in pixels
+    public record NonClientMetrics(
+            int borderWidth,
+            int scrollWidth,
+            int scrollHeight,
+            int captionWidth,
+            int captionHeight,
+            String captionFontFace,
+            int smallCaptionWidth,
+            int smallCaptionHeight,
+            int menuWidth,
+            int menuHeight,
+            int paddedBorderWidth
+    ) {
+        /// Validates the caption face.
+        public NonClientMetrics {
+            Objects.requireNonNull(captionFontFace, "captionFontFace");
+        }
+    }
+
+    /// Reads `SPI_GETNONCLIENTMETRICS` through generated `SystemParametersInfoW`.
+    ///
+    /// @return the non-client metrics including the caption `LOGFONTW` face
+    public NonClientMetrics nonClientMetrics() {
+        requireOpen();
+        MemorySegment metrics = arena.allocate(Win32Layouts.NONCLIENTMETRICSW);
+        metrics.fill((byte) 0);
+        int size = Math.toIntExact(Win32Layouts.NONCLIENTMETRICSW.byteSize());
+        metrics.set(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_CB_SIZE_OFFSET, size);
+        Win32FfmBindings.SystemParametersInfoWResult result = bindings.systemParametersInfoW(
+                SPI_GETNONCLIENTMETRICS,
+                size,
+                metrics,
+                0
+        );
+        if (result.value() == 0) {
+            throw new IllegalStateException("SystemParametersInfoW failed for SPI_GETNONCLIENTMETRICS: "
+                    + result.errorCode());
+        }
+        return new NonClientMetrics(
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_I_BORDER_WIDTH_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_I_SCROLL_WIDTH_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_I_SCROLL_HEIGHT_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_I_CAPTION_WIDTH_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_I_CAPTION_HEIGHT_OFFSET),
+                metrics.getString(
+                        Win32Layouts.NONCLIENTMETRICSW_LF_CAPTION_FONT_OFFSET + LOGFONT_FACE_OFFSET,
+                        StandardCharsets.UTF_16LE
+                ),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_I_SM_CAPTION_WIDTH_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_I_SM_CAPTION_HEIGHT_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_I_MENU_WIDTH_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_I_MENU_HEIGHT_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.NONCLIENTMETRICSW_I_PADDED_BORDER_WIDTH_OFFSET)
+        );
+    }
+
+    /// Minimized-window metrics reported by [`#minimizedMetrics()`].
+    ///
+    /// @param width the minimized-window width in pixels
+    /// @param horzGap the horizontal gap in pixels
+    /// @param vertGap the vertical gap in pixels
+    /// @param arrange the `ARW_*` arrangement flags
+    public record MinimizedMetrics(int width, int horzGap, int vertGap, int arrange) {
+    }
+
+    /// Reads `SPI_GETMINIMIZEDMETRICS` through generated `SystemParametersInfoW`.
+    ///
+    /// @return the minimized-window metrics
+    public MinimizedMetrics minimizedMetrics() {
+        requireOpen();
+        MemorySegment metrics = arena.allocate(Win32Layouts.MINIMIZEDMETRICS);
+        metrics.fill((byte) 0);
+        int size = Math.toIntExact(Win32Layouts.MINIMIZEDMETRICS.byteSize());
+        metrics.set(ValueLayout.JAVA_INT, Win32Layouts.MINIMIZEDMETRICS_CB_SIZE_OFFSET, size);
+        Win32FfmBindings.SystemParametersInfoWResult result = bindings.systemParametersInfoW(
+                SPI_GETMINIMIZEDMETRICS,
+                size,
+                metrics,
+                0
+        );
+        if (result.value() == 0) {
+            throw new IllegalStateException("SystemParametersInfoW failed for SPI_GETMINIMIZEDMETRICS: "
+                    + result.errorCode());
+        }
+        return new MinimizedMetrics(
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.MINIMIZEDMETRICS_I_WIDTH_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.MINIMIZEDMETRICS_I_HORZ_GAP_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.MINIMIZEDMETRICS_I_VERT_GAP_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.MINIMIZEDMETRICS_I_ARRANGE_OFFSET)
+        );
+    }
+
+    /// Desktop icon metrics reported by [`#iconMetrics()`].
+    ///
+    /// @param horzSpacing the horizontal spacing in pixels
+    /// @param vertSpacing the vertical spacing in pixels
+    /// @param titleWrap whether icon titles wrap
+    /// @param fontFace the icon-title `LOGFONTW` face name
+    public record IconMetrics(int horzSpacing, int vertSpacing, boolean titleWrap, String fontFace) {
+        /// Validates the face.
+        public IconMetrics {
+            Objects.requireNonNull(fontFace, "fontFace");
+        }
+    }
+
+    /// Reads `SPI_GETICONMETRICS` through generated `SystemParametersInfoW`.
+    ///
+    /// @return the desktop icon metrics including the title `LOGFONTW` face
+    public IconMetrics iconMetrics() {
+        requireOpen();
+        MemorySegment metrics = arena.allocate(Win32Layouts.ICONMETRICSW);
+        metrics.fill((byte) 0);
+        int size = Math.toIntExact(Win32Layouts.ICONMETRICSW.byteSize());
+        metrics.set(ValueLayout.JAVA_INT, Win32Layouts.ICONMETRICSW_CB_SIZE_OFFSET, size);
+        Win32FfmBindings.SystemParametersInfoWResult result = bindings.systemParametersInfoW(
+                SPI_GETICONMETRICS,
+                size,
+                metrics,
+                0
+        );
+        if (result.value() == 0) {
+            throw new IllegalStateException("SystemParametersInfoW failed for SPI_GETICONMETRICS: "
+                    + result.errorCode());
+        }
+        return new IconMetrics(
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.ICONMETRICSW_I_HORZ_SPACING_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.ICONMETRICSW_I_VERT_SPACING_OFFSET),
+                metrics.get(ValueLayout.JAVA_INT, Win32Layouts.ICONMETRICSW_I_TITLE_WRAP_OFFSET) != 0,
+                metrics.getString(
+                        Win32Layouts.ICONMETRICSW_LF_FONT_OFFSET + LOGFONT_FACE_OFFSET,
+                        StandardCharsets.UTF_16LE
+                )
+        );
+    }
+
+    /// Reads `SPI_GETACTIVEWINDOWTRACKING` through generated `SystemParametersInfoW`.
+    ///
+    /// @return whether active-window tracking is enabled
+    public boolean activeWindowTrackingEnabled() {
+        return systemParameterUint(SPI_GETACTIVEWINDOWTRACKING) != 0;
+    }
+
+    /// Reads `SPI_GETFOREGROUNDLOCKTIMEOUT` through generated `SystemParametersInfoW`.
+    ///
+    /// @return the foreground-lock timeout in milliseconds
+    public int foregroundLockTimeoutMillis() {
+        int timeout = systemParameterUint(SPI_GETFOREGROUNDLOCKTIMEOUT);
+        if (timeout < 0) {
+            throw new IllegalStateException("SPI_GETFOREGROUNDLOCKTIMEOUT returned " + timeout);
+        }
+        return timeout;
     }
 
     /// Reads one `UINT` SystemParametersInfo getter.

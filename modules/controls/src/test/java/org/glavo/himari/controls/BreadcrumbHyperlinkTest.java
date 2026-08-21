@@ -25,7 +25,7 @@ final class BreadcrumbHyperlinkTest {
         ControlGallery gallery = new ControlGallery();
         assertEquals("API", gallery.breadcrumb().value());
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 2000.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode crumb = first(tree, SemanticsRole.BREADCRUMB);
         assertEquals("API", crumb.label());
@@ -47,7 +47,7 @@ final class BreadcrumbHyperlinkTest {
         assertEquals("plans", gallery.link().href());
         assertEquals(0, gallery.link().activations());
         tree.setRoot(gallery.create(tree));
-        tree.measure(Constraints.loose(400.0f, 2000.0f));
+        tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
         SemanticsNode link = first(tree, SemanticsRole.LINK);
         assertEquals("Plans", link.label());

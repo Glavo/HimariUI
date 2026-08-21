@@ -501,6 +501,662 @@ public final class WindowsWindow implements PlatformWindow {
         return nativeWindow.inactiveBorderColor();
     }
 
+    /// Reads `SM_CMONITORS`.
+    ///
+    /// @return the display count
+    public int monitorCount() {
+        return nativeWindow.monitorCount();
+    }
+
+    /// Reads `SM_CXMIN`.
+    ///
+    /// @return the minimum window width in pixels
+    public int minWindowWidth() {
+        return nativeWindow.minWindowWidth();
+    }
+
+    /// Reads `SM_CYMIN`.
+    ///
+    /// @return the minimum window height in pixels
+    public int minWindowHeight() {
+        return nativeWindow.minWindowHeight();
+    }
+
+    /// Reads `SM_CXMAXIMIZED`.
+    ///
+    /// @return the default maximized-window width in pixels
+    public int maximizedWindowWidth() {
+        return nativeWindow.maximizedWindowWidth();
+    }
+
+    /// Reads `SM_CYMAXIMIZED`.
+    ///
+    /// @return the default maximized-window height in pixels
+    public int maximizedWindowHeight() {
+        return nativeWindow.maximizedWindowHeight();
+    }
+
+    /// Reads `SM_CXSCREEN`.
+    ///
+    /// @return the primary display width in pixels
+    public int screenWidth() {
+        return nativeWindow.screenWidth();
+    }
+
+    /// Reads `SM_CYSCREEN`.
+    ///
+    /// @return the primary display height in pixels
+    public int screenHeight() {
+        return nativeWindow.screenHeight();
+    }
+
+    /// Reads `SM_CXVIRTUALSCREEN`.
+    ///
+    /// @return the virtual-screen width in pixels
+    public int virtualScreenWidth() {
+        return nativeWindow.virtualScreenWidth();
+    }
+
+    /// Reads `SM_CYVIRTUALSCREEN`.
+    ///
+    /// @return the virtual-screen height in pixels
+    public int virtualScreenHeight() {
+        return nativeWindow.virtualScreenHeight();
+    }
+
+    /// Reads `SPI_GETWORKAREA`.
+    ///
+    /// @return the primary-monitor work-area rectangle in screen pixels
+    public WindowsNativeWindow.ClipRect workArea() {
+        return nativeWindow.workArea();
+    }
+
+    /// Reads `SM_CMOUSEBUTTONS`.
+    ///
+    /// @return the mouse button count
+    public int mouseButtonCount() {
+        return nativeWindow.mouseButtonCount();
+    }
+
+    /// Reads `SM_MOUSEPRESENT`.
+    ///
+    /// @return whether a mouse is present
+    public boolean mousePresent() {
+        return nativeWindow.mousePresent();
+    }
+
+    /// Reads `SM_MOUSEWHEELPRESENT`.
+    ///
+    /// @return whether a mouse wheel is present
+    public boolean mouseWheelPresent() {
+        return nativeWindow.mouseWheelPresent();
+    }
+
+    /// Reads `SM_CXEDGE`.
+    ///
+    /// @return the 3-D edge width in pixels
+    public int edgeWidth() {
+        return nativeWindow.edgeWidth();
+    }
+
+    /// Reads `SM_CYEDGE`.
+    ///
+    /// @return the 3-D edge height in pixels
+    public int edgeHeight() {
+        return nativeWindow.edgeHeight();
+    }
+
+    /// Reads `SM_CYSMCAPTION`.
+    ///
+    /// @return the small-caption height in pixels
+    public int smallCaptionHeight() {
+        return nativeWindow.smallCaptionHeight();
+    }
+
+    /// Reads `COLOR_MENU`.
+    ///
+    /// @return the menu-background `COLORREF`
+    public int menuColor() {
+        return nativeWindow.menuColor();
+    }
+
+    /// Reads `COLOR_MENUTEXT`.
+    ///
+    /// @return the menu-text `COLORREF`
+    public int menuTextColor() {
+        return nativeWindow.menuTextColor();
+    }
+
+    /// Reads `COLOR_MENUBAR`.
+    ///
+    /// @return the menu-bar `COLORREF`
+    public int menuBarColor() {
+        return nativeWindow.menuBarColor();
+    }
+
+    /// Reads `COLOR_INFOBK`.
+    ///
+    /// @return the tooltip-background `COLORREF`
+    public int infoBackgroundColor() {
+        return nativeWindow.infoBackgroundColor();
+    }
+
+    /// Reads `COLOR_INFOTEXT`.
+    ///
+    /// @return the tooltip-text `COLORREF`
+    public int infoTextColor() {
+        return nativeWindow.infoTextColor();
+    }
+
+    /// Reads `COLOR_HOTLIGHT`.
+    ///
+    /// @return the hot-tracked hyperlink `COLORREF`
+    public int hotLightColor() {
+        return nativeWindow.hotLightColor();
+    }
+
+    /// Reads `COLOR_SCROLLBAR`.
+    ///
+    /// @return the scrollbar `COLORREF`
+    public int scrollBarColor() {
+        return nativeWindow.scrollBarColor();
+    }
+
+    /// Reads `COLOR_APPWORKSPACE`.
+    ///
+    /// @return the MDI workspace `COLORREF`
+    public int appWorkspaceColor() {
+        return nativeWindow.appWorkspaceColor();
+    }
+
+    /// Reads `COLOR_WINDOWFRAME`.
+    ///
+    /// @return the window-frame `COLORREF`
+    public int windowFrameColor() {
+        return nativeWindow.windowFrameColor();
+    }
+
+    /// Reads `SM_CXSIZE`.
+    ///
+    /// @return the caption-button width in pixels
+    public int captionButtonWidth() {
+        return nativeWindow.captionButtonWidth();
+    }
+
+    /// Reads `SM_CYSIZE`.
+    ///
+    /// @return the caption-button height in pixels
+    public int captionButtonHeight() {
+        return nativeWindow.captionButtonHeight();
+    }
+
+    /// Reads `SM_CXMENUSIZE`.
+    ///
+    /// @return the menu-bar button width in pixels
+    public int menuButtonWidth() {
+        return nativeWindow.menuButtonWidth();
+    }
+
+    /// Reads `SM_CYMENUSIZE`.
+    ///
+    /// @return the menu-bar button height in pixels
+    public int menuButtonHeight() {
+        return nativeWindow.menuButtonHeight();
+    }
+
+    /// Reads `SM_XVIRTUALSCREEN`.
+    ///
+    /// @return the virtual-screen origin x in pixels
+    public int virtualScreenX() {
+        return nativeWindow.virtualScreenX();
+    }
+
+    /// Reads `SM_YVIRTUALSCREEN`.
+    ///
+    /// @return the virtual-screen origin y in pixels
+    public int virtualScreenY() {
+        return nativeWindow.virtualScreenY();
+    }
+
+    /// Reads `SPI_GETUIEFFECTS`.
+    ///
+    /// @return whether master UI effects are enabled
+    public boolean uiEffectsEnabled() {
+        return nativeWindow.uiEffectsEnabled();
+    }
+
+    /// Reads `SPI_GETDRAGFULLWINDOWS`.
+    ///
+    /// @return whether full-window drag is enabled
+    public boolean dragFullWindowsEnabled() {
+        return nativeWindow.dragFullWindowsEnabled();
+    }
+
+    /// Reads `SM_CXMINTRACK`.
+    ///
+    /// @return the minimum tracking width in pixels
+    public int minTrackWidth() {
+        return nativeWindow.minTrackWidth();
+    }
+
+    /// Reads `SM_CYMINTRACK`.
+    ///
+    /// @return the minimum tracking height in pixels
+    public int minTrackHeight() {
+        return nativeWindow.minTrackHeight();
+    }
+
+    /// Reads `COLOR_GRADIENTACTIVECAPTION`.
+    ///
+    /// @return the gradient active-caption `COLORREF`
+    public int gradientActiveCaptionColor() {
+        return nativeWindow.gradientActiveCaptionColor();
+    }
+
+    /// Reads `COLOR_GRADIENTINACTIVECAPTION`.
+    ///
+    /// @return the gradient inactive-caption `COLORREF`
+    public int gradientInactiveCaptionColor() {
+        return nativeWindow.gradientInactiveCaptionColor();
+    }
+
+    /// Reads `SM_CXMAXTRACK`.
+    ///
+    /// @return the maximum tracking width in pixels
+    public int maxTrackWidth() {
+        return nativeWindow.maxTrackWidth();
+    }
+
+    /// Reads `SM_CYMAXTRACK`.
+    ///
+    /// @return the maximum tracking height in pixels
+    public int maxTrackHeight() {
+        return nativeWindow.maxTrackHeight();
+    }
+
+    /// Reads `COLOR_BTNSHADOW`.
+    ///
+    /// @return the button-shadow `COLORREF`
+    public int buttonShadowColor() {
+        return nativeWindow.buttonShadowColor();
+    }
+
+    /// Reads `COLOR_BTNHIGHLIGHT`.
+    ///
+    /// @return the button-highlight `COLORREF`
+    public int buttonHighlightColor() {
+        return nativeWindow.buttonHighlightColor();
+    }
+
+    /// Reads `SPI_GETFOREGROUNDFLASHCOUNT`.
+    ///
+    /// @return the foreground flash count
+    public int foregroundFlashCount() {
+        return nativeWindow.foregroundFlashCount();
+    }
+
+    /// Reads `SPI_GETMOUSEVANISH`.
+    ///
+    /// @return whether the pointer hides while typing
+    public boolean mouseVanishEnabled() {
+        return nativeWindow.mouseVanishEnabled();
+    }
+
+    /// Reads `COLOR_ACTIVECAPTION`.
+    ///
+    /// @return the active-caption `COLORREF`
+    public int activeCaptionColor() {
+        return nativeWindow.activeCaptionColor();
+    }
+
+    /// Reads `COLOR_INACTIVECAPTION`.
+    ///
+    /// @return the inactive-caption `COLORREF`
+    public int inactiveCaptionColor() {
+        return nativeWindow.inactiveCaptionColor();
+    }
+
+    /// Reads `COLOR_CAPTIONTEXT`.
+    ///
+    /// @return the caption-text `COLORREF`
+    public int captionTextColor() {
+        return nativeWindow.captionTextColor();
+    }
+
+    /// Reads `COLOR_INACTIVECAPTIONTEXT`.
+    ///
+    /// @return the inactive-caption-text `COLORREF`
+    public int inactiveCaptionTextColor() {
+        return nativeWindow.inactiveCaptionTextColor();
+    }
+
+    /// Reads `IsIconic`.
+    ///
+    /// @return whether the window is minimized
+    public boolean iconic() {
+        return nativeWindow.iconic();
+    }
+
+    /// Reads `IsZoomed`.
+    ///
+    /// @return whether the window is maximized
+    public boolean zoomed() {
+        return nativeWindow.zoomed();
+    }
+
+    /// Reads `IsWindowVisible`.
+    ///
+    /// @return whether the window is visible
+    public boolean windowVisible() {
+        return nativeWindow.windowVisible();
+    }
+
+    /// Reads `IsWindowEnabled`.
+    ///
+    /// @return whether the window accepts mouse and keyboard input
+    public boolean windowEnabled() {
+        return nativeWindow.windowEnabled();
+    }
+
+    /// Enables or disables mouse and keyboard input through `EnableWindow`.
+    ///
+    /// @param enable `true` to enable input, `false` to disable it
+    /// @return the previous enabled state
+    public boolean setWindowEnabled(boolean enable) {
+        return nativeWindow.setWindowEnabled(enable);
+    }
+
+    /// Reads the window title through `GetWindowTextW`.
+    ///
+    /// @return the title
+    public String windowText() {
+        return nativeWindow.windowText();
+    }
+
+    /// Writes the window title through `SetWindowTextW`.
+    ///
+    /// @param title the next title
+    public void setWindowText(String title) {
+        nativeWindow.setWindowText(title);
+    }
+
+    /// Maps a client point to screen coordinates through `ClientToScreen`.
+    ///
+    /// @param x the client x in pixels
+    /// @param y the client y in pixels
+    /// @return the screen coordinates
+    public WindowsNativeWindow.ScreenPoint clientToScreen(int x, int y) {
+        return nativeWindow.clientToScreen(x, y);
+    }
+
+    /// Maps a screen point to client coordinates through `ScreenToClient`.
+    ///
+    /// @param x the screen x in pixels
+    /// @param y the screen y in pixels
+    /// @return the client coordinates
+    public WindowsNativeWindow.ScreenPoint screenToClient(int x, int y) {
+        return nativeWindow.screenToClient(x, y);
+    }
+
+    /// Reads the window class name through `GetClassNameW`.
+    ///
+    /// @return the class name
+    public String className() {
+        return nativeWindow.className();
+    }
+
+    /// Reads `GetForegroundWindow`.
+    ///
+    /// @return the foreground HWND
+    public MemorySegment foregroundWindow() {
+        return nativeWindow.foregroundWindow();
+    }
+
+    /// Reads `GetFocus`.
+    ///
+    /// @return the keyboard-focus HWND
+    public MemorySegment focusWindow() {
+        return nativeWindow.focusWindow();
+    }
+
+    /// Reads `GetActiveWindow`.
+    ///
+    /// @return the active HWND
+    public MemorySegment activeWindow() {
+        return nativeWindow.activeWindow();
+    }
+
+    /// Assigns keyboard focus through `SetFocus`.
+    ///
+    /// @return the previous focus HWND
+    public MemorySegment setFocus() {
+        return nativeWindow.setFocus();
+    }
+
+    /// Requests foreground activation through `SetForegroundWindow`.
+    ///
+    /// @return whether the host accepted the request
+    public boolean setForegroundWindow() {
+        return nativeWindow.setForegroundWindow();
+    }
+
+    /// Assigns the active window through `SetActiveWindow`.
+    ///
+    /// @return the previous active HWND
+    public MemorySegment setActiveWindow() {
+        return nativeWindow.setActiveWindow();
+    }
+
+    /// Reads `GetWindowThreadProcessId`.
+    ///
+    /// @return the thread and process identifiers
+    public WindowsNativeWindow.ThreadProcessIds threadProcessIds() {
+        return nativeWindow.threadProcessIds();
+    }
+
+    /// Reads `IsWindow`.
+    ///
+    /// @return whether the HWND is still a window
+    public boolean isWindow() {
+        return nativeWindow.isWindow();
+    }
+
+    /// Reads `IsWindow` for an arbitrary handle.
+    ///
+    /// @param hwnd the candidate HWND
+    /// @return whether the handle is still a window
+    public boolean isWindowHandle(MemorySegment hwnd) {
+        return nativeWindow.isWindowHandle(hwnd);
+    }
+
+    /// Reads `GetParent`.
+    ///
+    /// @return the owner or parent HWND
+    public MemorySegment parentWindow() {
+        return nativeWindow.parentWindow();
+    }
+
+    /// Reads `GetDesktopWindow`.
+    ///
+    /// @return the desktop HWND
+    public MemorySegment desktopWindow() {
+        return nativeWindow.desktopWindow();
+    }
+
+    /// Reads `GetAncestor` with `GA_ROOT`.
+    ///
+    /// @return the root owner HWND
+    public MemorySegment rootAncestor() {
+        return nativeWindow.rootAncestor();
+    }
+
+    /// Reads `GetTopWindow` for this HWND's children.
+    ///
+    /// @return the top child HWND
+    public MemorySegment topWindow() {
+        return nativeWindow.topWindow();
+    }
+
+    /// Reads `GetTopWindow` for the desktop.
+    ///
+    /// @return a top-level HWND
+    public MemorySegment desktopTopWindow() {
+        return nativeWindow.desktopTopWindow();
+    }
+
+    /// Reads `GetWindow` with `GW_HWNDNEXT`.
+    ///
+    /// @param hwnd the reference window
+    /// @return the next Z-order sibling
+    public MemorySegment nextWindow(MemorySegment hwnd) {
+        return nativeWindow.nextWindow(hwnd);
+    }
+
+    /// Reads `GetWindow` with `GW_OWNER`.
+    ///
+    /// @return the owner HWND
+    public MemorySegment ownerWindow() {
+        return nativeWindow.ownerWindow();
+    }
+
+    /// Reads `GetWindow` with `GW_CHILD`.
+    ///
+    /// @return the first child HWND
+    public MemorySegment childWindow() {
+        return nativeWindow.childWindow();
+    }
+
+    /// Reads `GetShellWindow`.
+    ///
+    /// @return the shell HWND
+    public MemorySegment shellWindow() {
+        return nativeWindow.shellWindow();
+    }
+
+    /// Finds a top-level window through `FindWindowW`.
+    ///
+    /// @param className the class name
+    /// @return the HWND, or a null segment when no window matches
+    public MemorySegment findWindow(String className) {
+        return nativeWindow.findWindow(className);
+    }
+
+    /// Enumerates top-level windows through `EnumWindows`.
+    ///
+    /// @return the count and whether this HWND was observed
+    public WindowsNativeWindow.TopLevelWindows enumerateTopLevelWindows() {
+        return nativeWindow.enumerateTopLevelWindows();
+    }
+
+    /// Enumerates child windows through `EnumChildWindows`.
+    ///
+    /// @param parent the parent HWND
+    /// @return the number of children passed to the callback
+    public int enumerateChildWindows(MemorySegment parent) {
+        return nativeWindow.enumerateChildWindows(parent);
+    }
+
+    /// Reads `GetWindow` with `GW_HWNDPREV`.
+    ///
+    /// @param hwnd the reference window
+    /// @return the previous Z-order sibling
+    public MemorySegment previousWindow(MemorySegment hwnd) {
+        return nativeWindow.previousWindow(hwnd);
+    }
+
+    /// Reads `GetLastActivePopup`.
+    ///
+    /// @return the last active popup HWND
+    public MemorySegment lastActivePopup() {
+        return nativeWindow.lastActivePopup();
+    }
+
+    /// Reads `GetSystemMenu`.
+    ///
+    /// @return the system-menu handle
+    public MemorySegment systemMenu() {
+        return nativeWindow.systemMenu();
+    }
+
+    /// Reads `SM_CXICONSPACING`.
+    ///
+    /// @return the desktop icon grid width in pixels
+    public int iconSpacingWidth() {
+        return nativeWindow.iconSpacingWidth();
+    }
+
+    /// Reads `SM_CYICONSPACING`.
+    ///
+    /// @return the desktop icon grid height in pixels
+    public int iconSpacingHeight() {
+        return nativeWindow.iconSpacingHeight();
+    }
+
+    /// Reads `COLOR_BACKGROUND`.
+    ///
+    /// @return the desktop `COLORREF`
+    public int backgroundColor() {
+        return nativeWindow.backgroundColor();
+    }
+
+    /// Reads `SPI_GETICONTITLEWRAP`.
+    ///
+    /// @return whether icon titles wrap
+    public boolean iconTitleWrapEnabled() {
+        return nativeWindow.iconTitleWrapEnabled();
+    }
+
+    /// Reads `SPI_GETFONTSMOOTHINGTYPE`.
+    ///
+    /// @return the font-smoothing type
+    public int fontSmoothingType() {
+        return nativeWindow.fontSmoothingType();
+    }
+
+    /// Raises the HWND through `BringWindowToTop`.
+    ///
+    /// @return whether the host accepted the request
+    public boolean bringToTop() {
+        return nativeWindow.bringToTop();
+    }
+
+    /// Maps a client point to screen coordinates through `MapWindowPoints`.
+    ///
+    /// @param x the client x in pixels
+    /// @param y the client y in pixels
+    /// @return the screen coordinates
+    public WindowsNativeWindow.ScreenPoint mapClientToScreen(int x, int y) {
+        return nativeWindow.mapClientToScreen(x, y);
+    }
+
+    /// Reads `COLOR_3DDKSHADOW`.
+    ///
+    /// @return the dark 3-D shadow `COLORREF`
+    public int darkShadowColor() {
+        return nativeWindow.darkShadowColor();
+    }
+
+    /// Reads `COLOR_3DLIGHT`.
+    ///
+    /// @return the light 3-D edge `COLORREF`
+    public int lightEdgeColor() {
+        return nativeWindow.lightEdgeColor();
+    }
+
+    /// Reads `GetCaretPos`.
+    ///
+    /// @return the caret client coordinates
+    public WindowsNativeWindow.ScreenPoint caretPosition() {
+        return nativeWindow.caretPosition();
+    }
+
+    /// Reads `GetWindowPlacement`.
+    ///
+    /// @return the show command and restored rectangle
+    public WindowsNativeWindow.WindowPlacement windowPlacement() {
+        return nativeWindow.windowPlacement();
+    }
+
     /// Delivers `WM_DPICHANGED` through the production WndProc.
     ///
     /// @param nextDpi the new DPI for both axes
@@ -945,6 +1601,48 @@ public final class WindowsWindow implements PlatformWindow {
     /// @return whether client-area animations are enabled
     public boolean clientAreaAnimationEnabled() {
         return nativeWindow.clientAreaAnimationEnabled();
+    }
+
+    /// Reads `SPI_GETANIMATION`.
+    ///
+    /// @return the `iMinAnimate` field from `ANIMATIONINFO`
+    public int animationMinAnimate() {
+        return nativeWindow.animationMinAnimate();
+    }
+
+    /// Reads `SPI_GETNONCLIENTMETRICS`.
+    ///
+    /// @return the non-client metrics including the caption `LOGFONTW` face
+    public WindowsNativeWindow.NonClientMetrics nonClientMetrics() {
+        return nativeWindow.nonClientMetrics();
+    }
+
+    /// Reads `SPI_GETMINIMIZEDMETRICS`.
+    ///
+    /// @return the minimized-window metrics
+    public WindowsNativeWindow.MinimizedMetrics minimizedMetrics() {
+        return nativeWindow.minimizedMetrics();
+    }
+
+    /// Reads `SPI_GETICONMETRICS`.
+    ///
+    /// @return the desktop icon metrics including the title `LOGFONTW` face
+    public WindowsNativeWindow.IconMetrics iconMetrics() {
+        return nativeWindow.iconMetrics();
+    }
+
+    /// Reads `SPI_GETACTIVEWINDOWTRACKING`.
+    ///
+    /// @return whether active-window tracking is enabled
+    public boolean activeWindowTrackingEnabled() {
+        return nativeWindow.activeWindowTrackingEnabled();
+    }
+
+    /// Reads `SPI_GETFOREGROUNDLOCKTIMEOUT`.
+    ///
+    /// @return the foreground-lock timeout in milliseconds
+    public int foregroundLockTimeoutMillis() {
+        return nativeWindow.foregroundLockTimeoutMillis();
     }
 
     /// Creates an OLE `IDropSource` owned by this session.

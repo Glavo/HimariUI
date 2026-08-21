@@ -2,9 +2,6 @@ package org.glavo.himari.controls;
 
 import org.glavo.himari.layout.Constraints;
 import org.glavo.himari.layout.LayoutTree;
-import org.glavo.himari.layout.input.KeyEvent;
-import org.glavo.himari.layout.input.KeyEventType;
-import org.glavo.himari.layout.input.LogicalKey;
 import org.glavo.himari.layout.input.PointerEvent;
 import org.glavo.himari.layout.input.PointerEventType;
 import org.glavo.himari.layout.semantics.SemanticsNode;
@@ -13,50 +10,52 @@ import org.jetbrains.annotations.NotNullByDefault;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/// Verifies unstyled separator and toolbar controls through the shipped gallery.
+/// Verifies unstyled avatar and banner controls through the shipped gallery.
 @NotNullByDefault
-final class SeparatorToolbarTest {
-    /// Places a non-focusable separator leaf.
+final class AvatarBannerTest {
+    /// Publishes initials, then an image source, through the gallery leaf.
     @Test
-    void separatorOccupiesSpaceWithoutFocus() {
+    void avatarPublishesInitialsThroughShippedLeaf() {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
+        assertEquals("Ada Lovelace", gallery.avatar().name());
+        assertEquals("AL", gallery.avatar().initials());
         tree.setRoot(gallery.create(tree));
         tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
-        SemanticsNode separator = first(tree, SemanticsRole.SEPARATOR);
-        assertEquals("separator", separator.label());
-        assertEquals(160.0f, gallery.separator().size().width());
-        assertEquals(1.0f, gallery.separator().size().height());
-        assertTrue(separator.bounds().height() > 0.0f);
+        SemanticsNode avatar = first(tree, SemanticsRole.AVATAR);
+        assertEquals("Ada Lovelace", avatar.label());
+        assertEquals("AL", avatar.itemStatus());
+        assertTrue(avatar.bounds().height() > 0.0f);
+        gallery.avatar().setSource("ada.png");
+        assertEquals("ada.png", first(tree, SemanticsRole.AVATAR).itemStatus());
+        gallery.avatar().setDisabled(true);
+        assertTrue(gallery.avatar().disabled());
+        assertTrue(first(tree, SemanticsRole.AVATAR).disabled());
     }
 
-    /// Selects and activates a toolbar command through pointer and arrow keys.
+    /// Dismisses a banner through pointer activation.
     @Test
-    void toolbarSelectsAndActivatesThroughShippedLeaf() {
+    void bannerDismissesThroughShippedLeaf() {
         LayoutTree tree = new LayoutTree();
         ControlGallery gallery = new ControlGallery();
-        assertEquals("Cut", gallery.toolbar().value());
-        assertEquals(-1, gallery.toolbar().lastActivated());
+        assertTrue(gallery.banner().visible());
         tree.setRoot(gallery.create(tree));
         tree.measure(Constraints.loose(400.0f, 3000.0f));
         tree.place();
-        SemanticsNode toolbar = first(tree, SemanticsRole.TOOLBAR);
-        assertEquals("Cut", toolbar.label());
-        click(tree, toolbar);
-        assertEquals(0, gallery.toolbar().lastActivated());
-        assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ARROW_RIGHT)));
-        assertEquals("Copy", gallery.toolbar().value());
-        assertTrue(tree.dispatch(new KeyEvent(KeyEventType.DOWN, LogicalKey.ENTER)));
-        assertEquals(1, gallery.toolbar().lastActivated());
-        gallery.toolbar().setDisabled(true);
-        gallery.toolbar().select(2);
-        gallery.toolbar().activate();
-        assertEquals("Copy", gallery.toolbar().value());
-        assertEquals(1, gallery.toolbar().lastActivated());
-        assertTrue(gallery.toolbar().disabled());
+        SemanticsNode banner = first(tree, SemanticsRole.BANNER);
+        assertEquals("Saved", banner.label());
+        assertEquals("visible", banner.itemStatus());
+        click(tree, banner);
+        assertFalse(gallery.banner().visible());
+        assertEquals("dismissed", first(tree, SemanticsRole.BANNER).itemStatus());
+        gallery.banner().setDisabled(true);
+        gallery.banner().show();
+        assertFalse(gallery.banner().visible());
+        assertTrue(gallery.banner().disabled());
     }
 
     /// Dispatches a pointer press on `node`.
